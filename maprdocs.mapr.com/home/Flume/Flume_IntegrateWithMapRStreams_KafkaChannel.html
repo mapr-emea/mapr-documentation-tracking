@@ -1,0 +1,50 @@
+Read or Write to MapR-ES using a Kafka Channel
+
+   Using a Kafka channel without a Flume sink or Flume source is more
+   reliable; it also involves less code. A Kafka channel is also useful
+   when you want to use one agent to store messages in a topic and then
+   copy the messages to another type of sink.
+   Note: Do not use a Kafka Channel when you have the following
+   requirements:
+     * Maintain of the order of each event.
+     * Read or write data from more than one topic.
+     * Good performance. Writing messages to a topic with a Kafka sink can
+       be twice as fast as a Kafka channel.
+
+   The following parameters are required when configuring Kafka channel to
+   read or write data in MapR-ES:
+   Property Name Description
+   type This property must be set to
+org.apache.flume.channel.kafka.KafkaChannel
+
+   kafka.topic A topic is specified with the volume path and stream name.
+   For example:
+/volume_path/stream_name:topic_name1
+
+   Note: It is critical that the path to the topic starts with a slash
+   (/), as the slash is what distinguishes the topic as a MapR-ES topic as
+   opposed to a Kafka topic.
+   kafka.pollTimeout The maximum amount of time in milliseconds the
+   channel will wait for events if they are not available. The default is
+   500.
+   parseAsFlumeEvent This must be set to false if other channels or sinks
+   write to the same topic.
+   producer.linger.ms These properties are used to configure the Kafka
+   Producer. Any producer property supported by Kafka can be used. The
+   only requirement is to prepend the property name with the prefix
+   kafka.producer. For example:
+kafka.producer.linger.ms=0
+
+   capacity The maximum number of events stored in the channel. The
+   default value is 100.
+   transactionCapacity The maximum number of events the channel will take
+   from a source or give to a sink per transaction. The default value is
+   100.
+
+   For additional properties that you may want to configure for the Kafka
+   channel, see the [1]Flume documentation. Note that brokerList is not
+   required when writing to MapR-ES.
+
+References
+
+   1. http://flume.apache.org/FlumeUserGuide.html

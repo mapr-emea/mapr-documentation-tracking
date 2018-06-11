@@ -1,0 +1,95 @@
+Assigning Weights in an Allocation File
+
+   An allocation file is an XML manifest that describes queues and their
+   properties, as well as certain policy defaults. The file contains these
+   types of elements:
+
+Queue Elements
+
+   Queue elements represent queues and can contain the following elements:
+     * minResources
+     * maxResources
+     * maxRunningApps
+     * weight
+     * schedulingPolicy
+     * aclSubmitApps
+     * aclAdministerApps
+     * minSharePreemptionTimeout
+
+   For more information on these elements, see [1]Hadoop: Fair Scheduler.
+   Note: The queueMaxAppsDefault value is used for any parent queue that
+   does not set a value for the maxRunningApps element.
+
+User Elements
+
+   User elements represent settings that govern the behavior of individual
+   users. They can contain a single property, maxRunningApps, which limits
+   the number of running applications for a particular user. It contains
+   the following elements:
+     * userMaxAppsDefault
+     * queueMaxAppsDefault
+     * fairSharePreemptionTimeout
+     * defaultQueueSchedulingPolicy
+     * queuePlacementPolicy
+
+   For more information on these elements, see [2]Hadoop: Fair Scheduler.
+   Note: If you set a value for queueMaxAppsDefault and do not set a value
+   for maxRunningApps for the root queue, the value of queueMaxAppsDefault
+   sets the application limit for all queues under the root queue
+   hierarchy.
+
+Example Allocation File
+
+   See example allocation file in [3]Hadoop: Fair Scheduler.
+
+Queue Access Control Lists
+
+   Queue Access Control Lists (ACLs) allow administrators to control who
+   may take actions on particular queues. They are configured with the
+   aclSubmitApps and aclAdministerApps properties, which can be set per
+   queue. Currently the only supported administrative action is killing an
+   application. Anyone who has permission to administer a queue may also
+   submit applications to it. These properties take values in a format
+   like user1,user2 group1,group2 or group1,group2. An action on a queue
+   will be permitted if its user or group is in the ACL of that queue or
+   in the ACL of any of that queue's ancestors. So if queue2 is inside
+   queue1, and user1 is in queue1's ACL, and user2 is in queue2's ACL,
+   then both users may submit to queue2.
+
+   For more information, see [4]Hadoop: Fair Scheduler.
+
+   The yarn.admin.acl and yarn.acl.enable Properties
+          By default on secure cluster users cannot kill jobs that are not
+          theirs.
+
+          On a secure cluster you do not need to set the yarn.acl property
+          or the yarn.admin.acl property. By default, they are set as
+          shown below. On unsecured clusters, these properties are not set
+          by default.
+
+<property>
+  <name>yarn.acl.enable</name> >
+  <value>true</value> >
+</property>
+<property>
+  <name>yarn.admin.acl</name> >
+  <value> </value> >
+</property>
+
+          The yarn.admin.acl property is set by default to " ", meaning
+          that no single admin is specified on a cluster.
+
+          To allow users to kill jobs that are not theirs or to get access
+          to the logs, you need to set the yarn.admin.acl property with
+          the user or group name.
+
+   Fair and Capacity scheduler root queue admins
+          For both the Fair scheduler and Capacity scheduler, the default
+          values of the admins for the root queues is " " .
+
+References
+
+   1. https://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/FairScheduler.html
+   2. https://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/FairScheduler.html
+   3. https://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/FairScheduler.html
+   4. https://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/FairScheduler.html

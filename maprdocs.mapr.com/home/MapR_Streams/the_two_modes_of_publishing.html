@@ -1,0 +1,26 @@
+Modes of Publishing
+
+   The producer client library batches messages into publish requests that
+   it sends to the MapR-ES server. By default, the client sends multiple
+   publish requests without waiting for acknowledgements from the MapR-ES
+   server. This behavior is determined by the producer configuration
+   parameter streams.parallel.flushers.per.partition, which defaults to
+   true.
+
+   With this behavior turned on, it is possible for messages to be
+   published to the partitions out of order due to the presence of
+   multiple network interface controllers, network errors, or retries.
+
+   For example, suppose a producer is sending messages that are
+   specifically for Partition 1. The producer client library buffers the
+   messages and sends a batch to Partition 1. Meanwhile, the producer
+   keeps sending messages for Partition 1 and the client continues to
+   buffer them. The next time the producer client library has enough
+   messages for Partition 1, the client sends another batch, whether or
+   not the MapR-ES server has acknowledged the previous batch.
+
+   If you always want messages to arrive to partitions in the order in
+   which they were sent, set the configuration parameter
+   streams.parallel.flushers.per.partition to false, which causes the
+   producer client library to wait for acknowledgements from the MapR-ES
+   server before sending subsequent publish requests.

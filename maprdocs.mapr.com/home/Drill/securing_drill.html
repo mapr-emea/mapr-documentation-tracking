@@ -1,0 +1,111 @@
+Securing Drill
+
+   An administrator can install Drill with the default security
+   configuration provided by MapR or manually configure custom security
+   for Drill.
+
+   Drill supports several security features that secure the communication
+   paths between Drill clients (such as[1] ODBC/JDBC) and Drillbits and
+   also between Drillbits. The following sections briefly describe the
+   security configuration options for Drill and provide links to
+   additional information and instructions.
+
+MapR Default Security Configuration
+
+   Starting in MapR 6.0 and Drill 1.11 ([2]MEP 4.0), Drill is
+   automatically secured when you install Drill on a MapR cluster that was
+   installed with the default MapR security configuration. The default
+   MapR security configuration provides authentication, authorization, and
+   encryption through the MapR-SASL mechanism, except for HTTPS, which
+   uses [3]SSL/TLS with form-based authentication.
+   Note: The default MapR security configuration does not include Kerberos
+   or Plain authentication, however you can manually configure these
+   security mechanisms in addition to the default MapR security
+   configuration.
+
+   See [4]Drill Default Security and [5]SSL/TLS for Encryption for more
+   information. You may also want to reference [6]Installing Drill, which
+   describes some Drill installation security scenarios.
+
+Security Features Supported in a Custom Configuration
+
+   Drill supports several security features that an [7]administrator can
+   manually configure to secure the communication paths between the Drill
+   client, such as ODBC and JDBC, and Drillbit and also between Drillbits.
+   See [8]Drill Drivers for ODBC and JDBC driver information.
+   The following table lists the security features and mechanisms
+   supported by Drill, as well as the communication paths secured by each
+   mechanism:
+   Security Features Supported Mechanisms Communication Paths Secured
+   Authentication [9]MapR Security (MapR-SASL/Tickets)
+     * Drill client to Drillbit
+     * Drillbit to Drillbit
+     * Drillbit to ZooKeeper
+       Note: The Drillbit creates znodes, for which ZooKeeper ACLs provide
+       security. See [10]Security Between ZooKeeper and Drillbits for more
+       information.
+
+     [11]Kerberos
+     * Drill client to Drillbit
+     * Drillbit to Drillbit
+
+     [12]Plain (username and password)
+     * Drill client to Drillbit
+
+     [13]Form-based
+     * Web client/REST API to Drillbit
+
+   Note: You can configure SSL/TLS for encryption.
+     [14]SPNEGO for HTTP
+     * Web client/REST API to Drillbit
+
+   Note: You can configure SSL/TLS for encryption.
+   Ecryption [15]MapR Security (MapR-SASL/Tickets)
+     * Drill client to Drillbit
+     * Drillbit to Drillbit
+
+     [16]Kerberos
+     * Drill client to Drillbit
+     * Drillbit to Drillbit
+
+     [17]SSL/TLS
+     * Drill client to Drillbit
+     * Web client/REST API to Drillbit
+
+   Authorization Based on file system permissions.
+     * Drill client to Drillbit
+
+   Impersonation [18]User Impersonation
+     * Drill client to Drillbit
+
+   Note: Drill supports user impersonation, inbound impersonation, and
+   user impersonation with Hive authorization.
+
+Views and File ACEs
+
+   In additiona to the listed security features, you can [19]create views
+   on data to limit access to data. You can also create [20]file ACEs on
+   the view definition files to protect the views.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill_connectors.html#drill_connectors
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MEPs/MEP_reference.html#concept_rqz_nr4_qz
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/ConfigWebConsolSecurity.html#ConfigWebConsolSecurity
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-secure-by-default.html#drill-secure-by-default
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/config-ssl-encrypt.html#config-ssl-encrypt
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/drill_installation.html#installing_drill
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/roles_and_privleges.html#roles_and_privleges
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill_connectors.html#drill_connectors
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-mapr-security-enable-authent-encrypt.html#drill-mapr-security-enable-authent-encrypt
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/zk-drillbit-security.html#zk-drillbit-security
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-kerberos.html#drill-kerberos
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-plain-authentication.html#drill-plain-authentication
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-plain-authentication.html#drill-plain-authentication
+  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-spnego-http-authentication.html#drill-spnego-http-authentication
+  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-mapr-security-enable-authent-encrypt.html#drill-mapr-security-enable-authent-encrypt
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-kerberos.html#drill-kerberos
+  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/config-ssl-encrypt.html#config-ssl-encrypt
+  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/user-impersonation.html#user-impersonation
+  19. https://drill.apache.org/docs/create-view/
+  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/file_aces_on_drill_views.html#file_aces_on_drill_views

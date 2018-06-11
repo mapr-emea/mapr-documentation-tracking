@@ -1,0 +1,139 @@
+Connecting Using Hive MapR-DB JSON Connector
+
+   This section describes the Hive connector for MapR-DB JSON table.
+
+   The Hive connector supports the creation of MapR-DB based Hive tables.
+   You can create a JSON table on MapR-DB and load CSV data and/or JSON
+   files to MapR-DB using the connector. MapR-DB based Hive tables can be:
+     * Queried just like MapR-FS based Hive tables.
+     * Combined with MapR-FS based Hive tables in joins and sub-queries.
+
+   The following table lists the Hive data type and the corresponding
+   (supported) MapR-DB OJAI type:
+   Hive Type MapR-DB OJAI Type
+   BOOLEAN   BOOLEAN
+   BINARY    BINARY
+   TINYINT   BYTE
+   DATE      DATE
+   DOUBLE    DOUBLE
+   FLOAT     FLOAT
+   INT       INT
+   BIGINT    LONG
+   SMALLINT  SHORT
+   STRING    STRING
+   TIMESTAMP TIMESTAMP
+   The Hive connector for MapR-DB JSON table also supports the use of the
+   following complex data types:
+     * map
+     * array
+     * struct
+
+   Note: The MapR-DB JSON tables do not support ACID transactions,
+   bucketing, and alteration.
+
+Creating a MapR-DB JSON Table and Hive Table Using Hive
+
+   To create a table, run the command similar to the following:
+   Note: The required properties are shown in bold.
+CREATE TABLE primitive_types (
+ id string,
+ bo boolean,
+ d double,
+ da date,
+ f double,
+ i int,
+ s string,
+ ts timestamp)
+STORED BY 'org.apache.hadoop.hive.maprdb.json.MapRDBJsonStorageHandler'
+TBLPROPERTIES("maprdb.table.name" = "/tbl","maprdb.column.id" = "id");
+
+   Here:
+     * The maprdb.table.name, maprdb.column.id and STORED BY
+       'org.apache.hadoop.hive.maprdb.json.MapRDBJsonStorageHandler' are
+       mandatory properties.
+     * The value for maprdb.column.id column should be of type string or
+       binary.
+
+   To create a Hive table that exists on MapR-DB, specify EXTERNAL in the
+   table DDL. If the table created is EXTERNAL, when the table is dropped,
+   only its metadata is deleted; the underlying MapR-DB data remains
+   intact. On the other hand, if the table is not EXTERNAL, dropping the
+   table deletes both the metadata associated with the table and the
+   underlying MapR-DB data.
+
+   For example, suppose a JSON table named /apps/my_users with the
+   following values:
+{"_id":"001","first_name":"John","last_name":"Doe","age":34}
+{"_id":"002","first_name":"Jack","last_name":"Smith","age":26}
+
+   To create a Hive table over existing MapR-DB JSON table:
+CREATE EXTERNAL TABLE primitive_types (
+ user_id string,
+ first_name string,
+ last_name string,
+ age int)
+STORED BY 'org.apache.hadoop.hive.maprdb.json.MapRDBJsonStorageHandler'
+TBLPROPERTIES("maprdb.table.name" = "/apps/my_users","maprdb.column.id" = "user_
+id");
+
+   Now, because table primitive_types points to MapR-DB table, you can
+   perform ETL query similar to MapR-FS based Hive tables:
+SELECT COUNT(*) FROM test_external;
+SELECT MAX(age) AS label FROM test_external;
+...
+
+Loading CSV Data to MapR-DB JSON Table
+
+    1. Create intermediate table.
+       For example:
+CREATE TABLE stage(id STRING, name STRING, age INT) ROW FORMAT DELIMITED FIELDS
+TERMINATED BY ',';
+    2. Load data to table.
+       For example:
+LOAD DATA INPATH '/data' into table stage;
+    3. Create MapR-DB table in Hive.
+       For example:
+CREATE TABLE users(id STRING, name STRING, age INT)
+STORED BY 'org.apache.hadoop.hive.maprdb.json.MapRDBJsonStorageHandler'
+TBLPROPERTIES("maprdb.table.name" = "/users","maprdb.column.id" = "id");
+    4. Insert data through stage table.
+       For example:
+INSERT INTO TABLE users select id, name, age from stage;
+
+Loading JSON Files to MapR-DB JSON Table
+
+    1. Add SerDe JAR for JSON.
+       For example:
+add jar /opt/mapr/hive/hive-<version>/hcatalog/share/hcatalog/hive-hcatalog-core
+-<version>-mapr.jar
+    2. Create intermediate table.
+       For example:
+CREATE EXTERNAL TABLE stage(id string, name string, age int)
+ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
+STORED AS TEXTFILE;
+    3. Load data in stage table.
+       For example:
+LOAD DATA INPATH '/data' into table stage;
+       Note: If there is a key in the JSON file that starts with "_" (for
+       example, "_id"), then treat the names as literals upon creating the
+       schema and query using the same literal syntax. For example,
+       specify `_id` string without any special serde properties. Then in
+       the query, use select `_id` from sometable;. Alternatively, you can
+       use 'org.openx.data.jsonserde.JsonSerDe' and add WITH
+       SERDEPROPERTIES ("mapping.id" = "_id" ) to your table definition.
+    4. Create MapR-DB table in Hive.
+       For example:
+CREATE TABLE users(id STRING, name STRING, age INT)
+STORED BY 'org.apache.hadoop.hive.maprdb.json.MapRDBJsonStorageHandler'
+TBLPROPERTIES("maprdb.table.name" = "/users","maprdb.column.id" = "id");
+    5. Insert data through stage table.
+       For example:
+INSERT INTO TABLE users select id, name, age from stage;
+       If there is a key in your JSON file that starts with "_" (for
+       example, "_id"), treat the names as literals upon creating the
+       schema and also query using the same literal syntax. In the above
+       example, it would look like `_id` string without any special serde
+       properties for it. Then, use again in query as shown below:
+select `_id`  from sometable;
+       Alternatively, use org.openx.data.jsonserde.JsonSerDe and add WITH
+       SERDEPROPERTIES ("mapping.id" = "_id" ) to your table definition.

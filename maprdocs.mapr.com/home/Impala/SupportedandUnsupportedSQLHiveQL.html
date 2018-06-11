@@ -1,0 +1,276 @@
+Supported and Unsupported SQL/HiveQL Language Features
+
+   Supported HiveQL Statements and Clauses
+     * JOIN
+     * AGGREGATE
+     * DISTINCT
+     * UNION ALL
+     * ORDER BY (Must use a LIMIT clause with ORDER BY.)
+     * LIMIT (Accepts arithmetic expressions and numeric literals. You can
+       include the OFFSET clause with the LIMIT clause to produce paged
+       result sets, like 11-20.)
+     * FROM (You can include FROM in an uncorrelated subquery.)
+     * INSERT INTO
+     * INSERT OVERWRITE
+     * LEFT|RIGHT ANTI JOIN
+
+   Supported SQL Statements
+
+   When you issue an SQL statement, use a semicolon at the end of each
+   statement.
+     * COMPUTE INCREMENTAL STATS
+     * COMPUTE STATS
+     * CREATE ROLE
+     * CREATE TABLE
+          + Use the STORED AS PARQUET or STORED AS TEXTFILE clause with
+            CREATE TABLE to identify the format of the underlying data
+            files.
+          + Use the TBLPROPERTIES clause with CREATE TABLE to associate
+            random metadata with a table as key-value pairs.
+          + Use SERDEPROPERTIES with CREATE TABLE to set up metadata that
+            defines how tables are read and written. This may be required
+            for Hive compatibility.
+          + USE WITH SERDEPROPERTIES with CREATE TABLE to specify the
+            SerDe classes that read and write data for a table. This may
+            be required for Hive compatibility.
+     * CREATE TABLE AS SELECT
+     * CREATE VIEW
+     * CURRENT DATABASE(Returns the database that the session is currently
+       using.)
+     * DESCRIBE
+     * DROP INCREMENTAL STATS
+     * DROP ROLE
+     * EXPLAIN (You can issue the command SET EXPLAIN_LEVEL=verbose for
+       more detailed EXPLAIN output. To revert, issue the command SET
+       EXPLAIN_LEVEL=normal.)
+     * EXPLAIN PLAN
+     * GRANT
+     * INVALIDATE METADATA
+     * LOAD DATA
+     * REFRESH
+     * REVOKE
+     * SELECT
+          + You can use the STRAIGHT_JOIN keyword immediately after SELECT
+            to override the reordering of join clauses that Impala does
+            internally.
+     * SHOW CREATE TABLE
+     * SHOW DATABASES
+     * SHOW FILES
+     * SHOW FUNCTIONS
+     * SHOW GRANT ROLE
+     * SHOW ROLE GRANT GROUP
+     * SHOW ROLES
+     * SHOW SCHEMAS
+     * SHOW TABLES
+     * SHOW COLUMN STATS
+     * SHOW TABLE STATS
+     * USE
+
+   Supported DDL Statements
+
+   DDL statements typically change the table schema. Issue an INVALIDATE
+   METADATA statement manually on the other nodes to update metadata. You
+   can use the SET command to enable the SYNC_DDL option with any DDL
+   statements to return after the Impala catalog service has propagated
+   changes on all Impala nodes.
+     * ALTER TABLE
+          + Use the TBLPROPERTIES clause with ALTER TABLE to associate
+            random metadata with a table as key-value pairs.
+          + Use SERDEPROPERTIES with ALTER TABLE to set up metadata that
+            defines how tables are read and written. This may be required
+            for Hive compatibility.
+     * ALTER VIEW
+     * COMPUTE STATS
+     * CREATE DATABASE
+     * CREATE FUNCTION
+     * CREATE ROLE
+     * CREATE TABLE
+     * CREATE VIEW
+     * DROP DATABASE
+     * DROP FUNCTION
+     * DROP ROLE
+     * DROP TABLE
+     * DROP VIEW
+     * GRANT
+     * REVOKE
+
+   Supported DML Statements
+
+   Impala only supports the INSERT and LOAD DATA statements which modify
+   data stored in tables.
+     * Issue the REFRESH statement on other nodes to refresh the data
+       location cache.
+     * If the SYNC_DDL statement is enabled, INSERT statements complete
+       after the catalog service propagates data and metadata changes to
+       all Impala nodes.
+     * You can use the [SHUFFLE] and [NOSHUFFLE] hints with INSERT to
+       redistribute work during INSERT...SELECT operations. You may want
+       to use these hints when inserting into partitioned Parquet tables
+       to avoid memory consumption problems and simultaneous open files,
+       by collecting new data for each partition on a specific node.
+
+   Supported Datatypes
+
+   Impala supports datatypes with the same names and semantics equivalent
+   to those in Hive.
+     * char
+     * varchar
+     * complex
+     * string
+     * tinyint
+     * smallint
+     * int
+     * bigint
+     * float
+     * double
+     * boolean
+     * string
+     * timestamp
+     * asSTRING
+
+   Supported Operators
+
+   SQL operators are a class of comparison functions used within the WHERE
+   clauses of a SELECT statement.
+     * BETWEEN
+     * COMPARISON
+     * CROSS JOIN (Use as the join operator for Cartesian joins; does not
+       use any ON clause.)
+     * IN
+     * IS NULL
+     * LIKE
+     * [NOT] EXISTS
+     * [NOT] IN
+     * REGEXP
+     * RLIKE
+
+   Supported Literals
+
+   Each of the Impala data types has corresponding notation for literal
+   values of that type. Specify literal values in SQL statements, such as
+   in the SELECT list or WHERE clause of a query, or as an argument to a
+   function call.
+     * Numeric
+     * String
+     * Boolean
+     * Timestamp
+     * NULL (You can add the NULLS FIRST or NULLS LAST clause at the end
+       of the ORDER BY clause to override or specify the sorting behavior
+       for NULL.)
+
+   Supported Schema Objects and Object Names
+     * Aliases
+     * Identifiers
+     * Databases
+     * Tables
+     * Views
+     * Functions
+
+   Analytic Functions
+
+   Analytic (window) functions operate on a set of rows and return a
+   single value for each row from the underlying query. The term "window"
+   describes the set of rows on which the function operates. A window
+   function uses values from the rows in a window to calculate the
+   returned values. When you use a window function in a query, you define
+   the window using the OVER() clause. The OVER() clause (window clause)
+   differentiates window functions from other analytical and reporting
+   functions.
+
+   As of Impala 2.2.0, you can use the following analytic functions in
+   queries:
+     * MAX()
+     * MIN()
+     * COUNT()
+     * AVG()
+     * RANK()
+     * LAG()
+     * LEAD()
+     * FIRST_VALUE()
+     * MAX(), SUM()
+     * COUNT()
+
+   The analytic functions support the following syntax:
+function(args) OVER([partition_by_clause] [order_by_clause [window_clause]]) par
+tition_by_clause ::= PARTITION BY expr [, expr ...]
+order_by_clause ::= ORDER BY expr  [ASC | DESC] [NULLS FIRST | NULLS LAST] [, ex
+pr [ASC | DESC] [NULLS FIRST | NULLS LAST] ...]
+
+   The window clause supports the following syntax:
+ROWS BETWEEN [ { m | UNBOUNDED } PRECEDING | CURRENT ROW] [ AND [CURRENT ROW | {
+ UNBOUNDED | n } FOLLOWING] ]
+RANGE BETWEEN [ {m | UNBOUNDED } PRECEDING | CURRENT ROW] [ AND [CURRENT ROW | {
+ UNBOUNDED | n } FOLLOWING] ]
+
+   Supported Aggregate Functions
+
+   Aggregate functions calculate a return value across all the items in a
+   result set. When you issues a function, you must include a FROM clause
+   in the query. Aggregate functions ignore NULL values rather than
+   returning a NULL result.
+     * APPX_MEDIAN()
+     * AVG()
+     * COUNT()
+     * GROUP_CONCAT()
+     * MAX()
+     * MIN()
+     * NDV()
+     * SUM()
+
+   Built-in Functions
+
+   Impala supports lots of built-in functions that you can use directly
+   with a SELECT statement to perform data transformation operations, such
+   as mathematical calculations, string manipulations, and data
+   calculations.
+
+   Unsupported SQL Features
+     * Non-scalar data types, such as maps, arrays, structs
+     * LOAD DATA to load raw files
+     * Restricted set of literal formats for the TIMESTAMP data type and
+       the from_unixtime() format string
+     * Extensibility mechanisms such as TRANSFORM, custom file formats, or
+       custom SerDes
+     * XML and JSON functions
+     * The following HiveQL aggregate functions: variance, var_pop,
+       var_samp, stddev_pop, stddev_samp, covar_pop, covar_samp, corr,
+       percentile, percentile_approx,histogram_numeric, collect_set
+     * User Defined Table Generating Functions (UDTFs)
+     * User Defined Aggregate Functions (UDAFs)
+     * User Defined Funtions
+     * Sampling
+     * Lateral views
+     * Authorization features such as roles
+     * Multiple DISTINCT clauses per query
+
+   Unsupported HiveQL Statements
+     * ANALYZE TABLE (the Impala equivalent is COMPUTE STATS)
+     * DESCRIBE COLUMN
+     * DESCRIBE DATABASE
+     * EXPORT TABLE
+     * IMPORT TABLE
+     * SHOW PARTITIONS
+     * SHOW TABLE EXTENDED
+     * SHOW TBLPROPERTIES
+     * SHOW FUNCTIONS
+     * SHOW COLUMNS
+     * SHOW CREATE TABLE
+     * SHOW INDEXES
+
+   Semantic Differences in Impala Statements vs HiveQL
+     * Different syntax and names for query hints.
+     * MapReduce specific features of SORT BY, DISTRIBUTE BY, or CLUSTER
+       BY are not exposed.
+     * Queries do not need a FROM clause.
+     * Impala does not allow:
+          + Implicit cast between string and numeric or Boolean types
+          + Implicit casts among the numeric types or from string to
+            timestamp
+          + Storing timestamps using the local timezone; Timestamps are
+            stored relative to GMT
+          + Return column overflows as NULL; Impala returns the largest or
+            smallest value in the range for the type
+          + Virtual columns
+     * Impala does not:
+          + Expose locking
+          + Expose some configuration properties

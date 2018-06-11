@@ -1,0 +1,414 @@
+Creating a Volume
+
+   You can create a new (Standard or Mirror) volume using MCS and/or the
+   CLI.
+
+Creating a Volume Using the MapR Control System
+
+   To create a new (Standard or Mirror) volume using MCS:
+    1. Go to Data > Volumes and click Create Volume.
+       The Create New Volume page displays.
+    2. Select the Volume Type under SETTINGS in the Properties tab.
+       Choose:
+          + Standard Volume to create a read-write volume.
+          + Mirror Volume to create a volume that is a read-only copy of a
+            source volume.
+            Tip: See also: [1]Mirror Types.
+    3. Specify the following required settings in the Properties tab:
+          + [2]Standard Volume
+          + [3]Mirror Volume
+
+   Volume Name Enter a name for the volume. A volume name can include
+   alphanumeric characters and the following characters: . (dot), _
+   (underscore), and - (dash).
+
+   Note: Do not begin the volume name with mapr. as mapr. is used for
+   system volumes. If you use mapr. at the start of the volume name, the
+   volume may not display in the default view of the list of volumes in
+   MCS; you must select the Include System Volumes checkbox in the Volumes
+   pane to view volumes with names beginning with mapr..
+   Accountable Entity Select the type, user or group, of accountable
+   entity and enter the name of the entity in the associated text field.
+       Steps 4 to 7 are optional and allow you to define optional volume
+       properties (for auditing and replication), volume access, volume
+       quota, and volume (snapshot and/or mirror) schedule. If these are
+       not defined, default values, where available, are used. You can
+       skip to step 8 to create a standard volume with basic settings.
+
+   Volume Name Enter a name for the volume. A volume name can include
+   alphanumeric characters and the following characters: . (dot), _
+   (underscore), and - (dash).
+
+   Note: Do not begin the volume name with mapr. as mapr. is used for
+   system volumes. If you use mapr. at the start of the volume name, the
+   volume may not display in the default view of the list of volumes in
+   MCS; you must select the Include System Volumes checkbox in the Volumes
+   pane to view volumes with names beginning with mapr..
+   Source Volume Cluster Enter the name of the cluster on which the source
+   volume exists. Mirroring only works between two secure clusters or
+   between two non-secure clusters. Mirroring does not work when one
+   cluster is secure and the other is non-secure.
+
+   Note: When setting up mirror volumes for mirroring between clusters,
+   for the mirroring operation to run successfully, servers in one cluster
+   cannot use the same IP addresses as servers in the other cluster. For
+   example, if node A in cluster A has a private IP address of
+   10.10.20.29, no server in cluster B can have the same private IP
+   address. Also, all the servers in destination cluster must be able to
+   reach all the servers in the source cluster and vice versa. For
+   example, suppose 10.10.20.29 is the only IP address used by node A in
+   cluster A; then all servers in cluster B should be able to reach the IP
+   address 10.10.20.29.
+   Source Volume Name Enter the name of the source volume, from which the
+   mirror volume pulls data, (after selecting the source volume cluster).
+   If the source volume is on:
+          + Same cluster, you will create a local mirror volume, which is
+            useful for load balancing or for providing a read-only copy of
+            a data set. See [4]Local Mirroring for more information.
+          + Another cluster, you will create a remote mirror volume, which
+            is useful for offsite backup, for data transfer to remote
+            facilities, and for load and latency balancing. See
+            [5]Creating Remote Mirrors for more information.
+
+   For information on setting up mirror cascades, see [6]Mirror Cascades.
+   Accountable Entity Select the type, user or group, of accountable
+   entity and enter the name of the entity in the associated text field.
+       Steps 4 to 6 are optional and allow you to define optional volume
+       properties (for auditing and replication), volume access, and
+       volume quota. If these are not defined, default values, where
+       available, will be applied. You can skip to:
+          + (Optional) Step 7 to associate a mirroring schedule or a
+            snapshot schedule with the mirror volume.
+            The mirroring schedule specifies how often to run the
+            mirroring operation, which copies data (that has changed at
+            the file-block level since the last data transfer) directly
+            from the source, even if the files in the source volume are
+            being written to or deleted.
+            The snapshot schedule specifies how often to take a snapshot
+            of the mirror volume for the purpose of preserving the state
+            of the mirror before a subsequent mirroring operation.
+          + Step 8 to create a mirror volume with basic settings.
+    4. (Optional) Specify the following in the Properties tab:
+          + [7]Standard Volume
+          + [8]Mirror Volume
+
+   SETTINGS Volume Access Specify whether volume is read-only or
+   read/write volume. Data on a read-only volume can only be read and data
+   can both be read from and written to a read/write volume. By default,
+   volume is created with read/write access.
+   Mount Specify whether to automatically mount (Yes) or not mount (No)
+   the volume after creation. By default, volumes are mounted immediately
+   after creation.
+
+   Note: If the mount point is specified while creating a volume, new
+   volumes can inherit properties from the parent volume.
+   Mount Path Specify the path to mount the volume. This is required if
+   the value for Mount is Yes.
+
+   Note: The path must be relative to / and cannot be in the form of a
+   global namespace path (for example, /mapr/<cluster-name>/).
+   Wire Encryption Specify whether (Yes) or not (No) to encrypt data in
+   the volume during transmission. This setting has no effect in a
+   non-secure cluster.
+   Topology Select the rack path to the volume. The default topology is
+   /data.
+   AUDITING Audit Specify whether to enable (Yes) or disable (No) auditing
+   of volume.
+
+   Note: When you create a snapshot of the volume, the snapshot will
+   inherit the audit settings of this volume.
+   Coalesce Interval Specify the interval of time (in minutes) to use for
+   logging multiple READ, WRITE, or GETATTR operations on one file from
+   one client IP address, if auditing is enabled. The default value is 60
+   minutes.
+   REPLICATION Replication Specify the minimum (Min Target) and desired
+   (Max Target) number of copies for the volume data. The default minimum
+   is 2 and the default maximum is 3.
+   Name Container Replication Specify the minimum (Min Target) and desired
+   (Max Target) number of copies for the name container associated with
+   the volume. The default minimum is 2 and the default maximum is 3.
+   Guarantee Min Replication (Available from v6.0.1) Specify whether (Yes)
+   or not (No) to enforce minimum number of copies. If this is enabled
+   (Yes), writes succeed only when the minimum number of copies exist.
+
+   For more information, see [9]Understanding Replication.
+   Optimize Replication Specify the basis for the replication factor:
+          + High throughput, or cascading replication, where volumes are
+            replicated sequentially on intermediate and tail containers.
+          + Low latency, or star replication, where volumes are replicated
+            on multiple containers in parallel.
+
+   The default value is high throughput. See [10]Selecting a Replication
+   Type for High Availability.
+
+   SETTINGS Mount Specify whether to automatically mount (Yes) or not
+   mount (No) the volume after creation. By default, volumes are mounted
+   immediately after creation.
+   Mount Path Specify the path to mount the volume. This is required if
+   the value for Mount is Yes.
+
+   Note: The path must be relative to / and cannot be in the form of a
+   global namespace path (for example, /mapr/<cluster-name>/).
+   Wire Encryption Specify whether (Yes) or not (No) to encrypt data in
+   the volume during transmission. This setting has no effect in a
+   non-secure cluster.
+   Topology Select the rack path to the volume. The default topology is
+   /data.
+   AUDITING Audit Specify whether to enable (Yes) or disable (No) auditing
+   of volume.
+
+   Note: Auditing for particular directories, files, and MapR-DB tables in
+   the mirror volume is enabled automatically if auditing is enabled for
+   them in the source volume.
+   Coalesce Interval Specify the interval of time (in minutes) to use when
+   logging multiple READ, WRITE, or GETATTR operations on one file from
+   one client IP address, if auditing is enabled. The default value is 60
+   minutes.
+   REPLICATION Replication Specify the minimum (Minimum Replication) and
+   desired (Replication) number of copies for the volume data. The default
+   minimum is 2 and the default target is 3.
+   Name Container Replication Specify the minimum and desired number of
+   copies for the name container associated with the volume. The default
+   minimum is 2 and the default replication factor is 3.
+   Guarantee Min Replication (Available from v6.0.1) Specify whether (Yes)
+   or not (No) to enforce minimum number of copies. If this is enabled
+   (Yes), writes succeed only when the minimum number of copies exist.
+
+   For more information, see [11]Understanding Replication.
+   Optimize Replication Specify the basis for the replication factor:
+          + High throughput, or cascading replication, where volumes are
+            replicated sequentially on intermediate and tail containers.
+          + Low latency, or star replication, where volumes are replicated
+            on multiple containers in parallel.
+
+   The default value is high throughput. See [12]Selecting a Replication
+   Type for High Availability.
+    5. (Optional) Specify the following volume (administrative and user)
+       access control settings in the Authorization tab:
+
+   ADMINISTRATIVE CONTROLS The users and/or groups that have one or more
+   of the following permissions:
+
+        Dump & Backup
+                Transport large amount of data or copies of the volume on
+                physical media to a remote cluster using backup files.
+
+        Restore & Mirror
+                Restore a volume from a dump file and create mirror
+                volumes, which is a read-only copy of the source volume.
+
+        Edit
+                Edit volume properties, create and delete snapshots.
+
+        Delete
+                Delete the volume.
+
+        Admin
+                View and edit access control settings (but cannot perform
+                volume operations).
+
+        Full Control
+                Perform all volume-related administrative operations
+                except changing access control settings.
+
+   To define administrative access control settings for another user or
+   group, click Add Another button.
+
+   Note: To perform this action from the command line, refer to [13]acl
+   set.
+   By default, the root user and the volume creator have full control
+   permissions on the volume.
+
+        Root Directory Permission
+                Set read, write, and/or execute permissons on the root
+                directory for users, groups and others.
+
+   USER ACCESS CONTROLS SThe users, groups, and/or roles that have and/or
+   do not have access to read and/or write to the volume.
+
+   To grant or block access to users, groups, and/or roles, from the:
+          + Basic settings, select the type — public, (OR) user, group, or
+            role — from the drop-down menu, specify the name of the user,
+            group, or role, and select one or more checkbox to grant
+            permissions.
+            Tip: Click [cloneACE.png] to create a copy of the associated
+            access control setting. Click [deleteRow.png] to remove the
+            associated access control expression.
+            To add access control expressions for another user, group, or
+            role, click Add Another and repeat this step.
+          + Advanced settings, or specify public (p) or user (u), group
+            (g), and/or role (r) who have and/or do not have the type of
+            access using the following boolean expressions and
+            subexpressions:
+               o ! — Negation operator.
+               o & — AND operation.
+               o | — OR operation.
+            Use (), parentheses, for subexpressions.
+            Note: You cannot specify user, group, or role individually if
+            access is granted to all users (public).
+            Alternatively, click [editPencil.png] associated with the type
+            of access to use the Access Control Expression window to
+            define access for public or users, group, and/or role. See
+            [14]Defining ACEs for more information.
+
+   Note: If you switch from Basic to Advanced, the basic settings, if any,
+   will be carried over to the advanced settings. If you switch from
+   Advanced to Basic, all the settings will be lost because the
+   subexpressions and AND (&) and negation (!) operations that are
+   supported by advanced settings are not supported in the basic settings.
+   By default, access is granted to all users (public). If access is
+   granted to all users (public), access cannot also be granted
+   individually to users, groups, and/or roles.
+    6. Define the amount of disk space (optional) in megabytes (MB),
+       gigabytes (GB), or terabytes (TB) to allocate to the volume in the
+       Usage tab:
+       By default, there is no limit on the disk space.
+       Warning: If the quota set for the mirror volume is less than the
+       quota set for its source volume, the CLDB raises an alarm. The
+       mirroring operation will not fail, but you must decide whether to
+       add space and increase the mirror volume quota, or remove unwanted
+       space from the source volume and decrease its quota.
+
+   Advisory Quota The limit, which when reached, an alarm is raised.
+   Hard Quota The limit, which when reached, no further writes are
+   allowed.
+       Note: The value for advisory quota cannot be greater than the value
+       for hard quota.
+       The graph shows the currently used (across volumes), reserve limit
+       (which is 90% of the total disk space on the cluster), and total
+       amount of disk space at the cluster level.
+    7. (Optional) Select the schedule(s) to associate with the volume in
+       the Schedule tab.
+          + [15]Standard Volume
+          + [16]Mirror Volume
+       The snapshot schedule specifies when snapshots should be
+       automatically created.
+       Note: If this is not defined, snapshots will not be automatically
+       created for this volume.
+       Each snapshot created by a schedule has an expiration date that
+       determines how long the snapshot is retained.
+       You can choose:
+
+   Snapshot Schedule The snapshot schedule specifies how often to take a
+   snapshot of the mirror volume for the purpose of preserving the state
+   of the mirror before a subsequent mirror operation. This way, if
+   corrupt data is copied from the source volume's snapshot into the
+   mirror volume, the mirror contents can be rolled back to the snapshot.
+   Each snapshot created by a schedule has an expiration date that
+   determines how long the snapshot is retained.
+   Mirror Schedule The mirror schedule specifies how frequently the mirror
+   volume must be synchronize with the source volume. In case of a
+   disaster (or any type of data loss on a read-write source volume), the
+   data can be recovered from the mirror volume, but any data written to
+   the source volume since the last successful mirror operation will not
+   be on the mirror volume. Therefore, you should set the mirror schedule
+   such that it meets your RPO (Recovery Point Objective).
+
+   Tip: For best performance, select a mirroring schedule according to the
+   anticipated rate of data changes and the available bandwidth for
+   mirroring. See also: [17]Guidelines for Setting Mirror Schedules.
+       When selecting a schedule, you can choose your custom schedule, if
+       it exists, or one of the (following) defaults:
+          + Critical data
+          + Important data
+          + Normal data
+    8. Click Create Volume to create the volume.
+
+     * If you created a remote mirror, edit the mapr-clusters.conf file so
+       that each cluster can resolve the nodes in the other cluster. For
+       more information, see [18]Setting Up Cross-Mirroring Between
+       Clusters.
+     * If the source volume at the primary datacenter is in a secure
+       cluster, the destination cluster needs authorization to pull data
+       from the source cluster in order to create a mirror volume.
+       Authorization can be granted by means of a cross-cluster ticket
+       generated by the source cluster administrator. For more
+       information, see [19]Configuring Secure Clusters for Cross-Cluster
+       Mirroring and Replication.
+
+Creating a Volume Using the CLI or the REST API
+
+   The basic command to create a volume is:
+maprcli volume create -name <name>
+
+   You can create a standard read-write volume and/or a (local or remote)
+   mirror volume.
+     * [20]Standard Volume
+     * [21]Local Mirror Volume
+     * [22]Remote Mirror Volume
+
+   The basic command to create a standard volume is:
+maprcli volume create -name <volume name> -path <volume path> -type rw
+
+   When creating and mounting a volume, the location of the mount point
+   can be specified using the path parameter. The volume that is last in
+   the path parameter is referred to as the parent volume. (The parent
+   volume is the volume on which the volume link is created.)
+
+   For complete reference information, see [23]volume create.
+    1. Log in to the node on the cluster where you want to create the
+       mirror.
+    2. Use the [24]volume create command to create the mirror volume.
+       Specify the source volume name, provide a name for the mirror
+       volume, and specify the type as mirror. Optionally, associate a
+       schedule with the volume. For example:
+maprcli volume create -name volume-a -source volume-a -type mirror -schedule 2
+       For complete reference information, see [25]volume create.
+
+    1. Log in to the node on the cluster where you wish to create the
+       mirror.
+    2. Use the volume create command to create the mirror volume.
+       Specify the source volume and cluster in the format
+       <volume>@<cluster>, provide a name for the mirror volume, and
+       specify the type as mirror. Optionally, associate a schedule with
+       the volume. For example:
+maprcli volume create -name volume-a -source volume-a@cluster-1 -type mirror -sc
+hedule 2
+       When creating and mounting a volume, the location of the mount
+       point can be specified using the path parameter. The volume that is
+       last in the path parameter is referred to as the parent volume.
+       (The parent volume is the volume on which the volume link is
+       created.)
+       For complete reference information, see [26]volume create.
+    3. Ensure that each cluster can resolve the nodes in the other
+       cluster.
+       See:
+          + [27]Setting Up Cross-Mirroring Between Clusters for more
+            information if both the clusters are non-secure.
+          + [28]Configuring Secure Clusters for Cross-Cluster Mirroring
+            and Replication for more information if both clusters are
+            secure.
+
+   For the complete list of supported parameters, see [29]volume create.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/c-mirror-types.html#concept_uh5_grt_lt
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html#div1entry1
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html#div1entry2
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/MirrorVolumes-LocalMirroring.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/MirrorVolumes-CreateRemoteMirrors.html#WorkingwithMirrorVolumes-_26982465-d3e710
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/MirrorVolumes-MirrorCascades.html#WorkingwithMirrorVolumes-_26982465-d3e491
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html#div2entry1
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html#div2entry2
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/SelectingReplicationType.html
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/SelectingReplicationType.html
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/acl-set.html#aclset
+  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/ACE-Builder.html
+  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html#div3entry1
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html#div3entry2
+  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/UsingPromotableMirrors-schedules-guidelines.html#UsingPromotableMirrors-schedules-guidelines
+  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/MirrorVolumes-EditConfFile.html#WorkingwithMirrorVolumes-_26982465-d3e781
+  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/AddingCross-ClusterTickets.html
+  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html#div4entry1
+  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html#div4entry2
+  22. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html#div4entry3
+  23. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#volumecreate
+  24. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html
+  25. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#volumecreate
+  26. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#volumecreate
+  27. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/MirrorVolumes-EditConfFile.html
+  28. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/AddingCross-ClusterTickets.html
+  29. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html

@@ -1,0 +1,486 @@
+New Features in Impala 2.2.0 for MapR
+
+Spill to Disk
+
+   Impala 2.2.0 for MapR introduces the "spill to disk" feature which
+   prevents queries that use memory-intensive operations, such as large
+   sort, join, aggregation, or analytic function operations, from failing
+   with out-of-memory errors. Impala automatically writes data to disk
+   when queries with memory-intensive operations exceed the set memory
+   limit on an Impala node. You can enable or disable the spill to disk
+   feature in /opt/mapr/impala/impala-<version>/conf/env.sh. You can also
+   change the DISABLE_UNSAFE_SPILLS setting at the session level to allow
+   or prevent data spills.
+
+   See [1]Spill to Disk for more information about this feature.
+
+Security
+
+   You can use SQL statements to create roles and grant/revoke privileges
+   on objects.
+
+   Note: This security functionality requires Sentry 1.6 .
+
+   The following statements create roles and grant privileges:
+     * CREATE ROLE - creates roles for users and groups
+     * GRANT - grants privileges on objects
+
+   The following statements revoke roles and privileges:
+     * DROP ROLE - removes roles from the metastore database
+     * REVOKE - revokes roles or privileges on a specified object from
+       groups
+
+   The following statements display role related information:
+     * SHOW GRANT ROLE - list all the grants for the given role name
+     * SHOW ROLES - displays roles
+     * SHOW ROLE GRANT GROUP - lists all the roles assigned to a specified
+       group
+
+Smaller Parquet and MapR-FS Block Size
+
+   The default setting for the PARQUET_FILE_SIZE query option has changed
+   from 1 GB to 256 MB. This makes the file more accurate and reduces the
+   amount of memory reserved during an INSERT into Parquet tables,
+   potentially avoiding out-of-memory errors and improving scalability
+   when inserting data into Parquet tables
+
+.impalarc Configuration File
+
+   You can specify impala-shell options from the command line or in the
+   $HOME/.impalarc configuration file. You can define a set of default
+   options for your impala-shell environment in the$HOME/.impalarc
+   configuration file. For every command line option, there is an
+   equivalent setting in the $HOME/.impalarc configuration file. Options
+   specified from the impala-shell command line override corresponding
+   options in the configuration file. See Impala-Shell Command Line
+   Options for more information. The configuration file must contain a
+   header label [impala], followed by the options specific to
+   impala-shell. This is a standard convention for configuration files
+   that enables a single file to hold configuration options for multiple
+   applications. To specify a different filename or path for the
+   configuration file, specify the argument
+--config_file=path_to_config_file
+
+   on the impala-shell command line.
+
+Files
+
+   Impala can read GZIP, BZIP, or Snappy compressed text files.The files
+   do not require special table settings to work in an Impala text table.
+   Impala ignores temporary files typically produced by ETL tools, such as
+   those with the suffixes .copying and .tmp.
+
+Log Rotation
+
+   Log rotation is the automatic removal of unneeded or old log files. By
+   default, Impala switches out old log files every 5 seconds, based on
+   the default interval specified in the logbufsecs setting. The
+   -max_log_files configuration option specifies how many log files to
+   keep at each severity level (INFO, WARNING, ERROR, and FATAL). You can
+   configure the
+   -max_log_files option for each Impala daemon (impalad, statestored, and
+   catalogd) in the env.shconfiguration file. By default, Impala preserves
+   the latest 10 log files for each severity level and removes old logs
+   based on the logbufsecs setting. Setting -max_log_files to 0 preserves
+   all of the log files. This setting requires manual log rotation.
+   Setting-max_log_files to 1 preserves only the latest log file.
+
+Impala Debug Web Interface
+
+   The Impala debug web interface displays a visual representation of the
+   query plan. You can access the Impala debug web interface at
+   http://<impala-node-hostname>:25000/. To see visual representation of
+   the query plan, select the /queries tab and click Details for a
+   particular query. The Details page includes a Plan tab with a plan
+   diagram for which you can zoom in or out using your mouse or trackpad.
+
+Date and Time Improvements
+
+   Flexibility to interpret TIMESTAMP values using the UTC time zone or
+   using the local time zone, for compatibility with TIMESTAMP values
+   produced by Hive.
+
+   Startup flags for the impalad daemon enable a higher level of
+   compatibility with TIMESTAMP values written by Hive and more
+   flexibility for working with date and time data using the local time
+   zone instead of UTC. To enable these features, set the impalad startup
+   flags -use_local_tz_for_unix_timestamp_conversions=true and
+   -convert_legacy_hive_parquet_utc_timestamps=true.
+
+   The -use_local_tz_for_unix_timestamp_conversions setting controls how
+   the unix_timestamp(), from_unixtime(), and now() functions handle time
+   zones. By default, this setting disabled, and Impala considers all
+   TIMESTAMP values to be in the UTC time zone when converting to or from
+   Unix time values. When this setting is enabled, Impala treats TIMESTAMP
+   values passed to or returned from these functions to be in the local
+   time zone. When this setting is enabled, verify that all hosts in the
+   cluster have the same timezone settings to avoid inconsistent results
+   depending on which host reads or writes TIMESTAMP data.
+
+   The -convert_legacy_hive_parquet_utc_timestamps setting causes Impala
+   to convert TIMESTAMP values to the local time zone when it reads them
+   from Parquet files written by Hive. This setting only applies to data
+   using the Parquet file format where Impala can use metadata in the
+   files to reliably determine that the files were written by Hive. If in
+   the future Hive changes the way it writes TIMESTAMP data in Parquet,
+   Impala will automatically handle that new TIMESTAMP encoding.
+
+   Built-in functions that accept or return integers representing
+   TIMESTAMP values use the BIGINT type for parameters and return values
+   rather than INT. This change prevents the date and time functions from
+   having overflow errors that would otherwise occur on January 19th, 2038
+   (known as the "Year 2038 problem" or "Y2K38 problem"). This change
+   affects the from_unixtime() and unix_timestamp() functions. You might
+   need to change application code that interacts with these functions,
+   change the types of columns that store the return values, or add CAST()
+   calls to SQL statements that call these functions.
+
+Analytic Functions
+
+   Analytic (window) functions operate on a set of rows and return a
+   single value for each row from the underlying query. The term "window"
+   describes the set of rows on which the function operates. A window
+   function uses values from the rows in a window to calculate the
+   returned values. When you use a window function in a query, you define
+   the window using the OVER() clause. The OVER() clause (window clause)
+   differentiates window functions from other analytical and reporting
+   functions.
+
+   As of Impala 2.2.0, you can use the following analytic functions in
+   queries:
+     * MAX()
+     * MIN()
+     * SUM()
+     * COUNT()
+     * AVG()
+     * RANK()
+     * LAG()
+     * LEAD()
+     * FIRST_VALUE()
+
+   The analytic functions support the following syntax:
+function(args) OVER([partition_by_clause] [order_by_clause [window_clause]])
+partition_by_clause ::= PARTITION BY expr [, expr ...]order_by_clause ::= ORDER
+BY expr  [ASC | DESC] [NULLS FIRST | NULLS LAST] [, expr [ASC |DESC] [NULLS FIRS
+T | NULLS LAST] ...]
+
+   The window clause supports the following syntax:
+ROWS BETWEEN [ { m | UNBOUNDED } PRECEDING | CURRENT ROW] [ AND [CURRENT ROW | {
+ UNBOUNDED | n } FOLLOWING] ]
+RANGE BETWEEN [ {m | UNBOUNDED } PRECEDING | CURRENT ROW] [ AND [CURRENT ROW | {
+ UNBOUNDED | n } FOLLOWING] ]
+
+Query Options
+
+   You issue query options to Impala using the SET command. SET has been
+   promoted to an SQL statement and can be used in client applications
+   through the JDBC and ODBC APIs.
+
+   The following table lists new query options that you can use with the
+   SET statement:
+   Option Description Syntax
+   APPX_COUNT_DISTINCT()
+
+   Allows multiple COUNT(DISTINCT) operations within a single query. When
+   used in a query, Impala rewrites each COUNT(DISTINCT) to use the NDV()
+   function, resulting in an approximate count rather than precise.
+
+   Default isfalse (shown as 0 in output of SET statement).
+set APPX_COUNT_DISTINCT=true|false;
+
+   SET EXEC_SINGLE_NODE_ROWS_THRESHOLD
+
+   This query option controls how many rows constitute a small query
+   providing a guideline for when to turn optimizations on or off which
+   prevents the unnecessary overhead of parallelizing and generating
+   native code. Impala can complete small queries quickly and free-up YARN
+   resources and admission control slots for data-intensive queries.
+
+   Default is 100.
+SET
+                  EXEC_SINGLE_NODE_ROWS_THRESHOLD=number_of_rows;
+
+   PARQUET_FILE_SIZE
+   Specifies the maximum size of each Parquet data file produced by Impala
+   INSERT statements. Specify the size in bytes or with a trailing m or
+   gcharacter to indicate megabytes or gigabytes. For example:
+-- 128 megabytes.set PARQUET_FILE_SIZE=134217728INSERT OVERWRITE parquet_table S
+ELECT * FROM text_table;
+-- 512 megabytes.set PARQUET_FILE_SIZE=512m;INSERT OVERWRITE parquet_table SELEC
+T * FROM text_table;
+-- 1 gigabyte.set PARQUET_FILE_SIZE=1g;INSERT OVERWRITE parquet_table SELECT * F
+ROM text_table;
+
+set PARQUET_FILE_SIZE=size
+INSERT OVERWRITE parquet_table SELECT * FROM text_table;
+
+   QUERY_TIMEOUT_S Sets the idle query timeout value, in seconds, for the
+   session. Impala automatically cancels queries that sit idle for longer
+   than the timeout value specified. QUERY_TIMEOUT_S must be smaller than
+   or equal to the --idle_query_timeout value if the
+   --idle_query_timeoutstartup option is set.
+SET QUERY_TIMEOUT_S=seconds;
+
+Functions
+
+   The following table lists new functions with their descriptions and
+   syntax:
+   Function Description Syntax
+   APPX_MEDIAN()
+
+   An aggregate function that uses sampling to produce an estimate for the
+   median value of a column. This function returns a value that is
+   approximately the median (midpoint) of values in the set of input
+   values. The input type must support less-than and greater-than
+   comparison operators.
+
+   Return type: Same as the input value, except for CHAR and VARCHAR
+   arguments which produce a STRING result
+   The return value is always the same as one of the input values, not an
+   "in-between" value produced by averaging.
+APPX_MEDIAN([DISTINCT | ALL] expression)
+
+   CURRENT_DATABASE() Utility function that returns the database that the
+   session is currently using. Returnsdefault if no database was selected
+   or the database that the session switched to with the USE statement or
+   the
+impalad-d
+
+   option. Return type: string
+CURRENT_DATABASE()
+
+   DATE_PART() A new date and time function, similar to EXTRACT(), but
+   with the order of the arguments reversed. You can also call the
+   EXTRACT() function using the SQL-99 syntax, EXTRACT(unit FROM
+   timestamp). These enhancements simplify the porting process for
+   date-related code from other systems. Return type: int
+DATE_PART(string,timestamp)
+
+   DECODE()
+
+   A function that compares an expression to one or more possible values
+   and returns a corresponding result when a match is found.
+
+   This function works as a shorthand for a CASE() expression and improves
+   compatibility with SQL code containing vendor extensions.
+   Return type: Same as the initial argument value, except that integer
+   values are promoted to BIGINT and floating-point values are promoted to
+   DOUBLE; use CAST() when inserting into a smaller numeric column.
+decode(type expression, type search1, type result1 [, type search2, type result2
+...] [, type default] )
+
+   isfalse(), isnotfalse(), isnottrue(), istrue(), nonnullvalue(),
+   nullvalue() These conditional functions provide enhanced compatibility
+   when porting code that uses industry extensions.
+   mod() This function returns the modulus of a number. MOD is equivalent
+   to using the % arithmetic operator. It works with any size integer
+   type, any size floating-point type, and DECIMAL with any precision and
+   scale. Return type: Same as the input value.
+mod(numeric_type a, same_type b)
+
+   NDV() This aggregate function now returns DOUBLE results rather than
+   STRING. Prior to 2.2.0, you had to CAST() the result to a numeric type
+   before using the function in arithmetic operations.
+NDV([DISTINCT | ALL] expression)
+
+   STDDEV(), STDDEV_POP(), STDDEV_SAMP() These aggregate functions now
+   return DOUBLE results rather than STRING. Prior to 2.2.0, you had to
+   CAST() the result to a numeric type before using the function in
+   arithmetic operations.
+{ STDDEV | STDDEV_SAMP | STDDEV_POP }([DISTINCT | ALL] expression)
+
+   VARIANCE(), VARIANCE_POP(), VARIANCE_SAMP() These aggregate functions
+   now return DOUBLE results rather than STRING. Prior to 2.2.0, you had
+   to CAST() the result to a numeric type before using the function in
+   arithmetic operations.VAR_SAMP() and VAR_POP() are aliases for the
+   existing VARIANCE_SAMP() and VARIANCE_POP() functions.
+{ VARIANCE | VAR[IANCE]_SAMP | VAR[IANCE]_POP } ([DISTINCT | ALL] expression)
+
+Statements
+
+   The following table lists new or improved statements with their
+   descriptions and syntax:
+   Statement Description Syntax
+   COMPUTE|DROP INCREMENTAL STATS This statement collects or drops
+   statistics for individual partitions in a partitioned table instead of
+   processing the entire table for each COMPUTE STATS statement. Use the
+   COMPUTE STATS statement for non-partitioned tables or partitioned
+   tables that are unchanging or have content that is entirely replaced.
+COMPUTE|DROP INCREMENTAL STATS [db_name.]table_name [PARTITION (partition_spec)]
+ partition_spec ::= partition_col=constant_value
+
+   CREATE ROLE This statement creates a role. You can grant privileges to
+   roles and then assign roles to users. A user can only exercise the
+   privileges associated with a particular role. Only users that have
+   administrative privileges can create/drop roles. By default, the hive,
+   impala and hue users have administrative privileges in Sentry.
+CREATEROLErole_name
+
+   DROP ROLE This statement removes a role from the metastore database.
+   When you drop a role, the role is revoked from all users to whom it was
+   previously assigned, and all privileges granted to that role are
+   revoked. In progress queries are not affected. Impala verifies the role
+   information approximately every 60 seconds.
+DROPROLErole_name
+
+   GRANT
+
+   This statement grants roles or privileges on specified objects to
+   groups. The object name is typically an identifier. For URIs, it is a
+   string literal.
+
+   Only administrative users (initially, a predefined set of users
+   specified in the Sentry service configuration file) can use this
+   statement.
+
+   The WITH GRANT OPTION clause allows members of the specified role to
+   issue GRANT and REVOKE statements for those same privileges. If a role
+   has the ALL privilege on a database and the WITH GRANTOPTION set, users
+   granted that role can execute GRANT/REVOKE statements only for that
+   database or child tables of the database. This means a user could
+   revoke the privileges of the user that provided them theGRANT OPTION.
+
+   You cannot revoke the WITH GRANT OPTION from a privilege that was
+   previously granted to a role. To remove the WITH GRANT OPTION, revoke
+   the privilege and grant it again without the WITHGRANT OPTION flag.
+GRANT ROLE role_name TO GROUP group_name
+
+GRANT privilege ON object_type object_name
+TO [ROLE] roleName
+[WITH GRANT OPTION]
+
+privilege ::= SELECT | INSERT | ALL
+object_type ::= TABLE | DATABASE | SERVER | URI
+
+   REVOKE This statement revokes roles or privileges on a specified object
+   from groups. The object name is typically an identifier. For URIs, it
+   is a string literal. Only administrative users (those with ALL
+   privileges on the server, defined in the Sentry policy file) can use
+   this statement. The revocation has a cascading effect. For example,
+   revoking the ALL privilege on a database also revokes the same
+   privilege for all the tables in that database.
+REVOKE ROLE role_name FROM GROUP group_name
+
+REVOKE privilege ON object_type object_name
+FROM [ROLE] role_name
+privilege ::= SELECT | INSERT | ALL
+object_type ::= TABLE | DATABASE | SERVER | URI
+
+   SHOW FILES This statement displays the files that constitute a
+   specified table or a partition within a partitioned table. Results
+   include the names of the files, file sizes, and the applicable
+   partition for a partitioned table. The size includes a suffix of B for
+   bytes, MB for megabytes, and GB for gigabytes. SHOW FILES applies to
+   tables and partitions stored on MapR-FS or S3. It does not apply to
+   views or tables mapped to HBase. HBase does not use the same file-based
+   storage layout.
+SHOW FILES IN table
+
+   SHOW GRANT ROLE This statement lists all the grants for the given role
+   name. This statement is only allowed for Sentry administrative users
+   and other users that have been granted the specified role. This syntax
+   is available when you are using the Sentry authorization framework
+   along with the Sentry service. It does not apply when you use the
+   Sentry framework with privileges defined in a policy file. When
+   authorization is enabled, the output of the SHOW statement is limited
+   to those objects for which you have some privilege, though there might
+   be other concealed database and tables.
+SHOWGRANTROLErole_name
+
+   SHOW ROLES This statement displays roles. This syntax is available when
+   you are using Sentry authorization with the Sentry service. It does not
+   apply when you use the Sentry framework with privileges defined in a
+   policy file. When authorization is enabled, the output of the SHOW
+   statement is limited to those objects for which you have some
+   privilege, though there might be other concealed database and tables.
+SHOW ROLES
+
+   SHOW ROLEGRANT GROUP This statement lists all the grants for the given
+   group. This statement is only allowed for Sentry administrative users
+   and other users that have been granted the specified role. This syntax
+   is available when you are using the Sentry authorization framework
+   along with the Sentry service. It does not apply when you use the
+   Sentry framework with privileges defined in a policy file. When
+   authorization is enabled, the output of the SHOW statement is limited
+   to those objects for which you have some privilege, though there might
+   be other concealed database and tables.
+SHOWROLEGRANT GROUP group_name
+
+Data Types
+
+   The following table lists new or improved data types with their
+   descriptions:
+   Data Type Description
+   Complex Impala can run queries against Parquet data containing columns
+   with composite or nested data types.
+   CHAR A fixed-length character type, padded with trailing spaces if
+   necessary to achieve the specified length. If values are longer than
+   the specified length, Impala truncates any trailing characters. The
+   maximum length you can specify is 255. Provides enhanced support for
+   CHARin the COMPUTE STATS statement.
+   VARCHAR A variable-length character type, truncated during processing
+   if necessary to fit within the specified length. Short values are
+   padded with spaces on the right. The maximum length you can specify is
+   65,535. Provides enhanced support for VARCHAR types in the COMPUTE
+   STATS statement.
+
+Clauses and Operators
+
+   The following table lists new or improved clauses and operators with
+   descriptions and syntax:
+   Feature Description Syntax
+   [NOT] EXISTS The EXISTS operator checks if a subquery returns any
+   results. The NOT EXISTS operator finds values in a table that do not
+   correspond to values in another table. You can use either of these
+   operators in the WHERE clause of a subquery. Correlated subqueries used
+   in the EXISTS operator cannot include a LIMIT clause.
+[NOT]EXISTS (subquery)
+
+   [NOT] IN The IN operator compares an argument value to a set of values.
+   If an argument value matches any value in a set, the result is TRUE.
+   The NOT IN operator checks if the argument value is not part of a set
+   of values. Correlated subqueries used in the IN operator cannot include
+   a LIMIT clause.
+expression [NOT] IN (expression [,
+                  expression])
+
+expression [NOT] IN (subquery)
+
+   LEFT|RIGHT ANTI JOIN These clauses return results from one table that
+   has no match in another table. The LEFT ANTI JOIN clause returns those
+   values from the left-hand table that have no matching value in the
+   right-hand table. RIGHT ANTI JOIN reverses the comparison and returns
+   values from the right-hand table.
+SELECT select_list FROM
+
+table_or_subquery1 {LEFT | RIGHT} ANTI JOIN table_or_subquery2 |
+
+[ ON col1 = col2 [AND col3 = col4 ...] |
+
+USING (col1 [, col2 ...]) ]
+
+[other_join_clause ...]
+
+[ WHERE where_clauses ]
+
+Hint
+
+   The Impala SQL dialect supports query hints to fine-tune the inner
+   workings of queries. You can specify hints as a temporary workaround
+   for expensive queries where missing statistics or other factors cause
+   inefficient performance.
+
+   Insert + immediately before a hint name to include hints inside
+   comments that use /* */ or – notation.
+
+   Example:
+INSERT insert_clauses
+/* +SHUFFLE|NOSHUFFLE */
+SELECT remainder_of_query;
+INSERT insert_clauses
+-- +SHUFFLE|NOSHUFFLE
+SELECT remainder_of_query;
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Impala/spill_to_disk.html#spill_to_disk

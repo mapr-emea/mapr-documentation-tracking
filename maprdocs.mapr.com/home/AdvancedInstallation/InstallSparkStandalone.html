@@ -1,0 +1,82 @@
+Installing Spark Standalone
+
+   This topic includes instructions for using package managers to download
+   and install Spark Standalone from the MEP repository.
+   For instructions on setting up the MEP repository, see [1]Step 10:
+   Install Ecosystem Components Manually.
+   Spark is distributed as four separate packages:
+   Package Description
+   mapr-spark Install this package on Spark worker nodes. This package is
+   dependent on the mapr-client package.
+   mapr-spark-master Install this package on Spark master nodes. Spark
+   master nodes must be able to communicate with Spark worker nodes over
+   SSH without using passwords. This package is dependent on the
+   mapr-spark and the mapr-core packages.
+   mapr-spark-historyserver Install this optional package on Spark History
+   Server nodes. This package is dependent on the mapr-spark and mapr-core
+   packages.
+
+   mapr-spark-thriftserver
+
+   Install this optional package on Spark Thrift Server nodes. This
+   package is available starting in the MEP 4.0 release. It is dependent
+   on the mapr‍-‍spark and mapr‍-‍core packages.
+   Run the following commands as root or using sudo.
+    1. Create the /apps/spark directory on MapR-FS, and set the correct
+       permissions on the directory.
+hadoop fs -mkdir /apps/spark
+hadoop fs -chmod 777 /apps/spark
+    2. Use the appropriate commands for your operating system to install
+       Spark.
+
+        On CentOS / RedHat
+
+yum install mapr-spark mapr-spark-master mapr-spark-historyserver mapr-spark-thr
+iftserver
+
+        On Ubuntu
+
+apt-get install mapr-spark mapr-spark-master mapr-spark-historyserver mapr-spark
+-thriftserver
+
+        On SUSE
+
+zypper install mapr-spark mapr-spark-master mapr-spark-historyserver mapr-spark-
+thriftserver
+
+       Note: The mapr-spark-historyserver and mapr-spark-thriftserver
+       packages are optional.
+       Spark is installed into the /opt/mapr/spark directory.
+    3. Copy the /opt/mapr/spark/spark-<version>/conf/slaves.template into
+       /opt/mapr/spark/spark-<version>/conf/slaves, and add the hostnames
+       of the Spark worker nodes. Put one worker node hostname on each
+       line. For example:
+localhost
+worker-node-1
+worker-node-2
+    4. Set up [2]passwordless ssh for the mapr user such that the Spark
+       master node has access to all slave nodes defined in the
+       conf/slaves file.
+    5. As the mapr user, start the worker nodes by running the following
+       command in the master node. Since the Master daemon is managed by
+       the Warden daemon, do not use the start-all.sh or stop-all.sh
+       command.
+/opt/mapr/spark/spark-<version>/sbin/start-slaves.sh
+    6. If you want to integrate Spark with MapR-ES, install the Streams
+       Client on each Spark node:
+          + On Ubuntu:
+ apt-get install mapr-kafka
+          + On RedHat/CentOS:
+yum install mapr-kafka
+    7. If you want to use a Streaming Producer, add the
+       spark-streaming-kafka-producer_2.11.jar from the MapR Maven
+       repository to the Spark classpath
+       (/opt/mapr/spark/spar-<versions>/jars/).
+    8. After installing Spark Standalone and before running your Spark
+       jobs, follow the steps outlined at [3]Configuring Spark Standalone.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/InstallingEcoWithoutInstaller.html#concept_gtv_mp4_2w
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/PreparingEachNode-connectivity.html#PreparingEachNode-connectivity
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ConfigureSparkStandalone.html#ConfigureSparkStandalone

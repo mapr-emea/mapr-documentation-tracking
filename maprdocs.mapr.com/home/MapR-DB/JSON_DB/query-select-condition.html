@@ -1,0 +1,105 @@
+Querying with Select and Conditions
+
+   The examples in this section query a document store and return specific
+   fields from documents that have specific conditions.
+
+   For more information about how to specify query conditions in OJAI, see
+   [1]Query Conditions in OJAI Applications.
+   Note: You can improve the peformance of queries with conditions by
+   using secondary indexes. See [2]Queries that Benefit from Secondary
+   Indexes for more details.
+     * [3]Java
+     * [4]dbshell
+
+   The following example shows how to return the name, address.zipCode,
+   age, and phoneNumber fields from documents that have address.zipCode
+   equal to 95196. It uses the [5]Query.select and [6]Query.where methods,
+   specifying the query condition as a JSON string.
+/**
+ * Copyright (c) 2017 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.mapr.ojai.examples;
+
+import org.ojai.Document;
+import org.ojai.DocumentStream;
+import org.ojai.store.Connection;
+import org.ojai.store.DocumentStore;
+import org.ojai.store.DriverManager;
+import org.ojai.store.Query;
+
+public class OJAI_009_FindQueryWithSelectAndCondition {
+
+  public static void main(final String[] args) {
+
+    System.out.println("==== Start Application ===");
+
+
+    // Create an OJAI connection to MapR cluster
+    final Connection connection = DriverManager.getConnection("ojai:mapr:");
+
+    // Get an instance of OJAI DocumentStore
+    final DocumentStore store = connection.getStore("/demo_table");
+
+    // Build an OJAI query with the condition specified as a JSON string
+    final Query query = connection.newQuery()
+        .select("name", "address.zipCode").select("age").select("phoneNumbers[0]
+")
+        .where("{\"$eq\": {\"address.zipCode\": 95196}}")
+        .build();
+
+    // fetch all OJAI Documents from this store
+    final DocumentStream stream = store.findQuery(query);
+
+    for (final Document userDocument : stream) {
+      // Print the OJAI Document
+      System.out.println(userDocument.asJsonString());
+    }
+
+    // Close this instance of OJAI DocumentStore
+    store.close();
+
+    // close the OJAI connection and release any resources held by the connectio
+n
+    connection.close();
+
+    System.out.println("==== End Application ===");
+  }
+
+}
+
+   The following two dbshell commands are equivalent to the code example.
+   See [7]dbshell find or findbyid for more details about the syntax
+   dbshell provides.
+find /demo_table --query {
+   "$select":["name","address.zipCode","age","phoneNumber[0]"],
+   "$where":{"$eq":{"address.zipCode":95196}}
+}
+
+find /demo_table
+   --fields name,address.zipCode,age,phoneNumber[0]
+   --where {"$eq":{"address.zipCode":95196}}
+
+   Note: The commands are shown split across multiple lines for
+   readability. When using dbshell, you must enter them in a single line.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQueryConditions.html#OJAIQueryConditions
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-types.html#concept_u1y_r3n_p1b
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect1
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect2
+   5. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+   6. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-find-findbyid.html

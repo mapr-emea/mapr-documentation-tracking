@@ -1,0 +1,40 @@
+Example: Create an ORC file in MapR-FS by Storing the Data in a Hive table
+and Uploading it to Pig
+
+   You can create an ORC format file in MapR-FS by using Hive to load a
+   text file into a table with ORC storage. Then, you can upload the
+   resulting ORC format file to Pig.
+    1. Create a sample test data file:
+cd /home/mapr
+nano test_pig.data
+chown mapr:mapr test_pig.data
+    2. Add data to the file.
+John,Smith
+Brian,May
+Rodger,Taylor
+John,Deacon
+Max,Plank
+Freddie,Mercury
+Albert,Einstein
+Fedor,Dostoevsky
+Lev,Tolstoy
+Niccolo,Paganini
+       Note: Do not include any extra lines at the end of the file.
+    3. Upload the test data to a Hive table:
+sudo -u mapr hive
+hive> create table test_pig(first_name string, last_name string) ROW FORMAT DELI
+MITED FIELDS TERMINATED BY ',';
+hive> load data local inpath '/home/mapr/test_pig.data' overwrite into table tes
+t_pig;
+    4. Create a Hive table with ORC storage:
+hive> create table test_pig_orc(first_name string, last_name string) stored as o
+rc tblproperties ("orc.compress"="NONE");
+hive> insert overwrite table test_pig_orc select * from test_pig;
+hive> select * from test_pig_orc;
+    5. Check that the ORC file was created:
+hadoop fs -ls /user/hive/warehouse/test_pig_orc
+    6. Upload the ORC file to Pig:
+sudo -u mapr pig
+grunt> B = load '/user/hive/warehouse/test_pig_orc/000000_0'
+using OrcStorage();
+grunt> dump B;

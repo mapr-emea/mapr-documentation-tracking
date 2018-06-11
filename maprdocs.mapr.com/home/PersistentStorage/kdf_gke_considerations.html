@@ -1,0 +1,87 @@
+Google Kubernetes Engine (GKE) Considerations
+
+   To create a [1]Google Kubernetes Engine (GKE) cluster, you must use
+   Ubuntu node images instead of CentOS.
+   The high-level installation steps are as follows:
+    1. Create a cluster with Ubuntu nodes.
+    2. Follow the steps later on this page to create a PodSecurityPolicy
+       (PSP).
+    3. Install the namespace, as described in [2]Installing the MapR Data
+       Fabric for Kubernetes.
+    4. Install the PSP.
+    5. Install the RBAC file, as described in [3]Installing the MapR Data
+       Fabric for Kubernetes.
+    6. Modify the service location in the plug-in, as described later on
+       this page.
+    7. Install the kdf-plugin-gke.yaml, as described in [4]Installing the
+       MapR Data Fabric for Kubernetes
+    8. Install the provisioner, as described in [5]Installing the MapR
+       Data Fabric for Kubernetes
+
+Creating a PSP
+
+   GKE turns on PodSecurityPolicies by default. This means that you must
+   create Role-Based Access Control (RBAC) and PodSecurityPolicies for
+   both the plug-in and any containers that call the plug-in. Before you
+   can edit RBAC and PSPs in GKE, you have to give your kubectl id
+   sufficient permissions. Assuming you have already logged into Google
+   Cloud and connected your cluster to kubectl, you need to execute the
+   following command:
+gcloud info | grep Account
+
+   The command returns an email address. Copy the email address into the
+   following command:
+kubectl create clusterrolebinding yourname-cluster-admin-binding --clusterrole=c
+luster-admin --user=myname@example.org
+
+   If this command is successful, you will have permissions to create a
+   Pod security policy. Here is an example of a PSP. It is recommended
+   that you adapt this PSP to the security best practices of your
+   organization:
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: mapr-kdf-psp
+spec:
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+    - 'hostPath'
+    - 'flexVolume'
+  allowedHostPaths:
+    - pathPrefix: "/opt"
+    - pathPrefix: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+    - pathPrefix: "/etc/kubernetes"
+    - pathPrefix: "/etc/localtime"
+  allowedFlexVolumes:
+    - driver: mapr.com/maprfs
+  runAsUser:
+    rule: 'RunAsAny'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+
+Nonstandard FlexVolume Path and Service Location
+
+   GKE uses a non-standard FlexVolume path: /home/kubernetes/flexvolume.
+   This path has already been changed in kdf-plugin-gke.yaml. However, you
+   must set the KUBERNETES_SERVICE_LOCATION for GKE. To do this, you must
+   edit the kdf-plugin-gke.yaml file to specify the service location. You
+   can find the correct value by connecting to your GKE cluster using the
+   kubectl interface. Use the kubectl config view command, and find the
+   server name and port for the current context.
+
+References
+
+   1. https://cloud.google.com/kubernetes-engine/
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_installation.html#concept_ogr_sxc_qcb
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_installation.html#concept_ogr_sxc_qcb
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_installation.html#concept_ogr_sxc_qcb
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_installation.html#concept_ogr_sxc_qcb

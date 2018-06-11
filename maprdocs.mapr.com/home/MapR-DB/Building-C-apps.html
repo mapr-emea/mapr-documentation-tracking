@@ -1,0 +1,54 @@
+Building and Launching C Applications
+
+   This topic describes basic setup for building and launching C
+   application using the MapR libMapRClient C API library
+
+Prerequisites
+
+   The MapR-DB libMapRClient C API library is MapR's extension of the
+   libhbase C API library). The libMapRClient header files are in this
+   directory: /opt/mapr/include/hbase
+     * Verify that the mapr-client package is installed on the node. The
+       mapr-client package must be installed on each node that builds an
+       application. The libMapRClient header files are in this directory:
+       /opt/mapr/include/hbase.
+     * Verify that both the libMapRClient library and libjvm shared
+       libraries are in the application’s library search path.
+
+Building Applications
+
+   When building applications that use libMapRClient, run this command:
+gcc -o <application_name> <source_file> -I/opt/mapr/include/hbase -L/opt/mapr/li
+b/ -lMapRClient -L/usr/lib/jvm/java-7-sun/jre/lib/amd64/server -ljvm
+
+   For example, the following command builds the hello_hbase application
+   with the hello_hbase.c source code:
+gcc -o hello_hbase hello_hbase.c -I/opt/mapr/include/hbase -L/opt/mapr/lib/ -lMa
+pRClient -L/usr/lib/jvm/java-7-sun/jre/lib/amd64/server -ljvm
+
+   Note:
+     * The compiled libMapRClient is statically linked to the following
+       third-party libraries: Crypto++: libcryptoapp.a (v5.6.2)Protobuf:
+       libprotobuf-lite.a (v2.5.0)
+     * The libMapRClient library has dependencies on libjvm, though a JVM
+       is not instantiated. In general, the libjvm library is located
+       within the JDK/JRE installation directory.
+
+Launching Applications
+
+   Before launching an application, set this value for the environment
+   variable LD_LIBRARY_PATH:
+/opt/mapr/lib:/usr/lib/jvm/java-6-openjdk-amd64/jre/lib/amd64/server
+
+   If the client is on Windows, append the following directories to the
+   PATH environment variable:
+     * $MAPR_HOME/lib
+     * $JAVA_HOME/bin/server
+
+   If the application uses the hb_connection_create_as_user API for
+   impersonation, set the MAPR_IMPERSONATION_ENABLED environment variable
+   to true.
+
+What To Do Next
+
+   Launch the application!

@@ -1,0 +1,171 @@
+Installing Drill
+
+   This topic provides instructions for using package managers to download
+   and install Drill.
+
+   You can install and run Drill on any number of nodes in your MapR
+   cluster. You can install Drill to run under the Warden service or under
+   YARN. Starting in MapR 6.0 and Drill 1.11, Drill is secured by default
+   when you install Drill on a secure MapR 6.x cluster.
+
+   MapR Default Security Configuration
+   As of Drill 1.11, Drill is automatically secured when you install Drill
+   in a 6.x MapR cluster that was installed with the default MapR security
+   configuration. The default security configuration uses MapR-SASL (mapr
+   tickets) to provide authentication, authorization, and encryption for
+   cluster security.
+   Note: You can install Drill 1.11 and later on clusters running MapR
+   6.x.
+   Note: The default security configuration does not support
+   Drill-on-YARN.
+   The default MapR security configuration is not required. You can
+   install Drill and configure custom security, or turn security off after
+   installing with the default security configuration. See the Drill
+   Installation Security Scenarios section below for more information. See
+   [1]Securing Drill.
+
+   Installing Drill Under Warden or YARN
+
+   You can install and run Drill under Warden or you can install and run
+   Drill under YARN. If you are currently running Drill under Warden, you
+   can upgrade Drill and continue to run Drill under Warden, or you can
+   migrate Drill to run under YARN. See [2]Migrate Drill to Run Under YARN
+   for instructions.
+
+   When Warden manages the Drill cluster, you can use the MapR Control
+   System for monitoring. [3]YARN (Yet Another Resource Negotiator) is a
+   cluster management tool that automates the resource sharing process in
+   a cluster. When you launch Drill under YARN, YARN deploys (localizes)
+   Drill onto each node. You can monitor the Drill cluster using the
+   Drill-on-YARN Application Master web UI.
+
+Drill Packages
+
+   You can use package managers to manually install the appropriate Drill
+   package. The Drill packages provide the software needed to run Drill.
+   In previous versions of Drill, MapR provided only the mapr-drill
+   package. As of Drill 1.8, with the introduction of Drill-on-YARN, MapR
+   also provides the mapr-drill-yarn package.
+
+   Drill includes the Drill daemon, the core Drillbit service that runs on
+   a node. Each node running the Drillbit service can receive, plan, and
+   execute queries sent from a client. The software also includes the
+   drill-shell command line interface, a pure-Java console-based utility,
+   for connecting to a Drill cluster and executing SQL commands.
+
+   The following sections list the Drill packages and their descriptions:
+
+   mapr-drill
+          The mapr-drill package is required to run Drill under the MapR
+          Warden service. This package installs or upgrades the Drill
+          software in /opt/mapr/drill and integrates Drill with the MapR
+          Warden service. You install this package on all nodes designated
+          to run Drill.
+
+          Note: Verify that you get both the mapr-drill and
+          mapr-drill-internal packages, especially if you install or
+          upgrade through the URL or download through the MapR
+          repositories. Also, verify that the packages have the same
+          version. For example, if you install Drill 1.13, both packages
+          should be version 1.13.
+
+   mapr-drill-yarn
+          The mapr-drill-yarn package is required to run Drill under YARN.
+          This package installs the Drill software in /opt/mapr/drill. You
+          install this package on the node that you designate as the
+          Drill-on-YARN client. See [4]Install Drill to Run Under YARN for
+          details. YARN deploys Drill to every node included in the Drill
+          cluster. Installing this package on every node is not required.
+          Note: If any users need to access SQLLine, you must install the
+          mapr-drill-yarn package on every node where users expect access
+          to SQLLine.
+
+Drill and Query Services
+
+   To use the optional [5]OJAI Distributed Query Service, you must install
+   Drill and configure and register the service. See [6]Configure the OJAI
+   Distributed Query Service.
+
+Drill Installation Security Scenarios
+
+   The following sections describe some manual installation scenarios for
+   Drill with information about security configuration:
+
+   Installing or Upgrading Drill
+
+   You can install Drill on a MapR cluster with or without default
+   security. After you install the Drill package, you must run the
+   configuration script, [7]configure.sh -R, to configure the Drill
+   service on the nodes. When you run the configuration script, the script
+   recognizes whether your MapR cluster is using the default security or
+   not, and configures Drill accordingly.
+   In a secure cluster, an internal Drill configuration script
+   automatically adds the security configuration to the drill-distrib.conf
+   and distrib-env.sh files. See [8]Securing Drill.
+   Note: You can override these default security settings in the
+   drill-override.conf file, but doing so is not recommended or supported.
+
+   If your cluster is not using the default security, the internal Drill
+   configuration script does not configure any security for Drill.
+   Instead, it copies [9]warden.drill-bits.conf to the conf.d directory.
+
+   Installing Drill with MapR and Configuring Custom Security
+   If you install MapR and Drill, and you want to manually secure the
+   cluster and Drill instead of using the default security option, you
+   must add a [10].customSecure file to the /usr/bin/touch /opt/mapr/conf/
+   directory before you run configure.sh, as shown:
+    1. Run /usr/bin/touch /opt/mapr/conf/.customSecure to add the
+       .customSecure file.
+    2. Run configure.sh -R.
+
+   The configuration script recognizes the .customSecure file which
+   indicates not to configure the default security settings. At this
+   point, you can manually configure security in drill-override.conf.
+
+   Turning Default Security On|Off After You Install Drill
+
+   If you installed Drill on a MapR cluster with the default security
+   option enabled, you can disable it. Likewise, if you did not enable the
+   default security option, you can enable it. When you enable or disable
+   the default security option, security is applied or removed across the
+   cluster.
+
+   For example, if your cluster is not secure and you enable the default
+   security option, the entire MapR cluster is secured, as well as all
+   supported ecosystem components, including Drill.
+   In such a scenario, you must run the [11]configure.sh script with the
+   -secure or -unsecure and -forceSecurityDefaults flags to update the
+   configuration of the nodes and apply or remove security across the
+   cluster, as shown:
+/opt/mapr/server/configure.sh -forceSecurityDefaults [ -unsecure | -secure ]
+ -C <CLDB_node> -Z <ZK_node>
+
+   The configuration script communicates with internal ecosystem scripts
+   to automatically configure or remove security across the cluster.
+
+Component and System Compatibility Matrix
+
+   See the [12]Interoperability Matrix pages for information about the
+   compatibility of Drill with operating systems and ecosystem projects.
+
+Drill Storage and Format Plug-in Support Matrix
+
+   See the [13]Drill Storage and Format Plugin Support Matrix page for a
+   list of supported and unsupported data sources and formats in Drill on
+   MapR.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/securing_drill.html#securing_drill
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/migrate_drill_to_yarn.html#run_drill_as_a_yarn_application
+   3. http://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/install_drill_to_run_under_yarn.html#install_drill_to_run_under_yarn
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/configure_query_services.html#task_gmp_tmg_2bb
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/securing_drill.html#securing_drill
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/wardenservicename.conf.html#wardenservicename.conf
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+  12. http://maprdocs.mapr.com/home/#InteropMatrix/c_matrix_intro.html
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill_storage_and_format_plugin_support_matrix.html#drill_storage_and_format_plugin_support_matrix

@@ -1,0 +1,43 @@
+Configure Kerberos for HBase Thrift 1 Gateway
+
+    1. Add the following to the hbase-site.xml file for every Thrift
+       gateway:
+<property>
+    <name>hbase.thrift.keytab.file</name>
+    <value>/etc/hbase/conf/hbase.keytab</value>
+</property>
+<property>
+    <name>hbase.thrift.kerberos.principal</name>
+    <value>$USER/_HOST@HADOOP.LOCALDOMAIN</value>
+    <!-- TODO: This may need to be HTTP/_HOST@<REALM> and _HOST may not work. Yo
+u may have to put the concrete full hostname. -->
+</property>
+<!-- Add these if you need to configure a different DNS interface from the defau
+lt -->
+<property>
+    <name>hbase.thrift.dns.interface</name>
+    <value>default</value>
+</property>
+<property>
+    <name>hbase.thrift.dns.nameserver</name>
+    <value>default</value>
+</property>
+       Substitute the appropriate credential and keytab for $USER and
+       $KEYTAB respectively.
+    2. In order to use the Thrift API principal to interact with HBase, it
+       is also necessary to add the hbase.thrift.kerberos.principal to the
+       acl table. For example, to give the Thrift API principal,
+       thrift_server, administrative access, a command such as this one
+       will suffice:
+grant 'thrift_server', 'RWCA'
+
+   For more information about [1]Access Control Labels (ACLs).
+
+   The Thrift gateway will authenticate with HBase using the supplied
+   credential. No authentication will be performed by the Thrift gateway
+   itself. All client access via the Thrift gateway will use the Thrift
+   gateway’s credential and have its privilege.
+
+References
+
+   1. http://hbase.apache.org/book.html#hbase.accesscontrol.configuration

@@ -1,0 +1,76 @@
+Configure Sentry to use Database Storage
+
+   As of Sentry 1.6, the database storage model is the preferred method
+   for storing privileges and roles. When you configure Sentry to use the
+   database storage model, it also includes a service that is managed by
+   Warden.
+   The following databases can be used to store privileges and roles:
+   MySQL, Oracle, Postgres, DB2 and Derby. Examples in the following
+   procedure use MySQL as the database type.
+   Note: When you install Sentry with the MapR Installer and you specify
+   MySQL as the database for Sentry, the MapR Installer performs the
+   following configurations.
+    1. Create a database for Sentry.
+       For example, run the following commands to create a MySQL database:
+mysql> create database sentry_store;
+                        mysql> use sentry_store;
+                        mysql> create user 'sentry'@'hostname' identified by 'se
+ntry';
+                        mysql> create user 'sentry'@'localhost' identified by 's
+entry';
+                        mysql> grant all on *.* to 'sentry'@localhost identified
+ by 'sentry';
+                        mysql> flush privileges;
+    2. In /opt/mapr/sentry/sentry-<version>/conf/sentry-site.xml, update
+       the value of the following property:
+
+                 Property           Configuration
+       sentry.hive.provider.backend
+
+   Set the value to org.apache.sentry.provider.db.SimpleDBProviderBackend
+       For example:
+<property>
+                            <name>sentry.hive.provider.backend</name>
+                            <value>org.apache.sentry.provider.db.SimpleDBProvide
+rBackend</value>
+                            <description> Options: {org.apache.sentry.provider.d
+b.SimpleDBProviderBackend, org.apache.sentry.provider.file.SimpleFileProviderBac
+kend}Privilege provider to be used, we support file based or db based  </descrip
+tion>
+                            </property>
+    3. In the sentry-site.xml file
+       (/opt/mapr/sentry/sentry-<version>/conf/sentry-site.xml), add the
+       following properties:
+
+                Property                        Configuration
+       sentry.store.jdbc.url      Set the value to the JDBC connection URL.
+       sentry.store.jdbc.driver   Set the value to the Backend JDBC driver.
+       sentry.store.jdbc.user     Set the value to the JDBC user name.
+       sentry.store.jdbc.password Set the value to the JDBC password.
+       For example:
+<property>
+                        <name>sentry.store.jdbc.url</name>
+                        <value>jdbc:mysql://localhost/sentry_store</value>
+                        </property>
+
+                        <property>
+                        <name>sentry.store.jdbc.driver</name>
+                        <value>com.mysql.jdbc.Driver</value>
+                        </property>
+
+                        <property>
+                        <name>sentry.store.jdbc.user</name>
+                        <value>sentry</value>
+                        </property>
+
+                        <property>
+                        <name>sentry.store.jdbc.password</name>
+                        <value>sentry</value>
+                        </property>
+    4. Initialize the database schema.
+/opt/mapr/sentry/sentry-<version>/bin/sentry --command schema-tool --conffile
+                        /opt/mapr/sentry/sentry-<version>/conf/sentry-site.xml -
+-dbType mysql --initSchema
+    5. To add Sentry to the list of services that the Warden monitors,
+       copy /opt/mapr/sentry/sentry-<version>/conf.d/warden.sentry.conf to
+       /opt/mapr/conf/conf.d.

@@ -1,0 +1,25 @@
+Configure MapR-SASL for Sqoop2
+
+   This section describes how to configure Sqoop2 to use MapR-SASL.
+   Starting with the MEP 4.0 release, for secure clusters, MapR-SASL is
+   automatically configured for Sqoop2 and you can skip the steps outlined
+   in this section.
+   When you configure MapR-SASL for Sqoop2, other components that
+   communicate with Sqoop, such as Hue, must also be configured to use
+   MapR-SASL. Complete the following steps on each node that runs the
+   Sqoop2 server:
+    1. Remove the # before the following properties in the Authentication
+       configuration section of the sqoop.properties file.
+       In Sqoop 1.99.6, the sqoop.properties file is in the following
+       directory: /opt/mapr/sqoop/sqoop-<version>/server/conf/. In Sqoop
+       1.99.7, the sqoop.properties file is in the following directory:
+       /opt/mapr/sqoop/sqoop-<version>/conf/.
+#org.apache.sqoop.security.authentication.type=CUSTOM
+#org.apache.sqoop.security.authentication.custom_handler=org.apache.hadoop.secur
+ity.authentication.server.MultiMechsAuthenticationHandler
+    2. Restart Sqoop2 server.
+maprcli node services -name sqoop2 -action restart -nodes <space delimited list
+of nodes>
+
+   Note: To start Sqoop2 client with MapR-SASL, run the following command:
+sudo -u mapr /opt/mapr/sqoop/sqoop-<version>/bin/sqoop.sh client --custom

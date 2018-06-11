@@ -1,0 +1,55 @@
+Running Hive Queries in Zeppelin
+
+   This section contains samples of Apache Hive queries that you can run
+   in your Apache Zeppelin notebook.
+   Before running Hive querires, make sure you have [1]configured the Hive
+   JDBC interpreter.
+    1. Using the shell interpreter, create a source data file:
+%sh
+cat > /tmp/test.data << EOF
+John,Smith
+Brian,May
+Rodger,Taylor
+John,Deacon
+Max,Plank
+Freddie,Mercury
+Albert,Einstein
+Fedor,Dostoevsky
+Lev,Tolstoy
+Niccolo,Paganini
+EOF
+    2. Copy the file to MapR-FS:
+          + [2]POSIX
+          + [3]Hadoop
+       To use POSIX shell comamnds like cp, you must have a [4]MapR-FS
+       mount point in your container. The example below assumes your mount
+       point is /mapr and your cluster name is my.cluster.com:
+%sh
+cp /tmp/test.data /mapr/my.cluster.com/user/mapruser1
+%sh
+hadoop fs -put /tmp/test.data /user/mapruser1
+    3. Run the Hive code using the Hive JDBC interpreter:
+%hive
+-- create and load Hive table
+create table test_hive(first_name string, last_name string) ROW FORMAT DELIMITED
+ FIELDS TERMINATED BY ',';
+load data inpath '/user/mapruser1/test.data' overwrite into table test_hive;
+-- create and load Hive ORC table
+create table test_hive_orc(first_name string, last_name string) stored as orc tb
+lproperties ("orc.compress"="NONE");
+insert overwrite table test_hive_orc  select * from test_hive;
+-- query the Hive ORC table
+select * from test_hive_orc;
+       The output looks like the following:
+       [ZeppelinHiveExample.png]
+    4. Drop the Hive tables created in the example:
+%hive
+drop table test_hive;
+drop table test_hive_orc;
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Zeppelin/ConfigureJDBCInterpreter.html#concept_b5l_xdk_qbb__section_a5z_d2k_qbb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Zeppelin/ZeppelinHive.html#div1entry1
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Zeppelin/ZeppelinHive.html#div1entry2
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_i4r_5c2_rbb

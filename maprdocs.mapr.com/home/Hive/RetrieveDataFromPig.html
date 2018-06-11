@@ -1,0 +1,23 @@
+Loading and Retrieving Data from Pig
+
+   To use the HCatalog library HCatLoader and HCatStorer to load and
+   retrieve data from Pig:
+    1. Create a table with the hcat utility.
+hcat -e "create table hcatpig(key int, value string)"
+    2. Verify that the table and table definition both exist.
+hcat -e "describe formatted hcatpig"
+    3. Load data into the table from Pig: Copy the
+       $HIVE_HOME/examples/files/kv1.txt file into the MapRFS file system,
+       then start Pig and load the file with the following commands:
+pig -useHCatalog -Dfs.default.name=maprfs://CLDB_Host:7222/
+grunt> A = LOAD 'kv1.txt' using PigStorage('\u0001') AS(key:INT, value:chararray
+);
+grunt> STORE A INTO 'hcatpig' USING org.apache.hive.hcatalog.pig.HCatStorer();
+    4. Retrieve data from the hcatpig table with the following Pig
+       commands: Another way to verify that the data is loaded into the
+       hcatpig table is by looking at the contents of
+       maprfs://user/hive/warehouse/hcatpig/. HCatalog tables are also
+       accessible from the Hive CLI. All Hive queries work on HCatalog
+       tables.
+B = LOAD 'default.hcatpig' USING org.apache.hive.hcatalog.pig.HCatLoader();
+dump B; // this should display the records in kv1.txt

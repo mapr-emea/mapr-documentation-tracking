@@ -1,0 +1,51 @@
+Using Serialization with the MapR-DB OJAI Connector for Apache Spark
+
+   In the context of the MapR-DB OJAI Connector for Apache Spark,
+   serialization refers to the methods that read and write objects into
+   bytes. This section describes how to configure your application to use
+   a more efficient serializer.
+
+   The Apache Spark cluster framework requires serialization to exchange
+   objects between driver and cluster executors. This type of
+   serialization has nothing to do with the way MapR-DB serializes the
+   objects onto the disk.
+
+   Because classes used in Spark transformations or actions must be
+   serializable, classes created for the MapR-DB OJAI Connector for Apache
+   Spark are serializable.
+
+   Spark uses Java serialization by default, but it can alternatively use
+   Kyro Serialization. A new Kyro registrator is introduced so you can
+   avoid using the default Java serialization. Kyro serialization provides
+   better peformance than Java serialization.
+
+   The following example shows how to set the new Kryo registrator in
+   sparkconf:
+     * [1]Scala
+
+new sparkconf()
+   .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+   .set("spark.kryo.registrator", "com.mapr.db.spark.OJAIKryoRegistrator")
+
+   A JSON document can use both complex and primitive value types. Java
+   can serialize the primitive types, but for complex types (such as Map,
+   Array, and Binary), you must use wrappers to achieve serialization. See
+   [2]Working with Complex JSON Document Types for details about these
+   wrappers.
+
+   Time-related data types, such as ODate, OInterval, OTime, and
+   OTimeStamp, use Java serialization by default. For efficiency, new
+   serializers and comparators have been created for these data types.
+   Here are the new serializers and the type which each serializer
+   applies:
+         Serializer           Type
+   ODateSerializer         ODate type
+   OTimeSerializer         OTime
+   OTimeStampSerializer    OTimeStamp
+   OIntervalSerializer -   OInterval
+   DBBinaryValueSerializer ByteBuffer
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/UsingSerializationwithNativeSpark.html#div1entry1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/WorkingwithComplexJSONDocTypes.html#concept_phv_y3y_hz

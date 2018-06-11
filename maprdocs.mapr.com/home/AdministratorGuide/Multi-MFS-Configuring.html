@@ -1,0 +1,47 @@
+Configuring the Number of Storage Pools per Instance
+
+   As you add MapR-FS instances, MapR assigns SPs to them. If MFS
+   instances are removed, the SPs assigned to those instances are
+   reallocated among the remaining live MFS instances. By default, the
+   value is 1, which implies that there is only 1 SP for all instances.
+   You can re-configure the number of SPs per instance globally or at the
+   node-level.
+   Note: If the number of MFS instances is not as configured, the
+   [1]Instance Mismatch Alarm will be raised. If the alarm is raised on a:
+     * CLDB node, restart warden by running the following command:
+service mapr-warden restart
+     * Non-CLDB node, restart file server by running the following
+       command:
+maprcli node services -nodes <node-ip> -fileserver restart
+
+Global Configuration
+
+   If you configure globally, the configuration will be applied to all the
+   nodes in the cluster. Make the following change only on homogeneous
+   clusters (that is, when all nodes in the cluster have the same type of
+   disks and the stripe width of the disks is the same):
+    1. Run the following command:
+maprcli config save -values {multimfs.numsps.perinstance:3}
+       The default value of this parameter is 0. Suppose a node reports 9
+       SPs:
+          + For a value of 3, the node would need to start 3 instances.
+          + For a value of 5, the node would need to start 2 instances.
+       For clusters with fast SSDs, this can be set to 1.
+       Note: On AWS nodes with HDD, set the multimfs.numsps.perinstance
+       parameter value to 50 to use a single instance.
+    2. Restart Warden in every node for the configuration change to take
+       effect.
+
+Node-level Configuration
+
+   At the node level, you can configure different number of instances for
+   each node in the cluster. To change the number of SPs per instance:
+    1. Run the following command:
+maprcli node modify -nodes <nodename> -numSpsPerInstance <n>
+       The number of instances changes automatically when new SPs are
+       created.
+    2. Restart Warden on the nodes where the configuration has changed.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/NodeAlarms-InstanceMismatchAlarm.html

@@ -1,0 +1,55 @@
+Creating Custom Images
+
+   The mapr-setup.sh script allows you to build custom Amazon Machine
+   Images (AMIs) or Azure VM images. You can use these images to create
+   more instances of the original image. With a couple of exceptions, the
+   steps for creating custom images are the same for AWS and Azure.
+
+   To create a custom image:
+    1. Create the instance from which you want to build the image.
+    2. Download or copy mapr-setup.sh to the instance. For more
+       information, see [1]MapR Installer.
+    3. Prep the image. This step adds MapR software to the image. For
+       example:
+./mapr-setup.sh image prep --version 5.2.2
+    4. Respond to the questions in the script.
+    5. (Optional): Install other software as needed on the image.
+    6. (Azure only): Finalize the image:
+./mapr-setup.sh image finalize azure
+    7. Create the image by using the image create command:
+       Note: (Azure only): The image create command must be run off the VM
+       that you want to make an image out of. The command can be run
+       anywhere the Azure CLI is installed or anywhere the MapR Installer
+       1.6 setup script is installed.
+          + AWS example
+./mapr-setup.sh image create
+          + Azure example
+            In this example, the script looks in the MapRImageCreateRG
+            resource group for a machine called MyVirtualMachine and
+            creates an image called MapRImage2:
+./mapr-setup.sh image create azure -u user@mapr.com -g MapRImageCreateRG -n MyVi
+rtualMachine -i MapRImage2
+    8. (AWS only): Once the image is created, you can see the image ID in
+       the EC2 console.
+    9. (Azure only): Once the image is created, you can see the image in
+       the list of resource groups. You can copy the image ID from the
+       script:
+       [azure_copy_image_id.png]
+       Note: Another way to obtain the Azure image ID is to navigate to
+       the Azure console and check the resource ID for the new image:
+       [azure_resource_id.png]
+   10. (AWS only): Update the AMI ID in the RegionMap of your
+       CloudFormation template.
+   11. (Azure only): Update the resource ID in the maprimageName field in
+       the ARM template.
+       [azure_maprimagename.png]
+   12. (AWS only): Run the CloudFormation template using the steps in
+       [2]Running the MapR AWS Templates.
+   13. (Azure only): Run the ARM template using the steps in [3]Running
+       the MapR Azure Templates.
+
+References
+
+   1. http://maprdocs.mapr.com/home/MapRInstaller.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/running_mapr_AWS_templates.html#task_eqd_v2w_x1b
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/running_mapr_Azure_templates.html#task_hm4_j3x_x1b

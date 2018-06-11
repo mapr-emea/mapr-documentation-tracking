@@ -1,0 +1,42 @@
+Post-Upgrade Steps for Drill
+
+   Complete the following steps after you upgrade Drill with or without
+   the MapR Installer.
+    1. Configuration files from the previous installation now reside in
+       /opt/mapr/drill/OLD_DRILL_VERSIONS. If you have made any changes to
+       configuration files in the previous version, compare and restore
+       your previous configurations in the
+       /opt/mapr/drill/drill-<version>/conf directory. Also, copy over any
+       UDF or custom storage or format plugin JAR files that you added to
+       the previous Drill directory.
+       Note: The drill-override.conf contains your ZooKeeper configuration
+       and any other options specified in the file. The drill-env.sh file
+       contains any options that you modified, such as Drill memory
+       allocation. The logback.xml file contains changes you may have made
+       to use Lilith.
+    2. Run configure.sh to refresh the node configuration.
+$ /opt/mapr/server/configure.sh -R
+       Note: Drill should be configured and running on the node. You can
+       use one of the following methods to verify that the Drillbit
+       service is running on the node:
+          + Issue the following command to verify the status of the
+            Drillbit service from the command line:
+jps
+          + Log in to the MCS at https://<host name>:8443 and click
+            Services to verify the status of the Drillbit service.
+       You should see the Drillbit listed as a service running on the
+       node.
+    3. Enter the following URL in a web browser to access the Drill Web
+       Console and verify that your storage plugin configurations were
+       preserved during the upgrade:
+http://<IP address or host name>:8047/storage
+       If your storage plugins were not preserved, use the back up that
+       you took before the upgrade to restore them.
+       Note: You can start/stop/restart the Drillbit service on one or
+       more nodes using the MCS or the following command:
+$ maprcli node services -name drill-bits -action start|restart|stop -nodes <node
+ host names separated by a space>
+       Use the host name if possible. Using host names instead of IP
+       addresses is a best practice.
+       You can access the Drill log files in
+       /opt/mapr/drill/drill-<version>/logs/drillbit.log.

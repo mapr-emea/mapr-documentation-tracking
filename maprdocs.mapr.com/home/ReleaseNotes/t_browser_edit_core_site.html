@@ -1,0 +1,30 @@
+Editing core-site.xml
+
+   With this option, you update the core-site.xml on each node with a
+   service that runs a web server such as WebServer(MCS), ResourceManager,
+   and HistoryServer nodes. Then, restart the services associated with the
+   web servers. For example, you would need to restart the webserver
+   service on the node that runs the MCS.
+    1. Add the following configuration to the core-site.xml on each node
+       with a service that runs a web server:
+<property>
+  <name>hadoop.ssl.exclude.cipher.suites</name>
+  <value>
+SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA,SSL_RSA_EXPORT_WITH_DES40_CBC_SHA,SSL_RSA_
+EXPORT_WITH_RC4_40_MD5,TLS_DHE_RSA_WITH_AES_128_CBC_SHA,TLS_DHE_RSA_WITH_AES_256
+_CBC_SHA,TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,TLS_DHE_DSS_WITH_AES_256_CBC_SHA256
+,TLS_DHE_DSS_WITH_AES_256_CBC_SHA,TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,TLS_DHE_DS
+S_WITH_AES_128_CBC_SHA256,TLS_DHE_DSS_WITH_AES_128_CBC_SHA
+ </value>
+</property>
+          + For MapR 3.x clusters, the core-site.xml is in the following
+            location: /opt/mapr/hadoop/hadoop-0.20.2/conf/
+          + For MapR 4.x and 5.x clusters, the core-site.xml is in the
+            following location: /opt/mapr/hadoop/hadoop-2.x.x/etc/hadoop/
+    2. Restart services associated with web servers.
+       For example:
+          + To restart the MCS webserver: maprcli node services -webserver
+            restart -nodes <webserver nodes>
+          + To restart the ResourceManager service(s): maprcli node
+            services -name resourcemanager -action restart -nodes <space
+            delimited list of resourcemanager nodes>

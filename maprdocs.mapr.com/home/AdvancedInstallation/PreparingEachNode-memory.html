@@ -1,0 +1,123 @@
+Memory and Disk Space
+
+   This section outlines required and recommended memory, storage, and
+   disk capacities.
+
+Minimum Memory
+
+   A minimum of 16 GB total memory is required on a node. MapR recommends
+   at least 16 GB for a production environment, and typical MapR
+   production nodes have 32 GB or more.
+
+   Run free -g to display total and available memory in gigabytes.
+$ free -g
+              total        used        free      shared      buffers      cached
+Mem:              3           2           1           0            0           1
+-/+ buffers/cache:            0           2
+Swap:             2           0           2
+
+   If the free command is not found, there are many alternatives: grep
+   MemTotal: /proc/meminfo, vmstat -s -SM, top, or various GUI system
+   information tools.
+
+   Using the numad service is not recommended, since it has not been
+   tested and validated with MapR software. Using numad can cause
+   artificial memory constraints to be set, which can lead to performance
+   degradation under load. To disable numad:
+    1. Stop the service by issuing the command service numad stop.
+    2. Set the numad service not to start on reboot: chkconfig numad off
+
+   MapR does not recommend using overcommit because it may lead to the
+   kernel memory manager killing processes to free memory, resulting in
+   killed MapR processes and system instability. Set vm.overcommit_memory
+   to 0:
+    1. Edit the file /etc/sysctl.conf and add the following line:
+       vm.overcommit_memory=0
+    2. Save the file and run: sysctl -p
+
+   Note: You can try MapR out on non-production equipment, but under the
+   demands of a production environment, memory needs to be balanced
+   against disks, network and CPU.
+
+Storage
+
+   MapR manages raw, unformatted devices directly to optimize performance
+   and offer high availability. For data nodes, allocate at least 3
+   unmounted physical drives or partitions for MapR storage. MapR uses
+   disk spindles in parallel for faster read/write bandwidth and therefore
+   groups disks into sets of three.
+   Warning: MapR requires a minimum of one disk or partition for MapR
+   data. However, file contention for a shared disk decreases performance.
+   In a typical production environment, multiple physical disks on each
+   node are dedicated to the distributed file system, which results in
+   much better performance.
+
+Drive Configuration
+
+   Do not use RAID or Logical Volume Management with disks that will be
+   added to MapR. While MapR supports these technologies, using them
+   incurs additional setup overhead and can affect your cluster's
+   performance. Due to the possible formatting requirements that are
+   associated with changes to the drive settings, configure the drive
+   settings prior to installing MapR.
+
+   If you have a RAID controller, configure it to run in HBA mode. For LSI
+   MegaRAID controllers that do not support HBA, configure the following
+   drive group settings for optimal performance:
+   Property (The actual name depends on the version) Recommended Setting
+   RAID Level RAID0
+   Stripe Size >=256K
+   Cache Policy or I/O Policy Cached IO or Cached
+   Read Policy Always Read Ahead or Read Ahead
+   Write Policy Write-Through
+   Disk Cache Policy or Drive Cache Disabled
+   Note: Enabling the Disk Cache policy can improve performance. However,
+   MapR does not recommend enabling the Disk Cache policy because it
+   increases the risk of data loss if the node loses power before the disk
+   cache is committed to disk.
+
+Minimum Disk Space
+
+   OS Partition. Provide at least 10 GB of free disk space on the
+   operating system partition.
+
+   MapR-FS. Provide the higher of 8 GB of free disk space or the memory
+   allocated to MapR-FS. Note that the disk space should be greater than
+   the memory allocated to MapR-FS.
+
+   Disk. Provide 10 GB of free disk space in the /tmp directory and 128 GB
+   of free disk space in the /opt directory. Services, such as
+   ResourceManager and NodeManager, use the /tmp directory. Files, such as
+   logs and cores, use the /opt directory.
+
+   Swap space. For production systems, provide at least 4 GB of swap
+   space. If you believe more swap space is needed, consult the swap-space
+   recommendation of your OS vendor. The amount of swap space that a
+   production system needs can vary greatly depending on the application,
+   workload, and amount of RAM in the system.  Note that the MapR
+   Installer generates a warning if your swap space is less than 10% of
+   main memory or less than 2 GB.
+
+   ZooKeeper. On ZooKeeper nodes, dedicate a partition, if practicable,
+   for the /opt/mapr/zkdata directory to avoid other processes filling
+   that partition with writes and to reduce the possibility of errors due
+   to a full /opt/mapr/zkdata directory. This directory is used to store
+   snapshots that are up to 64 MB. Since the four most recent snapshots
+   are retained, reserve at least 500 MB for this partition. Do not share
+   the physical disk where /opt/mapr/zkdata resides with any MapR File
+   System data partitions to avoid I/O conflicts that might lead to
+   ZooKeeper service failures.
+
+Virtual Memory (swappiness)
+
+   Swappiness is a setting that controls how often the kernel copies the
+   contents of RAM to swap. By setting vm.swappiness to the right value,
+   you can prevent the system from swapping processes too frequently, but
+   still allow for emergency swapping (instead of killing processes). For
+   all Linux distributions, the MapR recommendation is to set
+   vm.swappiness to 1.
+   To check the current value for vm.swappiness:
+cat /proc/sys/vm/swappiness
+
+   To change the value:
+sudo sysctl vm.swappiness=1

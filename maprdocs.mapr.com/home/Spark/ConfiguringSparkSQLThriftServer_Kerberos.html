@@ -1,0 +1,86 @@
+Configuring Spark Thrift Server with Kerberos
+
+   You can configure Spark Thrift server to use Kerberos for its
+   communications with various components on a secure MapR cluster if
+   necessary.
+   Note: MapR clusters do not provide Kerberos infrastructure. The
+   information in this section assume a Linux-based Kerberos environment,
+   and the specific commands for your environment may vary. Consult with
+   your Kerberos administrator for assistance.
+
+   To enable Kerberos authentication:
+    1. Create a Kerberos identity and keytab. You can use the following
+       commands in a Linux-based Kerberos environment to set up the
+       identity and update the keytab file.
+          + The hive.keytab file must be owned and readable only by the
+            mapr user.
+          + FQDN@REALM is case-sensitive.
+# kadmin
+          : addprinc -randkey mapr/<FQDN@REALM>
+          : ktadd -k /opt/mapr/conf/hive.keytab mapr/<FQDN@REALM>
+    2. Configure the following properties in hive-site.xml on each node
+       where HiveServer2 is installed:
+
+   Property Value
+   hive.server2.authentication KERBEROS
+   hive.server2.authentication.kerberos.principal mapr/FQDN@REALM
+
+   (where mapr/FQDN@REALM is the principal that you want to use for the
+   Spark Thrift server)
+   hive.server2.authentication.kerberos.keytab /opt/mapr/conf/mapr.keytab
+
+   (where /opt/mapr/conf/mapr.keytab is path to the keytab that must be
+   used)
+<property>
+     <name>hive.server2.authentication</name>
+     <value>KERBEROS</value>
+     <description>authenticationtype</description>
+</property>
+<property>
+      <name>hive.server2.authentication.kerberos.principal</name>
+      <value>mapr/FQDN@REALM</value>
+      <description>Spark Thrift server principal. If _HOST is used as the FQDN p
+ortion,
+      it will be replaced with the actual hostname of the running instance.
+      </description>
+</property>
+<property>
+     <name>hive.server2.authentication.kerberos.keytab</name>
+     <value>/opt/mapr/conf/mapr.keytab</value>
+     <description>Keytab file for Spark Thrift server principal</description>
+</property>
+    3. Reconfigure the following options in env.sh (/opt/mapr/conf/env.sh)
+       on each node where HiveServer2 is installed:
+       Note: These configurations are listed in the portion of the file
+       that begins with if [ "$MAPR_SECURITY_STATUS" = "true" ];. However,
+       you should make the changes in the /opt/mapr/conf/env_override.sh
+       file. For more information, see [1]About env_override.sh.
+
+   Existing Configuration Required Configuration
+   MAPR_HIVE_SERVER_LOGIN_OPTS="-Dhadoop.login=maprsasl_keytab"
+
+   MAPR_HIVE_LOGIN_OPTS="-Dhadoop.login=maprsasl"
+MAPR_HIVE_SERVER_LOGIN_OPTS="-Dhadoop.login=hybrid"
+
+MAPR_HIVE_LOGIN_OPTS="-Dhadoop.login=hybrid"
+
+    4. Restart Spark Thrift server to apply this change. sbin is in your
+       Spark directory at /opt/mapr/spark/spark-2.1.0/.
+       Important: The MapR administrative user (generally, the account
+       named mapr) should start Spark Thrift server. Then, process
+       identifier (PID) files will be owned by this user, and
+       impersonation support (where applicable) will function correctly.
+./sbin/stop-thriftserver.sh
+./sbin/start-thriftserver.sh
+
+Related Links
+
+   For information about working with HiveServer, see:
+     * [2]Setting Up HiveServer2
+     * [3]Hive
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb
+   2. https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hive/Hive.html

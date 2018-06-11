@@ -1,0 +1,39 @@
+8. Restart All Nodes
+
+   To restart all nodes in the cluster, stop each node, configure the node
+   with the new CLDB and ZooKeeper addresses, and start the node.
+   Complete the following steps on each node in the cluster:
+    1. Stop the node.
+         a. Change to the root user (or use sudo for the following
+            commands).
+         b. Stop the Warden:
+service mapr-warden stop
+    2. Configure all the nodes with the new CLDB and ZooKeeper addresses.
+       The script configure.sh configures a node to be part of a MapR
+       cluster, or modifies services running on an existing node in the
+       cluster. You must run this script to configure a node. The script
+       creates (or updates) configuration files related to the cluster and
+       the services running on the node.
+       Before you run configure.sh, make sure you have the hostname of the
+       CLDB node and the hostnames of the ZooKeeper nodes. You can,
+       optionally, specify the ports for the CLDB and ZooKeeper nodes as
+       well. The default ports are:
+
+        Service  Default Port #
+       CLDB      7222
+       ZooKeeper 5181
+       The script configure.sh takes an optional cluster name and log
+       file, the CLDB hostname, and comma-separated list of ZooKeeper host
+       names or IP addresses (and optionally ports), using the following
+       syntax:
+/opt/mapr/server/configure.sh -C <host>[:<port>] -Z <host>[:<port>][,<host>[:<po
+rt>]...] [-L <logfile>][-N <cluster name>]
+       Note: Each time you specify the -Z <host>[:<port>] option, you must
+       use the same order for the ZooKeeper node list. If you change the
+       order for any node, the ZooKeeper leader election process will
+       fail.
+       Example:
+/opt/mapr/server/configure.sh -C r1n1.sj.us:7222 -Z r1n1.sj.us:5181,r2n1.sj.us:5
+181,r3n1.sj.us:5181,r4n1.sj.us:5181,r5n1.sj.us:5181 -N MyCluster
+    3. Start Warden.
+service mapr-warden start

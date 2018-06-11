@@ -1,0 +1,56 @@
+General Security for Ecosystem Components
+
+   Ecosystem components in the MapR Converged Data Platform use the Java
+   Authentication and Authorization Service (JAAS) for security
+   configuration.
+     * /opt/mapr/conf/mapr.login.conf file-defines JAAS configurations
+     * MAPR_ECOSYSTEM_LOGIN_OPTS environment variable in the
+       /opt/mapr/conf/env.sh file-specifies the JAAS configuration used by
+       installed Ecosystem components
+
+   Note: See the [1]Ecosystem Guide for component-specific security
+   configuration information.
+
+   When security is [2]enabled, the value of the MAPR_ECOSYSTEM_LOGIN_OPTS
+   is modified to include the hybrid JVM option for hadoop.login. This is
+   equivalent to setting the -Dhadoop.login=hybrid flag at the command
+   line. This setting specifies a mixed security environment using
+   Kerberos and MapR tickets.
+
+   The mapr.login.conf file has two stanzas for hybrid security:
+ /**
+ * authenticate using hybrid of kerberos and MapR
+ * maprticket must already exist on file system as MapR login module
+ * cannot get kerberos identity from subject for implicit login.
+ */
+
+hadoop_hybrid {
+  org.apache.hadoop.security.login.KerberosBugWorkAroundLoginModule optional
+      useTicketCache=true
+      renewTGT=true
+      doNotPrompt=true;
+  com.mapr.security.maprsasl.MaprSecurityLoginModule required
+      checkUGI=false;
+  org.apache.hadoop.security.login.GenericOSLoginModule required;
+  org.apache.hadoop.security.login.HadoopLoginModule required
+      principalPriority=com.mapr.security.MapRPrincipal;
+};
+
+hadoop_hybrid_keytab {
+  org.apache.hadoop.security.login.KerberosBugWorkAroundLoginModule optional
+      refreshKrb5Config=true
+      doNotPrompt=true
+      useKeyTab=true
+      storeKey=true;
+  com.mapr.security.maprsasl.MaprSecurityLoginModule required
+      checkUGI=false
+      useServerKey=true;
+  org.apache.hadoop.security.login.GenericOSLoginModule required;
+  org.apache.hadoop.security.login.HadoopLoginModule required
+      principalPriority=com.mapr.security.MapRPrincipal;
+};
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/c_ecosystem_intro.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Enable-wire-level-security.html

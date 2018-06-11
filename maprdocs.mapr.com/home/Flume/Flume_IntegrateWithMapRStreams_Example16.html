@@ -1,0 +1,79 @@
+Example Agents Files: Flume 1.6 and MapR-ES Integration
+
+   The following examples can be used to understand how you might want to
+   configure Flume 1.6 agent files.
+
+Example: Read MapR-ES topics and Write to MapR-FS
+
+   In this example, the agent reads two topics (log_topic1 and
+   log_topic2), stores the event data in memory channel, and then writes
+   the event data to a file on the MapR-FS (maprfs:///flume/log_data).
+agent1.sources = source1
+agent1.channels = channel1
+agent1.sinks = sink1
+agent1.sources.source1.channels = channel1
+agent1.sinks.sink1.channel = channel1
+agent1.sources.source1.type = org.apache.flume.source.kafka.v09.KafkaSource
+agent1.sources.source1.kafka.topics = /streaming_data/flume_stream:log_topic1,
+/streaming_data/flume_stream:log_topic2
+agent1.sources.source1.kafka.consumer.group.id = flume
+agent1.sources.source1.batchSize = 20
+agent1.sources.source1.batchDurationMillis = 1000
+agent1.sinks.sink1.type = hdfs
+agent1.sinks.sink1.hdfs.path = maprfs:///flume/log_data
+agent1.sinks.sink1.hdfs.filePrefix = source
+agent1.sinks.sink1.hdfs.rollCount = 0
+agent1.sinks.sink1.hdfs.rollInterval = 0
+agent1.sinks.sink1.hdfs.rollSize = 10485760
+agent1.sinks.sink1.hdfs.fileType = DataStream
+agent1.channels.channel1.type = memory
+agent1.channels.channel1.capacity = 10000
+agent1.channels.channel1.transactionCapacity = 1000
+
+Example: Read Log File and Write Log File to a MapR Streams Topic
+
+   In this example, the agent uses an exec source to read messages from a
+   local error log file, stores data in a channel, and then publishes the
+   data as messages in a MapR-ES topic
+   (/streaming_data/error_stream:error_log_topic).
+agent1.sources = source1
+agent1.channels = channel1
+agent1.sinks = sink1
+agent1.sources.source1.channels = channel1
+agent1.sinks.sink1.channel = channel1
+agent1.sources.source1.type = exec
+agent1.sources.source1.command = tail -f /opt/app/logs/error_log_file
+agent1.channels.channel1.type = memory
+agent1.channels.channel1.capacity = 10000
+agent1.channels.channel1.transactionCapacity = 1000
+agent1.sinks.sink1.type = org.apache.flume.sink.kafka.v09.KafkaSink
+agent1.sinks.sink1.kafka.topic = /streaming_data/error_stream:error_log_topic
+agent1.sinks.sink1.flumeBatchSize = 5
+
+Example: Read Log Events and Write to MapR-FS File
+
+   In this example, the agent reads events from syslogtcp server, uses a
+   Kafka channel to store events in a MapR-ES topic
+   (/streaming_data/flume_stream:syslogtcp_topic), and then writes the
+   data to a file on the MapR-FS (maprfs:///flume/analytics).
+agent1.sources = source1
+agent1.channels = channel1
+agent1.sinks = sink1
+agent1.sources.source1.channels = channel1
+agent1.sinks.sink1.channel = channel1
+agent1.sources.source1.type = syslogtcp
+agent1.sources.source1.host=syslog_host
+agent1.sources.source1.port=5140
+agent1.channels.channel1.type = org.apache.flume.channel.kafka.v09.KafkaChannel
+agent1.channels.channel1.kafka.pollTimeout = 500
+agent1.channels.channel1.kafka.topic = /streaming_data/flume_stream:syslogtcp_to
+pic
+agent1.channels.channel1.transactionCapacity = 1000
+agent1.channels.channel1.capacity = 1000
+agent1.channels.channel1.producer.linger.ms=0
+agent1.sinks.sink1.type = hdfs
+agent1.sinks.sink1.hdfs.path = maprfs:///flume/analytics
+agent1.sinks.sink1.hdfs.rollInterval = 5
+agent1.sinks.sink1.hdfs.rollSize = 0
+agent1.sinks.sink1.hdfs.rollCount = 0
+agent1.sinks.sink1.hdfs.fileType = DataStream

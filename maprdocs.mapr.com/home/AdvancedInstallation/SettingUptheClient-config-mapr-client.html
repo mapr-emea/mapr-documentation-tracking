@@ -1,0 +1,43 @@
+Configuring MapR Client User on Windows
+
+   Before you use the Windows Client, configure it with information from
+   your cluster.
+   Before running applications on the Windows Client, configure the
+   core-site.xml file with the UID, GID, and user name of the cluster user
+   that will be used to access the non-secure cluster.
+   Note: If you are on secure cluster, this configuration is not needed
+   because on secure clusters, the username is available through the
+   ticket.
+
+   Complete the following steps:
+    1. Obtain the UID and GID that has been set up for your user account.
+       To determine the correct UID and GID values for your username, log
+       into a cluster node and type the id command. In the following
+       example, the UID is 1000 and the GID is 2000:
+$ id
+uid=1000(juser) gid=2000(juser) groups=4(adm),20(dialout),24(cdrom),46(plugdev),
+105(lpadmin),119(admin),122(sambashare),2000(juser)
+    2. Add the following parameters to the core-site.xml files that
+       correspond to the version of the hadoop commands that you plan to
+       run:
+<property>
+  <name>hadoop.spoofed.user.uid</name>
+  <value>{UID}</value>
+</property>
+<property>
+  <name>hadoop.spoofed.user.gid</name>
+  <value>{GID}</value>
+</property>
+<property>
+  <name>hadoop.spoofed.user.username</name>
+  <value>{id of user who has UID}</value>
+</property>
+       Warning: You must use the numeric values for UID and GID, not the
+       text names.
+       Note: When wire-level security is implemented on Windows, spoofing
+       is not supported. This greatly increases the security of the
+       cluster, but the core-site.xml file settings above then have no
+       effect.
+       For MapReduce version 2 or other applications that run on YARN, the
+       core-site.xml file(s) that you need to edit is located at:
+       %MAPR_HOME%\hadoop\hadoop-2.x.x\etc\hadoop\core-site.xml.

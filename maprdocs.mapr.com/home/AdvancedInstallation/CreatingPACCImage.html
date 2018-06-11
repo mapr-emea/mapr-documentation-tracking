@@ -1,0 +1,171 @@
+Creating a MapR PACC Image Using mapr-setup.sh
+
+   This section describes how to download and run the mapr-setup.sh script
+   to create a MapR-PACC image.
+
+   To create a MapR PACC image using mapr-setup.sh:
+    1. Before using mapr-setup.sh, review these topics to understand
+       important prerequisites and security considerations:
+          + [1]Before Deploying the MapR PACC
+          + [2]Security Considerations for the MapR PACC
+    2. Download the mapr-setup.sh script from [3]mapr.com to a Linux or
+       Mac OS X platform where Docker 1.12.5 or later is installed.
+       Note: Running mapr-setup.sh on Windows is not supported.
+    3. Run the mapr-setup.sh script with the docker client command to
+       create the Docker image:
+./mapr-setup.sh docker client
+    4. Answer the command-line prompts to provide the information needed
+       to configure the image. The following table describes each prompt.
+       If you press Enter without specifying a value, mapr-setup.sh uses
+       the default value shown in the square brackets ([]):
+
+   Parameter Notes
+   Build MapR client image? (y/n) [y] Press y to continue or n to exit the
+   script.
+   Image OS class (centos7, ubuntu16) [<local OS>]: Specify the base
+   operating system on which to build the image.
+
+   Note: SUSE is not currently supported.
+   Docker FROM base image name:tag [centos:centos7]: Specify the starting
+   image used to create the new image. If necessary, you can enter your
+   own tag and image name to choose a base image already created for your
+   installation.
+   MapR core version [6.x.x]: Specify the MapR core version that matches
+   the version of the MapR cluster you want to access using the PACC. For
+   the supported MapR core values, see Table 1 in [4]Extending a MapR
+   PACC. If you want to install the Hadoop Client with YARN, you must
+   select 5.2.1 or later.
+   MapR MEP version [x.x.x]: Specify the MEP version that matches the MEP
+   version of the MapR cluster you want to access using the PACC.
+   Supported values are 2.0 or later. If you want to install the Hadoop
+   Client with YARN, you must select MEP 3.0 or later. For more
+   information about MEPs, see [5]MEP Components and OS Support.
+   Install Hadoop YARN client (y/n) [n]: Choose whether to install the
+   Hadoop Client with YARN. Note that the Hadoop Client with YARN requires
+   MapR core version 5.2.1 and MEP 3.0 or later. If you choose No, the
+   script installs the POSIX (FUSE), MapR DB, and MapR Streams clients.
+   The script does not install the Hadoop Client with YARN and does not
+   ask if you want to install the Hive, Pig, and Streams clients.
+   Add POSIX (FUSE) client to container? (y/n) [y]: Choose whether to
+   install the POSIX (FUSE) client.
+   Add HBase client to container? (y/n) [n]: Choose whether to install the
+   HBase client.
+   Add Hive client to container? (y/n) [n]: Choose whether to install the
+   Hive client.
+   Add Pig client to container? (y/n) [n]: Choose whether to install the
+   Pig client.
+   Add Spark client to container? (y/n) [n]: Choose whether to install the
+   Spark client.
+   Add MapR Streams clients to container? (y/n) [y]: Choose whether to
+   install the MapR Streams clients.
+   MapR client image tag name [<name>]: Accept the software-provided name
+   for the image, or provide your own name. This is the name you will use
+   to run the image to create the MapR PACC. The script automatically
+   provides a name. For example:
+maprtech/pacc:6.0.0_4.0.0_centos7_yarn_fuse_hbase_hive_pig_streams
+
+   Container network mode (bridge|host) [bridge]: Select the Docker
+   network mode. For more information, see the [6]Docker documentation.
+   Container memory: specify host XX[kmg] or 0 for no limit [0]: Specify
+   the maximum amount of memory (in kilobytes, megabytes, or gigabytes)
+   that Docker allows the container to access. For example:
+          + 2g
+          + 4096m
+          + 0
+
+   Accepting the default (0), means there is no restriction on memory, and
+   the container can use as much memory as the platform makes available.
+    5. Press Enter after the last prompt. The script creates the image and
+       notifies you of successful creation. For example:
+        Complete!
+
+        ...Success
+
+        Stopped service mapr-posix-client-container
+
+        ...Success
+
+         ---> 170362a5a82d
+        Removing intermediate container 8f100b9d6d9b
+        Step 7/8 : ENTRYPOINT /opt/mapr/installer/docker/mapr-setup.sh container
+         ---> Running in f98e5cde91ed
+         ---> 7099a990a422
+        Removing intermediate container f98e5cde91ed
+        Step 8/8 : CMD start
+         ---> Running in f6ae4139ab41
+         ---> 01ca2ab6d0d3
+        Removing intermediate container f6ae4139ab41
+        Successfully built 01ca2ab6d0d3
+
+        Edit '/root/thinclient/docker_images/client/mapr-docker-client.sh' to se
+t
+       MAPR_CLUSTER and MAPR_CLDB_HOSTS and then execute it to start the contain
+er
+       mapr-setup.sh creates the mapr-docker-client.sh sample-run file and
+       displays the location of the file:
+Edit '/root/thinclient/docker_images/client/mapr-docker-client.sh' to set
+MAPR_CLUSTER and MAPR_CLDB_HOSTS and then execute it to start the container
+       mapr-docker-client.sh contains environment variables for the image
+       and makes it easy for you to start the container.
+    6. Edit the mapr-docker-client.sh script file. At a minimum, you must
+       provide the MAPR_CLUSTER name and the MAPR_CLDB_HOSTS information.
+       For example:
+MAPR_CLUSTER=my.cluster.com
+MAPR_CLDB_HOSTS=perfnode13[4-9].perf.lab
+       You may wish to provide other values. You can:
+          + Start the FUSE client by specifying the MAPR_MOUNT_PATH.
+          + For a secure cluster, use a ticket by specifying a
+            MAPR_TICKETFILE_LOCATION. For more information about security
+            parameters, see [7]Running the MapR PACC Using Docker.
+          + For secure and non-secure clusters, follow security best
+            practices by specifying these parameters:
+               o MAPR_CONTAINER_USER
+               o MAPR_CONTAINER_GROUP
+               o MAPR_CONTAINER_UID
+               o MAPR_CONTAINER_GID
+          + Set environment variables, such as MAPR_CLASSPATH, MAPR_HOME,
+            PATH, and others.
+          + Set the container time zone by specifying MAPR_TZ. The default
+            is UTC.
+    7. Run the mapr-docker-client.sh file to start the container:
+$ ./docker_images/client/mapr-docker-client.sh
+       The script uses the current user name to create a user for cluster
+       access. This user is created so that you can run your application
+       as a MapR client user:
+Testing for cluster user account...
+
+Enter MapR cluster user name: robertjones
+
+User 'robertjones' does not exist. Creating new cluster user account...
+
+Enter 'robertjones' uid: 502
+ Enter 'robertjones' group name: users
+ Enter 'robertjones' password: <password>
+...Success
+
+Configuring MapR client ( -c -C perfnode134.perf.lab -N my.cluster.com)...
+
+create /opt/mapr/conf/conf.old
+Configuring Hadoop-2.7.0 at /opt/mapr/hadoop/hadoop-2.7.0
+Done configuring Hadoop
+CLDB node list: perfnode134.perf.lab:7222
+Zookeeper node list:
+Node setup configuration: hbinternal
+Log can be found at: /opt/mapr/logs/configure.log
+
+...Success
+
+    8. Use the docker ps and docker inspect commands to inspect the
+       container:
+$ docker ps
+$ docker inspect <container-run-ID>
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/BeforeDeployingtheMapRPACC2.html#concept_hy1_hcj_vy
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/SecurityConsiderMapRPACC.html#concept_hdh_gcr_vy
+   3. https://mapr.com/products/hadoop-download/
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/CustomizingaMapRPACC.html#concept_wwq_tqq_vy
+   5. https://maprdocs.mapr.com/home/InteropMatrix/r_MEP_52.html
+   6. https://docs.docker.com/engine/reference/run/#network-settings
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/RunningtheMapRPACC.html#concept_dxr_4gj_vy

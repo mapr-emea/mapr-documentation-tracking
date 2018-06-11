@@ -1,0 +1,519 @@
+New Features in Impala 2.5.0 for MapR
+
+   Impala 2.5.0 for MapR introduces some new features that enhance the
+   behavior and performance of Impala.
+
+Performance Improvements
+
+   The following updates improve the performance of Impala:
+     * Impala caches file handles to avoid the overhead of repeatedly
+       opening the same file which improves I/O performance.
+     * Basic query types, such as counting the elements of a complex
+       column, use an optimized code path that improves the performance of
+       queries involving nested complex types.
+     * Impala uses code generation in certain parts of queries, such as
+       evaluating functions in the WHERE clause, even when code generation
+       is not used in some phases of query execution.
+     * Using DECIMAL values in a GROUP BY clause triggers code generation
+       optimization, which speeds up queries that group by values, such as
+       prices, and improves performance and reliability of the DECIMAL
+       data type.
+     * Improved coordination and parallelization between Impala nodes
+       results in faster query startup time for queries that involve
+       tables with many partitions or complex queries with many fragments.
+     * The coordinator node requires less memory, making it faster and
+       less resource-intensive when performing joins that involve several
+       tables with thousands of partitions.
+     * Impala only re-evaluates metadata for partitions that are affected
+       by a DDL operation, not all partitions in the table. While a DDL or
+       insert statement is in progress, other Impala statements that
+       attempt to modify metadata for the same table wait until the first
+       one finishes, improving performance and reliability of DDL and
+       insert operations on partitioned tables with a large number of
+       partitions.
+     * A new query option, OPTIMIZE_PARTITION_KEY_SCANS, speeds up
+       aggregation operations that involve only the partition key columns
+       of partitioned tables. This optimization can produce different
+       results when files in a partition are manually deleted or are
+       empty.
+
+Security
+
+   This release of Impala provides the following new security features:
+
+   Column-Level Authorization
+          You can use column-level authorization to define access to
+          particular columns within a table instead of the entire table.
+          Creating views to set up authorization schemes for subsets of
+          information is not required. This functionality requires Sentry
+          1.6
+
+          Column-level authorization has the following syntax:
+
+GRANT SELECT(column_name) ON TABLE table_name TO ROLE role_name;
+REVOKE SELECT(column_name) ON TABLE table_name FROM ROLE role_name;
+
+   LDAP Password Retrieval
+          You can use a new impala-shell command line option,
+          --ldap_password_cmd, to retrieve the LDAP password. The
+          resulting password is used to authenticate the impala-shell
+          command with the LDAP server.
+
+Scripting Capability Improvements
+
+   Scripting capability improvements for the impala-shell enable you to
+   define substitution variables and use them in SQL statements that you
+   execute through command-line options. The --var command-line option
+   passes key-value pairs to the impala-shell. The shell substitutes the
+   values into an SQL statement where it contains the notation
+   ${var:varname} before Impala executes the query.
+
+   You can use the SET and UNSET commands in a session to define or clear
+   substitution variables with the SET|UNSET VAR:variable_name=value
+   notation or a script file processed by the –f option. You cannot define
+   your own substitution variables through the SET statement in a JDBC or
+   ODBC application.
+
+Dynamic Partition Pruning
+
+   Dynamic partition pruning is a technique that prevents Impala from
+   reading data files from partitions that are not included in the result
+   set. This occurs when a query references a partition key column in the
+   WHERE clause and the column values are unknown until the query runs.
+   Impala evaluates the predicate and skips the I/O for unnecessary
+   partitions. This technique is useful for join queries that involve
+   large partitioned tables.
+
+   You can control the level of dynamic partition pruning through the
+   RUNTIME_FILTER_MODE query option. By default, this option is enabled
+   and set at medium level: RUNTIME_FILTER_MODE=LOCAL). The maximum
+   setting uses more memory for queries than in previous releases. You can
+   set RUNTIME_FILTER_MODE=GLOBAL to fully enable dynamic partition
+   pruning. Before you run a query, check the EXPLAIN output to verify
+   that partition pruning is applied.
+
+Nested Loop Join Queries
+
+   Nested loop joins make additional non-equijoin queries possible and
+   optimize queries that retrieve values from complex type columns. Some
+   join queries that previously needed equality comparisons can use
+   operators.
+
+Live Progress Reporting
+
+   The live progress reporting feature enables you to monitor the status
+   of queries through two command-line options, --live_progress and
+   --live_summary. The live progress option provides an interactive
+   progress bar that represents the percent completion for queries
+   submitted through the impala-shell command. The live summary option
+   summarizes the work performed in various stages of a query with the
+   measurements updated in real time as the query progresses. These query
+   options are disabled by default. To enable these options, start the
+   impala-shell with the --live_progress and --live_summary command-line
+   options, or use the SET command with LIVE_SUMMARY and LIVE_PROGRESS
+   during a session:
+set live_progress=true|false;
+set live_summary=true|false;
+
+Runtime Filtering
+
+   Runtime filtering is technique where Impala determines the filter
+   conditions as a query runs and broadcasts the information to the Impala
+   nodes reading a table. This technique is useful for optimizing queries
+   against partitioned tables or to evaluate join conditions when only
+   partial table data is needed. The technique eliminates the I/O required
+   to read all of the partitioned data, as well as unnecessary network
+   traffic.
+   The following table lists the new query options related to runtime
+   filtering:
+   Option Description Type Default
+   RUNTIME_FILTER_MODE Adjusts the settings, turns the feature on and off,
+   and controls how extensively the filters are transmitted between hosts.
+   numeric (0, 1, 2) or corresponding mnemonic strings (OFF, LOCAL,
+   GLOBAL) 1 (same as LOCAL)
+   MAX_NUM_RUNTIME_FILTERS Sets an upper limit on the number of runtime
+   filters produced for each query. integer 10
+   RUNTIME_BLOOM_FILTER_SIZE Size (in bytes) of Bloom filter data
+   structure used by the runtime filtering feature. integer
+
+   1048576 (1 MB)
+
+   Max: 16 MB
+   RUNTIME_FILTER_WAIT_TIME_MS Maximum filter wait time in milliseconds.
+   By default, each scan node waits for up to 1 second (1000 milliseconds)
+   for filters to arrive. If all filters have not arrived within the
+   specified interval, the scan node proceeds, using whatever filters did
+   arrive to help avoid reading unnecessary data. If a filter arrives
+   after the scan node begins reading data, the scan node applies that
+   filter to the data that is read after the filter arrives, but not to
+   the data that was already read. integer 1000 milliseconds
+   DISABLE_ROW_RUNTIME_FILTERING
+
+   Reduces the scope of the runtime filtering feature. Queries still
+   dynamically prune partitions, but do not apply the filtering logic to
+   individual rows within partitions.
+
+   Only applies to queries against Parquet tables. For other file formats,
+   Impala only prunes at the level of partitions, not individual rows.
+   Boolean; recognized values are 1 and 0, or true and false; any other
+   value interpreted as false
+
+   false
+
+Data Types
+
+   Impala now supports new complex data types that can encode multiple
+   named fields, positional items, or key-value pairs within a single
+   column. You can combine these types to produce nested types with
+   arbitrarily deep nesting. Currently, complex data types are only
+   supported for the Parquet file format.
+   The following table lists the complex data types and the syntax for
+   each:
+   Data Type Syntax
+   STRUCT
+
+   column_name STRUCT < name : type [COMMENT 'comment_string'], ... >
+
+   type ::= primitive_type | complex_type
+   ARRAY
+
+   column_name ARRAY < type >
+
+   type ::= primitive_type | complex_type
+   MAP
+
+   column_name MAP < primitive_type, type >
+
+   type ::= primitive_type | complex_type
+
+Operators
+
+   The following table provides the new and improved operators with
+   descriptions and syntax:
+   Operator Description Syntax
+   ILIKE Improvements enable the ILIKE operator to perform
+   case-insensitive wildcard matches or regular expression matches, rather
+   than explicitly converting column values with UPPER or LOWER.
+
+   string_expression ILIKE wildcard_expression
+
+   string_expression NOT ILIKE wildcard_expression
+   IREGEXPR Improvements enable the IREGEXPR operator to perform
+   case-insensitive wildcard matches or regular expression matches, rather
+   than explicitly converting column values with UPPER or LOWER.
+   string_expression IREGEXP regular_expression
+   IS [NOT] DISTINCT FROM
+
+   Compares values for a true or false result, even if one or both values
+   are NULL. The IS NOT DISTINCT FROM operator, or its equivalent <=>
+   notation, improves the efficiency of join queries that treat key values
+   that are NULL in both tables as equal.
+
+   expression1 IS DISTINCT FROM expression2
+
+   expression1 IS NOT DISTINCT FROM expression2
+
+   expression1 <=> expression2
+
+Statements
+
+   The following table lists new or improved statements with their
+   descriptions and syntax:
+   Statement Description Syntax
+   TRUNCATE TABLE Removes all data from a table without removing the table
+   itself. The statement accepts the IF EXISTS clause, making TRUNCATE
+   TABLE easier to use in setup or ETL scripts where the table might or
+   might not exist.
+
+   TRUNCATE TABLE [IF EXISTS] [db_name.]table_name
+
+   CREATE TABLE AS SELECT The CREATE TABLE AS SELECT statement accepts a
+   PARTITIONED BY clause. You can create a partitioned table and insert
+   data into the table with a single statement.
+
+   CREATE [EXTERNAL] TABLE [IF NOT EXISTS] db_name.]table_name
+
+   [PARTITIONED BY (col_name[, ...])]
+
+   [COMMENT 'table_comment']
+
+   [WITH SERDEPROPERTIES ('key1'='value1', 'key2'='value2', ...)]
+
+   [
+
+   [ROW FORMAT row_format] [STORED AS file_format]
+
+   ]
+
+   [LOCATION 'hdfs_path']
+
+   [TBLPROPERTIES ('key1'='value1', 'key2'='value2', ...)]
+
+   [CACHED IN 'pool_name' [WITH REPLICATION = integer] | UNCACHED]
+
+   AS
+
+   select_statement
+   SHOW DATABASES The SHOW DATABASES statement returns two columns rather
+   than one. The second column includes the associated comment string, if
+   it exists, for each database. SHOW DATABASES;
+   DESCRIBE The DESCRIBE statement displays metadata about a database.
+   DESCRIBE DATABASE db_name;
+   DROP DATABASE The DROP DATABASE statement works for a nonempty
+   database. When you specify the optional CASCADE clause, any tables in
+   the database are dropped before the database itself is removed.
+
+   DROP (DATABASE|SCHEMA) [IF EXISTS] database_name [RESTRICT | CASCADE];
+
+   DROP TABLE/ALTER TABLE DROP PARTITION The DROP TABLE, ALTER TABLE, and
+   DROP PARTITION statements have an optional keyword, PURGE. PURGE causes
+   Impala to immediately remove the relevant data files rather than
+   sending them to the trashcan. This feature can help to avoid
+   out-of-space errors on storage devices, and to avoid files being left
+   behind in case of a problem with the trashcan. PURGE works when the
+   trashcan is enabled.
+
+   DROP TABLE [IF EXISTS] [db_name.]table_name [PURGE]
+
+   ALTER TABLE name { ADD [IF NOT EXISTS] | DROP [IF EXISTS] } PARTITION
+   (partition_spec) [PURGE]
+
+Functions
+
+   The following sections provide information about new and improved
+   Impala functions.
+
+   User-Defined Functions
+          User-defined functions written in C++ persist when the catalog
+          service is restarted. You no longer have to run the CREATE
+          FUNCTION statements again after a restart. You must still
+          reissue the CREATE FUNCTION statement for any Java-based
+          user-defined functions. User-defined aggregate functions have
+          more flexibility for intermediate data types.
+
+   Analytic (Window) Functions
+          The following table lists the new analytic functions:
+
+   Function Description Syntax
+   PERCENT_RANK Calculates the rank, expressed as a percentage, of each
+   row within a group of rows. If rank is the value for that same row from
+   the RANK() function (from 1 to the total number of rows in the
+   partition group), then the PERCENT_RANK() value is calculated as (rank
+   - 1) / (rows_in_group - 1). If there is only a single item in the
+   partition group, its PERCENT_RANK() value is 0. The ORDER BY clause is
+   required. The PARTITION BY clause is optional. The window clause is not
+   allowed.
+
+   PERCENT_RANK (expr)
+   OVER ([partition_by_clause] order_by_clause)
+   NTILE Returns the "bucket number" associated with each row, between 1
+   and the value of an expression. For example, creating 100 buckets puts
+   the lowest 1% of values in the first bucket, while creating 10 buckets
+   puts the lowest 10% of values in the first bucket. Each partition can
+   have a different number of buckets. The ORDER BY clause is required.
+   The PARTITION BY clause is optional. The window clause is not allowed.
+
+   NTILE (expr [, offset ...]
+   OVER ([partition_by_clause] order_by_clause)
+   CUME_DIST
+   Returns the cumulative distribution of a value. The value for each row
+   in the result set is greater than 0 and less than or equal to 1.
+   The ORDER BY clause is required. The PARTITION BY clause is optional.
+   The window clause is not allowed.
+   CUME_DIST (expr)
+   OVER ([partition_by_clause] order_by_clause)
+
+   Math Functions
+          The following table lists the new math functions:
+
+   Function Description Return Type
+   cot(double a) Returns the cotangent of the argument. double
+   factorial(integer_type a)
+
+   Computes the factorial of an integer value and works with any integer
+   type.
+   You can use either the factorial() function or the ! operator. The
+   factorial of 0 is 1. The factorial() function returns 1 for any
+   negative value. The maximum positive value for the input argument is
+   20; a value of 21 or greater overflows the range for a BIGINT and
+   causes an error.
+   bigint
+   radians(double a) Converts the argument value from degrees to radians.
+   double
+
+   String Functions
+          The following table lists the new string functions:
+
+   Function Description Return Type
+   btrim(string a), btrim(string a, string chars_to_trim) Removes all
+   instances of one or more characters from the start and end of a STRING
+   value. By default, removes only spaces. If a non-NULL optional second
+   argument is specified, the function removes all occurrences of
+   characters in that second argument from the beginning and end of the
+   string. string
+   chr(int character_code) Returns a character specified by a decimal code
+   point value. The interpretation and display of the resulting character
+   depends on your system locale. Because consistent processing of Impala
+   string values is only guaranteed for values within the ASCII range,
+   only use this function for values corresponding to ASCII characters. In
+   particular, parameter values greater than 255 return an empty string.
+   string
+   regexp_like(string source, string pattern[, string options])
+   Returns true or false to indicate whether the source string contains
+   anywhere inside it the regular expression given by the pattern. The
+   optional third argument consists of letter flags that change how the
+   match is performed, such as i for case-insensitive matching. boolean
+   split_part(string source, string delimiter, bigint n) Returns the nth
+   field within a delimited string. The fields are numbered starting from
+   1. The delimiter can consist of multiple characters, not just a single
+   character. All matching of the delimiter is done exactly, not using any
+   regular expression patterns. string
+
+   Date/Time Functions
+          The following table lists the new date and time functions:
+
+   Function Description Return Type
+   int_months_between(timestamp newer, timestamp older) Returns the number
+   of months between the date portions of two TIMESTAMP values, as an INT
+   representing only the full months that passed. int
+   months_between(timestamp newer, timestamp older) Returns the number of
+   months between the date portions of two TIMESTAMP values. Can include a
+   fractional part representing extra days in addition to the full months
+   between the dates. The fractional component is computed by dividing the
+   difference in days by 31 (regardless of the month). double
+   timeofday() Returns a string representation of the current date and
+   time, according to the time of the local system, including any time
+   zone designation. string
+   timestamp_cmp(timestamp t1, timestamp t2) Tests if one TIMESTAMP value
+   is newer than, older than, or identical to another TIMESTAMP. int
+   (either -1, 0, 1, or NULL)
+
+   Bit Manipulation Functions
+          The following table lists the new bit manipulation functions:
+
+   Function Description Return Type
+   bitand(integer_type a, same_type b) Returns an integer value
+   representing the bits that are set to 1 in both of the arguments. If
+   the arguments are of different sizes, the smaller is promoted to the
+   type of the larger. Equivalent to the & binary operator. Same as the
+   input value
+   bitnot(integer_type a)
+
+   Inverts all the bits of the input argument.
+   Equivalent to the ~ unary operator.
+   Same as the input value
+   bitor(integer_type a, same_type b) Returns an integer value
+   representing the bits that are set to 1 in either of the arguments. If
+   the arguments are of different sizes, the smaller is promoted to the
+   type of the larger. Equivalent to the | binary operator. Same as the
+   input value
+   bitxor(integer_type a, same_type b) Returns an integer value
+   representing the bits that are set to 1 in one but not both of the
+   arguments. If the arguments are of different sizes, the smaller is
+   promoted to the type of the larger. Equivalent to the ^ binary
+   operator. Same as the input value
+   countset(integer_type a [, int zero_or_one]) By default, returns the
+   number of 1 bits in the specified integer value. If the optional second
+   argument is set to zero, it returns the number of 0 bits instead. Same
+   as the input value
+   getbit(integer_type a, int position) Returns a 0 or 1 representing the
+   bit at a specified position. The positions are numbered right to left,
+   starting at zero. The position argument cannot be negative. When you
+   use a literal input value, it is treated as an 8-bit, 16-bit, and so on
+   value, the smallest type that is appropriate. The type of the input
+   value limits the range of the positions. Cast the input value to the
+   appropriate type if you need to ensure it is treated as a 64-bit,
+   32-bit, and so on value. Same as the input value
+   rotateleft(integer_type a, int positions)
+
+   Rotates an integer value left by a specified number of bits. As the
+   most significant bit is taken out of the original value, if it is a 1
+   bit, it is "rotated" back to the least significant bit. Therefore, the
+   final value has the same number of 1 bits as the original value, just
+   in different positions.
+   Specifying a second argument of zero leaves the original value
+   unchanged. Rotating a -1 value by any number of positions still returns
+   -1, because the original value has all 1 bits and all the 1 bits are
+   preserved during rotation. Similarly, rotating a 0 value by any number
+   of positions still returns 0. Rotating a value by the same number of
+   bits as in the value returns the same value. Because this is a circular
+   operation, the number of positions is not limited to the number of bits
+   in the input value. For example, rotating an 8-bit value by 1, 9, 17,
+   and so on positions returns an identical result in each case.
+   Same as the input value
+   rotateright(integer_type a, int positions) Rotates an integer value
+   right by a specified number of bits. As the least significant bit is
+   taken out of the original value, if it is a 1 bit, it is "rotated" back
+   to the most significant bit. Therefore, the final value has the same
+   number of 1 bits as the original value, just in different positions.
+   Specifying a second argument of zero leaves the original value
+   unchanged. Rotating a -1 value by any number of positions still returns
+   -1, because the original value has all 1 bits and all the 1 bits are
+   preserved during rotation. Similarly, rotating a 0 value by any number
+   of positions still returns 0. Rotating a value by the same number of
+   bits as in the value returns the same value. Because this is a circular
+   operation, the number of positions is not limited to the number of bits
+   in the input value. For example, rotating an 8-bit value by 1, 9, 17,
+   and so on positions returns an identical result in each case. Same as
+   the input value
+   setbit(integer_type a, int position [, int zero_or_one])
+
+   By default, changes a bit at a specified position to a 1, if it is not
+   already. If the optional third argument is set to zero, the specified
+   bit is set to 0 instead. If the bit at the specified position was
+   already 1 (by default) or 0 (with a third argument of zero), the return
+   value is the same as the first argument. The positions are numbered
+   right to left, starting at zero. (Therefore, the return value could be
+   different from the first argument even if the position argument is
+   zero.) The position argument cannot be negative.
+   When you use a literal input value, it is treated as an 8-bit, 16-bit,
+   and so on value, the smallest type that is appropriate. The type of the
+   input value limits the range of the positions. Cast the input value to
+   the appropriate type if you need to ensure it is treated as a 64-bit,
+   32-bit, and so on value.
+   Same as the input value
+   shiftleft(integer_type a, int positions) Shifts an integer value left
+   by a specified number of bits. As the most significant bit is taken out
+   of the original value, it is discarded and the least significant bit
+   becomes 0. The final value has either the same number of 1 bits as the
+   original value, or fewer. Shifting an 8-bit value by 8 positions, a
+   16-bit value by 16 positions, and so on produces a result of zero.
+   Specifying a second argument of zero leaves the original value
+   unchanged. Shifting any value by 0 returns the original value. Shifting
+   any value by 1 is the same as multiplying it by 2, as long as the value
+   is small enough; larger values eventually become negative when shifted,
+   as the sign bit is set. Starting with the value 1 and shifting it left
+   by N positions gives the same result as 2 to the Nth power, or
+   pow(2,N). Same as the input value
+   shiftright(integer_type a, int positions)
+
+   Shifts an integer value right by a specified number of bits. As the
+   least significant bit is taken out of the original value, it is
+   discarded and the most significant bit becomes 0. Therefore, the final
+   value has either the same number of 1 bits as the original value, or
+   fewer. Shifting an 8-bit value by 8 positions, a 16-bit value by 16
+   positions, and so on produces a result of zero. Specifying a second
+   argument of zero leaves the original value unchanged. Shifting any
+   value by 0 returns the original value. Shifting any positive value
+   right by 1 is the same as dividing it by 2. Negative values become
+   positive when shifted right.
+   Same as the input value
+
+   Miscellaneous Functions
+          The following table lists a new miscellaneous function:
+
+   Function Description Syntax
+   uuid() The uuid() function generates an alphanumeric value that you can
+   use as a guaranteed unique identifier. The uniqueness applies across
+   tables in cases where an ascending numeric sequence is not suitable.
+
+   select uuid();
+   typeof(type value) A type conversion function that returns the name of
+   the data type corresponding to an expression. For types with extra
+   attributes, such as length for CHAR and VARCHAR, or precision and scale
+   for DECIMAL, includes the full specification of the type.
+
+   select typeof(type value);
+   Returns the type
+   For example, select typeof('xyz'); returns STRING
+   For example, select typeof(5.30001 / 2342.1); returns DECIMAL(13,11)

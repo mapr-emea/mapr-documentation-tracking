@@ -1,0 +1,181 @@
+Designating NICs for MapR
+
+   By default, MFS instances and the CLDB nodes advertise all the
+   available IP addresses and MapR automatically uses all available
+   network interface cards (NICs) on each node for all communication. For
+   nodes that have multiple NICs, MapR supports segregation of NICs such
+   that certain IPs can be used for clients/communication within the
+   cluster and certain IPs can be used for clients/communication from/to
+   outside the cluster. Also, NICs can be segregated for specific
+   (high-performance and/or low-performance) clients within the cluster.
+
+   For example, if you use multiple NICs of mixed speeds (such as 1GbE and
+   10GbE) on each node, you might want to separate them to two different
+   networks depending upon the ethernet card speeds. You can assign IP
+   addresses in the same network to the NICs of 1GbE and assign IP
+   addresses in another network to the the NICs of 10GbE. That way, you
+   can use the faster NICs for communication within the cluster or for
+   certain high-performance clients (for example, FUSE-based POSIX client)
+   and the slower NICs for external communication or for low-performance
+   clients/jobs.
+
+   To illustrate this arrangement, the following diagram shows six nodes
+   on a MapR cluster, each with a 1GbE NIC (eth0) and a 10GbE NIC (eth1).
+   All the 1GbE NICs are networked together and connected to Network B.
+   Likewise, all the 10GbE NICs are networked together (as part of a
+   subnet written as 10.10.10.0/24 in CIDR notation) and connected to
+   Network A, where peak performance is required. ClientA, which is within
+   the cluster, communicates with cluster nodes over Network A and clients
+   outside the cluster communicate with cluster nodes over Network B. The
+   illustration also shows ClientB, which is a low-performance client
+   inside the cluster, communicating with cluster nodes over Network B.
+   [NICs.png]
+
+   MapR provides two environment variables, MAPR_SUBNETS and
+   MAPR_EXTERNAL, which can be used to segregate NICs for internal and
+   external clients or to segregate NICs for high-performance and
+   low-performance clients.
+
+About MAPR_SUBNETS Environment Variable
+
+   The MAPR_SUBNETS environment variable can be used to restrict MapR to a
+   subset of NICs. If MAPR_SUBNETS is not set, all IPs are available for
+   all communication. When MAPR_SUBNETS is set on:
+     * MFS nodes, MFS registers these IP addresses with CLDB as internal
+       IP addresses on which MFS nodes can be reached.
+     * CLDB nodes, CLDB advertises the IP address to clients on the
+       cluster.
+
+   The MAPR_SUBNETS environment variable can be set on all the nodes. On
+   the cluster nodes, the value for this environment variable is a
+   comma-separated list of subnet masks. For example:
+export MAPR_SUBNETS=10.10.15.0/24,10.10.16.0/24
+
+   You can specify up to four NICs in the MAPR_SUBNETS environment
+   variable. If your system has more than four NICs, MapR advertises the
+   first four it finds or if MAPR_SUBNETS environment variable is set,
+   MapR restricts the networks/IPs that are advertised based on the
+   subnets specified therein.
+
+   The MAPR_SUBNETS environment variable can be set on the client if there
+   is a NAT between the server and client. On the client host, the value
+   for this environment variable is any one IP address of the client. For
+   example:
+export MAPR_SUBNETS=10.11.12.13/32
+
+   When specifying the IP address in the MAPR_SUBNETS environment variable
+   on the client host, use /32 to specify a single IP address.
+
+About MAPR_EXTERNAL Environment Variable
+
+   If all the IP addresses on the servers are public and can be accessed
+   from outside, the MAPR_EXTERNAL environment variable need not be set.
+   On the other hand, if your cluster nodes have private IP addresses, to
+   allow clients outside the cluster to reach the cluster nodes (such as
+   when MapR is installed on the cloud or Docker container), the public IP
+   addresses can be specified in the MAPR_EXTERNAL environment variable.
+
+   This variable can be set on the cluster nodes only. When MAPR_EXTERNAL
+   environment variable is set on:
+     * MFS nodes, MFS registers these IP addresses with CLDB as the IP
+       addresses on which external clients can reach MFS nodes.
+       Communication between MFS nodes on the cluster still happen over
+       the internal IP addresses.
+     * CLDB nodes, CLDB advertises these IPs addresses to clients outside
+       the cluster or data center.
+
+   Note: Do not set the MAPR_EXTERNAL environment variable on the client
+   host(s).
+
+   The value for this environment variable is a comma-separated list of IP
+   addresses; you cannot specify the hostname as value. For example:
+ip1,ip2,ip3;
+
+   For example, you can specify the IP addresses of the IGbE NICs (shown
+   in the illustration above) as the value for this environment variable
+   to allow external or low-performance clients to communicate with the
+   cluster nodes.
+export MAPR_EXTERNAL=10.11.0.0
+
+About IP Addresses for ZooKeeper Nodes
+
+   You can specify the IP addresses of ZooKeeper nodes by running the
+   configure.sh utility with both the -Z and -EZ options during cluster
+   configuration and list the:
+     * Internal IP addresses with the -Z option
+     * External IP addresses with the -EZ option
+
+   When you specify the IP addresses using the -Z and -EZ options, these
+   IP addresses are registered with CLDB and included in the cldb.conf
+   file. In the cldb.conf file, the internal IP addresses set using the -Z
+   option are the values for the cldb.zookeeper.servers parameter and the
+   external IP addresses set using the -EZ option are the values for the
+   cldb.external.zookeeper.servers parameter.
+   Note: The configure.sh command with the -EZ option need not be run
+   during client configuration.
+
+   For more information, see [1]configure.sh.
+
+   If all the ZooKeepers have different IP addresses, port forwarding is
+   not required and, optionally, you can specify the same port with all
+   the IP addresses. However, in some cases, such as when there is a
+   single external IP address being used by multiple ZooKeepers (as in a
+   Docker container), you can specify ports for ZooKeepers when you run
+   the configure.sh utility with the -Z and -EZ options. For more
+   information, see [2]Specifying Ports.
+
+About Internal and External Clients
+
+   Clients communicating with CLDB using internal IP address (of CLDB) are
+   considered internal clients (or clients within the cluster) and clients
+   communicating with CLDB using external IP address (of CLDB) are
+   considered external clients (or clients outside the cluster).
+
+   To configure a client as an internal or high-performance client,
+   include CLDB’s internal IP address in the mapr-clusters.conf file on
+   the client host. Similarly, to configure a client as an external or
+   low-performance client, include CLDB’s external IP address in the
+   mapr-clusters.conf file on the client host.
+
+   The mapr-clusters.conf file on the client host should not contain both
+   internal and external IP addresses of the server on a cluster. The
+   mapr-clusters.conf file can contain internal and external IP addresses
+   only when the entries in the file on the client host are for multiple
+   clusters. For example, suppose a client, which is an internal client on
+   one cluster and external client on another cluster. The
+   mapr-clusters.conf file on the client host can contain CLDB’s internal
+   IP address for the cluster on which the client is considered an
+   internal client and CLDB’s external IP address for the cluster on which
+   the client is considered an external client.
+   Note: The mapr-clusters.conf file on the cluster nodes should not
+   contain any external IP address.
+
+Limitations
+
+   If:
+     * Both MAPR_SUBNETS and MAPR_EXTERNAL environment variables are set,
+       segregation of NICs for internal and external communication is
+       possible. Internal communication happens over the IP addresses
+       listed in the MAPR_SUBNETS environment variable and external
+       communication happens over the IP addresses listed in the
+       MAPR_EXTERNAL environment variable.
+     * Only MAPR_SUBNETS environment variable is set, MFS registers the IP
+       addresses (in the MAPR_SUBNETS environment variable) with CLDB as
+       internal IPs.
+     * Only MAPR_EXTERNAL environment variable is set, the environment
+       variable setting is ignored and all the NICs are used for internal
+       communication; external communication from/to outside the cluster
+       is not possible.
+
+   Note: Both the environment variables must be set to segregate internal
+   or high performance clients and external or low-performance clients.
+
+   You can specify up to 4 IP addresses in the MAPR_SUBNETS environment
+   variable 4 IP addresses in the MAPR_EXTERNAL environment variable.
+   Note: ZooKeeper must be configured with an IP address that is reachable
+   by both internal and external clients.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/SettingUpPorts.html

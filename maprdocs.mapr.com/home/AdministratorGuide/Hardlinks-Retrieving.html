@@ -1,0 +1,51 @@
+Retrieving the Number of Hard Links
+
+   To retrieve the number of hard links associated with a file, run the
+   following command:
+ls -l
+
+   The command, ls -l, will print the number of hardlinks in the second
+   column. For example, your output will look similar to the following:
+[root@atsqa6c51 vol1]# ls -l sample-link
+rw-r--r- 2 root root 0 Apr 21 11:09 sample-link
+
+   To retrieve the list of the hard links associated with a file, run the
+   following command:
+find <dirpath> -samefile <sourcefile>
+
+   where <dirpath> is the path to the source file and <sourcefile> is the
+   source file for the hard link. For example, your output will look
+   similar to the following:
+[root@atsqa6c51 vol1]# find . -samefile file8
+./file8-link2
+./file8-link100
+./file8-link101
+./file8
+./file8-link
+
+   For POSIX (loopback NFS) clients, the number of hardlinks to a file can
+   be retrieved using the stat64 system call. For example, your output
+   will look similar to the following:
+[root@atsqa6c51 cluster2]# stat samplefile
+File: 'samplefile'
+Size: 0               Blocks: 0          IO Block: 131072 regular empty file
+Device: 14h/20d Inode: 853785146   Links: 4
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2016-05-12 13:06:21.000000000 -0700
+Modify: 2016-05-12 13:06:30.002560000 -0700
+Change: 2016-05-12 13:06:30.002560000 -0700
+
+   If you are not using NFS or the POSIX clients, to retrieve the number
+   of hard links, you can run the hadoop command to retrieve the fid and
+   then run the maprcli command to retrieve the number of hard links as
+   shown below. The nlink variable will print the number of links.
+# hadoop mfs -ls /p1
+Found 1 items
+-rw-r--r--  Z U U   3 root root       3054 2016-05-05 13:49  268435456 /p1
+p 2049.40.262550  node-31.lab:5660
+# maprcli fid stat -fid 2049.40.262550
+xattrInum  uid  atime       nblocks  deleteFlags     mtime       parent     nlin
+k  type       version  size  mode  networkencryption  subtype   gid  compression
+
+0          0    1462481255  1        DeleteTypeNone  1462481376  2049.16.2  2
+   FTRegular  2097165  3054  644   false              FSTInval  0    lz4

@@ -1,0 +1,230 @@
+table create
+
+   Creates a new MapR-DB binary or JSON table.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+maprcli table create
+  -path <path>
+  [ -copymetafrom <path to source table> ]
+  [ -copymetatype all|cfs|aces|splits|attrs ]
+  [ -regionsizemb <region size in MB> ]
+  [ -autosplit true|false ]
+  [ -bulkload true|false ]
+  [ -audit true|false ]
+  [ -tabletype <Table Type - json or binary> default: binary ]
+  [ -packperm <Pack Permission settings> ]
+  [ -bulkloadperm <Bulk load Permission settings> ]
+  [ -splitmergeperm <Split and Merge Permission settings> ]
+  [ -createrenamefamilyperm <Add/Rename Family Permission settings>]
+  [ -deletefamilyperm <Delete Family Permission settings> ]
+  [ -adminaccessperm <ACE Admin Permission settings> ]
+  [ -replperm <Replication Admin Permission settings> ]
+  [ -indexperm <ACE Admin Permission settings> ]
+  [ -defaultversionperm <CF Versions Default Permission setting>]
+  [ -defaultcompressionperm <CF Compression Default Permission setting> ]
+  [ -defaultmemoryperm <CF Memory Default Permission setting>]
+  [ -defaultreadperm <CF Read Default Permission setting> ]
+  [ -defaultwriteperm <CF Write Default Permission setting> ]
+  [ -defaulttraverseperm CF Traverse Default Permission ]
+  [ -defaultappendperm <CF Append Default Permission setting>]
+
+   REST
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/create?path=<path>'
+  -u <username>:<password>
+
+Parameters
+
+   Parameter
+
+   Description
+
+   path
+
+   The path to the new MapR-DB table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under a volume with a
+       mount point at /volume1, specify the following path: /volume1/test
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named customer under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customer
+
+   copymetafrom
+
+   The path to a table that contains the metadata that should be used to
+   create the table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, if you want to copymetadata from a table named
+       test under volume1 which has a mount point at /volume1, specify the
+       following path: /volume1/test
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, if you want to copymetadata from a
+       table named test under volume1 in the sanfrancisco cluster, specify
+       the following path: /mapr/sanfrancisco/volume1/customer
+
+   copymetatype
+
+   The type of metadata to copy from the table identified in the
+   copymetafrom parameter. You can specify one or more of the following
+   options in a comma separated list:
+     * all. Copy all metadata. This is the default.
+     * cfs. Copy column family metadata.
+     * aces. Copy ACE permissions.
+     * splits. Copy split keys.
+     * attrs. Copy table attributes.
+
+   regionsizemb
+
+   The average size of the regions into which MapR-DB tries to split the
+   table as the table grows. The default is 4096 MB. This value is ignored
+   if autosplit is set to false.
+
+   If autosplit is set to true, MapR-DB splits a region when the size of
+   the region exceeds 150% of the average value. For example, if the
+   average value is 4096 MB, MapR-DB splits a region that is larger than
+   6144 MB.
+
+   Although splits are automatic, merges are not. For example, if the
+   value of regionsizemb is changed from 8 GB to 4 GB, all regions that
+   are eligible are split automatically, if autosplit is set to true.
+   However, if the value of regionsizemb is changed from 2 GB to 4 GB,
+   regions smaller than 4 GB are not automatically merged.
+   Note: When a table has less than 4 regions, MapR-DB ignores the
+   regionsizemb parameter and splits regions at a lower threshold.
+   autosplit
+
+   A Boolean value that specifies whether to split the table into regions
+   automatically as the table grows. The average size of each region is
+   determined by the regionsizemb parameter.
+
+   The default value is true. If you set the value to false, you can
+   manually split tables into regions by using the table region split
+   command.
+   bulkload
+
+   A Boolean value that specifies whether to allow a full bulk load of the
+   table. The default is false. For more information, see [4]Loading Data
+   into Binary Tables and [5]Loading Documents into JSON Tables.
+   audit Specifies whether to turn auditing on for the table. If auditing
+   is also enabled at the cluster level with the maprcli audit data
+   command and enabled for the current volume, setting this value to true
+   causes auditing to start for the table.
+   tabletype Specifies whether the table will be a binary table or a JSON
+   table. The values are binary and json. The default is binary.
+   packperm The Access Control Expression that controls who can pack table
+   regions. By default, permission is given to the user ID that is used to
+   create the table.
+   bulkloadperm The Access Control Expression that controls who can load
+   this table with bulk loads if the table was created with bulk load
+   support. By default, permission is given to the user ID that is used to
+   create the table.
+   splitmergeperm
+
+   The Access Control Expression that controls who can take the following
+   actions:
+     * Run the table region split and table region merge commands to split
+       the table into regions or to merge regions of the table together.
+     * Change the value of regionsizemb.
+
+   By default, permission is given to the user ID that is used to create
+   the table.
+   createrenamefamilyperm The Access Control Expression that controls who
+   can create column families for this table or rename existing column
+   families. By default, permission is given to the user ID that is used
+   to create the table.
+   deletefamilyperm The Access Control Expression that defines access to
+   delete column families for this table. Delimit the expression with
+   single-quotation marks. By default, permission is given to the user ID
+   that is used to create the table.
+   adminaccessperm The Access Control Expression that controls who can
+   view and edit the permissions for this table. By default, permission is
+   given to the user ID that is used to create the table.
+   replperm The Access Control Expression that controls who can set up
+   replication either to or from a table. By default, permission is given
+   to the user ID that is used to create the table
+   indexperm The secondary index Admin permissions setting that controls
+   who can create an index associated with this table. By default,
+   permission is given to the user ID that is used to create the table.
+
+   defaultversionperm
+   The default Access Control Expression for the version permission on new
+   column families that are created in this table. If no value is
+   specified, the default is u:<username of the table creator>. This value
+   of the parameter versionperm in the table cf create and table cf edit
+   commands overrides this value.
+   Note: This permission is not applicable to JSON tables. Versioning is
+   not supported for JSON documents.
+   defaultcompressionperm Applies to binary tables only: The default
+   Access Control Expression for the compression permission on new column
+   families that are created in this table. If no value is specified, the
+   default is u:<username of the table creator>. This value of the
+   parameter compressionperm in the table cf create and table cf edit
+   commands overrides this value.
+
+   defaultmemoryperm
+
+   The default Access Control Expression for the memory permission on new
+   column families that are created in this table. If no value is
+   specified, the default is u:<username of the table creator>. This value
+   of the parameter memoryperm in the table cf create and table cf edit
+   commands overrides this value.
+   defaultreadperm The default Access Control Expression for the read
+   permission on new column families that are created in this table. If no
+   value is specified, the default is u:<username of the table creator>.
+   This value of the parameter readperm in the table cf create and table
+   cf edit commands overrides this value. See [6]table cf create and
+   [7]table cf edit
+   defaultwriteperm The default Access Control Expression for the write
+   permission on new column families that are created in this table. If no
+   value is specified, the default is u:<username of the table creator>.
+   This value of the parameter writeperm in the table cf create and table
+   cf edit commands overrides this value. See [8]table cf create and
+   [9]table cf edit
+   defaulttraverseperm Applies to JSON tables only: The default Access
+   Control Expression for the traverse permission on new column families.
+   For more information about this permission, see [10]Permission Types
+   for Fields and Column Families in JSON Tables.
+   defaultappendperm Applies to binary tables only: The default Access
+   Control Expression for the append permission on new column families
+   that are created in this table. If no value is specified, the default
+   is u:<username of the table creator>. This value of the parameter
+   appendperm in the table cf create and table cf edit commands overrides
+   this value.
+
+Example
+
+   Creates a new MapR table named newtable in volume1:
+
+   CLI
+   maprcli table create -path /volume1/newtable
+
+   REST
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/create?path=%2Fvolume1%2Fnewtable' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/BulkLoadingandMapR-DBTables-binary.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/loading_documents_into_json_tables.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-cf-create.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-cf-edit.html
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-cf-create.html
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-cf-edit.html
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/granting_or_denying_access_to_fields_with_aces.html

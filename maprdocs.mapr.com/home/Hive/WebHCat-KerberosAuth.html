@@ -1,0 +1,55 @@
+Configure Kerberos Authentication for WebHCat
+
+   When security features are enabled on your MapR cluster and Kerberos is
+   in use, communications between WebHCat and its clients can use Kerberos
+   with [1]SPNEGO.
+
+   To enable WebHCat to use Kerberos, complete the following steps on the
+   node where WebHCat is installed.
+    1. Create the principal HTTP/<FQDN@REALM> for WebHCat and add the
+       principal to the keytab file. For example:
+kadmin: addprinc -randkey HTTP/<FQDN@REALM>
+kadmin: xst -k /opt/mapr/HTTP.keytab HTTP/<FQDN>
+    2. Verify the following:
+          + The principal was added to the /opt/mapr/conf/HTTP.keytab file
+            and that the file is only readable by the mapr user. For
+            example: chown mapr /opt/mapr/conf/HTTP.keytab
+          + The node where the WebHCat server is running has an HTTP user
+            with a valid maprlogin password.
+    3. Add the following section to the
+       /opt/mapr/hive/hive-<version>/hcatalog/etc/webhcat/webhcat-site.xml
+       file:
+<property>
+    <name>templeton.kerberos.secret</name>
+    <value>secret value</value>
+</property>
+<property>
+    <name>templeton.kerberos.principal</name>
+    <value>HTTP/<FQDN@REALM></value>
+</property>
+<property>
+    <name>templeton.kerberos.keytab</name>
+    <value>/opt/mapr/conf/HTTP.keytab</value>
+</property>
+    4. Add the following section to the
+       /opt/mapr/hadoop/hadoop-<version>/etc/hadoop/core-site.xml file:
+<property>
+      <name>hadoop.proxyuser.HTTP.groups</name>
+      <value>*</value>
+      <description>Allow the superuser mapr to impersonate any member of any gro
+up</description>
+</property>
+<property>
+      <name>hadoop.proxyuser.HTTP.hosts</name>
+      <value>*</value>
+      <description>The superuser can connect from any host to impersonate a user
+</description>
+</property>
+    5. Start WebHCat. See Managing the WebHCat Server.
+    6. To test if the connection is working, generate a Kerberos ticket
+       with the kinit utility and then run the following command:
+curl --negotiate -i -u : 'http://<FQDN>:50111/templeton/v1/ddl/database/'
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ConfiguringSPNEGOonMapR.html#ConfiguringSPNEGOonMapR

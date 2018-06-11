@@ -1,0 +1,45 @@
+Determining the Query Execution Path for OJAI Queries
+
+   This section describes how to determine whether an OJAI query directly
+   accesses MapR-DB JSON or leverages the OJAI Distributed Query Service.
+
+   Enable OJAI tracing, which logs information that allows you to
+   determine which execution path your queries use.
+
+   To enable tracing, set the following property in your log4j.properties
+   file, located in the /opt/mapr/conf directory:
+log4j.logger.com.mapr.ojai.store.impl=TRACE, stdout
+
+   If the query does not use the OJAI Distributed Query Service, you will
+   see tracing like the following:
+2017-07-17 17:35:59 TRACE OjaiDocumentStore:132 - Query Plan: '[{"streamName":"D
+BDocumentStream","parameters":{"queryConditionPath":false,"indexName":"abc_Idx",
+"projectionPath":["c","b","a"],"primaryTable":"/tmp/test-728918932/ei_suffix_sor
+t"}}]'
+
+   If a query uses the OJAI Distributed Query Service, you will see
+   tracing like the following instead:
+2017-07-17 18:51:13 TRACE OjaiDocumentStore:132 - Query Plan:'[{"streamName":"Dr
+illDocumentStream","parameters":{"sql":"select t.`$$ENC00NQYF6YJUL5UW45AAL5UWI`,
+t.`$$document` from dfs.`/tmp/testTable` t where (t.`l0_a4_int` = -92) order by
+t.`l0_a4_int` ASC,t.`_id` DESC"}}]'
+2017-07-17 18:51:14 DEBUG DrillDocumentStream:120 - DocumentResultsListener[1].q
+ueryIdArrived(queryId = 2692966d-0888-96e2-fa09-0d9befcd3173 ,sql string = selec
+t t.`$$ENC00NQYF6YJUL5UW45AAL5UWI`,t.`$$document` from dfs.`/tmp/testTable` t wh
+ere (t.`l0_a4_int` = -92) order by t.`l0_a4_int` ASC,t.`_id` DESC)
+
+   Note that the Query Plan in the second trace fragment above contains a
+   DrillDocumentStream instead of a DBDocumentStream. The sql parameter in
+   that stream shows a SQL query. This is also missing in the first trace
+   fragment above. The presence of the SQL query indicates that OJAI
+   passes the query to the OJAI Distributed Query Service, as noted in the
+   third trace fragment.
+
+   For further information about OJAI query plans, see [1]Examining the
+   OJAI Query Plan. For background information about different query
+   execution paths, see [2]OJAI Distributed Query Service.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/ExaminingOJAIQueryPlan.html#concept_nml_g12_pbb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b

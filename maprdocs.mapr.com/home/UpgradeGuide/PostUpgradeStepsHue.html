@@ -1,0 +1,88 @@
+Post-Upgrade Steps for Hue
+
+   Complete the following steps after you upgrade Hue with or without the
+   MapR Installer:
+    1. To configure the Hue-livy package after upgrading, see [1]Integrate
+       Hue 3.10+ With Spark 2.
+    2. After upgrading on Ubuntu, remove the mapr-hue-base package:
+apt-get remove mapr-hue-base
+    3. Copy the changes that you made for required services in your
+       existing hue.ini file into the latest version of the file:
+/opt/mapr/hue/hue-<version>/desktop/conf/hue.ini
+       Note: Hue 3.9 uses the old Query editor to work with Hive and
+       Impala queries, and introduces new Spark Notebooks. Hue 3.10+ uses
+       Notebooks as a replacement for the old Query editor for Hive and
+       Impala. If you are upgrading to Hue 3.10+, and you want to have
+       access to your saved queries in the old Hive or Impala Query
+       editor, you need to configure Hue to use the old Query editor. To
+       do this, set the use_new_editor property in the hue.ini file to
+       false. For example:
+[desktop]
+...
+  # Choose whether to show the new SQL editor.
+  use_new_editor=false
+    4. If Hue is installed on CentOS/RedHat 7.x nodes, complete the
+       following steps:
+         a. Create the following symlink to the Cyrus SASL library:
+ln -s /lib64/libsasl2.so.3.0.0 /lib64/libsasl2.so.2
+         b. If Hue is also configured to use a MySQL database, run the
+            following commands to install MariaDB and the Redhat 6
+            compatibility library:
+yum install mariadb
+ rpm -ivh --nodeps http://yum.mariadb.org/<mariadb_version>/rhel7-amd64/rpms/Mar
+iaDB-<mariadb_version>-centos7-x86_64-compat.rpm
+    5. If you use SQLite as the Hue database, load its backup:
+         a. If the Hue node runs on Ubuntu, install sqlite3:
+apt-get install sqlite3
+         b. Run the following commands:
+cd /opt/mapr/hue/hue-<new_version>/desktop
+mv desktop.db desktop.db.old
+sqlite3 desktop.db < ~/dump-hue-<old_version>-sqlite.bak
+sqlite3 desktop.db
+DELETE FROM django_content_type;
+
+    6. Update the old database schema so that it is compatible with the
+       new upgraded version:
+source /opt/mapr/hue/hue-<new_version>/build/env/bin/activate
+hue syncdb --noinput
+hue migrate --merge
+deactivate
+       For example, run the following commands to update the database
+       schema so that it is compatible with Hue 3.10+:
+source /opt/mapr/hue/hue-3.10.0/build/env/bin/activate
+hue syncdb --noinput
+hue migrate --merge
+deactivate
+       If you are using MySQL, PostgreSQL, or Oracle, and you have trouble
+       with the database during the Hue upgrade, you can restore your data
+       from the backup that you created during the [2]Pre-Upgrade Steps
+       for Hue:
+source /opt/mapr/hue/hue-<new_version>/build/env/bin/activate
+hue loaddata --ignorenonexistent ~/dump-hue-<old_version>.json
+deactivate
+    7. For upgrades performed without the MapR Installer: If you are using
+       Hadoop MRv1, complete the following steps to establish
+       communication between Hue and the JobTracker processes:
+         a. Remove existing Hue plugins from the MapReduce lib directory:
+rm /opt/mapr/hadoop/hadoop-0.20*/lib/hue-plugins-*.jar
+         b. Copy new Hue plugins to the MapReduce lib directory:
+cp /opt/mapr/hue/hue-<version>/desktop/libs/hadoop/java-lib/hue-plugins-*.jar /o
+pt/mapr/hadoop/hadoop-0.20*/lib/
+            For example, run the following commands to copy the Hue plugin
+            for Hue 3.10+:
+cp /opt/mapr/hue/hue-3.10.0/desktop/libs/hadoop/java-lib/hue-plugins-*.jar /opt/
+mapr/hadoop/hadoop-0.20*/lib/
+         c. Restart the JobTracker services:
+maprcli node services -jobtracker restart -nodes <ip_addresses>
+    8. Run configure.sh -R:
+/opt/mapr/server/configure.sh -R
+       If you do not complete this step, Hue may fail to start and the MCS
+       may still display references to the Hue version that you upgraded
+       from.
+    9. Restart the Hue service:
+maprcli node services -name hue -action restart -nodes <ip_address>
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hue/ConfigureHue3.10withSpark2.0.1.html#task_kym_zpy_1y
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/PreupgradeStepsHue.html#Untitled15

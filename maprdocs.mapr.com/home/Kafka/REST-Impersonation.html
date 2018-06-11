@@ -1,0 +1,88 @@
+User Impersonation
+
+   Describes how to disable, enable, and use Impersonation with Kafka REST
+   4.0.0 .
+
+   User impersonation enables Kafka REST jobs to be submitted as a
+   particular user. Without impersonation, Kafka REST submits jobs as the
+   user that started Kafka REST server.
+
+   On a MapR cluster, the impersonated user is typically the mapr user or
+   the user specified in the MAPR_USER environment variable. By default
+   impersonation and PAM authentication in Kafka REST are enabled.
+
+Enabling User Impersonation
+
+   To enable user impersonation, you need to first set the PAM
+   authentication properties in the kafka-rest.properties file and then
+   set the rest.proxy.enable.doAs property.
+    1. Enable PAM authentication. Set the following properties in
+       opt/mapr/kafka-rest/kafka-rest-<version>/config/kafka-rest.properti
+       es:
+          + authentication.method=BASIC
+          + authentication.realm=jpamLogin
+    2. Once authentication is enabled, set the following property in
+       /opt/mapr/kafka-rest/kafka-rest-<version>/config/kafka-rest.propert
+       ies:
+          + rest.proxy.enable.doAs=true
+
+Disabling User Impersonation
+
+   To disable user impersonation, you need to first disable the PAM
+   authentication properties in the kafka-rest.properties file and then
+   disable the rest.proxy.enable.doAs property.
+    1. Disable PAM authentication. Set the following properties in
+       opt/mapr/kafka-rest/kafka-rest-<version>/config/kafka-rest.properti
+       es:
+          + authentication.method=NONE
+          + authentication.realm=""
+    2. Once authentication is disabled, set the following property in
+       /opt/mapr/kafka-rest/kafka-rest-<version>/config/kafka-rest.propert
+       ies:
+          + rest.proxy.enable.doAs=false
+
+Example: Verify that a list of topics is owned by an impersonated user
+
+   This example gets a list of topics from a particular stream and then
+   checks that it is owned by a particular user. Depending on whether or
+   not impersonation is enabled (the default) or not, you need to use a
+   different curl command.
+$  sudo maprcli stream info -json  -path /stream1
+{
+ "timestamp":1505471089855,
+  "timeofday":"2017-09-15 10:24:49.855 GMT+0000",
+  "status":"OK",
+  "total":1,
+  "data":[
+       {
+       "path":"/stream1",
+       "physicalsize":245760,
+       "logicalsize":114688,
+       "numtopics":2,
+       "defaultpartitions":1,
+       "ttl":604800,
+       "compression":"lz4",
+       "autocreate":true,
+       "produceperm":"u:root",
+       "consumeperm":"u:root",
+       "topicperm":"u:root",
+       "copyperm":"u:root",
+       "adminperm":"u:root",
+       "ischangelog":false
+       }
+    ]
+ }
+
+   If impersonation is enabled (the default), use the following query,
+   where the query is submitted as the root user.
+$ curl -u root  -X GET http://localhost:8082/topics/%2Fstream%3Atopic1
+Enter host password for user 'root':
+{"name":"/stream:topic1","configs":null,"partitions":
+  [{"partition":0,"leader":0,"replicas":[{"broker":0,"leader":true,"in_sync":tru
+e},
+   {"broker":0,"leader":false,"in_sync":true}]}]}
+
+   If impersonation is disabled, use the following query, where the query
+   is submitted as the mapr user.
+$ curl  -X GET http://localhost:8082/topics/%2Fstream%3Atopic1
+{"error_code":40401,"message":"Topic not found."}

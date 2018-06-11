@@ -1,0 +1,34 @@
+Enabling Volume Metric Collection
+
+   On all new installations, this feature is enabled by default and you
+   only need to enable metrics collection for each volume. If you are
+   upgrading, to start collecting volume metrics that you can then
+   visualize in Grafana, you must enable metrics collection feature and
+   then enable metrics collection for each volume.
+
+   You can enable metrics collection from the command-line.
+
+Enabling the Metric Collection Feature
+
+   Enable the feature by running the following command:
+maprcli cluster feature enable -name mfs.feature.metrics.support
+
+Enabling Metric Collection for Volumes Using the CLI
+
+   Enable metrics collection on:
+     * A new volume by running the following command:
+maprcli volume create -name <volume-name> -path <volume-mount-path> -type <volum
+e-type> -metricsenabled true
+       For more information, see [1]volume create.
+     * An existing volume by running the following command:
+maprcli volume modify -name <volume-name> -metricsenabled true
+       For more information, see [2]volume modify.
+     * All volumes that do not have mapr in the name by running the
+       following script:
+for i in `maprcli volume list -columns n | grep -v mapr`; do echo $i; maprcli vo
+lume modify -name $i -metricsenabled true; done
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html

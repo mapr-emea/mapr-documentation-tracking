@@ -1,0 +1,182 @@
+Patching a Secure Cluster
+
+   The following steps show how to patch a secure cluster when you are
+   unable to establish a secure connection. Once the fix is complete, no
+   further action is required except to access the MCS and other web
+   interfaces, such as the JobTracker UI and the ResourceManager UI.
+    1. Perform the following steps on any cluster node:
+         a. Download the script from the following location:
+            [1]http://package.mapr.com/scripts/mcs/ For example:
+wget http://package.mapr.com/scripts/mcs/fixssl
+         b. Run the following command to update the permissions on the
+            file:
+chmod 755 fixssl
+         c. Run the following command to run the script:
+sudo ./fixssl
+            Once you run the script, the following is displayed
+Creating 10 year self signed certificate with subjectDN='CN=*.us-west-2.compute.
+internal'
+Certificate stored in file </tmp/tmpfile-mapcert.3743>
+Certificate was added to keystore
+
+********************************************************************************
+*********
+* In order for your cluster to work, please copy the following files in /opt/map
+r/conf  *
+* to all the nodes in the cluster, to the same directory: ssl_keystore ssl_trust
+store   *
+* After copying the files to the other nodes, please restart CLDB, Webserver, an
+d any   *
+* other service that utilizes https (Jobtracker, tasktracker)
+        *
+* (See doc for more details if you do not wish to have downtime in your cluster)
+        *
+********************************************************************************
+*********
+
+    2. On each node in the cluster, back up existing certificates and copy
+       the certificates to all other nodes in the cluster. For example:
+$ maprcli node list -columns ip
+ hostname ip
+ ip-172-31-18-196.us-west-2.compute.internal 172.31.18.196
+ ip-172-31-18-197.us-west-2.compute.internal 172.31.18.197
+ ip-172-31-18-198.us-west-2.compute.internal 172.31.18.198
+ ip-172-31-18-199.us-west-2.compute.internal 172.31.18.199
+ ip-172-31-18-200.us-west-2.compute.internal 172.31.18.200
+
+$ ssh 172.31.18.200 "mv /opt/mapr/conf/ssl_keystore /opt/mapr/conf/ssl_keystoreo
+ld"
+
+$ ssh 172.31.18.200 "mv /opt/mapr/conf/ssl_truststore /opt/mapr/conf/ssl_trustst
+oreeold"
+
+ $ scp /opt/mapr/conf/ssl_keystore /opt/mapr/conf/ssl_truststore mapr@172.31.18.
+200:/opt/mapr/conf
+
+    3. Restart the CLDB slave services. To do this, first you determine
+       which cluster nodes are running the CLDB service and then determine
+       which node is running the master CLDB. The slaves are the
+       non-master CLDB nodes. For example:
+$ maprcli node list -columns configuredservice -filter '[configuredservice==cldb
+]'
+ hostname                                     configuredservice
+                  ip
+ ip-172-31-18-198.us-west-2.compute.internal  webserver,cldb,fileserver,nfs,host
+stats,jobtracker  172.31.18.198
+ ip-172-31-18-199.us-west-2.compute.internal  webserver,cldb,fileserver,nfs,host
+stats,jobtracker  172.31.18.199
+ ip-172-31-18-200.us-west-2.compute.internal  webserver,cldb,fileserver,nfs,host
+stats,jobtracker  172.31.18.200
+
+ $ maprcli node cldbmaster
+ cldbmaster
+
+ ServerID: 8868598593037642491 HostName: ip-172-31-18-199.us-west-2.compute.inte
+rnal
+
+ $maprcli node services -cldb restart -nodes 172.31.18.198 172.31.18.200
+
+
+    4. Restart half of the TaskTracker and Nodemanager services.
+         a. List all TaskTracker or NodeManager Hosts. For example:
+ $ maprcli node list -columns configuredservice -filter '[configuredservice==tas
+ktracker]or[configuredservice==nodemanager]'
+ hostname                                     configuredservice
+    ip
+ ip-172-31-18-196.us-west-2.compute.internal  fileserver,tasktracker,nfs,hoststa
+ts  172.31.18.196
+ ip-172-31-18-197.us-west-2.compute.internal  fileserver,tasktracker,nfs,hoststa
+ts  172.31.18.197
+
+         b. Restart TaskTracker and NodeManager services on half of the
+            nodes that run those services. For example, the following
+            command will restart both TaskTracker and NodeManager services
+            on all nodes specified. If either service is not configured on
+            that node, it will ignore it.
+ $ maprcli node services -multi '[{ "name": "tasktracker", "action": "restart"},
+ { "name": "nodemanager", "action": "restart"}]' -nodes 172.31.18.196
+ ERROR (10002) -  Service: nodemanager is not configured on node: ip-172-31-18-1
+96.us-west-2.compute.internal
+
+    5. Restart JobTracker and ResourceManager services.
+         a. List all nodes running JobTracker or ResourceManager. For
+            example:
+$ maprcli node list -columns configuredservice -filter '[configuredservice==jobt
+racker]or[configuredservice==resourcemanager]'
+hostname                                     configuredservice
+                 ip
+ip-172-31-18-198.us-west-2.compute.internal  webserver,cldb,fileserver,nfs,hosts
+tats,jobtracker  172.31.18.198
+ip-172-31-18-199.us-west-2.compute.internal  webserver,cldb,fileserver,nfs,hosts
+tats,jobtracker  172.31.18.199
+ip-172-31-18-200.us-west-2.compute.internal  webserver,cldb,fileserver,nfs,hosts
+tats,jobtracker  172.31.18.200
+
+         b. Restart JobTracker and ResourceManager services. For example,
+            the following command will restart both JobTracker and
+            ResourceManager services on the specified nodes. If either
+            service is not configured on that node, it will ignore it.
+$ maprcli node services -multi '[{ "name": "jobtracker", "action": "restart"}, {
+ "name": "resourcemanager", "action": "restart"}]' -nodes 172.31.18.198 172.31.1
+8.199 172.31.18.200
+ERROR (10002) -  Service: resourcemanager is not configured on node: ip-172-31-1
+8-199.us-west-2.compute.internal
+ERROR (10002) -  Service: resourcemanager is not configured on node: ip-172-31-1
+8-200.us-west-2.compute.internal
+ERROR (10002) -  Service: resourcemanager is not configured on node: ip-172-31-1
+8-198.us-west-2.compute.internal
+
+    6. Restart remaining TaskTracker and NodeManager services. For
+       example, the following command will restart both TaskTracker and
+       NodeManager services on the specifed nodes. If either service is
+       not configured on that node, it will ignore it.
+$ maprcli node services
+-multi '[{ "name": "tasktracker", "action": "restart"}, { "name": "nodemanager",
+ "action": "restart"}]'
+-nodes 172.31.18.197 ERROR (10002) -  Service: nodemanager is not configured on
+node: ip-172-31-18-197.us-west-2.compute.internal
+
+    7. Restart additional secure services (Oozie, HistoryServer,
+       Webserver, HiveServer2, Hue). For example, the following command
+       can be run with the IPs or hostnames of all nodes in the cluster,
+       as it will only restart the services that it finds:
+$ maprcli node services
+                    -multi '[{ "name": "hue", "action": "restart"},
+                        { "name": "historyserver", "action": "restart"},
+                        { "name": "webserver", "action": "restart"},
+                        { "name": "oozie", "action": "restart"},
+                        { "name": "hs2", "action": "restart"}]'
+                    -nodes 172.31.18.198 172.31.18.199 172.31.18.200 172.31.18.1
+96 172.31.18.197
+
+    8. Restart CLDB master service. For example:
+$ maprcli node cldbmaster
+cldbmaster
+
+ServerID: 8868598593037642491 HostName: ip-172-31-18-199.us-west-2.compute.inter
+nal
+
+$ maprcli node services -cldb restart -nodes 172.31.18.199
+
+   The fixssl script performs the following steps on a node in a secure
+   cluster:
+    1. Updates manageSSLKeys.sh to use the new certificate cipher
+       algorithm.
+    2. Backs up the existing certificates so that new versions can be
+       generated with the new cipher algorithm:
+          + /opt/mapr/conf/ssl_keystore is renamed to
+            /opt/mapr/conf/ssl_keystore_old
+          + /opt/mapr/comf/ssl_truststore is renamed to
+            /opt/mapr/comf/ssl_truststore_old
+    3. Runs the following command to generate new versions of the keystore
+       and truststore files:
+/opt/mapr/manageSSLKey.sh  create -N <clustername> -ug <maprusername>:<maprgroup
+>
+          + The cluster name is retrieved from
+            /opt/mapr/conf/mapr-clusters.conf.
+          + The mapr user and mapr group is retrieved from
+            /opt/mapr/conf/daemon.conf.
+
+References
+
+   1. http://package.mapr.com/scripts/mcs/

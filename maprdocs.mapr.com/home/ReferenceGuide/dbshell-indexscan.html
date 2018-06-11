@@ -1,0 +1,124 @@
+dbshell indexscan
+
+   Describes how to use the MapR-DB shell to examine the contents of a
+   secondary index. This includes displaying information about errors
+   encountered inserting into the index.
+
+   The indexscan command scans secondary indexes and returns the document
+   ID and the values of the indexed and included fields.
+
+Syntax
+
+maprdb root:> indexscan
+        <table path>
+        --indexname <index name>
+        --limit
+        --withtags
+        --pretty
+        --mode
+
+Parameters
+
+   Parameters Description
+   <table path> (Required) The path of the JSON table
+   indexname (Required) The name of the secondary index
+   limit (Optional) The limit on the number of records to return
+   withtags (Optional) Whether to show tags for extended JSON data types
+
+   Values: true, false
+   pretty (Optional) Whether to display the content of the JSON documents
+   as an indented hierarchy of field-value pairs
+
+   Values: true, false
+   mode (Optional) Whether to display the contents of the index or error
+   information. When --mode err is specified, the command scans only rows
+   with errors and prints the _id and $ERROR fields. When --mode is not
+   specified, the command prints the _id, indexed, and included fields of
+   rows that do not have errors.
+
+   Value: err
+   There are four types of errors:
+     * KEY_TOO_LONG
+     * ARRAYS_ARE_NOT_SUPPORTED
+     * MAPS_ARE_NOT_SUPPORTED
+     * INVALID_CAST
+
+Example: Simple Index
+
+   The following example uses a simple index where index1 is on table1,
+   field a.
+// Insert one document
+maprdb root:> insert /table1 --id 1 --value '{"a":7}'
+Document with id: "1" inserted.
+
+// Create index1 on table1 and index field a
+# maprcli table index add -path /table1 -index index1 -indexedfields a -json
+
+// Perform a normal indexscan; the _id field and the indexed field for the docum
+ent is displayed
+maprdb root:> indexscan /table1 --indexname index1
+{"_id":"1","a":7}
+1 document(s) found.
+
+// Insert another document with _id value as 2 with field a as a map
+// An error occurs because maps are not allowed on indexed fields
+maprdb root:> insert /table1 --id 2 --value '{"a":[1,2,3]}'
+
+// Perform a normal indexscan; the document that does not have the error is disp
+layed
+maprdb root:> indexscan /table1 --indexname index1
+{"_id":"1","a":7}
+1 document(s) found.
+
+// Perform an indexscan with error mode; the document with the error is displaye
+d
+maprdb root:> indexscan /table1 --indexname index1 --mode err
+{"_id":"2","$ERROR":"Index field 2: ARRAYS_ARE_NOT_SUPPORTED"}
+1 document(s) found.
+
+Example: Composite Index
+
+   The following example uses a composite index with included fields, in
+   which index2 is on table table1, with indexed fields a and b and
+   included field c.
+// Insert a document with fields 'a', 'b' and 'c'.
+maprdb root:> insert /table1 --id 2 --value '{"a":7,"b":"mapr","c":"db"}'
+Document with id: "2" inserted.
+
+// Create index2 on table1 withindexed fields a and b, and included field c
+# maprcli table index add -path /table1 -index index2 -indexedfields a,b -includ
+edfields c
+
+// Perform an indexscan
+maprdb root:> indexscan /table1 --indexname index2
+{"_id":"2","c":"db","a":7,"b":"mapr"}
+1 document(s) found.
+
+// Insert a document that has field a as a map (which causes an error because ma
+ps are not allowed on an indexed field)
+maprdb root:> insert /table1 --id 1 --value '{"a":{"m":4},"b":"mapr","c":"db"}'
+Document with id: "1" inserted.
+
+// Perform a normal indexscan; the same results shown earlier are displayed
+maprdb root:> indexscan /table1 --indexname index2
+{"_id":"2","c":"db","a":7,"b":"mapr"}
+1 document(s) found.
+
+// Perform an indexscan with error mode; the document with the error is displaye
+d
+maprdb root:> indexscan /table1 --indexname index2 --mode err
+{"_id":"1","c":"db","$ERROR":"Index field 3: MAPS_ARE_NOT_SUPPORTED"}
+1 document(s) found.
+
+Troubleshooting Use Cases
+
+   Situations where you can use this command are as follows:
+     * List the contents of an index.
+     * Resolve encoding errors encountered inserting into an index.
+
+   See [1]Troubleshooting Secondary Indexes for more information on these
+   use cases.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-troubleshooting.html#indexes-troubleshooting

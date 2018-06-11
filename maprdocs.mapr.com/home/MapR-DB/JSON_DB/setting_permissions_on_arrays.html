@@ -1,0 +1,38 @@
+Setting Permissions on Arrays
+
+   Permissions apply to an entire array, not to individual elements in an
+   array. However, it is possible to set permissions on fields within
+   documents or maps that are stored in an array.
+
+   For example, granting a user read permission on array a[] in this
+   document permits the user to read all of the elements in the array. It
+   is not possible to grant read permission on an individual array element
+   like a[1].
+{"a" : [ "b", 1, "c", 2 ] }
+
+   However, suppose you have the following document with a person array
+   field that has the following nested documents:
+{
+    "_id" : "id001",
+    "person" : [
+        {"name" : {"last" : "Smith", "first" : "John"}},
+        {"name" : {"last" : "Subramanium", "first" : "Ananya"}}
+    ]
+}
+
+   If you grant a user read permission on the array person[], that user
+   can read every field in every document within the array.
+
+   If you want to restrict read access to only specific fields in the
+   nested document, perform the following sequence of steps:
+    1. Deny the user read permission on the array person[].
+    2. Grant the user traverse permission on the array person[].
+    3. Grant the user read permission on the specific fields. For example,
+       to grant the user read permission on only the first names in the
+       nested documents, grant this permission on person[].name.first.
+
+   If you grant permissions on person[].name.first, and a document has a
+   field person with a single nested document (rather than an array of
+   nested documents), then any permissions granted on person[].name.first
+   do not apply. You must grant separate permissions on person.name.first
+   to enforce permissions on the single nested document.

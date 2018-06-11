@@ -1,0 +1,46 @@
+CLDB
+
+CLDB
+
+   The Container Location Database (CLDB) service tracks the following
+   information about every container in MapR-FS:
+     * The node where the container is located.
+     * The container’s size.
+     * The volume the container belongs to.
+     * The policies, quotas, and usage for that volume.
+
+   For more information on containers, see [1]MapR-FS.
+
+   The CLDB also tracks fileservers in the cluster and node activity.
+   Running the CLDB service on multiple nodes distributes lookup
+   operations across those nodes for load balancing, and also provides
+   high availability.
+
+   When a cluster runs the CLDB service on multiple nodes, one node acts
+   as the master CLDB and the others act as slaves. The master node has
+   read and write access to the file system, while slave nodes only have
+   read access. The kvstore (key-value store) container has the container
+   ID 1, and holds cluster-related information. The ZooKeeper tracks
+   container information for the kvstore container. The CLDB assigns a
+   container ID to each new container it creates. The CLDB service tracks
+   the location of containers in the cluster by the container ID.
+
+   When a client application opens a file, the application queries the
+   CLDB for for the container ID of the root volume’s name container. The
+   CLDB returns the container ID and the IP addresses of the nodes in the
+   cluster where the replicas of that container are stored. The client
+   application looks up the volume associated with the file in the root
+   volume’s name container, then queries the CLDB for the container ID and
+   IP addresses of the nodes in the cluster with the name container for
+   the target volume. The target volume’s name container has the file ID
+   and inode for the target file. The client application uses this
+   information to open the file for a read or write operation.
+
+   Each fileserver heartbeats to the CLDB periodically, at a frequency
+   ranging anywhere from 1-3 seconds depending on the cluster size, to
+   report its status and container information. The CLDB may raise alarms
+   based on the status communicated by the FileServer.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapROverview/c_maprfs.html

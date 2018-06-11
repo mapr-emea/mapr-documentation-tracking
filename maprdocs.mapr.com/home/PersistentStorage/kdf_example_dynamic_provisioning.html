@@ -1,0 +1,237 @@
+Example: Mounting a PersistentVolume for Dynamic Provisioning
+
+   This example also uses a PersistentVolume. However, unlike the previous
+   example, when you use the MapR dynamic provisioner, you do not need to
+   create a PersistentVolume manually. The PersistentVolume is created
+   automatically based on the parameters specified in the referenced
+   StorageClass.
+
+   Dynamic provisioning is useful in cases where you do not want MapR and
+   Kubernetes administrators to create storage manually to store the Pod
+   storage state.
+
+   The following example uses a PersistentVolumeClaim that references a
+   Storage Class. In this example, a Kubernetes Administrator has created
+   a storage class called secure-maprfs for Pod creators to use when they
+   want to create persistent storage for their Pods. In this example, it
+   is important for the created Pod storage to survive the deletion of a
+   Pod.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+   name: secure-maprfs
+   namespace: mapr-examples
+provisioner: mapr.com/maprfs
+parameters:
+    restServers: "rest1:8443"
+    cldbHosts: "cldb1 cldb2 cldb3"
+    cluster: "mysecurecluster"
+    securityType: "secure"
+    ticketSecretName: "mapr-ticket-secret"
+    ticketSecretNamespace: "mapr-examples"
+    maprSecretName: "mapr-provisioner-secrets"
+    maprSecretNamespace: "mapr-examples"
+    namePrefix: "pv"
+    mountPrefix: "/pv"
+    readOnly: "true"
+    reclaimPolicy: "Retain"
+    advisoryquota: "100M"
+    readonly: "1"
+
+---
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: test-secure-provisioner
+  namespace: mapr-examples
+spec:
+  containers:
+  - name: busybox
+    image: busybox
+    args:
+    - sleep
+    - "1000000"
+    imagePullPolicy: Always
+    volumeMounts:
+      - name: maprfs-pvc
+        mountPath: "/dynvolume"
+  restartPolicy: "Never"
+  volumes:
+    - name: maprfs-pvc
+      persistentVolumeClaim:
+        claimName: maprfs-secure-pvc
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: maprfs-secure-pvc
+  namespace: mapr-examples
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: secure-maprfs
+  resources:
+    requests:
+      storage: 300M
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mapr-provisioner-secrets
+  namespace: mapr-examples
+type: Opaque
+data:
+  MAPR_CLUSTER_USER: CHANGETHIS!
+  MAPR_CLUSTER_PASSWORD: CHANGETHIS!
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mapr-ticket-secret
+  namespace: mapr-examples
+type: Opaque
+data:
+  CONTAINER_TICKET: <BASE64 ENCODED VERSION OF CONTENTS OF TICKET FILE>
+
+   The following tables describe the parameters in the example:
+
+   StorageClass
+   Parameter Notes
+   apiVersion The Kubernetes APi version for the StorageClass spec.
+   kind The kind of object being created. This is a StorageClass.
+   metadata: name The name of the StorageClass. Administrators should
+   specify the name carefully because it will be used by Pod authors to
+   help select the right StorageClass for their needs.
+   metadata: namespace The namespace in which the StorageClass runs. This
+   namespace can be different from the namespace used by the PVC and Pod,
+   since the StorageClass namespace can be a cross-namespace resource.
+   provisioner The provisioner being used. for the MapR provisioner,
+   specify mapr.com/maprfs.
+   restServers A space-separated list of MapR webservers. Specify the
+   hostname or IP address and port number of each REST server for the MapR
+   cluster. For fault tolerance, providing multiple REST server hosts is
+   recommended.
+   cldbHosts The hostname or IP addresses of the CLDB hosts for the MapR
+   cluster. You must provide at least one CLDB host. For fault-tolerance,
+   providing multiple CLDB hosts is recommended. To specify multiple
+   hosts, separate each name or IP address by a space.
+   cluster The MapR cluster name.
+   securityType A parameter that indicates whether MapR tickets are used
+   or not used. If MapR tickets are used, specify secure. Otherwise,
+   specify unsecure.
+   ticketSecretName The name of the Secret that contains the ticket to use
+   when mounting to the MapR cluster. See [1]Configuring a Secret.
+   ticketSecretNamespace The namespace that contains the Secret. Use the
+   same namespace as the namespace used by the Pod.
+   maprSecretName The name of the Kubernetes Secret that is used to store
+   MapR administrative credentials (user, password, and ticket information
+   for the MapR webserver). To use the provisioner, you must configure a
+   Secret. See [2]Configuring a Secret.
+   maprSecretNamespace The namespace for the Secret containing the MapR
+   administrative credentials (user name and password information for a
+   MapR user that has the privileges to create MapR volumes). This
+   namespace can be different from the namespace used by the Pod, since a
+   Pod author or namespace admin might not be trusted to create
+   administration Secrets for the MapR cluster.
+   namePrefix A prefix for the MapR volume to be created. For example, if
+   you specify PV as the namePrefix, the first dynamically created volume
+   might be named PV.bevefsescr. The provisioner generates random names
+   using lower-case letters. If you do not specify a prefix, the
+   provisioner uses maprprovisioner as a prefix.
+   mountPrefix The parent path of the mount in MapR-FS. If you do not
+   specify a mount prefix, the provisioner mounts your volume under the
+   MapR root.
+   readOnly This parameter specifies that the POSIX driver should mount
+   the MapR path as read only. This is different from the readonly
+   parameter for volume creation that creates the volume as read only.
+   reclaimPolicy Kubernetes does not currently support passing a
+   non-delete reclaim policy to the StorageClass. This parameter allows
+   you to specify Retain. This ensures that provisioned volumes are not
+   automatically deleted when their calling Pods are deleted. If you
+   specify Retain, you must clean up your provisioned volumes manually.
+   advisoryquota The advisory storage quota for the MapR volume.
+   advisoryquota is one of the MapR parameters that you can specify for
+   dynamic provisioning. For more information, see [3]Before You Begin.
+   readonly When the value is 1, this parameter specifies that the MapR
+   volume should be created as read-only. This is different from the
+   readOnly parameter that mounts the MapR path as read only.
+
+   Pod
+   Parameter Notes
+   apiVersion The Kubernetes API version for the Pod spec.
+   kind The kind of object being created. For clarity, this example uses a
+   naked Pod. Generally, it is better to use a Deployment, DaemonSet, or
+   StatefulSet for high availability and ease of upgrade.
+   metadata: name The Pod name.
+   metadata: namespace The namespace in which the Pod runs. It should be
+   the same namespace in which the PVC runs.
+   volumeMounts: mountPath A directory inside the container that is
+   designated as the mount path.
+   volumeMounts: name A name that you assign to the Kubernetes
+   volumeMounts resource. The value should match Volumes: name.
+   Volumes: name A string to identify the name of the Kubernetes volumes
+   resource. The value should match volumeMounts: name.
+   persistentVolumeClaim: claimName The name of the PersistentVolumeClaim
+   (PVC). For more information, see [4]PersistentVolumeClaims.
+
+   PVC
+   Parameter Notes
+   apiVersion The Kubernetes API version for the Pod spec.
+   kind The kind of object being created. This is a PersistentVolumeClaim
+   (PVC).
+   metadata: name The PVC name.
+   metadata: namespace The namespace in which the PVC runs. This should be
+   the same namespace used by the Pod.
+   accessModes How the PersistentVolume is mounted on the host. Only
+   ReadWriteOnce (RWO) is supported. (This is a limitation of the
+   FlexVolume driver.) For more information, see [5]Access Modes.
+   storageClassName The name of the storage class requested by the
+   PersistentVolumeClaim. For more information, see [6]Dynamic
+   Provisioning and Storage Classes.
+   requests: storage The storage resources being requested, or that were
+   requested and have been allocated. The Pod author can use this
+   parameter to tell MapR how much quota is needed for the MapR volume.
+   For the units, see [7]Resource Model.
+
+   Provisioner Secret
+
+   In the mapr-provisioner-secrets Secret:
+   Parameter Notes
+   MAPR_CLUSTER_USER This is the base64-encoded user ID used to log in to
+   the MapR REST server and create or delete volumes. See [8]Converting a
+   String to Base64. For more information about Secrets, see [9]Secrets.
+   MAPR_CLUSTER_PASSWORD This is the base64-encoded password for the
+   MAPR_CLUSTER_USER. See [10]Converting a String to Base64. For more
+   information about Secrets, see [11]Secrets.
+
+   Ticket Secret
+
+   In the mapr-ticket-secret Secret:
+   Parameter Notes
+   CONTAINER_TICKET The contents of the MapR ticket encoded in base64. If
+   you specified secure for the securityType, you must provide the ticket.
+   To encode the ticket, see [12]Converting a String to Base64. You may
+   remove the ticket if the MapR cluster is not secure. For more
+   information about Secrets, see [13]Secrets.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_before_you_begin.html#concept_ogr_sxc_qcb
+   4. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
+   5. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+   6. http://blog.kubernetes.io/2017/03/dynamic-provisioning-and-storage-classes-kubernetes.html
+   7. https://github.com/kubernetes/community/blob/master/contributors/design-proposals/scheduling/resources.md
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_converting_a_string.html#concept_ogr_sxc_qcb
+   9. https://kubernetes.io/docs/concepts/configuration/secret/
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_converting_a_string.html#concept_ogr_sxc_qcb
+  11. https://kubernetes.io/docs/concepts/configuration/secret/
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_converting_a_string.html#concept_ogr_sxc_qcb
+  13. https://kubernetes.io/docs/concepts/configuration/secret/

@@ -1,0 +1,234 @@
+gfsck
+
+   The gfsck (global filesystem check) command performs a check and repair
+   operation on a volume or volume snapshot. The command checks the
+   consistency of a volume including:
+     * All cross container links (for example, from file to filelets, from
+       table to tablets)
+     * The tabletmap key range
+     * The attributes of filelets (uid/gid/mode)
+
+   It identifies the unreachable files, directories, and tables in the
+   volume and moves them to /lost+found during repair operation. It also
+   identifies any unreachable DB inodes or dangling pointers to lost
+   inodes and fixes them.
+
+   The gfsck utility can be used when local fsck repairs some containers
+   at highest epoch or when some containers are lost (either when a lower
+   epoch container was promoted as master or when a container was
+   permanently lost) at highest epoch.
+
+Typical process flow
+
+    1. Take the affected storage pools offline with the [1]mrconfig sp
+       offline command.
+    2. Execute the [2]fsck command on the storage pools (or disks).
+    3. Bring the storage pools back online with the [3]mrconfig sp online
+       command.
+    4. Execute the gfsck command on the cluster, volumes, or snapshots
+       that were affected.
+       Warning: If there are alarms, such as DataUnavailableAlarm or
+       DataUnderReplicatedAlarm, do not run gfsck command with -r
+       (--repair) option. Running the gfsck command with the -r (--repair)
+       option might result in data loss. If necessary, first run gfsck
+       without the -r (--repair) option and attempt to repair only after
+       analyzing the command output.
+
+Syntax
+
+/opt/mapr/bin/gfsck
+    [ -h|--help ]
+    [ -c|--clear ]
+    [ -d|--debug ]
+    [ -b|--dbcheck ]
+    [ -r|--repair ]
+    [ -y|--assume-yes ]
+    [ cluster=<cluster name> ]
+    [ rwvolume=<volume name> ]
+    [ snapshot=<snapshot name> ]
+    [ snapshotid=<snapshot-id> ]
+
+Parameters
+
+   Parameter
+
+   Description
+
+   -h --help
+
+   Prints usage text.
+
+   -c --clear
+
+   Clears previous warnings before performing the global filesystem check.
+
+   -d --debug
+
+   Provides additional information in the output for debug purposes.
+
+   -b --dbcheck
+
+   Checks that every key in a tablet is within that tablet's startKey and
+   endKey range. This option is very IO intensive, and should only be used
+   if database inconsistency is suspected.
+
+   -r --repair
+
+   Indicates that repairs should be performed if needed.
+   Note: Running the gfsck command with the -r (--repair) option might
+   result in data loss. If necessary, first run gfsck without the -r
+   (--repair) option and attempt to repair only after analyzing the
+   command output.
+
+   -y --assume-yes
+
+   Assumes that containers without valid copies (as reported by CLDB) can
+   be deleted automatically. If this option is not specified, gfsck will
+   pause for user input to verify that containers can be deleted - enter
+   yes to delete, no to exit gfsck, or ctrl-C to quit.
+
+   cluster
+
+   Name of the cluster (default: default cluster)
+
+   rwvolume
+
+   Name of the volume (default: null)
+
+   snapshot
+
+   Name of the snapshot (default: null)
+
+   snapshotid
+
+   The snapshot id (default: 0)
+
+Example (Debug mode)
+
+   Execute the gfsck command on the read/write volume named
+   mapr.cluster.root with debug mode turned on.
+/opt/mapr/bin/gfsck rwvolume=mapr.cluster.root -d
+
+   Sample output is shown below.
+Starting GlobalFsck:
+  clear-mode            = false
+  debug-mode            = true
+  dbcheck-mode          = false
+  repair-mode           = false
+  assume-yes-mode       = false
+  cluster               = my.cluster.com
+  rw-volume-name        = mapr.cluster.root
+  snapshot-name         = null
+  snapshot-id           = 0
+  user-id               = 0
+  group-id              = 0
+
+  get volume properties ...
+    rwVolumeName = mapr.cluster.root (volumeId = 205374230, rootContainerId = 20
+49, isMirror = false)
+
+  put volume mapr.cluster.root in global-fsck mode ...
+
+  get snapshot list for volume mapr.cluster.root ...
+
+  starting phase one (get containers) for volume mapr.cluster.root(205374230) ..
+.
+    container 2049 (latestEpoch=3, fixedByFsck=false)
+    got volume containers map
+  done phase one
+
+  starting phase two (get inodes) for volume mapr.cluster.root(205374230) ...
+    get container inode list for cid 2049
+      +inodelist: fid=2049.32.131224 pfid=-1.16.2 typ=4 styp=0 nch=0 dMe:false d
+Rec: false
+      +inodelist: fid=2049.33.131226 pfid=-1.16.2 typ=2 styp=0 nch=0 dMe:false d
+Rec: false
+      +inodelist: fid=2049.34.131228 pfid=-1.33.131226 typ=4 styp=0 nch=0 dMe:fa
+lse dRec: false
+      +inodelist: fid=2049.35.131230 pfid=-1.16.2 typ=4 styp=0 nch=0 dMe:false d
+Rec: false
+      +inodelist: fid=2049.36.131232 pfid=-1.16.2 typ=4 styp=0 nch=0 dMe:false d
+Rec: false
+      +inodelist: fid=2049.38.262312 pfid=-1.16.2 typ=2 styp=0 nch=0 dMe:false d
+Rec: false
+      +inodelist: fid=2049.39.262314 pfid=-1.38.262312 typ=1 styp=0 nch=0 dMe:fa
+lse dRec: false
+    got container inode lists (totalThreads=1)
+  done phase two
+
+  starting phase three (get fidmaps & tabletmaps) for volume mapr.cluster.root(2
+05374230) ...
+    got fidmap lists (totalFidmapThreads=0)
+    got tabletmap lists (totalTabletmapThreads=0)
+  done phase three
+
+  === Start of GlobalFsck Report ===
+
+  file-fidmap-filelet union --
+   2049.39.262314:P     --> primary (nchunks=0)      --> AllOk
+    no errors
+
+  table-tabletmap-tablet union --
+    empty
+
+  orphan directories --
+    none
+
+  orphan kvstores --
+    none
+
+  orphan files --
+    none
+
+  orphan fidmaps --
+    none
+
+  orphan tables --
+    none
+
+  orphan tabletmaps --
+    none
+
+  orphan dbkvstores --
+    none
+
+  orphan dbfiles --
+    none
+
+  orphan dbinodes --
+    none
+
+  containers that need repair --
+    none
+
+  incomplete snapshots that need to be deleted --
+    none
+
+  user statistics --
+    containers          = 1
+    directories         = 2
+    kvstores            = 0
+    files               = 1
+    fidmaps             = 0
+    filelets            = 0
+    tables              = 0
+    tabletmaps          = 0
+    schemas             = 0
+    tablets             = 0
+    segmaps             = 0
+    spillmaps           = 0
+    overflowfiles       = 0
+    bucketfiles         = 0
+    spillfiles          = 0
+
+  === End of GlobalFsck Report ===
+
+  remove volume mapr.cluster.root from global-fsck mode (ret = 0) ...
+
+GlobalFsck completed successfully (7142 ms); Result: verify succeeded
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mrconfig-sp-offline.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/fsck.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mrconfig-sp-online.html

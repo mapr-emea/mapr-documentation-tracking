@@ -1,0 +1,63 @@
+Performing Bulkloads with MapReduce
+
+   This section describes custom MapReduce applications used to perform
+   bulkloads for MapR-DB binary tables.
+
+   You can use the [1]HFileOutputFormat configureIncrementalLoad() method
+   for writing custom MapReduce applications to perform bulk loads.
+   Although the name of the method implies that you can use it only for
+   incremental bulk loads, the method also works for full bulk loads,
+   provided that the -bulkload, BULKLOAD, or Bulkload parameter for a
+   table is set to true, as described in [2]Bulk Loading and MapR-DB
+   Tables.
+
+   If you have a custom MapReduce applications that does not use
+   HFileOutputFormat.configureIncrementalLoad(), simply use the path to
+   the MapR-DB table that you want to load. Using
+   HFileOutputFormat.configureIncrementalLoad() provides at least two
+   advantages:
+   This method performs a number of tasks that your application would
+   otherwise need to do explicitly:
+    1. Inspects the table to configure a total order partitioner
+    2. Uploads the partitions file to the cluster and adds it to the
+       DistributedCache
+    3. Sets the number of reduce tasks to match the current number of
+       regions
+    4. Sets the output key/value class to match HFileOutputFormat's
+       requirements
+    5. Sets the reducer up to perform the appropriate sorting (either
+       KeyValueSortReducer or PutSortReducer)
+
+   This method turns off Speculative Execution automatically. For details,
+   see the note below.
+   Warning: Turning off Speculative Execution
+
+   Speculative Execution of MapReduce tasks is on by default. For custom
+   applications that load MapR-DB binary tables, it is recommended to turn
+   Speculative Execution off. When it is on, the tasks that import data
+   might run multiple times. Multiple tasks for an incremental bulkload
+   could insert one or more versions of a record into a table. Multiple
+   tasks for a full bulkload could cause loss of data if the source data
+   continues to be updated during the load.
+
+   If your custom MapReduce application uses
+   HFileOutputFormat.configureIncrementalLoad(), you do not have to turn
+   off Speculative Execution manually.
+   HFileOutputFormat.configureIncrementalLoad() turns it off
+   automatically. Speculative Execution is automatically turned off for
+   MapReduce utilities such as CopyTable and ImportTsv.
+
+   If you are writing a custom MapReduce application that does not use the
+   HFileOutputFormat configureIncrementalLoad() method for bulk loading,
+   you must turn off Speculative Execution manually.
+
+   Turn off Speculative Execution by setting the following MapReduce
+   version 2 parameter to false: mapreduce.map.speculative
+
+   If the job is programmatically written, you can turn off Speculative
+   Execution at the code level: job.setSpeculativeExecution(false);
+
+References
+
+   1. https://hbase.apache.org/apidocs/index.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/BulkLoadingandMapR-DBTables-binary.html

@@ -1,0 +1,147 @@
+Optimizing Queries with Indexes
+
+   MapR-DB provides a highly scalable key-value database platform on which
+   you can run SQL queries using Drill. As of the 6.0 release of the MapR
+   Converged Data Platform, MapR-DB natively supports indexes on secondary
+   fields in JSON tables.
+   Note: MapR-DB does not support indexes on binary tables.
+   An index is a special table that stores a subset of document fields
+   from a JSON table. The primary field in a JSON table is the _id field
+   (unique key field). By default, MapR-DB sorts the JSON table by the _id
+   field. All other fields in the JSON table are secondary fields. You can
+   create indexes on the secondary fields in a JSON table to eliminate
+   full tables scans and significanlty improve query performance. See
+   [1]MapR-DB as a Document Database and [2]Secondary Index Concepts for
+   more information.
+
+Benefits of Indexes
+
+   Well-designed indexes can optimize access to data stored in MapR-DB
+   JSON tables and improve performance for high read operations, fast
+   integrated analytics, and complex operational analytics. See
+   [3]Secondary Indexes for more information about the benefits of
+   indexes.
+
+Types of Queries that Benefit from Indexes
+
+   Indexes primarily benefit queries with filters in the WHERE clause and
+   queries with an ORDER BY clause for sorting, as described in the
+   following table:
+   Query Type Description
+   Equality Equality queries contain equality conditions, such as a=1 and
+   can also include IN. See [4]Equality Queries.
+   Range Range queries contain range conditions, such as <=, >=, and the
+   LIKE pattern matching condition. See [5]Range Queries.
+   Note: The LIKE operator only works on fields that have varchar data
+   types. To use the LIKE operator in queries, use the [6]CAST function to
+   explicitly cast fields to varchar. To use indexes for such queries,
+   create indexes on the cast expressions, as explained in [7]Using Casts
+   in Secondary Indexes.
+   ORDER BY ORDER BY queries specify a sort order. If the ordering and
+   sorting of the index key list match the ordering specified in a query,
+   the optimizer in Drill does not have to sort the data after the index
+   scan. See [8]ORDER BY Queries.
+   Multi-index Multi-index queries contain conditions on multiple fields.
+   Drill can scan multiple indexes and use the intersection of the
+   matching documents to optimize these queries. Multi-index queries are
+   an alternative to using [9]composite key indexes. See [10]Multi-Index
+   Queries.
+
+   Drill can create index plans for queries with and without filters in
+   the WHERE clause. For example, Drill can create an index plan for an
+   ORDER BY query that does not have filters.
+   Drill 1.12 and later also supports the following types of queries
+   without filters :
+     * GROUP BY
+     * JOIN
+     * DISTINCT
+
+   See [11]Index Planning in Drill for more information.
+
+Types of Indexes Supported by MapR-DB
+
+   MapR-DB supports several types of indexes on JSON tables including
+   simple, composite, hashed, covering, and indexes with the CAST
+   function.
+   Note: MapR-DB enforces certain [12]restrictions on indexes, such as a
+   limit of 32 KB on the collective size of all indexed keys for each
+   index. See [13]Restrictions on Secondary Indexes for a full list of
+   restrictions and [14]Data Types Supported for Secondary Indexes.
+   The following table lists the supported index types with brief
+   descriptions and links to topics that provide more information:
+   Index Type Description
+   Simple Simple indexes are indexes with a single indexed field (or key).
+   See [15]Simple Indexes.
+   Composite Composite indexes are indexes that have more than one indexed
+   field (or key). See [16]Composite Indexes.
+   Hashed Hashed indexes are indexes that distribute keys across logical
+   partitions to avoid the creation of hot spots when MapR-DB updates the
+   index with new keys from the JSON table. See [17]Hashed Indexes.
+   Covering A covering index is an index that allows MapR-DB to process a
+   query using only the secondary indexes. MapR-DB does not have to read
+   data in the JSON table. See [18]Covering Indexes.
+   Indexes with the CAST function Indexes with the CAST function convert
+   the indexed field to the data type specified by the CAST function and
+   store the results. See [19]Using Casts in Secondary Indexes.
+
+Steps Required to Use Indexes
+
+   To use the index functionality with Drill, complete the following
+   steps:
+    1. Install the latest version of the required MapR software on the
+       cluster. See [20]Preparing Clusters for Querying using Secondary
+       Indexes on JSON Tables and Installing Drill.
+    2. Evaluate your queries and design indexes that support the queries.
+       See [21]Understanding the Secondary Index Workflow and
+       [22]Designing Secondary Indexes.
+    3. Create indexes on JSON tables in MapR-DB. See [23]Adding Secondary
+       Indexes on JSON Tables and [24]Managing Secondary Indexes.
+       Note: The user that creates indexes on a JSON table must have
+       created the table or have the indexperm permission in addition to
+       readAce on the volume and lookupdir on directories in the table
+       path. If you do not have these permissions, consult with your
+       system administrator.
+    4. Issue queries.
+    5. Verify that Drill uses the available indexes. See [25]Determining
+       Index Use and Troubleshooting Indexes.
+
+Additional Information
+
+     * To see how Drill selects a query plan, see [26]Selection and
+       Execution of Secondary Indexes.
+     * To learn about the index planning and execution configuration
+       options available in Drill, see [27]Index Planning and Execution
+       Configuration Options.
+     * For information about index architecture, see [28]Implementation of
+       Secondary Indexes.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapROverview/MaprDB-overview-json.html#concept_qwp_p2f_3y
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-learning-about.html#concept_u1l_rhn_p1b
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/Indexes.html#indexes
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-equality-queries.html#reference_ug4_jbl_f1b
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-range-queries.html#reference_q5p_v1l_f1b
+   6. https://drill.apache.org/docs/data-type-conversion/
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-functional-index.html#concept_u1s_wll_f1b
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby-queries.html#reference_cfw_jwl_f1b
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-multi-index-queries.html#concept_pbs_jk3_t1b
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/index-planning-drill.html#index-planning-drill
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-restrictions.html#concept_n3m_z4v_s1b
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-restrictions.html#concept_n3m_z4v_s1b
+  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes
+  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-singleField-index.html#reference_llf_y1n_pz
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz
+  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/hashed-index.html#hashed-index
+  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/index-types-covering.html#concept_qdg_p5j_t1b
+  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-functional-index.html#concept_u1s_wll_f1b
+  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/admin-prepCluster-for-indexingTables.html#admin-prepCluster-for-indexingTables
+  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-deployment.html#indexes-implementation
+  22. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz
+  23. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/admin-adding-indexes.html#creating-indexes
+  24. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-administration.html#indexes-administration
+  25. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/evaluating_queries.html#evaluating_queries
+  26. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/OverviewIndexSelectionExecution.html#concept_pc2_4ws_p1b
+  27. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-si-config-options.html#drill-si-config-options
+  28. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-implementation.html#indexes-implementation

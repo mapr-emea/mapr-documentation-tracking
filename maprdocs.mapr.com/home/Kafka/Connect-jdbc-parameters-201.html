@@ -1,0 +1,133 @@
+Kafka Connect 2.0.1: JDBC Configuration Options
+
+   Use the following parameters to configure the Kafka Connect for MapR-ES
+   JDBC connector; they are modified in the quickstart-sqlite.properties
+   file.
+
+   In standalone mode, JDBC connector configuration is specified in the
+   quickstart-sqlite.properties file. Additional configurations such as
+   the offset storage location and the port for the REST interface are
+   specified in the connect-standalone.properties file. See [1]Kafka
+   Connect 2.0.1: Configuring in Standalone Mode.
+/opt/mapr/kafka-connect-jdbc/kafka-connect-jdbc-2.0.1/etc/kafka-connect-jdbc/qui
+ckstart-sqlite.properties
+/opt/mapr/kafka/kafka-0.9.0/config/connect-standalone.properties
+
+   In distributed mode, HDFS connector configuration is provided in the
+   POST and PUT requests when creating or modifying the connector. See
+   [2]Kafka Connect 2.0.1: POST /connectors and [3]Kafka Connect 2.0.1:
+   PUT /connectors/(string:name)/config for more information about using
+   the REST API. Additional configurations such as defining the topics
+   that will store the connector state, task configuration state, and
+   connector offset state are specified in the
+   connect-distributed.properties file. See [4]Kafka Connect 2.0.1:
+   Configuring in Distributed Mode .
+/opt/mapr/kafka/kafka-0.9.0/config/connect-distributed.properties
+
+   CAPTION: Table 1. JDBC Configuration parameters
+
+          Parameters       Description
+
+   connection.url
+
+   JDBC connection URL for the database to load.
+     * Type: string
+     * Default: “”
+
+   topic.prefix
+
+   Prefix to prepend to table names to generate the name of the topic to
+   publish data to, or in the case of a custom query, the full name of the
+   topic to publish to. For example: /path/to/stream:topic-prefix-.
+     * Type: string
+     * Default: “”
+
+   mode
+
+   The mode for updating a table each time it is polled. Options include:
+     * bulk - perform a bulk load of the entire table each time it is
+       polled.
+     * incrementing - use a strictly incrementing column on each table to
+       detect only new rows. Note that this will not detect modifications
+       or deletions of existing rows.
+     * timestamp - use a timestamp (or timestamp-like) column to detect
+       new and modified rows. This assumes the column is updated with each
+       write, and that values are monotonically incrementing, but not
+       necessarily unique.
+     * timestamp+incrementing - use two columns, a timestamp column that
+       detects new and modified rows and a strictly incrementing column
+       which provides a globally unique ID for updates so each row can be
+       assigned a unique stream offset.
+     * Type: string
+     * Default: “”
+
+   poll.interval.ms
+
+   Frequency (milliseconds) to poll for new data in each table.
+     * Type: int
+     * Default: 5000
+
+   incrementing.column.name
+
+   The name of the strictly incrementing column to use to detect new rows.
+   Any empty value indicates the column should be autodetected by looking
+   for an auto-incrementing column. This column may not be nullable.
+     * Type: string
+     * Default: “”
+
+   query
+
+   If specified, the query to perform to select new or updated rows. Use
+   this setting to join tables, select subsets of columns in a table, or
+   filter data. If used, this connector will only copy data using this
+   query – whole-table copying will be disabled. Different query modes may
+   still be used for incremental updates, but in order to properly
+   construct the incremental query, it must be possible to append a WHERE
+   clause to this query (i.e. no WHERE clauses may be used). If you use a
+   WHERE clause, it must handle incremental queries itself.
+     * Type: string
+     * Default: “”
+
+   table.blacklist
+
+   List of tables to exclude from copying. If specified, table.whitelist
+   may not be set.
+     * Type: list
+     * Default: []
+
+   table.whitelist
+
+   List of tables to include in copying. If specified, table.blacklist may
+   not be set.
+     * Type: list
+     * Default: []
+
+   timestamp.column.name
+
+   The name of the timestamp column to use to detect new or modified rows.
+   This column may not be nullable.
+     * Type: string
+     * Default: “”
+
+   batch.max.rows
+
+   Maximum number of rows to include in a single batch when polling for
+   new data. This setting can be used to limit the amount of data buffered
+   internally in the connector.
+     * Type: int
+     * Default: 100
+
+   table.poll.interval.ms
+
+   Frequency (milliseconds) to poll for new or removed tables, which may
+   result in updated task configurations to start polling for data in
+   added tables or stop polling for data in removed tables.
+     * Type: long
+     * Default: 60000
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Kafka/Connect-standalone-mode-201.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Kafka/Connect-rest-post-connectors-201.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Kafka/Connect-rest-put-connector-config-201.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Kafka/Connect-distributed-mode-201.html

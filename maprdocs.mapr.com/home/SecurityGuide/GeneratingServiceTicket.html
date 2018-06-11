@@ -1,0 +1,37 @@
+Generating a Service Ticket
+
+   Applications may have service processes that run outside the MapR
+   cluster but need to access the cluster to run MapR commands. For
+   security reasons, you may not want to run these services as the mapr
+   user. Instead, you can use the maprlogin utility to generate a "service
+   ticket" that can be used to access the cluster for the user account
+   that runs the service. The maprlogin utility uses the current user's
+   ticket (the user running the maprlogin command) to send an
+   authenticated request for a newly generated service ticket.
+
+   This type of ticket has a specified duration (expiration), a renewal
+   period (maximum lifetime), and a designated location where the ticket
+   is safely stored. The service process that uses the ticket can access
+   it based on the definition of the MAPR_TICKETFILE_LOCATION environment
+   variable, which points to the location of the ticket and should be set
+   for the service process when it starts. Short duration and renewal
+   values may be used for security reasons, but much longer lifetimes are
+   supported for ease of administration.
+
+   For example:
+# maprlogin generateticket -type service -out /tmp/longlived_ticket -duration 30
+:0:0 -renewal 90:0:0 -user mapr
+MapR credentials of user 'mapr' for cluster 'xxxx' are written to '/tmp/longlive
+d_ticket'
+
+   This command generates a service ticket that expires after 30 days and
+   is stored in /tmp/longlived_ticket. The ticket may be renewed at any
+   time before the 30 days pass, extending its lifetime to a maximum of 90
+   days. The ticket must be renewed explicitly before its expiration date;
+   it does not renew automatically when it expires.
+   Note: Before you can generate a service ticket, you must first
+   authenticate with the cluster by [1]Generating a MapR User Ticket.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/GeneratingMapRUserTicket.html#TicketsandCertificates-Ge_26281159-d3e202

@@ -1,0 +1,57 @@
+Configuring the WebHCat Server
+
+   The properties to configure WebHCat are in the following file:
+/opt/mapr/hive/hive-<version>/hcatalog/etc/webhcat/webhcat-site.xml
+
+   When you set up WebHCat, you can configure MapR-FS and Zookeeper as
+   storage.
+    1. To configure storage for WebHCat, add the MapRFS location property.
+<property> <name>templeton.storage.class</name> <value>org.apache.hive.hcatalog.
+templeton.tool.HDFSStorage</value> </property> <property> <name>templeton.storag
+e.root</name> <value>/user/mapr/webhcat</value> <description>The path to the dir
+ectory to use for storage</description> </property>
+    2. To configure WebHCat for Pig:
+         a. Compress the Pig installation, then move the compressed file
+            to the MapRFS layer.
+# cd /opt/mapr/pig
+# tar -czvf /tmp/pig-<version>.tar.gz pig-<version>/
+# hadoop fs -mkdir /user/mapr/webhcat
+# hadoop fs -put /tmp/pig-<version>.tar.gz /user/mapr/webhcat/
+         b. Set the value of the templeton.pig.archive property to the
+            location of the compressed file.
+<property> <name>templeton.pig.archive</name> <value>maprfs:///user/mapr/webhcat
+/pig-<version>.tar.gz</value> </property>
+         c. Set the value of the templeton.pig.path property to the path
+            inside the compressed Pig file where the Pig binary is
+            located.
+<property>
+    <name>templeton.pig.path</name>
+    <value>pig-<version>.tar.gz/pig-<version>/bin/pig</value>
+</property>
+    3. To configure WebHCat for Hive:
+         a. Compress the Hive installation, then move the compressed file
+            to the MapR-FS layer.
+# cd /opt/mapr/hive
+# tar -czvf /tmp/hive-<version>.tar.gz hive-<version>/
+# hadoop fs -mkdir /user/mapr/webhcat
+# hadoop fs -put /tmp/hive-<version>.tar.gz /user/mapr/webhcat
+         b. Set the value of the templeton.hive.archive property to the
+            location of the compressed file.
+<property> <name>templeton.hive.archive</name> <value>maprfs:///user/mapr/webhca
+t/hive-<version>.tar.gz</value> </property>
+         c. Set the value of the templeton.hive.path property to the path
+            inside the compressed Hive file where the Hive binary is
+            located.
+<property>
+     <name>templeton.hive.path</name>
+     <value>hive-<version>.tar.gz/hive-<version>/bin/hive</value>
+</property>
+    4. To Configure WebHCat for streaming:
+         a. Copy the Streaming JAR to the MapR-FS layer.
+# hadoop fs -put
+/opt/mapr/hadoop/hadoop-<version>/contrib/streaming/hadoop-<version>-dev-streami
+ng.jar /user/mapr/webhcat
+         b. Set the templeton.streaming.jar property to the location of
+            the streaming JAR.
+<property> <name>templeton.streaming.jar</name> <value>maprfs:///user/mapr/webhc
+at/hadoop-<version>-dev-streaming.jar</value> </property>

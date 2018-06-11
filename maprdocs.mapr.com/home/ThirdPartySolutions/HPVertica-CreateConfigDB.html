@@ -1,0 +1,41 @@
+Create and Configure a Database
+
+   Configure HP Vertica for MapR-FS by creating a Vertica database as
+   directed here. Perform these steps as the HP Vertica administrative
+   user:
+    1. Create a database specifying the MapR NFS directories for the HP
+       Vertica data and catalog instead of a local Linux directory:
+HOSTLIST=$(/opt/vertica/bin/admintools -t list_host) /opt/vertica/bin/admintools
+ -t create_db
+-c /vertica/data/catalog -D /vertica/data/files -s $HOSTLIST -d <your_db_name>
+       Warning: If you have not yet run admintools, the first command will
+       hang. It will be waiting for you to accept the HP Vertica EULA. If
+       you have not yet installed a license, the second command
+       (admintools) will ask you to include the license path.
+    2. Alter the database parameter to limit memory use to the percentage
+       you specified in /opt/mapr/conf/conf.d/warden.HPVertica.conf.
+       For example, to set this value to 65% of system memory, type:
+vsql -c "alter resource pool general maxmemorysize '65%'"
+    3. Configure the storage locations so that HP Vertica uses the temp
+       spaces set up in the earlier step.
+       A script such as the following will do that:
+vsql -q -t -A <<EOF | vsql -q
+Select E'select add_location(\'/vertica/tmp/'
+|| database_name || '/'
+|| node_name || E'_tmp\',\''
+|| node_name || E'\',\'TEMP\');'
+
+from nodes cross join databases;
+;
+select E'select alter_location_use(\'/vertica/data/files/'
+|| database_name || '/'
+|| node_name
+|| E'_data\',\''
+|| node_name
+|| E'\',\'DATA\');'
+from storage_locations cross join databases
+where location_usage ilike 'DATA,TEMP'
+;
+EOF
+       This HP Vertica SQL script generates another SQL script using node
+       names then pipes it back into vsql.

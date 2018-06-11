@@ -1,0 +1,190 @@
+Example: Mounting a PersistentVolume for Static Provisioning
+
+   For static provisioning, configuring a PersistentVolume has some
+   advantages over annotating Kubernetes volume information in a Pod spec:
+     * The configuration file can be shared for use by multiple Pod specs.
+     * The configuration file enables the PersistentVolume to be mounted
+       and available even when the Pod spec that references it is removed.
+
+   For example: A marketing volume exists in the MapR filesystem under the
+   path /Departments/Marketing. An administrator wants to statically
+   provision this volume and make it available to multiple users. It is
+   critical that data access is as fast as possible. To make this work,
+   the administrator must:
+    1. Create a PersistentVolume (PV).
+    2. Set the AccessMode of the PV to ReadWriteOnce.
+    3. Create a PersistentVolumeClaim (PVC) spec.
+    4. Set the AccessMode of the PVC to ReadWriteOnce.
+    5. Create the Pod spec.
+    6. Generate a MapR service ticket, and set the flexVolume securityType
+       parameter to secure. For information about generating a service
+       ticket, see [1]Generating a Service Ticket.
+    7. Configure a Ticket Secret, and include the base64-encoded contents
+       of the ticket file in the Ticket Secret. See [2]Ticket Secrets.
+    8. Set the runAsUser and the fsGroup parameters to the UID and GID of
+       the user that created the ticket.
+    9. Set the platinum parameter in the Pod spec to platinum: "true". See
+       [3]Enabling the Platinum Posix Client.
+   10. Point the volumePath in the flexVolume setting to the desired MapR
+       path.
+   11. Fill in the cldbHosts and cluster information.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-testsecure1
+  namespace: mapr-examples
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    namespace: mapr-examples
+    name: pvc-testsecure1
+  flexVolume:
+    driver: "mapr.com/maprfs"
+    options:
+      platinum: "true"
+      cluster: "mycluster"
+      cldbHosts: "cldb1 cldb2 cldb3"
+      volumePath: "/path/in/mapr"
+      securityType: "secure"
+      ticketSecretName: "mapr-ticket-secret"
+      ticketSecretNamespace: "mapr-examples"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-securepv
+  namespace: mapr-examples
+spec:
+  containers:
+  - name: mycontainer
+    image: myrepo/myorg/mycontainer
+    args:
+    - sleep
+    - "1000000"
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "500m"
+    volumeMounts:
+    - mountPath: /mapr
+      name: maprvolume
+  volumes:
+    - name: maprvolume
+      persistentVolumeClaim:
+        claimName: pvc-testsecure1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-testsecure1
+  namespace: mapr-examples
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5G
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mapr-ticket-secret
+  namespace: mapr-examples
+type: Opaque
+data:
+  CONTAINER_TICKET: <BASE64-ENCODED VERSION OF TICKET-FILE CONTENTS>
+
+   PersistentVolume (PV)
+   Parameter Notes
+   Capacity Specifies how big the allocated storage should be. This value
+   is not validated against the MapR quota or advisory quota. It is up to
+   the person creating the PV to specify this value accurately.
+   accessModes How the PersistentVolume is mounted on the host. All modes
+   work the same. The example uses ReadWriteOnce. Note that ReadOnlyMany
+   does not mount read-only. (To implement a read-only mount, use the
+   Flexvolume flag for readOnly, as shown in [4]Example: Statically
+   Provisioning a MapR Volume Using the FlexVolume Plug-in.) It's
+   important that the PV and PVC modes are the same so that they can bind.
+   For more information, see [5]Access Modes.
+   persistentVolumeReclaimPolicy Specifies what happens to the volume when
+   it is released by its claim. The Retain value keeps the PVC around for
+   manual cleanup. Delete deletes the PV from Kubernetes.
+   Note: If this volume was created using dynamic provisioning, Delete
+   causes the underlying volume to be deleted. Recycle is not supported by
+   Kubernetes FlexVolumes. For more information, see [6]Reclaiming.
+   claimRef Specifies a default PVC to bind to. If unspecified, the PV
+   selected for a PVC is randomly allocated based on the access mode and
+   provides at least as much storage capacity as requested by the PVC.
+   flexVolume: driver The MapR FlexVolume driver being used. Call it by
+   specifying driver: mapr.com/maprfs.
+   platinum If set to platinum: "true", the POSIX client uses the platinum
+   driver for better performance. Note that the platinum driver consumes
+   more host resources and MapR Platinum licenses.
+   cluster The MapR cluster name.
+   cldbHosts The hostname or IP addresses of the CLDB hosts for the MapR
+   cluster. You must provide at least one CLDB host. For fault-tolerance,
+   providing multiple CLDB hosts is recommended. To specify multiple
+   hosts, separate each name or IP address by a space.
+   volumePath The mount point within the MapR filesystem. This parameter
+   specifies an existing MapR path. For example, you can specify the root
+   volume as "/", providing access to the entire filesystem.
+   securityType A parameter that indicates whether MapR tickets are used
+   or not used. If MapR tickets are used, specify secure. Otherwise,
+   specify unsecure.
+   ticketSecretName The name of the Ticket Secret that contains the ticket
+   to use when mounting to the MapR cluster. See [7]Ticket Secrets.
+   ticketSecretNamespace The namespace that contains the Ticket Secret.
+   Use the same namespace as the namespace used by the Pod.
+
+   Pod
+   Parameter Notes
+   apiVersion The Kubernetes API version for the Pod spec.
+   kind The kind of object being created. The example uses a naked Pod for
+   clarity. Generally, it is better to use a Deployment, DaemonSet, or
+   StatefulSet for high availability and ease of upgrade.
+   metadata: name The Pod name.
+   metadata: namespace The namespace in which the Pod runs.
+   volumeMounts: mountPath A directory inside the container that is
+   designated as the mount path.
+   volumeMounts: name A name that you assign to the Kubernetes
+   volumeMounts resource. This value should match Volumes: name.
+   Volumes: name A string to identify the name of the Kubernetes volumes
+   resource. This value should match volumeMounts: name.
+
+   PersistentVolumeClaim (PVC)
+   Parameter Notes
+   AccessMode How the requested PersistentVolume is mounted on the host.
+   All modes work the same. The example uses ReadWriteOnce. Note that
+   ReadOnlyMany does not mount read-only. (To implement a read-only mount,
+   use the Flexvolume flag for readOnly, as shown in [8]Example:
+   Statically Provisioning a MapR Volume Using the FlexVolume Plug-in.)
+   It's important that the PV and PVC modes are the same so that they can
+   bind. For more information, see [9]Access Modes.
+
+   Secret
+   Parameter Notes
+   metadata: name The name of the Ticket Secret. See [10]Ticket Secrets
+   metadata: namespace The namespace in which the Ticket Secret runs.
+   CONTAINER_TICKET The contents of the MapR ticket encoded in base64. If
+   you specified secure for the securityType, you must provide the ticket.
+   To encode the ticket, see [11]Converting a String to Base64. You may
+   remove the ticket if the MapR cluster is not secure.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/GeneratingServiceTicket.html#TicketsandCertificates-Ge_26281159-d3e299
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb__section_uxq_bfd_vcb
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_enabling_platinum_posix_client.html#concept_ogr_sxc_qcb
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_example_static_provisioning_volume.html#concept_ogr_sxc_qcb
+   5. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+   6. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb__section_uxq_bfd_vcb
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_example_static_provisioning_volume.html#concept_ogr_sxc_qcb
+   9. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb__section_uxq_bfd_vcb
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_converting_a_string.html#concept_ogr_sxc_qcb

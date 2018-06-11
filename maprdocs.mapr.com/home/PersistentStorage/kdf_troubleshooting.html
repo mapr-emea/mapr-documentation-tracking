@@ -1,0 +1,45 @@
+Troubleshooting the MapR Data Fabric for Kubernetes
+
+   This section describes how to resolve common problems you might
+   encounter when using the MapR Data Fabric for Kubernetes.
+
+Unable to Access MapR-FS
+
+   Problem
+          Storage is not mounted and no errors are generated in the plugin
+          or provisioner [1]logs.
+
+   Possible Cause
+          The fusermount symlink might be broken.
+
+   Resolution
+          If the symlink points to a location other than
+          /opt/mapr/k8s/bin/fusermount, unlink it using the following
+          command from the command line on the host:
+
+unlink /bin/fusermount
+
+          Then re-create the Kubernetes Pod.
+
+Pod Container Stuck in Container Creation State During Installation
+
+   Problem
+          During installation, the Pod container can become stuck in the
+          container creation state on a node, and the/opt/mapr/k8s
+          directory is not created. As a result, the plug-in does not get
+          copied to the node.
+
+   Possible Cause
+          Unknown.
+
+   Resolution
+          Check the installation [2]logs for an indication that the
+          installation is not completed or the /opt/mapr/k8s directory is
+          not created. Restart the kubelet service in the node:
+
+systemctl restart kubelet
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_log_files.html#concept_ogr_sxc_qcb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_log_files.html#concept_ogr_sxc_qcb

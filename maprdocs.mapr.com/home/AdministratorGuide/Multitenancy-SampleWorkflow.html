@@ -1,0 +1,55 @@
+Provisioning MFS for Multiple Tenants - Sample Workflow
+
+   For example, suppose two tenants Tenant1 and Tenant2. The following
+   steps show the workflow for setting up the two tenants:
+    1. The cluster administrator creates two users, Tenant1 and Tenant2,
+       on the MapR cluster and creates volumes (or shares) on the cluster
+       for the two tenants.
+       For example, to create volumes on the cluster:
+$ maprcli volume create -name tenant1Vol -path /tenant1Enoke -tenantuser Tenant1
+$ maprcli volume create -name tenant2Vol -path /tenant2Enoke -tenantuser Tenant2
+    2. The cluster administrator generates tickets for the users, copies
+       the tickets to the tenant servers (tenant1Host and tenant2Host),
+       and grants the tenant admins (tenant1Admin and tenant2Admin) read
+       access to the ticket.
+       For example, to:
+          + Generate ticket for the users:
+$ maprlogin generateticket -type tenant -cluster myCluster -user tenant1 -out /t
+mp/tenant_Tenant1_ticket.txt
+$ maprlogin generateticket -type tenant -cluster myCluster -user tenant2 -out /t
+mp/tenant_Tenant2_ticket.txt
+          + Copy tickets to appropriate tenant hosts:
+$ scp /tmp/tenant_Tenant1_ticket.txt tenant1Admin@tenant1Host:~tenant1Admin/
+$ scp /tmp/tenant_Tenant2_ticket.txt tenant2Admin@tenant2Host:~tenant2Admin/
+    3. The tenant administrators log into their respective hosts and mount
+       their shares by starting the client.
+       For example, to start the:
+
+        FUSE-based POSIX client
+
+              a. Update the following parameters in the fuse.conf file:
+
+                 fuse.ticketfile.location For:
+                    # Tenant1, tenant1Admin/tenant_Tenant1_ticket.txt
+                    # Tenant2, tenant2Admin/tenant_Tenant2_ticket.txt
+
+                 fuse.mount.point For:
+                    # Tenant1, /tenant1Enoke
+                    # Tenant2, /tenant2Enoke
+
+                 fuse.export For:
+                    # Tenant1, /tenant1Enoke/tenant1Vol
+                    # Tenant2, /tenant2Enoke/tenant2Vol
+
+              b. Run the following command to start the service:
+$ service mapr-posix-client-* start
+
+        loopbacknfs POSIX client
+
+              a. Update the tenant ticket file location in
+                 /etc/loopbacknfs/initscripts/mapr-loopbacknfs file.
+              b. Run the following command to start the service:
+$ service mapr-loopbacknfs start
+
+    4. The tenant administrators can grant access to users within their
+       tenant namespace by modifying data access using ACEs.

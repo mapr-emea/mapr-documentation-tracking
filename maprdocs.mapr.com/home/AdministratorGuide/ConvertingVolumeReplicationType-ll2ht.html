@@ -1,0 +1,101 @@
+Converting Volume Replication Type (Low Latency to High Throughput) Using the
+CLI
+
+   A high throughput replication type allows for volumes to be replicated
+   sequentially on intermediate and tail containers from a master
+   container.
+
+   To convert from a low-latency to a high throughput-replication type:
+    1. Change the permissions on the volume from read-write to read only.
+       For example:
+maprcli volume modify -name mvol1,mvol2 -readonly true
+       Wait for the running operations to complete before proceeding to
+       the next step.
+    2. Convert the volume from low_latency replication type to
+       high_throughput replication type using the maprcli command.
+       For example:
+maprcli volume modify -name mvol1,mvol2 -replicationtype high_throughput
+       Wait till replication type conversion is complete and the first
+       container of the volume acquires a master. If necessary, run the
+       following command to see if replication type has been converted:
+maprcli volume list -columns ReplTypeConversionInProgress,volumename
+       If the conversion is complete, the ReplTypeConversionInProgress
+       flag will be set to false (0). For example, the 0 in the
+       ReplTypeConversionInProgress column in the following sample output
+       indicates successful conversion of corresponding volume in the
+       volumename column:
+# maprcli volume list -columns ReplTypeConversionInProgress,volumename
+ReplTypeConversionInProgress  volumename
+
+0                             mapr.apps
+
+0                             mapr.cldb.internal
+
+0                             mapr.cluster.root
+
+0                             mapr.configuration
+
+0                             mapr.hbase
+
+
+0                             mapr.metrics
+
+0                             mapr.node-20.lab.local.audit
+
+0                             mapr.node-20.lab.local.logs
+
+0                             mapr.node-20.lab.local.mapred
+
+0                             mapr.node-20.lab.local.metrics
+
+0                             mapr.node-20.local.audit
+
+0                             mapr.node-20.local.logs
+
+0                             mapr.node-20.local.metrics
+
+0                             mapr.node-21.lab.local.audit
+
+0                             mapr.node-21.lab.local.logs
+
+0                             mapr.node-21.lab.local.mapred
+
+0                             mapr.node-21.lab.local.metrics
+
+0                             mapr.node-22.lab.local.audit
+
+0                             mapr.node-22.lab.local.logs
+
+0                             mapr.node-22.lab.local.mapred
+
+0                             mapr.node-22.lab.local.metrics
+
+0                             mapr.node-23.lab.local.audit
+
+0                             mapr.node-23.lab.local.logs
+
+0                             mapr.node-23.lab.local.mapred
+
+0                             mapr.node-23.lab.local.metrics
+
+
+0                             mapr.opt
+
+0                             mapr.resourcemanager.volume
+
+0                             mapr.tmp
+
+0                             mapr.var
+
+0                             mvol1
+
+0                             mvol2
+
+0                             mvol3
+
+0                             users
+
+0                             vol3
+    3. Reset the permissions on the volume to read-write.
+       For example, to reset, run the following command:
+maprcli volume modify -name vol1,vol2 -readonly false

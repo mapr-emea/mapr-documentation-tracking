@@ -1,0 +1,78 @@
+Setting Whole Volume ACEs
+
+   You can set ACEs at the time of volume creation using the [1]volume
+   create command and set/modify them at a later time using the [2]volume
+   modify command. When you run the command to set or modify ACEs, the
+   command will:
+     * Overwrite existing values with new values, if specified, for access
+       types that were previously set.
+     * Set values for access types that have not yet been set, if
+       specified.
+     * Not modify access types that were not specified with the command,
+       whether they were previously set or are unset.
+
+   When you set whole volume ACEs, permissions on files and tables under
+   that volume remain unchanged. Also, new files and tables in the volume
+   will not inherit the whole volume ACEs of that volume. Instead, whole
+   volume ACEs, if set, will be used to determine volume level access to
+   tables and files within the volume. To gain access to volume data, user
+   must have access at both the volume and file/table levels.
+
+Whole Volume ACE Example
+
+   For example, suppose the following sequence of whole volume ACE
+   settings for users u3 and u4.
+   Note: In the following illustration, default ACE values are shown in
+   red.
+   [wholevolumeACEeg.png]
+
+   As shown in the illustration above, in:
+
+   Step 1:
+          User u3 is granted permissions to read.
+
+          User u3: User u3 has permissions to read files and tables at the
+          volume level and by default, user u3 has write permission (shown
+          in red) at the volume level. However, for:
+
+          + Files in the volume, file ACE or POSIX mode bits will be used
+            to determine read and write access for user u3.
+          + Tables in the volume, table ACEs will be used to determine
+            read and write access for user u3.
+
+          User u4: User u4 cannot read files and tables within the volume
+          because the ACE for the volume does not explicitly grant access
+          to user u4 and although user u4 has write permission by default,
+          user u4 cannot write to files/tables in the volume because user
+          u4 does not have read permission.
+
+   Step 2:
+          User u3 is granted permissions to write.
+
+          User u3: User u3’s read access remains unchanged and although
+          user u3 has permissions to write to files and tables, for:
+
+          + Files in the volume, file ACE or POSIX mode bits will be used
+            to determine write access for user u3.
+          + Tables in the volume, table ACEs will be used to determine
+            write access for user u3.
+
+          User u4: User u4 cannot write to files/tables in the volume.
+
+   Step 3
+          User u4 is granted read access.
+
+          User u3: User u3’s read and write access remains unchanged.
+
+          User u4: User u4 has permissions to read files and tables at the
+          volume-level; however, for:
+
+          + Files in the volume, file ACE or POSIX mode bits will be used
+            to determine read access for user u4.
+          + Tables in the volume, table ACEs will be used to determine
+            read access for user u4.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html

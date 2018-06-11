@@ -1,0 +1,65 @@
+Using the Pre-Built MapR Installer Container Images
+
+   This section describes how to obtain and run the pre-built MapR
+   Installer container images.
+   Pre-built MapR Installer 1.6 container images are available on Docker
+   hub. Images are available for:
+     * Ubuntu 16.04
+     * Ubuntu 14.04
+     * CentOS 7
+     * CentOS 6
+
+   The pre-built images are about 200 MB. A sample-run script that you can
+   use to start the container is available on GitHub.
+   To use a pre-built image:
+    1. Download the pre-built MapR Installer container image and the
+       sample-run script to a Linux or Mac OS X platform where Docker
+       1.12.5 or later is installed and the Docker daemon is up and
+       running.
+          + You can download the pre-built image from the [1]MapR public
+            repository.
+          + You can download the sample-run script
+            (mapr-docker-installer.sh) from this [2]GitHub location.
+    2. (Optional) Edit the mapr-docker-installer.sh script file if you
+       want to change any environmental variables. For more information
+       about the environmental variables, see [3]Environmental Variables
+       for the MapR Installer Container.
+    3. Run the mapr-docker-installer.sh file to start mapr-installer
+       services:
+$ ./docker_images/installer/mapr-docker-installer.sh
+       After the installer service is started, you can issue [4]Stanza
+       commands or open the web-based MapR Installer in a browser:
+installer (380) started with log /opt/mapr/installer/logs/installer.log
+Started service mapr-installer
+
+...Success
+
+    To continue installing MapR software, open the following URL in a web browse
+r
+
+              If the address '172.17.0.2' is internal and not accessible
+           from your browser, use the external address mapped to it instead
+
+                              https://172.17.0.2:9443
+
+       The MapR Installer maintains the state of the cluster. When the
+       installer is run from a container, the installer database is only
+       as persistent as the container itself. If you need the installer
+       data to be persistent, here are some options:
+          + If you shut down a MapR Installer container, use the docker
+            start command (not the docker run command) to restart the same
+            instance of the container. If you create a new instance of the
+            container, the database will have no information.
+          + Mount the /opt/mapr/ data directory outside the container to
+            persistent storage to maintain the cluster state.
+          + Use the Stanza export command to export the state of the
+            cluster before you shut down the container. See [5]Exporting a
+            Cluster Configuration.
+
+References
+
+   1. https://hub.docker.com/r/maprtech/installer/tags/
+   2. https://raw.githubusercontent.com/mapr/mapr-installer/master/docker/template/mapr-docker-installer.sh
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Env_Variables_Installer_Container.html#reference_w2p_hvh_s1b
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/SilentInstallerCommands.html#reference_c11_wmk_cy
+   5. http://maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/ExportClusterConfig.html

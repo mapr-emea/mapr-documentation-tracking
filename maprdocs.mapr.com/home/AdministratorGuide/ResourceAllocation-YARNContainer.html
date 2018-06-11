@@ -1,0 +1,71 @@
+YARN Container Resources
+
+   A YARN application can be a MapReduce version 2 (MRv2) application or a
+   non-MapReduce application. The Warden on each node calculates the
+   resources that can be allocated to process YARN applications. Each
+   application has an Application Master that negotiates YARN container
+   resources. For MapReduce applications, YARN processes each map or
+   reduce task in a container. The Application Master requests resources
+   from the Resource Manager based on memory, CPU, and disk requirements
+   for the YARN containers. For YARN containers that process MRv2 tasks,
+   there are additional considerations. See [1]YARN Container Resources
+   for MapReduce Version 2 Applications for details.
+
+   The Application Master requests YARN container resources based on the
+   values of the following parameters:
+   Parameter Default Description
+   yarn.scheduler.minimum-allocation-mb 1024
+
+   Defines the minimum memory allocation available for a container in MB.
+
+   To change the value, edit the [2]yarn-site.xml file for the node that
+   runs the ResourceManager. Assign the new value to this property, then
+   restart the ResourceManager.
+   yarn.scheduler.maximum-allocation-mb 8192 Defines the maximum memory
+   allocation available for a container in MB
+
+   To change the value, edit the [3]yarn-site.xml file for the node that
+   runs the ResourceManager. Assign the new value to this property, then
+   restart the ResourceManager.
+   yarn.nodemanager.resource.memory-mb Variable. This value is calculated
+   by Warden. Defines the memory available to processing Yarn containers
+   on the node in MB.
+
+   Warden uses the following formula to calculate this value: [total
+   physical memory on node] – [memory required by the operating system,
+   MapR-FS, and MapR services installed on the node].
+
+   To determine the value, go to the ResourceManager UI and view the
+   memory available for that node.
+
+   yarn.nodemanager.resource.cpu-vcores
+   Variable. This value is calculated by Warden.
+
+   Defines the number of CPUs available to process YARN containers on this
+   node.
+
+   Warden uses the following formula to calculate this value: [# CPU cores
+   on node] – [# of CPU cores assigned to Mapr-FS].
+
+   To determine the value, go to the ResourceManager UI or the YARN pane
+   on the MCS and view the number of CPUs available for that node.
+
+   To change the value, edit the [4]yarn-site.xml file for the node,
+   assign the new value to this property, then restart the NodeManager.
+   yarn.nodemanager.resource.io-spindles
+
+   Variable. This value is calculated by Warden.
+
+   Defines the number of disks available to process YARN containers.
+   Warden uses the following formula to calculate this value: [# of disk
+   on the node].
+
+   To determine the value, go to the ResourceManager UI or the YARN pane
+   in the MCS and view the disk information for this node.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/ResourceAllocation-MRv2Apps.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/yarn-site.xml.html#reference_eqn_dbx_pt
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/yarn-site.xml.html#reference_eqn_dbx_pt
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/yarn-site.xml.html#reference_eqn_dbx_pt

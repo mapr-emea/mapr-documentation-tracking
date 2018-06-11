@@ -1,0 +1,120 @@
+SSL Security for HttpFS
+
+   You can configure SSL (HTTPS) for HttpFS with or without
+   certificate-based authentication for HttpFS. Use ssl_keystore and
+   ssl_truststore, which are generated automatically for a secure cluster
+   in /opt/mapr/conf/. Note: When using SSL on non-secure clusters, you
+   need to manually generate keystore and truststore.
+    1. To preserve the original version, rename the existing server.xml
+       file
+       (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server
+       .xml) to server.xml.orig.
+sudo cp /opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server.xml
+/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server.xml.orig
+    2. Replace the contents of server.xml with the contents of
+       server.xml.https.
+sudo cp /opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server.xml.h
+ttps
+/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server.xml
+    3. To enable SSL without certificate-based authentication, set the
+       clientAuth attribute to "false" and set properties related to
+       keystore and truststore (on a secure cluster, the defaults are
+       already set properly) in server.xml
+       (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server
+       .xml).
+       For example:
+<Connector port="${httpfs.http.port}" SSLEnabled="true"
+maxThreads="150" scheme="https" secure="true"
+clientAuth="false" sslProtocol="TLS"
+keystoreFile="/opt/mapr/conf/ssl_keystore"
+keystorePass="mapr123"
+truststoreFile="/opt/mapr/conf/ssl_truststore"
+truststorePass="mapr123"/>
+    4. To enable certificate-based authentication, perform the following
+       steps:
+         a. Verify that the clientAuth attribute is set to "true" and set
+            properties related to keystore and trustore in server.xml
+            (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/s
+            erver.xml).
+            For example:
+<Connector port="${httpfs.http.port}" SSLEnabled="true"
+maxThreads="150" scheme="https" secure="true" clientAuth="true" sslProtocol="TLS
+"
+keystoreFile="/opt/mapr/conf/ssl_keystore"
+keystorePass="mapr123"
+truststoreFile="/opt/mapr/conf/ssl_truststore"
+truststorePass="mapr123"/>
+         b. In web.xml
+            (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/webapp
+            s/webhdfs/WEB-INF/web.xml), un-comment the following section:
+<security-constraint>
+           <web-resource-collection>
+                <web-resource-name>Protected Context</web-resource-name>
+                <url-pattern>/*</url-pattern>
+           </web-resource-collection>
+           <auth-constraint>
+                <role-name>sample</role-name>
+           </auth-constraint>
+           <user-data-constraint>
+                <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+           </user-data-constraint>
+</security-constraint>
+
+<security-role>
+           <role-name>sample</role-name>
+</security-role>
+
+<login-config>
+           <auth-method>CLIENT-CERT</auth-method>
+</login-config>
+         c. Verify that tomcat-users.xml
+            (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/t
+            omcat-users.xml) contains the roles and users in the
+            certificates.
+<tomcat-users>
+         <role rolename="sample"/>
+         <user name="CN=<hostname>" password="null" roles="sample" />
+</tomcat-users>
+            Note: The name value should include information from your
+            certificate. For example, <tomcat-users> <role
+            rolename="sample"/> <user name="CN=www.mapr.com, OU=mapr,
+            O=mapr, L=San Jose, ST=San Jose, C=CA" password="null"
+            roles="sample" /> </tomcat-users> You can run the following
+            command to view the contents of the certificate file: openssl
+            x509 -text -in /opt/mapr/hue/hue-<version>/cert.pem
+<tomcat-users>
+         <role rolename="sample"/>
+         <user name="CN=www.mapr.com, OU=mapr, O=mapr, L=San Jose,
+             ST=San Jose, C=CA" password="null" roles="sample" />
+</tomcat-users>
+    5. Restart the HttpFS server.
+maprcli node services -name httpfs -action restart -nodes <space delimited list
+of nodes>
+    6. Run one of the following curl commands to check that HTTPS is
+       enabled. These commands fetch the file some_file.txt from MapR-FS
+       under /user/mapr and attempt to open it securely over HTTPS.
+          + To check if HTTPS is enabled, run the following command (which
+            differs for non-secure and secure clusters):
+               o For non-secure clusters:
+curl -k "https://localhost:14000/webhdfs/v1/user/mapr/some_file.txt?
+op=open&user.name=mapr"
+               o For secure clusters:
+curl -u <user_name> -k
+"https://localhost:14000/webhdfs/v1/user/mapr/some_file.txt?
+op=open"
+          + If you configured Hue to use SSL encryption with
+            certificate-based authentication for communication with
+            HttpFS, run the following command (which differs for
+            non-secure and secure clusters):
+               o For non-secure clusters:
+curl -k
+--cert /opt/mapr/hue/hue-<version>/cert.pem
+--key /opt/mapr/hue/hue-<version>/hue_private_keystore.pem
+"https://localhost:14000/webhdfs/v1/user/mapr/some_file.txt?
+op=open&user.name=mapr"
+               o For secure clusters:
+curl -u <user_name> -k
+--cert /opt/mapr/hue/hue-<version>/cert.pem
+--key /opt/mapr/hue/hue-<version>/hue_private_keystore.pem
+"https://localhost:14000/webhdfs/v1/user/mapr/some_file.txt?
+op=open"

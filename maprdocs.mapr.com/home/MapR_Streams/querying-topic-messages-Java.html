@@ -1,0 +1,57 @@
+Querying Topic Messages
+
+   Describes how MapR-ES topic messages can be queried.
+
+Time-based Querying
+
+   The consumer.offsetsForTimesAPI is used to get offsets in a
+   topic-partition. This API takes in a Map of TopicPartition and
+   timestamp. The offset is returned in an OffsetAndTimestamp object when
+   offsetsForTime is called.
+   The following shows how the Map is constructed:
+Long timestamp = 1522195205L;
+TopicPartition topicPartition = new TopicPartition(topic,partition);
+
+HashMap<TopicPartition, Long> offsetsForTimesMap = new HashMap<TopicPartition, L
+ong>();
+offsetsForTimesMap.put(topicPartition, timestamp);
+
+// Invocation to offsetsForTimes
+Map<TopicPartition, OffsetAndTimestamp> offsetForTimesResultMap = consumer.offse
+tsForTimes(offsetsForTimesMap);
+
+Direct Querying
+
+   The Streams class is used to directly query topic messages. See the
+   [1]mapr streamanalyzer utility for a sample application that counts and
+   queries topic messages.
+     * The getMessageStore() APIs are used to get the DocumentStore object
+       which represents the underlying topic messages for a specified
+       stream.
+     * The DocumentStore.find() APIs are used to query the messages that
+       are in the DocumentStore object. While running find() on the
+       returned [2]DocumentStore object, message fields can be projected
+       based on the specified field name.
+
+   Note: DocumentStore is a part of the open-source [3]OJAI API.
+
+   The logical schema of each message is the same, where analytics
+   applications can run queries on these fields. See [4]Logical Schema of
+   Messages for more information.
+{
+        "_id":<STRING>,
+        "topic":<STRING>,
+        "partition":<SHORT>,
+        "offset":<LONG>,
+        "timestamp":<LONG>,
+        "producer":<VARCHAR>,
+        "key":<BINARY>,
+        "value":<VARBINARY>
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr_streamanalyzer.html
+   2. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
+   3. http://maprdocs.mapr.com/apidocs/60/OJAI
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/message-logical-schema.html

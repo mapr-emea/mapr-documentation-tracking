@@ -1,0 +1,206 @@
+dump rolebalancerinfo
+
+   Returns information about active replication role switches.
+
+   Use the dump rolebalancerinfo command to see if the replication role
+   balancer is currently switching the replication roles of any containers
+   in a cluster. For example, if too many data containers with the master
+   or intermediate roles exist within a storage pool, the replication role
+   balancer switches the role of some of these containers to the tail role
+   to evenly spread load across nodes during the replication process. If
+   the role balancer is not currently switching the roles of any
+   containers, the command returns a message stating that there are no
+   active role switches.
+
+   You can include some additional parameters with the dump
+   rolebalancerinfo command, such as the volumeinfo parameter, which
+   provides information about how the replication role balancer balanced
+   container roles across each storage pool in a particular volume.
+
+   See [1]Replication Role Balancer for more information about how the
+   replication role balancer works.
+
+   For the best readability, use the -json option at the end of the
+   command.
+
+Syntax
+
+   CLI
+
+maprcli dump rolebalancerinfo
+    [-cluster <cluster name>]
+    [-stats]
+    [-volumeinfo]
+    [-volumename <volume name>]
+    [-namecntrinfo]
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter Description
+   cluster The cluster on which to run the command. When you omit this
+   parameter, the command runs on the same cluster where it is issued. In
+   a multi-cluster environment, use this parameter to specify a particular
+   cluster.
+   stats Provides a list of active switches for the role balancer. The
+   command returns the same information with or without this parameter.
+   volumeinfo Provides the volume balancing information and details how
+   the container roles are balanced across each storage pool in a volume.
+   Requires the volumename parameter.
+   volumename The name of the volume. To obtain volume names, use the
+   maprcli volume list command.
+   namecntrinfo Provides information about how the name containers are
+   distributed across the storage pools in the cluster, including how many
+   name containers are master and tail containers. More informative when
+   the replication role balancer is configured to balance container roles
+   by count instead of size.
+
+Output
+
+   The following example shows the output of the dump rolebalancerinfo
+   command when the replication role balancer switches a container to the
+   tail role:
+# maprcli dump rolebalancerinfo -json
+{
+      "timestamp":1452150159265,
+      "timeofday":"2016-01-07 07:02:39.265 GMT+0000",
+      "status":"OK",
+      "total":1,
+      "data":[
+             {
+                   "containerid":57482,
+                   "Tail IP:Port":"10.10.104.37:5660-10.10.105.37:5660-",
+                   "Updates blocked Since":"Thu Jan 07 07:02:24 UTC 2016"
+              }
+        ]
+   }
+
+   The following example shows the dump rolebalancerinfo -volumeinfo
+   -volumename command:
+# maprcli dump rolebalancerinfo -volumeinfo -volumename vol2 -json
+{
+        "timestamp":1452218225547,
+        "timeofday":"2016-01-08 01:57:05.547 GMT+0000",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "VolumeBalancingInfo":{
+                                "Volume":"vol2",
+                                "Assign Cache Containers Count":60,
+                                "Assign Cache Containers Size":951171,
+                                "Zero Size Containers Count":5,
+                                "Storage Pools":[
+                                        {
+                                                "SpId":"e471499d52ce710e00566942
+c1075a69",
+                                                "HostAddress":"10.10.104.34(2)",
+                                                "NumContainers":17,
+                                                "NumMasters":7,
+                                                "NumTails":4,
+                                                "SizeOfContainers":213690,
+                                                "SizeOfMasters":93769,
+                                                "DesiredSizeOfMasters":71230,
+                                                "SizeOfTails":76001,
+                                                "DesiredSizeOfTails":71230,
+                                                "Assign Cache Containers Count":
+6,
+                                                "Assign Cache Containers Size":7
+1783
+                                        },
+                                        {
+                                                "SpId":"6a7222578e9cb90300566942
+e00bfb3e",
+                                                "HostAddress":"10.10.104.35(2)",
+                                                "NumContainers":21,
+                                                "NumMasters":6,
+                                                "NumTails":9,
+                                                "SizeOfContainers":373222,
+                                                "SizeOfMasters":141546,
+                                                "DesiredSizeOfMasters":124407,
+                                                "SizeOfTails":115855,
+                                                "DesiredSizeOfTails":124407,
+                                                "Assign Cache Containers Count":
+3,
+                                                "Assign Cache Containers Size":6
+2491
+                                        },
+                                        {
+                                                "SpId":"ca379b6cfc88827000566942
+8c02c6e3",
+                                                "HostAddress":"10.10.104.32(2)",
+                                                "NumContainers":5,
+                                                "NumMasters":0,
+                                                "NumTails":2,
+                                                "SizeOfContainers":107549,
+                                                "SizeOfMasters":0,
+                                                "DesiredSizeOfMasters":35849,
+                                                "SizeOfTails":48267,
+                                                "DesiredSizeOfTails":35849,
+                                                "Assign Cache Containers Count":
+0,
+                                                "Assign Cache Containers Size":0
+                                        }
+
+                                ]
+                        }
+                }
+        ]
+}
+
+   Output
+   Field Description
+   containerID The unique ID number of the container.
+   Tail IP:Port The IP address and port number of the tail container node.
+   Updates blocked Since During a replication role switch, updates to that
+   container are blocked during the date and time indicated.
+   Volume Name of the volume.
+   Assign Cache Containers Count The total number of containers in the
+   assign cache. The assign cache is a list of containers that the CLDB
+   has reserved on a particular fileserver node. The CLDB allocates
+   containers from the cache when it receives a request from the
+   fileserver for more containers.
+   Assign Cache Containers Size The total size of the containers in the
+   assigned cache. The assign cache is a list of containers that the CLDB
+   has reserved on a particular fileserver node. The CLDB allocates
+   containers from the cache when it receives a request from the
+   fileserver for more containers.
+   Zero Size Containers Count The number of empty cache containers.
+   Storage Pools The list of storage pools in the specified volume.
+   SpId The ID of the storage pool located within the specified volume.
+   HostAddress The server on which the storage pool resides.
+   NumContainers The total number of containers that reside on the storage
+   pool in the specified volume.
+   NumMasters The total number of master containers that reside on the
+   storage pool in the specified volume.
+   NumTails The total number of tail containers that reside on the storage
+   pool in the specified volume.
+   SizeOfContainers The total size of the containers that reside on the
+   storage pool in the specified volume.
+   SizeOfMasters The total size of the master containers that reside on
+   the storage pool in the specified volume.
+   DesiredSizeOfMasters The cumulative size of master replicas on a
+   specific storage pool within a volume. Typically, this is
+   1/ReplicationFactor of all containers on a storage pool for a
+   particular volume. For example, if the replication factor is set to 3,
+   then ⅓ of all containers on a storage pool should have the master
+   container role.
+   SizeOfTails The total size of the tail containers that reside on the
+   storage pool in the specified volume.
+   DesiredSizeOfTails The cumulative size of tail replicas on a specific
+   storage pool within a volume. Typically, this is 1/ReplicationFactor of
+   all containers on a storage pool for a particular volume. For example,
+   if the replication factor is set to 3, then ⅓ of all containers on a
+   storage pool should have the tail container role.
+
+Example
+
+   CLI
+
+maprcli dump rolebalancerinfo -json
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/ReplicationRoleBalancer.html#ConfiguringBalancerSettin_26982510-d3e396

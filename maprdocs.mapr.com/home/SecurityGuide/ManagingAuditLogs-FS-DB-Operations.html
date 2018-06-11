@@ -1,0 +1,99 @@
+Managing Audit Logs for Filesystem and Table Operations
+
+   There are three parameters that you can use to manage audit logs for
+   filesystem and table operations:
+     * -maxSize
+     * -retention
+     * -coalesce
+
+   You can set the first two parameters with the maprcli audit data
+   command. You can set the third parameter with the maprcli volume audit
+   command.
+
+Effects of the -maxSize parameter
+
+   When you enable auditing with the [1]maprcli audit data command, you
+   can use the -maxSize parameter to specify the size at which an alarm is
+   raised concerning the size of the audit volume. The alarm is displayed
+   on the dashboard in MCS and in the output of the [2]maprcli alarm list
+   command. This alarm simply means that the threshold size has been
+   reached. Audited operations are still logged to the audit volume in
+   question.
+
+   There are three actions that you can take:
+     * If you decide that you want to be notified when the audit volume
+       reaches a smaller or larger size, you can change the threshold by
+       running the [3]maprcli audit data command and changing the value of
+       the -maxSize parameter.
+     * If you want to try preventing audit log files from growing as
+       quickly as they are, you can change the number of identical
+       operations that are logged within a number of minutes. Run the
+       [4]maprcli audit data command and increase the value of the
+       -coalesce parameter. This parameter is described below.
+     * If you are concerned about longer-term space requirements for
+       storing audit log files, you can change the number of days to keep
+       old log files before they are deleted. Run the [5]maprcli audit
+       data command and decrease the value of the -retention parameter.
+       This parameter is also described below.
+
+Effects of the -retention parameter
+
+   When you enable auditing with the [6]maprcli audit data command, you
+   can use the -retention parameter to specify how many days to keep old
+   log files.
+
+   Audit logs are rotated every night at midnight UTC time . The saved
+   audit logs are kept until the retention period expires.
+
+   For example, suppose the retention period is 30 days. The node
+   192.168.10.15 in the volume /myVolume contains 30 days of saved log
+   files for file-system operations and the current date is March 30,
+   2016. The directory /var/mapr/local/102.168.10.15/audit/ contains these
+   log files:
+
+   FSAudit.log.json-30-03–2016-001
+
+   FSAudit.log.json-29-03–2016-001
+
+   FSAudit.log.json-28-03–2016-001
+
+   …
+
+   FSAudit.log.json-01-03–2016-001
+
+   If there is no more disk space for new entries in audit logs, audit
+   logging stops.
+
+   If the size of the audit log volume exceeds its quota, an alarm is
+   raised, though logging continues. The alarm is
+   VOLUME_ALARM_ADVISORY_QUOTA_EXCEEDED. You can view alarms in [7]MCS or
+   by running the command [8]maprcli alarm list. The default quota is 32
+   GB.
+
+Effects of the -coalesce parameter
+
+   This parameter sets an interval during which READ, WRITE, or GETATTR
+   operations on one file from one client IP address are logged only once.
+
+   For example, suppose that a client application reads a single file
+   three times in 6 minutes, so that there is one read at 0 minutes,
+   another at 3 minutes, and a final read at 6 minutes. If the coalesce
+   interval is at least 6 minutes, then only the first read operation is
+   logged. However, if the interval is between 4 minutes, then only the
+   first and third read operations are logged. If the interval is 2
+   minutes, all three read operations are logged.
+
+   You can set this interval on individual volumes. The default value is
+   60 minutes. Setting this field to a larger number helps prevent audit
+   logs from growing quickly.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/audit-data.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/alarm-list.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/audit-data.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/audit-data.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/audit-data.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/audit-data.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Alarms-Checking.html
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/alarm-list.html

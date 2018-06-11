@@ -1,0 +1,36 @@
+Renaming a Node from the Command-Line
+
+   To rename a node:
+    1. Stop Warden on the node. Example:
+service mapr-warden stop
+    2. If the node is a ZooKeeper node, stop ZooKeeper on the node.
+       Example:
+service mapr-zookeeper stop
+    3. Rename the host:
+          + On Red Hat or CentOS, edit the HOSTNAME parameter in the file
+            /etc/sysconfig/network and restart the xinetd service or
+            reboot the node.
+          + On Ubuntu, change the old hostname to the new hostname in the
+            /etc/hostname and /etc/hosts files.
+    4. If the node is a ZooKeeper node or a CLDB node, run [1]configure.sh
+       with a list of CLDB and ZooKeeper nodes.
+    5. If the node is a ZooKeeper node, start ZooKeeper on the node.
+       Example:
+service mapr-zookeeper start
+    6. Start Warden on the node. Example:
+service mapr-warden start
+
+   After you rename a:
+     * CLDB or ZooKeeper node, run [2]configure.sh on all the nodes with
+       the new hostname to update the mapr-clusters.conf with the new
+       hostname. Ensure that there are no duplicate entries in the file.
+       Also, verify that the new host is accessible from all the nodes.
+     * Node, some local volumes (such as for audit, metrics, etc.) may
+       exist with both the old and new hostnames. If you want, you can
+       remove the local volumes with the old hostname, use the existing
+       local volume path, or remount to new path.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html

@@ -1,0 +1,48 @@
+Comparable JSON Document Data Types
+
+   Defines comparable JSON document data types and describes their
+   behavior when used in comparisons and sorts.
+
+   Data types that have a well defined order amongst the types are
+   comparable data types. In a filter condition, if a document's field
+   value and the comparison value are of comparable types, the document
+   qualifies if the condition returns true. This applies regardless of
+   whether you have created secondary indexes on the comparison fields.
+   Based on the above definition, numeric types are comparable. This
+   includes the following types:
+     * INT
+     * SHORT
+     * LONG
+     * FLOAT
+     * DOUBLE
+
+Example
+
+   Consider the following example where you have four documents, each with
+   a field, AccountBalance. The types of the field differ, as noted in the
+   table, but they are all comparable numeric types:
+   Document Name AccountBalance Field Value AccountBalance Field Type
+   DOCUMENT1     1900.12                    FLOAT
+   DOCUMENT2     10000                      INT
+   DOCUMENT3     10                         LONG
+   DOCUMENT4     27.88                      DOUBLE
+
+   If you specify a sort on the field AccountBalance, MapR-DB sorts the
+   field in the following order:
+   Document Name AccountBalance Field Value
+   DOCUMENT3     10
+   DOCUMENT4     27.88
+   DOCUMENT1     1900.12
+   DOCUMENT2     10000
+
+   Secondary indexes sort and store data based on the values of the
+   indexed fields. When reading through the index, MapR-DB returns the
+   documents in the order of index.
+
+   For example, suppose you have an index where AccountBalance is the
+   indexed field. A query with the condition, "AccountBalance > 20",
+   returns the documents in the following order if MapR-DB processes the
+   query using the index:
+     * DOCUMENT4
+     * DOCUMENT1
+     * DOCUMENT2

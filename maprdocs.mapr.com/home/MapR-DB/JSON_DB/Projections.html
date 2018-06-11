@@ -1,0 +1,56 @@
+Projection Queries
+
+   OJAI queries that do not use the OJAI Distributed Query Service can use
+   indexes even when there are no filter conditions referencing the fields
+   of an index. This requires a full scan of the index. But in cases where
+   all fields referenced in the query are fields in an index, this
+   eliminates the need to read the MapR-DB JSON table. The referenced
+   fields can be either indexed fields or included fields
+
+   The following table provides examples where MapR-DB can and cannot use
+   the index for projections. Assume you have an index with the following
+   fields:
+     * Indexed fields - IdxField1, IdxField2
+     * Included fields - Field3, Field4, Field5
+
+   Also, assume that the fields referenced in the index are a small subset
+   of the total fields in the MapR-DB JSON table. So, avoiding reads on
+   the JSON table is beneficial.
+   OJAI Query Elements Use of Index for Projections
+     * SELECT IdxField1, Field4
+
+   Yes
+
+   All fields referenced are fields in index.
+     * SELECT Field3, Field4
+
+   Yes
+
+   All fields referenced are fields in index.
+     * SELECT IdxField1, Field6
+
+   No
+
+   Field6 not included in index.
+     * SELECT IdxField1, Field3
+     * WHERE condition on IdxField2
+
+   No
+
+   All fields referenced are fields in the index, but the index cannot be
+   used with the WHERE condition.
+     * SELECT IdxField1, Field3
+     * WHERE condition on Field4
+
+   No
+
+   All fields referenced are fields in the index, but the index cannot be
+   used with the WHERE condition.
+     * SELECT IdxField1, Field4
+     * ORDER BY on IdxField2
+
+   No
+
+   All fields referenced are fields in the index, but the index cannot
+   optimize the ORDER BY. The query needs the OJAI Distributed Query
+   Service to sort large data sets.

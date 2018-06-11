@@ -1,0 +1,466 @@
+dbshell update
+
+Description
+
+   Update operations are performed with mutations. These mutation
+   operations are specified with sub-commands that are used to update and
+   add document fields, or merge sub-documents to existing documents.
+   Note: When a document mutation is specified with field paths that are
+   overlapping and the conflict is detected, MapRDB's client-side encoding
+   for the mutation discards the previous mutation at the node where the
+   conflict is occurring and proceeds with the next mutation at that node.
+   For example, if the existing document is:
+{"_id":"id1", "a":{"b":{"c":5}}}
+
+   You perform a mutation with overlapping fields:
+update /tbl --id id1 --m {"$delete":"a.b","$set":{"a.b.d":10}}
+
+   Where the desired result is:
+{"_id":"id1", "a":{"b":{"d":"10"}}}
+
+   The actual result is:
+{"_id":"id1", "a":{"b":{"c":5,"d":"10"}}}
+
+   In this case, the set operation on a.b.d causes the delete operation on
+   a.b to be discarded by the client.
+
+Parameters
+
+   update Options Description
+   *, --t, --table (Required) Table path
+   --id (Required) Document ID. For rowID-only conditions, the rowID can
+   be provided either within a condition payload or by using the --id
+   switch. For example, --id id1 is equivalent to --c
+   {"$eq":{"_id":"id1"}}
+   Note: Repeating _ids with a switch and within a condition payload is
+   not allowed.
+   -m, --mutation (Required) JSON document containing fields and thier
+   values.
+   -c, --where Condition in JSON format. See [1]JSON Document Query
+   Conditions Using OJAI Syntax for a description of the syntax.
+
+Syntax
+
+   update <table path> <parameter> {"<sub-command>": <operation> }
+
+Sub-Commands for the --mutation option
+
+   Each of the following sub-commands are used to modify multiple fields
+   of a document at once. Fields of sub-commands can be provided either by
+   an array, map, or value.
+   Sub-Command Description
+   $set The set command is used to update the field(s) of a document. $set
+   is a read-modify-write operation where the type of the existing value
+   validated at the specified FieldPath before applying the mutation. If
+   the field does not exist in the corresponding document in the document
+   store, it is created. If the field exists but is not of the same type
+   as the type of new value, then the entire mutation fails. The list of
+   field paths and values need to be provided as an array of
+   comma-separated key-value pairs. If there is a single field path, array
+   representation is not required.
+   Note: The behavior of this command is the same as JSON
+   DocumentMutation.set().
+   $put The put command does not perform a read-modify-write operation. If
+   a field exists, it’s value is updated irrespective of original type.
+   Therefore, you can update a field a.b from array to map. If the field
+   does not exists, it is created with the given value.
+   Note: The behavior of this command is same as OJAI
+   DocumentMutation.setOrReplace().
+   $delete The delete command needs a list of fieldpath(s) to be deleted.
+   If the field exists, it is deleted. If the field does not exists, the
+   operation succeeds silently.
+   Note: The behavior of this command operation is same as OJAI
+   DocumentMutation.delete().
+   $increment The increment command is used to increment a field of
+   numeric type. It will not change the type of an existing field. If
+   there is a mismatch in the type of an intermediate field, the increment
+   operation fails. For example, if you perform an increment operation on
+   field a.b.c where a is an integer, the command fails. If the fieldpath
+   does not exist, a new field is created with the value provided.
+   Note: The behavior of this command is the same as JSON
+   DocumentMutation.increment().
+   $decrement The decrement command adds new fields in the document with a
+   decrement value if the field does not exist. The command fails if there
+   is a type mismatch in the intermediate field (similar behavior as
+   $increment).
+   Note: The behavior of this command is the same as JSON
+   DocumentMutation.decrement().
+   $append The append command is a read-modify-write type operation that
+   is used to append a given value to an existing binary, string or array
+   type field. If there is type mismatch in any intermediate field
+   specified in fieldpath with that in the document, it fails with an
+   error. For example, an append operation on field a.b.c fails if the
+   field a itself is a scalar.
+   Note: The behavior of this command is the same as OJAI
+   DocumentMutation.append().
+   $merge The merge command is used to merge a subdocument to an existing
+   document. If the original document contains the same fields as the
+   subdocument, the values are replaced. Otherwise, new fields with the
+   given value are added. If there is a mismatch in type of target field
+   between original document and input to the command, merge fails.
+   Note: The behavior of this command is the same as OJAI
+   DocumentMutation.merge().
+
+Sample JSON Document
+
+   The dbshell update examples use the following sample JSON document:
+{
+  "_id": "id1",
+  "a": {
+       "b": [{"boolean":false}, {"decimal": 123.456}],
+       "c":{
+             "d":10,
+             "e":"Hello"
+           }
+       },
+  "m":"MapR wins"
+}
+
+$set
+
+   With this example, the document fields a.b[0].boolean, a.c.d and a.x
+   are updated. The condition is on the rowkey. If the field does not
+   exist, the update command creates and sets it. The update fails if the
+   existing field type does not match. If the field exists and is the same
+   type, the value is updated.
+update /tbl --id id1 --m {
+        "$set":[{"a.b[0].boolean":true},{"a.c.d":11},{"a.x":1}]
+        }
+
+   When this update operation is applied to the sample JSON document, the
+   following is the resulting document:
+{
+  "_id": "id1",
+  "a": {
+        "b": [{"boolean":true}, {"decimal": 123.456}],
+        "c":{
+              "d":11,
+              "e":"Hello"
+            },
+        "x":1
+       },
+
+  "m":"MapR wins"
+ }
+
+   Note: If only one field is set, the command looks like the following:
+update /tbl --id id1 --m {
+          "$set": {"a.b[0].boolean":true}
+          }
+
+$put
+
+   With this example, a put operation is performed. Similar to the set
+   operation, an array representation is not required for a single field.
+update /tbl --id id1 --m {
+      "$put": [{"a.b[0].boolean":true},{"a.c.d":"eureka"},{"a.x":1}]
+      }
+
+   When this update operation is applied to the sample JSON document, the
+   following is the resulting document:
+{
+  "_id": "id1",
+  "a": {
+        "b": [{"boolean":true}, {"decimal": 123.456}],
+        "c":{
+              "d":"eureka",
+              "e":"Hello"
+            },
+        "x":1
+      },
+  "m":"MapR wins"
+}
+
+$delete
+
+   With the following example, the operation deletes multiple fieldpaths
+   in the document at once.
+update /tbl --id id1 --m {
+      "$delete": ["a.b[1]","a.c.e"]
+      }
+
+   When this update operation is applied to the sample JSON document, the
+   following is the resulting document:
+{
+  "_id": "id1",
+  "a": {
+        "b": [{"boolean":false}],
+        "c": {
+              "d": 10
+              }
+        },
+  "m": "MapR wins"
+}
+
+   The following example shows that if there is a single field to be
+   deleted, the array can be skipped:
+update /tbl --id id1 --m {
+      "$delete":"a.b[1]"
+      }
+
+$merge
+
+   With this example, a merge operation is performed.
+update /tbl --id id1 --m {
+      "$merge":{"a.c":{"d":11,"y":"yo"}}
+      }
+
+   When this update operation is applied to the sample JSON document, the
+   following is the resulting document:
+{
+    "_id": "id1",
+    "a": {
+        "b": [{"boolean":false}, {"decimal": 123.456}],
+        "c":{
+            "d":11,
+            "e":"Hello",
+            "y":"yo"
+        }
+    },
+    "m":"MapR wins"
+}
+
+   Note: $merge does not support the array format for merging two maps at
+   two different fieldpaths in the document.
+   For example, the following syntax is not correct:
+// WRONG Syntax
+update /tbl --id id1 --m {"$merge":["a":{"b":1},{"a":{"d":"MapR"}}]}
+
+   The following syntax is correct:
+// CORRECT Syntax
+update /tbl --id id1 --m {"$merge":{"a":{"b":1,"d":"MapR"}}}
+
+   Alternatively, you can run the [2]update without using sub-commands:
+// Alternative Syntax
+update /tbl --id id1 --m {"a":{"b":1},"a":{"d":"MapR"}}
+
+$increment
+
+   With this example, an increment operation is performed.
+     * If field p.q.r exists:
+          + Increment the field by 1.
+          + Otherwise, set the field to 1 (does not exist).
+     * If field a.c.d exists:
+          + Increment the field by 5.
+          + Otherwise, set the field to 5 (does not exist).
+
+   Note: If there are multiple fields, the value of $increment should be
+   an array: "$increment":["p.q.r",{"a.c.d": 5}].
+update /tbl --id id1 --m {
+      "$increment":{"a.c.d":-5}
+      }
+
+   When this update operation is applied to the sample JSON document, the
+   following is the resulting document:
+{
+  "_id": "id1",
+  "a": {
+        "b": [{"boolean":false}, {"decimal": 123.456}],
+        "c":{
+              "d":5,
+              "e":"Hello"
+            }
+        },
+  "m":"MapR wins"
+}
+
+$decrement
+
+   With this example, an decrement operation is performed.
+     * If field p.q.r exists:
+          + Decrement the field by 1.
+          + Otherwise, set the field to -1 (does not exist).
+     * If field a.c.d exists:
+          + Decrement the field by 5.
+          + Otherwise, set the field to -5 (does not exist).
+
+   Note: Similar to the increment operation, a fieldpath can be provided
+   without a value: "$decrement":["p.q.r",{"a.c.d":2}]
+update /tbl --id id1 --m {
+      "$decrement":{"a.c.d":5}
+      }
+
+   When this update operation is applied to the sample JSON document, the
+   following is the resulting document:
+{
+  "_id": "id1",
+  "a": {
+        "b": [{"boolean":false}, {"decimal": 123.456}],
+        "c":{
+              "d":-5,
+              "e":"Hello"
+            }
+        },
+  "m":"MapR wins"
+}
+
+$append
+
+   With this example, an append operation is performed on fields a.b and
+   a.c.e.
+update /tbl --id id1 --m
+     '{
+      "$append":[{"a.b":{"appd":1}},{"a.c.e":" MapR"}]
+      }'
+
+   When this update operation is applied to the sample JSON document, the
+   following is the resulting document:
+{
+  "_id": "id1",
+  "a": {
+        "b": [{"boolean":false}, {"decimal": 123.456}, {"appd":1}],
+        "c":{
+              "d":10,
+              "e":"Hello MapR"
+            }
+        },
+  "m":"MapR wins"
+}
+
+Multiple Sub-commands Example
+
+   A user can combine different sub-commands into a single JSON mutation
+   in the shell. If multiple fieldpaths are provided and if there is a
+   path conflict during runtime, exception errors will be thrown. This
+   behavior is consistent with current OJAI API behavior.
+   Note: If the document provided as a part of --m and --c has spaces,
+   then it must be enclosed within single quotes.
+// Syntax for combining different sub-commands
+
+update /tbl --id id1 --m
+        '{
+        "$set":[{"a.b":<value>},…],
+        "$delete":["a.c.d",…],
+        "$merge":{...},
+        "$increment":[....],
+        "$append":[...]
+        }'
+
+   The following is an example of combining different sub-commands.
+update /tbl --id id1 --m
+        '{
+        "$set":{"x":[1,2,3]},
+        "$put":{"a.c.e":{"$binary":"AAAADg=="}},
+        "$increment":"a.b[1].decimal",
+        "$delete":"a.b[0]",
+        "$merge":{"newDoc":{"k":"MapR DBShell rocks!!"}},
+        "$append":{"m":"!!!"}
+        }'
+
+   The following is example output:
+{
+  "_id":"id1",
+  "a":{
+        "b":[{"decimal":124.456}],
+        "c":{"d":10,"e":{"$binary":"AAAADg=="}}
+      },
+  "m":"MapR wins!!!",
+  "newDoc":{"k":"MapR DBShell rocks!!"},
+  "x":[1,2,3]
+}
+
+   The changes to the document operate in the following manner:
+     * $set subcommand adds a new array [1,2,3] with fieldpath x into the
+       document.
+     * $put subcommand replaces the existing string "Hello" with a binary
+       value {"$binary":"AAAADg=="}.
+     * $delete subcommand deletes the fieldpath a.b[0] from the document.
+     * $merge subcommand merges a new document {"newDoc":{"k":"MapR
+       DBShell rocks!!"}}.
+     * $append subcommand merges the strings "MapR wins" and "!!!"
+       together.
+     * $increment and $delete work on the array a.b which is an array but
+       on different indices.
+"$increment":"a.b[1].decimal"
+"$delete":"a.b[0]"
+
+   Important: The following operations are not recommended because the
+   nature of execution is not guaranteed.
+"$increment":"a.b[1].decimal"
+"$delete":"a.b"
+
+Update without Sub-commands
+
+   As part of the update command, a subdocument can be merged with
+   original document without using update sub-commands. When applying this
+   type of update, the behavior is same as the merge command.
+
+   For example:
+update /tbl --id id1 --m {
+      "k":"eureka",
+      "a":{"c":{"d":1234}}
+      }
+
+   If the document with key "id1" exists, the subdocument within the
+   update command is merged with the original document. If the document
+   does not exist, a new document is created with the input provided.
+
+   Application of the command above to sample document will result in
+   following :
+{
+  "_id": "id1",
+  "a": {
+        "b": [{"boolean":false}, {"decimal": 123.456}],
+        "c":{
+              "d":1234,
+              "e":"Hello"
+            }
+        },
+ "k":"eureka",
+ "m":"MapR wins"
+}
+
+   Another example of the update command :
+update /tbl --id id1 --m {
+      "k":"eureka",
+      "a":{"c":{"d":null}}
+      }
+
+   The resulting document will be :
+{
+  "_id": "id1",
+  "a": {
+        "b": [{"boolean":false}, {"decimal": 123.456}],
+        "c":{
+              "d":null,
+              "e":"Hello"
+             }
+        },
+  "k":"eureka",
+  "m":"MapR wins"
+}
+
+   Note: In this example, field "a.c.d" remains in the document while
+   being set to null.
+
+Update with Condition and Logical Operator
+
+   The rowid field can be either part of a condition or provided in the
+   command line using the --id switch. More complex conditions can be
+   selected by using logical operators ($and, $or) and comparison
+   operators ($gt, $lt, $eq, etc.). A logical operator is defined in JSON
+   documents with an array that contains a list of simple conditions.
+   There are other types of condition operators that can be used.
+
+   In this example, the mutation is applied to a document with a given
+   rowid if the condition evaluates to true.
+   Note: A command of this form is the same as OJAI checkAndUpdate().
+
+   The following is an example of an update operation with complex
+   conditions:
+update  /tbl  --c {"$and":[
+      {"$eq": {"_id" : "id1"}},
+      {"$and":[
+      {"$eq":{"a.b[0].boolean":false}},
+      {"$or":[{"$ne":{"a.c.d":5}},
+      {"$gt":{"a.b[1].decimal":1},"$lt":{"a.b[1].decimal":10}}
+      ]}
+      ]}
+      ]
+      }
+      --m {<document mutation>}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-update.html#dbshell-update__section_zqx_mln_bdb

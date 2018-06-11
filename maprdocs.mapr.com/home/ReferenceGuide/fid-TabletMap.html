@@ -1,0 +1,25 @@
+FID for a Tablet Map
+
+   Describes how to determine the FID for a tablet map.
+
+   To determine the FID for a tablet map:
+    1. Run hadoop mfs -ls <table path> to determine the table FID. The
+       table FID is the FID that displays after the "p.”
+       Example:
+[mapr@hostname ~]$ hadoop mfs -ls /testdst
+                        Found 1 items
+                        tr-------- Z U 3 mapr mapr 2 2015-02-18 15:24 0 /testdst
+                        p 2049.49.131220 hostname:5660
+                        r 2061.32.131258 hostname:5660
+    2. Run maprcli fid dump on the table FID to determine the tablet map
+       FID.
+       Example:
+                        [mapr@hostname ~]$ maprcli fid dump -fid 2049.49.131220
+                        value key
+                        {"value":{"fid":"<parentCID>.51.131224"}} schema
+                        {"value":{"fid":"<parentCID>.50.131222"}} tabletmap
+
+    3. Construct the tablet map FID for the maprcli fid dump command by
+       replacing <parentCID> with the set of numbers before the first
+       period four numbers in the table FID.
+       Example: 2049.50.131222

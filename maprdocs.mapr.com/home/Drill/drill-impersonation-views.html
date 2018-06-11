@@ -1,0 +1,69 @@
+Impersonation and Views
+
+   You can use views with impersonation to provide granular access to data
+   and protect sensitive information.
+
+   When you create a view, Drill stores the view definition in a file and
+   suffixes the file with view.drill. For example, if you create a view
+   named myview, Drill creates a view file named myview.view.drill and
+   saves it in the current workspace or the workspace specified, such as
+   dfs.views.myview. See [1]CREATE VIEW.
+
+   You can create a view and grant read permissions on the view to give
+   other users access to the data that the view references. When a user
+   queries a view on which s/he has read access, Drill impersonates the
+   view owner to access the underlying data. If the user tries to query
+   the data directly (instead of using the view), Drill returns a
+   permission denied error. A user with read access to a view can create
+   new views from the originating view to further restrict access on data.
+
+View Permissions
+
+   A user must have write permission on a directory or workspace to create
+   a view, as well as read access on the table(s) and/or view(s) that the
+   view references. When a user creates a view, permission on the view is
+   set to owner by default. Users can query an existing view or create new
+   views from the view if they have read permissions on the view file and
+   the directory or workspace where the view file is stored.
+
+   When users query a view, Drill accesses the underlying data as the user
+   that created the view. If a user does not have permission to access a
+   view, the query fails and Drill returns an error. Only the view owner
+   or a superuser can modify view permissions to change them from owner to
+   group or world.
+
+   The view owner or a superuser can modify permissions on the view file
+   directly or they can set view permissions at the system or session
+   level prior to creating any views. Any user that alters view
+   permissions must have write access on the directory or workspace in
+   which they are working.
+
+Modifying Permissions on a View File
+
+   Only a view owner or a super user can modify permissions on a view file
+   to change them from owner to group or world readable. Before you grant
+   permission to users to access a view, verify that they have access to
+   the directory or workspace in which the view file is stored.
+   Use the chmod and chown commands with the appropriate octal code to
+   change permissions on a view file:
+hadoop fs –chmod <octal code> <file_name>
+hadoop fs –chown <user>:<group> <file_name>
+//hadoop fs –chmod 750 employees.view.drill
+
+Modifying SYSTEM|SESSION Level View Permissions
+
+   Use the ALTER SESSION|SYSTEM command with the
+   new_view_default_permissions parameter and the appropriate octal code
+   to set view permissions at the system or session level prior to
+   creating a view.
+ALTER SESSION SET `new_view_default_permissions` = '<octal_code>';
+ALTER SYSTEM SET `new_view_default_permissions` = '<octal_code>';
+//ALTER SESSION SET `new_view_default_permissions` = '777';
+
+   After you set this parameter, Drill applies the same permissions on
+   each view created during the session or across all sessions if set at
+   the system level.
+
+References
+
+   1. https://drill.apache.org/docs/create-view

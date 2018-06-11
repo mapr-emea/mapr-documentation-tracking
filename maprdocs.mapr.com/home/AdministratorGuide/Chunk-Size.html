@@ -1,0 +1,70 @@
+Managing Chunk Size
+
+   Files in MapR-FS are split into chunks (similar to Hadoop blocks) that
+   are normally 256 MB by default. Any multiple of 65,536 bytes is a valid
+   chunk size, but tuning the size correctly is important:
+     * Smaller chunk sizes result in larger numbers of map tasks, which
+       can result in lower performance due to task scheduling overhead.
+     * Larger chunk sizes require more memory to sort the map task output,
+       which can crash the JVM or add significant garbage collection
+       overhead MapR can deliver a single stream at upwards of 300 MB per
+       second, making it possible to use larger chunks than in stock
+       Hadoop. Generally, it is wise to set the chunk size between 64 MB
+       and 256 MB.
+
+   Chunk size is set at the directory level. Files inherit the chunk size
+   settings of the directory that contains them, as do subdirectories on
+   which chunk size has not been explicitly set. Any files written by a
+   Hadoop application, whether via the file APIs or over NFS, use chunk
+   size specified by the settings for the directory where the file is
+   written. If you change a directory's chunk size settings after writing
+   a file, the file will keep the old chunk size settings. Further writes
+   to the file will use the file's current chunk size.
+   Note: If chunk size is zero (0), when an application makes a request
+   for block size, MapR will return 2^62 (4611686018427387904); however,
+   [1]hadoop mfs commands will continue to display 0 for chunk size.
+
+Configuring Chunk Size
+
+   Chunk size also affects parallel processing and random disk I/O during
+   MapReduce applications. A higher chunk size means less parallel
+   processing because there are fewer map inputs, and therefore fewer
+   mappers. A lower chunk size improves parallelism, but results in higher
+   random disk I/O during shuffle because there are more map outputs. Set
+   the io.sort.mb parameter to a value between 120% and 150% of the chunk
+   size.
+   Here are general guidelines for chunk size:
+     * For most purposes, set the chunk size to the default 256 MB and set
+       the value of the io.sort.mb parameter to the default 380 MB.
+     * On very small clusters or nodes with not much RAM, set the chunk
+       size to 128 mb and set the value of the io.sort.mb parameter to 190
+       MB.
+     * If application-level compression is in use, the io.sort.mb
+       parameter should be at least 380MB.
+
+   Note: If you have Drill running in the cluster, change the
+   store.parquet.block-size parameter in Drill so that the Parquet block
+   size is the same as the chunk size in MapR-FS. See [2]Configuring the
+   Parquet Block Size for more information.
+
+Setting Chunk Size
+
+   You can set the chunk size for a given directory in two ways:
+     * Change the ChunkSize attribute in the [3].dfs_attributes file at
+       the top level of the directory
+     * Use the command [4]hadoop mfs -setchunksize <size> <directory>
+
+   For example, if the volume test is NFS-mounted at
+   /mapr/my.cluster.com/projects/test you can set the chunk size to
+   268,435,456 bytes by editing the file
+   /mapr/my.cluster.com/projects/test/.dfs_attributes and setting
+   ChunkSize=268435456. To accomplish the same thing from the hadoop
+   shell, use the following command:
+hadoop mfs -setchunksize 268435456 /mapr/my.cluster.com/projects/test
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/parquet-block-size.html#parquet-block-size
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dfs_attributes.html#dfs_attributes
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

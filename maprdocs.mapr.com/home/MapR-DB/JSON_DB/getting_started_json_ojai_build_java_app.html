@@ -1,0 +1,144 @@
+Build Your Java Application
+
+   Follow the instructions in this section to build a Java application
+   that uses OJAI and accesses MapR-DB JSON tables.
+
+1. Prepare the Directory Structure
+
+   This application uses the JSON tables that are mapped to the file
+   system and uses the POSIX permission model (read/write for users and
+   groups), and more. In this tutorial we do not use any advanced security
+   features. To read more about security, see [1]Performing Filesystem
+   Operations on MapR-DB Tables.
+   A particular directory structure is needed on the VM for this
+   application. Change the permissions for the apps directory, and add a
+   blog folder (used by the Java REST Sample application).
+ssh mapr@maprdemo
+cd /mapr/demo.mapr.com/
+ls -la
+chmod 777 apps
+mkdir apps/blog
+chmod 777 apps/blog
+
+2. MapR-DB and Java: Overview
+
+   The [2]OJAI 101 repository contains the full application that shows the
+   core operations of MapR-DB and OJAI.
+   Before running any Java application, you have to set the library path
+   to point to the MapR client library. For example:
+-Dmapr.home.dir=/opt/mapr
+
+   If you used a different name for the folder in opt, use that name.
+   Code Snippets
+   Create a table:
+Table table = MapRDB.createTable("/apps/user_profiles");
+
+   Create an JSON document (JSON):
+Document doc = MapRDB.newDocument()
+                          .set("firstName", "John")
+                          .set("lastName", "Doe")
+                          .set("age", 50);
+
+   This document is very simple, but you can use the API to create any
+   valid JSON document, including nested documents and arrays. The JSON
+   document looks like this:
+{
+  "firstName" : "John",
+  "lastName" : "Doe",
+  "age" : 50
+}
+
+   You can now insert the document into MapR-DB using the insert() method.
+   You just need to set the Document ID (or rowkey):
+table.insert("jdoe", doc);
+
+   The Document ID is unique within a table. If you try to insert a
+   document using an existing key, a DocumentExistsException will be
+   raised. You can also use the insertOrReplace method; with this method,
+   if the document with the ID exists, it will be replaced.
+   You can also retrieve the document with a simple get operation:
+Document doc2  = table.findById("jdoe");
+System.out.println(  doc2  );
+System.out.println(
+       doc2.getString("firstName") +":"+ doc2.getInt("age")
+);
+
+   To update a document, you have to do the following operations:
+DocumentMutation mutation = MapRDB.newMutation()
+                                     .increment("age", 1)
+                                     .set("interests", Arrays.asList("sports", "
+movies"));
+table.update("jdoe", mutation);
+
+   As you can see, not only can you update an existing attribute, such as
+   the age increment, but you can also modify the structure of the
+   document. For example, we added the interests field to the document.
+   We won't go into all the capabilities of the database, but let's take a
+   look at a simple query. For example, return all the profiles with an
+   age greater than 50:
+QueryCondition condition = MapRDB.newCondition()
+                                  .is("age", Condition.Op.GREATER, 50)
+                                  .build();
+
+DocumentStream rs = table.find(condition);
+Iterator<Document> itrs =  rs.iterator();
+while (itrs.hasNext()) {
+    System.out.println( itrs.next() );
+}
+rs.close();
+
+   Finally let's delete a document:
+table.delete("jdoe");
+
+   Let's also delete the table:
+MapRDB.deleteTable("/apps/user_profiles");
+
+   You have now learned the basics of OJAI and you can see how to store,
+   retrieve, and delete a document from a MapR-DB table.
+
+   You can now start building your own application or look at the
+   different sample applications available.
+
+3. MapR-DB and Java: Sample Application
+
+   Clone the following git repository:
+   [3]https://github.com/mapr-demos/maprdb-ojai-101
+
+   Look at the [4]com.mapr.db.samples.basic.Ex01SimpleCRUD.run() method.
+
+   This method calls three other methods:
+     * createDocuments(), which shows different ways of creating documents
+     * queryDocuments(), which shows different ways of querying documents
+     * updateDocuments(), which shows different ways of updating documents
+
+   Execute the following Maven commands:
+mvn clean package
+mvn exec:java -Dexec.mainClass="com.mapr.db.samples.basic.Ex01SimpleCRUD"
+
+   You can use the MapR-DB Shell described at the end of this document to
+   query JSON documents, including the one created by running the sample
+   application.
+
+4. MapR-DB and Java: REST API Sample
+
+   Clone the following git repository:
+   [5]https://github.com/mapr-demos/maprdb-ojai-rest-sample
+
+   This web application exposes a MapR-DB document using a REST API (using
+   JAX-RS and Swagger).
+   Execute the following Maven commands:
+mvn clean package
+mvn exec:java -Dexec.mainClass="com.mapr.db.samples.rest.Main"
+
+   Look at [6]com.mapr.db.samples.rest.Main.
+
+   Start the application and go to: http://localhost:8080
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/FilesystemOperationsonMapRDB-tables.html
+   2. https://github.com/mapr-demos/maprdb-ojai-101
+   3. https://github.com/mapr-demos/maprdb-ojai-101
+   4. https://github.com/mapr-demos/maprdb-ojai-101/blob/master/src/main/java/com/mapr/db/samples/basic/Ex01SimpleCRUD.java#L58
+   5. https://github.com/mapr-demos/maprdb-ojai-rest-sample
+   6. https://github.com/mapr-demos/maprdb-ojai-rest-sample/blob/master/src/main/java/com/mapr/db/samples/rest/Main.java#L22

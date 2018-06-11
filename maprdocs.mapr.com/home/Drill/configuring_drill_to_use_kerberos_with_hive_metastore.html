@@ -1,0 +1,67 @@
+Configuring Drill to Use Kerberos with Hive Metastore
+
+   To configure Drill to use Kerberos with the Hive metastore, modify the
+   hive storage plugin in the Drill Web UI and then restart the Warden
+   service.
+   Note: When you configure Drill to use Kerberos with the Hive metastore,
+   Drill submits requests to the Hive metastore as the mapr superuser. If
+   you want Drill to submit requests to the Hive metastore as any other
+   user, configure [1]Drill impersonation with Hive instead of performing
+   this task. Drill impersonation works with or without Kerberos
+   configured for the Hive metastore.
+
+Prerequisites
+
+   The configurations described in this document have the following
+   dependencies:
+     * MapR clueter.
+     * Drill installed with Drillbits running as the mapr user.
+     * Supported version of Hive installed with the following:
+          + Hive Metastore configured to use Kerberos authentication
+          + Configured Hive remote metastore repository
+       Note: See the [2]Drill Support Matrix for supported versions of
+       Hive.
+
+Modify the Hive Storage Plugin in Drill
+
+   Modify the Hive storage plugin configuration in the Drill Web UI based
+   on the authorization and security scenario for the cluster. You can
+   only access the Drill Web UI for a running Drillbit.
+
+   Complete the following steps to configure Drill to use Kerberos with
+   Hive Metastore:
+    1. Navigate to http://<drillbit_hostname>:8047, and select the Storage
+       tab.
+       Note: You can only access the Drill Web UI for a running Drillbit.
+    2. Click Update next to the hive option.
+    3. In the configuration window, add the hive.metastore.sasl.enabled,
+       hive.metastore.kerberos.principal, and
+       hive.security.authorization.enabled properties, as shown below, if
+       configuration does not contain them already. Note that other
+       properties shown may or may not be required in your environment:
+{
+  "type": "hive",
+  "enabled": true,
+  "configProps": {
+    "hive.metastore.uris": "thrift://<metastore_hostname>:9083",
+    "fs.default.name": "maprfs:///",
+    "hive.server2.enable.doAs": "false",
+    "hive.metastore.sasl.enabled": "true",
+    "hive.metastore.kerberos.principal": "<metastore_server_principal_name>",
+    "hive.security.authorization.enabled": "true"
+  }
+}
+
+Restart Warden
+
+   Issue the following command on all nodes to restart the Warden service:
+service mapr-warden restart
+
+   If you have clush installed, you can run the following command to
+   restart Warden on all nodes at once:
+clush –a "service mapr-warden restart"
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/configuring-impersonation-hive.html#configuring-impersonation-hive
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/r_drill_matrix.html#reference_lv3_2sb_t5

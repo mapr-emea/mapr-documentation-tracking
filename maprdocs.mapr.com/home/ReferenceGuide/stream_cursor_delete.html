@@ -1,0 +1,56 @@
+stream cursor delete
+
+   Deletes committed cursors that are in the partitions in a stream.
+   Note: Deleting the committed cursors for active consumers has no effect
+   on the consumers. Consumers use read cursors to keep track of where
+   they currently are in partitions.
+
+   For example, the consumer consumer1 continues reading the messages in a
+   partition from the position of the consumer's read cursor even after
+   the consumer's committed cursor is deleted. However, if consumer1 goes
+   offline and the partition is reassigned to another consumer (consumer2)
+   in the same consumer group before consumer1 creates another committed
+   cursor, consumer2 starts reading the partition at the most recent
+   message.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * adminperm or consumeperm permission on the stream
+
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+maprcli stream cursor delete
+         -path <Stream Path>
+        [ -consumergroup <Consumer Group ID> ]
+        [ -topic <Topic Name> ]
+        [ -partition <Partition ID> ]
+
+   REST http[s]://<host>:<port>/rest/stream/cursor/delete?path=<path>
+
+Parameters
+
+   Parameter Description
+   path The path and name of the stream in which the committed cursors are
+   located.
+   consumergroup Specifies the ID of a particular consumer group that you
+   want to delete the committed cursors for.
+   topic The name of a topic to delete committed cursors from. If you also
+   specify the -partition parameter, only the committed cursors in the
+   indicated partition are deleted.
+   partition The ID of the partition where the committed cursors that you
+   want to delete is located. If you specify this ID, you must also use
+   the -topic parameter.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

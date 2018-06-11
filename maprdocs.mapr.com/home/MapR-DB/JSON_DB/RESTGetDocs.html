@@ -1,0 +1,205 @@
+GET /api/v2/table/{path}
+
+   Retrieves one or more documents from a MapR-DB JSON table
+
+Parameters
+
+                                Name                                 Description
+   path
+
+   string
+
+   (path)
+Required: Path to the MapR-DB JSON table
+   condition
+
+   string
+
+   (query)
+   Query condition (in JSON format) to evaluate on documents retrieved.
+   See [1]JSON Document Query Conditions Using OJAI Syntax for a
+   description of the syntax.
+   fields
+
+   string
+
+   (query)
+   The fields from the document to retrieve. See [2]JSON Document Field
+   Paths for details about how to specify field paths.
+   fromId
+
+   string
+
+   (query)
+Starting id of the range of documents to retrieve (inclusive)
+   toId
+
+   string
+
+   (query)
+Ending id of the range of documents to retrieve (exclusive)
+   getPlan
+
+   string
+
+   (query)
+
+   If set to true, returns the query plan used to retrieve the documents
+   Value: True|False
+
+   Default: False
+   limit
+
+   integer
+
+   (query)
+The maximum number of documents to retrieve
+   offset
+
+   integer
+
+   (query)
+The number of documents to skip past before returning results
+   orderBy
+
+   string
+
+   (query)
+   The fields on which to sort the result.
+
+   Specify the fields in a comma separated list, in the format <field
+   name>:<sort order> where <sort order> is either asc or desc. <sort
+   order> is optional and defaults to asc.
+   query
+
+   string
+
+   (query)
+   Query string with predefined keywords that define the behavior of the
+   query. See [3]Query with --query for syntax details.
+   withTags
+
+   string
+
+   (query)
+
+   Enables or disables output with extended type tags
+
+   Value: True|False
+
+   Default: True
+
+Request Examples
+
+    1. The following retrieves all documents from /apps/employees:
+curl -X GET \
+  'https://10.10.100.42:8243/api/v2/table/%2Fapps%2Femployees' \
+  -u root:mapr
+    2. The following specifies an offset and limit in the GET request:
+curl -X GET \
+  'https://10.10.100.42:8243/api/v2/table/%2Fapps%2Femployees%2F?offset=1&limit=
+2' \
+  -u root:mapr
+    3. The following retrieves only the first names in the documents:
+curl -X GET \
+'https://10.10.100.42:8243/api/v2/table/%2Fapps%2Femployees?fields=first_name' \
+  -u root:mapr
+    4. The following retrieves all documents with a last name of 'Doe':
+curl -g -X GET \
+'https://10.10.100.42:8243/api/v2/table/%2Fapps%2Femployees?condition={"$eq":{"l
+ast_name":"Doe"}}' \
+  -u root:mapr
+       Note: You must pass '-g' in the cURL command due to the nested
+       braces in the condition.
+    5. The following retrieves the id and first name of documents with a
+       last name of 'Doe':
+curl -g -X GET \
+'https://10.10.100.42:8243/api/v2/table/%2Fapps%2Femployees?condition={"$eq":{"l
+ast_name":"Doe"}}&fields=_id,first_name' \
+  -u root:mapr
+    6. The following runs the same command and includes a request for the
+       query plan:
+curl -g -X GET \
+'https://10.10.100.42:8243/api/v2/table/%2Fapps%2Femployees?condition={"$eq":{"l
+ast_name":"Doe"}}&fields=_id,first_name&getPlan=true' \
+  -u root:mapr
+
+Response Examples
+
+200 OK
+
+{
+    "DocumentStream": [
+        {
+            "_id": "user001",
+            "first_name": "John",
+            "last_name": "Doe"
+        },
+        {
+            "_id": "user002",
+            "first_name": "Jane",
+            "last_name": "Doe"
+        },
+        {
+            "_id": "user003",
+            "first_name": "Simon",
+            "last_name": "Davis"
+        }
+    ]
+}
+
+   If you have configured the MapR Data Access Gateway to limit the number
+   of documents in retrieval requests, and your result set exceeds the
+   limit, the API response includes a warning. In the following example,
+   the limit is set to 2:
+{
+    "DocumentStream": [
+        {
+            "_id": "user001",
+            "first_name": "John",
+            "last_name": "Doe"
+        },
+        {
+            "_id": "user002",
+            "first_name": "Jane",
+            "last_name": "Doe"
+        }
+    ],
+    "WARNING": "result truncated due to limit set to 2."
+}
+
+   The following shows an example of output that includes a query plan. It
+   corresponds to the output from example #6 in the previous section:
+{
+    "DocumentStream": [
+        {
+            "_id": "user001",
+            "first_name": "John"
+        },
+        {
+            "_id": "user002",
+            "first_name": "Jane"
+        }
+    ],
+    "QueryPlan": [
+        [
+            {
+                "streamName": "DBDocumentStream",
+                "parameters": {
+                    "queryConditionPath": true,
+                    "projectionPath": [
+                        "_id",
+                        "first_name"
+                    ],
+                    "primaryTable": "/apps/employees"
+                }
+            }
+        ]
+    ]
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/IdentifyingJSONFields.html#IdentifyingJSONFields
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-find-query.html#dbshell-find-query

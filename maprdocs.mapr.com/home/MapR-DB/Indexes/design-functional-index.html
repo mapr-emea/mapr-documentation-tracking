@@ -1,0 +1,145 @@
+Using Casts in Secondary Indexes
+
+   Defining an index that specifies index keys with CAST functions
+   provides fast access for queries that contain CAST functions. The index
+   converts the indexed field to the type specified by the CAST function
+   and stores the result.
+   Create indexes using CAST functions if you want to CAST fields to
+   specific data types in your queries. To define an index with the CAST
+   function applied to a field, specify a CAST when defining the index
+   key. The following example creates an index that casts the age field to
+   an INT type and the height field to a FLOAT type.
+maprcli table index add -path /castTable -index castIdx \
+   -indexedfields '$CAST(age@INT)','$CAST(height@FLOAT)'
+
+   When issuing Drill queries through BI tools, you can include CAST
+   functions in your queries to create [1]Drill views. Including CAST
+   functions provides the metadata needed to optimally process the
+   queries. For more information about using the CAST function with Drill,
+   see [2]Data Type Conversion.
+
+Casting from NULL in Drill
+
+   You can cast from null to any data type supported by the indexes with
+   the CAST function. However, null can be a valid JSON value for the
+   string data type, for example:
+{ "name": "null" }
+
+   Null can also represent the absence of an actual value, for example:
+{ "_id":1,"name":"Annie" }
+{ "_id":2 }  (name does not exist)
+
+   When you cast on columns with missing values, Drill does not return
+   null for the missing values. Drill only returns null in cases where an
+   actual value of null exists.
+   For example, if you have the following data stored in a JSON table
+   named t1:
+   a1 b1
+   1  'abc'
+   2  null
+   3  'null'
+   And you issue the following query against the table:
+SELECT a1, b1(cast b1 as varchar(20))) from t1;
+
+   Drill returns the following data:
+   a1 b1
+   1  abc
+   2
+   3  null
+   Drill does not return null where null represents a missing value. Drill
+   only returns null in the instance where null is stored as a string
+   value.
+
+Guidelines for Using Casts in Indexes
+
+   The following rules apply to CAST functions used in secondary indexes:
+     * You can include the CAST function only on indexed fields.
+     * You do not have to cast between comparable data types.
+     * Indexes support casting to the following data types:
+          + Boolean
+          + String
+          + Int
+          + Long
+          + Float
+          + Double
+          + Date
+          + Time
+          + Timestamp
+       Note: MapR-DB does not support casting from any data type to byte,
+       short, decimal, binary, or interval.
+       Note: Queries that use the CAST function on fields with timestamp
+       and binary data types are not supported.
+     * When casting to a string type, you can optionally specify a length.
+       If you do not specify a length, it defaults to the maximum length
+       of 255.
+     * When casting from a binary type, MapR-DB assumes that the binary
+       value is a UTF-8 formatted string representation of the resulting
+       data type.
+     * If MapR-DB cannot cast a value, MapR-DB indexes the row with an
+       encoding error that specifies a CAST issue.
+     * You cannot cast all data types to the supported data types. See the
+       Casting Matrix below for supported and unsupported combinations.
+
+Casting Matrix
+
+   The following matrix displays supported and unsupported casting, from
+   the data type shown in the column to the data type shown in the row. Y
+   indicates a supported casting; N indicates an unsupported casting.
+   Hypen (-) indicates that casting is unnecessary, because the data types
+   are comparable.
+             int long float double string boolean date time timestamp
+   byte      Y   Y    Y     Y      Y      Y       N    N    N
+   short     Y   Y    Y     Y      Y      Y       N    N    N
+   int       -   Y    Y     Y      Y      Y       Y^1  Y^2  Y
+   long      Y   -    Y     Y      Y      Y       Y    Y    Y
+   float     Y   Y    -     Y      Y      Y       N    N    N
+   double    Y   Y    Y     -      Y      Y       N    N    N
+   string    Y   Y    Y     Y      -      Y^3     Y    Y    Y
+   boolean   Y   Y    N     N      Y      -       N    N    N
+   date      N   N    N     N      Y      N       -    Y    Y
+   time      N   N    N     N      Y      N       N    -    N
+   timestamp N   N    N     N      Y^4    N       Y    Y    -
+   binary    Y   Y    Y     Y      Y      N       N    N    N
+
+   ^1 When casting int/long to a date type, the date value is constructed
+   based on the int/long value being the number of milliseconds since
+   epoch.
+
+   ^2 When casting int/long to a time type, the time value is constructed
+   based on the int/long value being the time of day in milliseconds.
+
+   ^3 MapR-DB casts the strings true, yes, on, y, t, and 1 to boolean
+   true. MapR-DB casts the strings false, no, off, n, f, and 0 to boolean
+   false.
+
+   ^4 The string represents the time in UTC timezone.
+
+Example Using Cast Function in an Index
+
+   This example shows you how to create an index with the CAST function.
+   The following statement queries a table named lineitem and casts the
+   L_LINENUMBER and L_ORDERKEY fields to the int data type:
+SELECT L_LINESTATUS, L_QUANTITY FROM lineitem WHERE CAST(L_LINENUMBER as int) =
+1 AND CAST(L_ORDERKEY as int) = 550;
+
+   You can create an index on the L_LINENUMBER and L_ORDERKEY fields and
+   indicate the use of the CAST function and data type for each field, as
+   shown below:
+maprcli table index add -path /drill/testdata/qa/sf1/maprdb/json/lineitem -index
+ l_cast_comp_1 \
+   -indexedfields '$CAST(L_LINENUMBER@INT)','$CAST(L_ORDERKEY@INT)' \
+   -includedfields L_LINESTATUS,L_QUANTITY
+
+   The index stores the values of the L_LINENUMBER and L_ORDERKEY fields
+   as the int data type. MapR-DB can use the index for any subsequent
+   queries that use the CAST function to retrieve these fields as the int
+   type, instead of accessing data in the primary table and converting the
+   values to int.
+   Note: If you created an index on the L_LINENUMBER and L_ORDERKEY fields
+   without the CAST function, the query used in this example would not
+   benefit from the index.
+
+References
+
+   1. https://drill.apache.org/docs/create-view/
+   2. https://drill.apache.org/docs/data-type-conversion/

@@ -1,0 +1,33 @@
+Creating Job Labels
+
+   To place an individual job on a particular node, use a job label. You
+   can apply job labels in three ways:
+     * Use [1]set() from the Hadoop configuration API in your Java
+       application. For example:
+conf.set("mapreduce.job.label","Production");
+     * At the command line, pass the label in -Dmapreduce.job.label when
+       you run the job with the [2]hadoop jar command. For example:
+hadoop jar /opt/mapr/hadoop/hadoop-2.4.1/share/hadoop/mapreduce/hadoop-mapreduce
+-examples-2.4.1-mapr-4.0.1-20140804.191359-4.jar teragen
+-Dmapreduce.job.label=Production 100000000 /teragen
+     * Set the mapreduce.job.label parameter in [3]mapred-site.xml. For
+       example, to configure an application label expression for a
+       MapReduce application that can run on any Development node or Fast
+       node (including a Fast node from the Production rack), set the
+       mapreduce.job.label parameter as shown:
+<property>
+   <name>mapreduce.job.label</name>
+   <value>Development || Fast</value>
+   <description>Label expression for MapReduce application</description>
+</property>
+       Warning:
+       If an application is submitted with a label that does not
+       correspond to any nodes, the application will run as though no
+       label had been specified. Consult the ResourceManager log for more
+       information (look for ‘invalid label’ error messages).
+
+References
+
+   1. http://hadoop.apache.org/common/docs/current/api/org/apache/hadoop/conf/Configuration.html#set%28java.lang.String,%20java.lang.String%29
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-jar.html#hadoopjar
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapred-site.xml.html#mapred-site.xml

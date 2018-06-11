@@ -1,0 +1,31 @@
+Setting Resource Limits on CentOS/RedHat/Oracle Linux
+
+   While you can use Warden to automatically set resource limits, you may
+   want to set limits manually.
+
+   Rather than relying on Warden to set resource file-access limits
+   automatically using ulimit, you can use the following procedure to set
+   the limits manually.
+    1. Edit /etc/security/limits.conf and add a line to set the resource
+       limits. For example, set the resource limits to 65536.
+<MAPR_USER> - nofile 65536
+    2. Edit /etc/security/limits.d/90-nproc.conf to add a similar line.
+<MAPR_USER> - nproc 64000
+    3. Check that the /etc/pam.d/su file contains the following settings:
+#%PAM-1.0
+auth            sufficient      pam_rootok.so
+# Uncomment the following line to implicitly trust users in the "wheel" group.
+#auth           sufficient      pam_wheel.so trust use_uid
+# Uncomment the following line to require a user to be in the "wheel" group.
+#auth           required        pam_wheel.so use_uid
+auth            include         system-auth
+account         sufficient      pam_succeed_if.so uid = 0 use_uid quiet
+account         include         system-auth
+password        include         system-auth
+session         include         system-auth
+session         required        pam_limits.so
+session         optional        pam_xauth.so
+    4. Use ulimit to verify settings.
+    5. Reboot the system.
+    6. Run the following command as the MapR user (not root) at a command
+       line: ulimit -n

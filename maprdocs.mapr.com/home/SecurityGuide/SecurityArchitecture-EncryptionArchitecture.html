@@ -1,0 +1,21 @@
+Encryption Architecture: Wire-Level Security
+
+   Describes the encryption architecture in MapR.
+
+   MapR uses a mix of approaches to secure the core work of the cluster
+   and the Hadoop components installed on the cluster. For example, nodes
+   in a MapR cluster use different protocols depending on their tasks:
+     * The FileServer, NodeManager, and ResourceManager use MapR tickets
+       to secure their remote procedure calls (RPCs) with the native MapR
+       security layer. Clients can use the maprlogin utility to obtain
+       MapR tickets. Web UI elements of these components use password
+       security by default, but can also be configured to use SPNEGO.
+     * Hive Metastore, Hue, Flume, and Oozie use MapR tickets by default,
+       but can also be configured to use Kerberos.
+     * HBase requires Kerberos for secure communications.
+
+   Servers must use matching security approaches. When an Oozie server,
+   which supports MapR Tickets and Kerberos, connects to HBase, which
+   supports only Kerberos, Oozie must use Kerberos for outbound security.
+   When servers have both MapR and Kerberos credentials, these credentials
+   must map to the same User ID to prevent ambiguity problems.

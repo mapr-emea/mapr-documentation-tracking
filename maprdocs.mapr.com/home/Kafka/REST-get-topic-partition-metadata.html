@@ -1,0 +1,53 @@
+GET /topics/{string: topic_name}/partitions/{string: partition_id}
+
+   Retrieves metadata about a specific partition within a topic.
+
+Description
+
+   Depending on the configuration, the type of information retrieved has
+   different behavior. See the streams.default.stream in [1]Configuration
+   Parameters.
+
+   CAPTION: Table 1. Response Behavior
+
+   Parameters Defined Response
+   streams.default.stream is defined Gets metadata about a specific
+   partition within a MapR-ES topic. The user could pass fully qualified
+   topic name or not. If a fully qualified topic name is not used,
+   metadata is retrieved and appended to the default stream path.
+   streams.default.stream is not defined Gets metadata about specific
+   MapR-ES partitions within a topic. The user could only pass fully
+   qualified topic names that contains stream path.
+
+   CAPTION: Table 2. Parameters
+
+        Parameters               Description
+   topic_name (string) Name of the topic.
+   partition_id (int)  ID of the partition to inspect.
+
+Syntax
+
+http://<host>:8082/topics/<topic_name>/partitions/<partition_id>
+
+Request Example
+
+curl -X GET -H "Content-Type: application/vnd.kafka.v2"
+http://localhost:8082/topics/%2Fstreaming_data%2Fstream%3Atesttopic1/partitions/
+0
+
+Response Example
+
+{
+  "partition":0,
+  "leader":0,
+  "replicas":
+    [{
+      "broker":0,
+      "leader":true,
+      "in_sync":true
+      }]
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Kafka/REST-config-parameters.html

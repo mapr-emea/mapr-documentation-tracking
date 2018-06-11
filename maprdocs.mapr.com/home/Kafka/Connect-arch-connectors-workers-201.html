@@ -1,0 +1,61 @@
+Kafka Connect 2.0.1: Connectors, Tasks, and Workers
+
+   This section describes how Kafka Connect for MapR-ES work and how
+   connectors, tasks, offsets, and workers are associated wth each other.
+
+Connectors
+
+   Connectors (or a connector instance) are logical jobs that are
+   responsible for managing the copying of data between MapR-ES and
+   another systems. Each connector instantiates a set of tasks that copies
+   the data. By allowing the connector to break a single job into many
+   tasks, support is built-in for parallelism and scalable data copying
+   with very little configuration. Connector plugins are jars that add the
+   classes that implement a connector.
+
+Offsets
+
+   As connectors run, Kafka Connect tracks offsetsfor each one so that
+   connectors can resume from their previous position in the event of
+   failures or graceful restarts for maintenance. They track the current
+   position in the stream of data being copied and because each connector
+   may need to track many offsets for different partitionsof the stream.
+   For example, when loading data from a database, the offset might be a
+   transaction ID that identifies a position in the database change log.
+
+   Users generally do not need to worry about the format of offsets,
+   especially since they differ from connector to connector. However,
+   Kafka Connect does require persistent storage for offset data to ensure
+   it can recover from faults. This storage for offset data is
+   configurable. See [1]Kafka Connect 2.0.1: Standalone Worker
+   Configuration Options and [2]Kafka Connect 2.0.1: Distributed Worker
+   Configuration Options
+
+Workers
+
+   Connectors and tasks are logical units of work and must be scheduled to
+   execute in a process. Kafka Connect calls these processes workers. With
+   Kafka Connect for MapR streams, the worker processors run as a service.
+   This service can be run in either standalone mode or distributed mode.
+     * In standalone mode, the cluster consists of a single worker that is
+       supplied with tasks that are useful for testing and debugging
+       purposes.
+     * In distributed mode, the cluster consisting from multiple workers
+       with the same group.id, offset.storage.topic, and
+       config.storage.topic. Connector tasks are submitted via the Kafka
+       Connect REST API.
+
+   The following list the location of the standalone and distributed
+   worker configuration files:
+/opt/mapr/kafka/kafka-0.9.0/config/connect-standalone.properties
+/opt/mapr/kafka/kafka-0.9.0/config/connect-distributed.properties
+
+   Note: Distributed mode is supported on MapR 5.2.1 and above
+   Note: Port 8083 is the default port.
+   Note: If you running multiple workers on the same node, the rest.port
+   parameter must be different for each worker.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Kafka/Connect-config-worker-standalone-201.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Kafka/Connect-config-worker-distributed-201.html

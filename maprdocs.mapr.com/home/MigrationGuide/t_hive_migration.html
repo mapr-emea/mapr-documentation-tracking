@@ -1,0 +1,54 @@
+Hive Migration
+
+   You can continue to use Hive tables in a MapR cluster.
+
+   Hive facilitates the analysis of large datasets stored in the Hadoop
+   filesystem by organizing that data into tables that can be queried and
+   analyzed using a dialect of SQL called HiveQL. The schemas that define
+   these tables and all other Hive metadata are stored in a centralized
+   repository called the metastore.
+   If you would like to continue using Hive tables developed on an HDFS
+   cluster in a MapR cluster, you can import Hive metadata from the
+   metastore to recreate those tables in MapR. Depending on your needs,
+   you can choose to import a subset of table schemas or the entire
+   metastore in one go:
+     * Importing table schemas into a MapR cluster: Use this procedure to
+       import a subset of the Hive metastore from an HDFS cluster to a
+       MapR cluster. This method is preferred when you want to test a
+       subset of applications using a smaller subset of data.
+     * Importing an entire Hive metastore into a MapR cluster: Use the
+       following procedure to import an entire Hive metastore from an HDFS
+       cluster to a MapR cluster. This method is preferred when you want
+       to test all applications using a complete dataset. You will need to
+       redirect all of links that formerly pointed to the HDFS
+       (hdfs://<namenode>:<port number>/<path>) to point to MapR-FS
+       (maprfs:///<path>).
+       MySQL is a very popular choice for the Hive metastore and is used
+       in the following example. If you are using another RDBMS, consult
+       the relevant documentation.
+
+    1. Ensure that both Hive and your database are installed on one of the
+       nodes in the MapR cluster. For step-by-step instructions on setting
+       up a standalone MySQL metastore, see [1]Using MySQL for the Hive
+       Metastore.
+    2. On the HDFS cluster, back up the metastore to a file.
+mysqldump [options] \--databases db_name... > filename
+    3. Ensure that queries in the dumpfile point to the MapR-FS rather
+       than HDFS. Search the dumpfile and edit all of the URIs that point
+       to hdfs:// so that they point to maprfs:/// instead.
+    4. Import the data from the dumpfile into the metastore running on the
+       node in the MapR cluster:
+mysql [options] db_name < filename
+
+   Using Hive with MapR volumes
+
+   MapR-FS does not allow moving or renaming across volume boundaries. Be
+   sure to set the Hive Scratch Directory and Hive Warehouse Directory in
+   the same volume where the data for the Hive job resides before running
+   the job. For more information, see How Hive Handles Scratch Directories
+   on MapR in [2]Hive Directories.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hive/Config-MySQLForHiveMetastore.html#UsingMySQLfortheHiveMetas_29655346-d3e108
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hive/Config-HiveDirectories.html#HiveDirectories

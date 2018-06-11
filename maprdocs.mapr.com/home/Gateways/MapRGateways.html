@@ -1,0 +1,41 @@
+Administering MapR Gateways
+
+   A MapR gateway mediates one-way communication between a source MapR
+   cluster and a destination cluster. MapR-DB binary tables and MapR-ES
+   streams can be replicated.
+
+   The initial task for setting up your gateways is to decide where you
+   want to put your them.
+     * If you are going to replicate MapR-DB tables, see [1]Gateways for
+       Replicating MapR-DB Tables.
+     * If you are going to replicate streams, see [2]Gateways and Stream
+       Replication.
+
+   Note: Gateways perform negligible disk I/O and use negligible amounts
+   of memory, though gateways require significant CPU usage.
+
+   However, the resource that gateways use the most is network bytes. For
+   example, if the peak network throughput for puts is about 40 MB per
+   second per node, in a 10-node source cluster the peak network
+   throughput will be about 400 MB per second. So, the aggregate network
+   throughput required on the nodes running gateways will be 400 MB per
+   second for both incoming and outgoing traffic. The aggregate network
+   throughput for a on 50 node cluster would be 2GB per second.
+
+   For another example, in this diagram there are two source clusters of
+   three nodes each and the clusters are replicating to one destination
+   cluster. The peak traffic on the gateways will be 40MB per second per
+   cluster node, which means that these gateways together will experience
+   a peak network load of 240MB per second.
+
+   [30474866.jpg]
+
+   Although the load is balanced across the two gateways, so that each
+   gateway experiences a peak network load of 120MB per second, each
+   gateway should be able to tolerate the full aggregate network load in
+   case the other gateway fails unexpectedly.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/Gateways-replication-Tables.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/gateways_for_replicating_streams.html

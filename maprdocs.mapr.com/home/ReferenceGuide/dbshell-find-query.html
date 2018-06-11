@@ -1,0 +1,166 @@
+Query with --query
+
+   When querying JSON documents with the find command, you can use the
+   --query option. With this option, you can specify keywords that
+   determine the documents and the fields from those documents that the
+   command returns.
+
+Syntax
+
+find <table path> --query <keywords>
+
+   Note: The find command does not allow --query to work in tandem with
+   other options such as --fields, --where, and --orderby. For example,
+   the following command does not return your desired results:
+find /tbl --f a --q {"$limit":2}
+
+   In addition, repetition of keywords in the --query option is not
+   supported. You should not enter the same keyword twice:
+// Incorrect
+{"$select":"a","$select":"b"}
+
+// Correct
+{"$select":["a","b"]}
+
+Keywords for the --query Option
+
+   The following keywords are supported by the --query option:
+   --query Keywords              Description
+   $select          Equivalent to the --f, --fields option
+   $where           Equivalent to the --c, --where option
+   $limit           Equivalent to the --limit option
+   $offset          Equivalent to the --offset option
+   $orderby         Equivalent to the --orderby option
+
+Sample JSON Document
+
+   The following sample JSON document is used in examples in this section:
+{
+    "_id": "id1",
+    "a": {
+            "b": [{"boolean":false}, {"decimal": 123.456}],
+            "c":{
+                  "d":10,
+                  "e":"Hello"
+                 }
+          },
+    "m":"MapR wins"
+}
+
+$select Syntax and Example
+
+   The $select keyword defines the field path projections to be displayed
+   in the result set.
+
+   The following syntax shows single and multiple field path projections:
+// Single field path projection syntax
+find <table path> --q {"$select":"<fieldpath>"}
+
+// Multiple field path projection syntax
+find <table path> --q {"$select":["<fieldpath1>","<fieldpath2>","<fieldpath3>"]}
+
+   The following example shows single and multiple field path projections:
+// Single field path projection example
+find /tbl --q {"$select":"a.c.d"}
+
+// Multiple field path projection example
+find /tbl --q {"$select":["a.c.d","a.c.e","m"]}
+
+$where Syntax and Example
+
+   When using the $where keyword, define the condition in JSON format.
+find <table path> --q {"$where":<condition>}
+
+   The following example performs a find operation with a projection and a
+   condition:
+find /tbl --q {"$select":"a.c.e",
+            "$where":{
+                     "$and":[
+                             {"$eq":{"a.b[0].boolean":false}},
+                             {"$or":[
+                                     {"$ne":{"a.c.d":5}},
+                                     {"$gt":{"a.b[1].decimal":1}},
+                                     {"$lt":{"a.b[1].decimal":10}}
+                                     ]
+                              }
+                             ]
+                      }
+               }
+
+   The projection is on field a.c.e. The condition is the following
+   expression:
+(a.b.[0].boolean == false && (a.c.d != 5 || a.b[1].decimal > 1 || a.b[1].decimal
+ < 10))
+
+   See [1]JSON Document Query Conditions Using OJAI Syntax for more
+   information about the syntax of query conditions.
+
+$limit Syntax and Example
+
+   The $limit keyword sets the maximum number of documents to return. It
+   only accepts positive integers. It throws an exception for negative or
+   decimal values.
+find <table path> --q {"$limit":<positive integer>}
+
+   The following example performs a find with a projection on the a.c.e
+   and m fields and limits the result set to a max of 10 documents:
+find /tbl --q {"$select":["a.c.e","m"],
+               "$limit":10
+              }
+
+$offset Syntax and Example
+
+   The $offset keyword skips the first n number of rows in the result. If
+   n is greater than the total number of documents, no documents are
+   returned. It only accepts positive integers.
+find <table path> --q {"$offset":<positive integer>}
+
+   The following example performs a find operation with projection on the
+   a.c.e and m fields and offsets the result set to skip first five
+   documents:
+find /tbl --q {"$select":["a.c.e","m"],
+               "$offset":5
+              }
+
+$orderby Syntax and Examples
+
+   The $orderby keyword sorts the result on the specified fields.
+
+   The following shows the syntax and an example of sorting a single field
+   in the default ascending order:
+// Syntax for sorting a single field in the default ascending order
+find <table path> --q {"$orderby":"<field path>"}
+
+// Example sort on field path a.c.e in the default ascending order
+find /tbl --q {"$orderby":"a.c.e"}
+
+   The following show the syntax and examples of sorting a single field in
+   ascending or descending order where <order> is ASC for ascending and
+   DESC for descending:
+// Syntax for sorting a single field in ASC/DESC order
+find <table path> --q {"$orderby":{"<field path>":"<order>"}}
+
+// Example sort on field path a.c.e in ascending order
+find /tbl --q {"$orderby":{"a.c.e":"asc"}}
+
+// Example sort on field path a.c.e in descending order
+find /tbl --q {"$orderby":{"a.c.e":"desc"}}
+
+   Note: The keywords ASC and DESC are case insensitive.
+
+   The following shows the syntax and an example of sorting multiple
+   fields in ascending and descending order:
+// Syntax for sorting multiple field paths in ascending/descending order
+find <table path> --q {"$orderby":[{"<field path1>":"<order>"},
+                                   {"<field path2>":"<order>"},
+                                   {"<field path3>":"<order>"}
+                                  ]
+                      }
+
+// Example sort on field path a.c.d (in the default ascending order)
+// and field path a.c.e in descending order
+find /tbl --q {"$orderby":["a.c.d",{"a.c.e":"desc"}]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields

@@ -1,0 +1,97 @@
+Using the MapR-FS JAR to Connect to the Cluster
+
+   The MapR-FS JAR file includes the MapR client libraries required to
+   connect to the cluster. While this is strongly discouraged, application
+   developers can bundle the MapR-FS JAR file in MapR-FS, MapR-DB, and
+   MapR-ES applications instead of installing the MapR client on the edge
+   node (node that runs the application). Applications should not bundle
+   the MapR-FS JAR file unless the application meets certain requirements.
+   Important: When bundling the MapR-FS JAR file, if there is a binary
+   mismatch between the bundled JAR file and the version that the cluster
+   expects, this can result in failures. In MapR 5.2.2 and later, the
+   system detects the mismatch and prevents the application from starting.
+   In MapR releases earlier than 5.2.2, nodes running applications may run
+   out of memory or shut down unexpectedly.
+
+Requirements
+
+   You can bundle the MapR-FS JAR (maprfs-<version>-mapr.jar) with
+   applications that meet all of the following requirements:
+     * The application communicates directly with the MapR-FS, MapR-DB, or
+       MapR-Streams.
+     * The application does not run as a MapReduce or YARN job/application
+       on the cluster.
+     * The application does not include MapR-FS JARs on the local machine
+       in its classpath.
+     * The application accesses a cluster that is not secure.
+
+Configuring the Cluster Connection
+
+   When you include the MapR-FS JAR in an application instead of
+   installing the MapR Client on the edge node, you must create and
+   configure a mapr-clusters.conf file on node that runs the application.
+    1. Set a MAPR_HOME environment variable to a location such as
+       /opt/mapr.
+    2. Create the mapr-clusters.conf file in the $MAPR_HOME/conf
+       directory.
+    3. Configure the mapr-clusters.conf file with the cluster name and the
+       list of CLDB nodes.
+       For example, the mapr-clusters.conf on an edge node would contain
+       the following content if it was connecting to a cluster named
+       my.cluster with CLDB nodes on centos765, centos234, and centos123:
+my.cluster secure=false centos765 centos234 centos123
+       For more information about how to configure mapr-clusters.conf, see
+       [1]mapr-clusters.conf.
+
+   For more information about how the MapR client connects to the MapR
+   cluster, see [2]How MapR Client Connects to the Cluster.
+
+Using Maven to Include MapR-FS JAR as a Dependency
+
+   If you use Maven to bundle the MapR-FS JAR file with an application and
+   you plan to run the application on a MapR cluster where a patch has
+   been applied, ensure that you specify both a system scope and a local
+   system path to the file.
+   For example, to bundle the MapR-FS 5.2 JAR file, the pom.xml file may
+   include the following:
+...
+ <groupId>com.mapr.hadoop</groupId>
+        <artifactId>maprfs</artifactId>
+        <version>${mapr.core.version}</version>
+        <scope>system</scope>
+        <systemPath>/opt/mapr/lib/maprfs-5.2.0-mapr.jar</systemPath>
+...
+
+   By default, the MapR Maven repository includes JAR files from
+   [3]http://repository.mapr.com/maven/. This default Maven repository
+   includes JAR files associated with the GA packages for each MapR
+   release. Therefore, when a patch has been applied to the cluster,
+   failure to specify a system scope may result in errors due to a binary
+   mismatch between the MapR-FS JAR files used by the application and the
+   cluster.
+
+Known Issues
+
+   Nodes running applications with a bundled MapR-FS JAR file may run out
+   of memory or shut down unexpectedly in the following scenarios:
+
+   The version of the MapR-FS JAR included in the application differs from
+          the version that is available on the cluster.
+          This may occur when a patch was applied to some, but not all the
+          nodes in the cluster. It can also occur when Maven is bundling
+          the GA version of the JAR file when the cluster expects a newer,
+          patched version.
+
+   Two versions of the JAR are available on the node.
+          For YARN applications, the NodeManager nodes that run the tasks
+          or containers store local versions of the dependencies included
+          with the application. In this scenario, since both the cluster’s
+          MapR-FS JAR and the version included in the application are
+          available on the node, it is unknown which JAR will be used when
+          processing the application.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr-clusters.conf.html#mapr-clusters.conf
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapROverview/establishing_connections_to_mapr_clusters.html#concept_ztx_swt_sy
+   3. http://repository.mapr.com/maven/

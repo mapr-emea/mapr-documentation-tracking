@@ -1,0 +1,143 @@
+Configuring Kerberos
+
+   Describes how Kerberos works with MapR tickets.
+
+Configuring Kerberos for Authentication Using MapR Tickets
+
+   To use Kerberos to generate MapR [1]Managing Tickets for users, enable
+   Kerberos on the CLDB by creating a Kerberos identity on the Kerberos
+   server used by the cluster and distributing that identity to the other
+   CLDB nodes in the cluster.
+   Note: You must enable wire-level security on your clusters before using
+   Kerberos. See [2]Enabling Wire-level Security.
+
+   MapR clusters do not provide Kerberos infrastructure. This section
+   assumes you have a functioning Kerberos realm and your systems have the
+   Kerberos client installed. The tips in this section assume a
+   Linux-based Kerberos environment, and the specific commands for your
+   environment may vary. Please consult with your Kerberos administrator
+   for assistance.
+   Important:
+
+   If you are using strong encryption with Kerberos with the Oracle JDK,
+   you will require a new [3]Java Cryptography Extension (JCE) policy
+   file.
+
+Creating a Kerberos Identity for the CLDB
+
+   The CLDB requires a Kerberos server identity, but no other nodes do. By
+   default, this identity takes the form mapr/<cluster name>. You can use
+   [4]configure.sh or edit the mapr-clusters.conf file to change this
+   default. Use the following commands in a Linux-based Kerberos
+   environment to set up the identity:
+kadmin
+        : addprinc -randkey mapr/my.cluster.com
+        : ktadd -k /opt/mapr/conf/mapr.keytab mapr/my.cluster.com
+
+   Copy the resulting mapr.keytab file to the same location on every CLDB
+   node. The mapr.keytab file must be owned and readable only by the mapr
+   user. You can specify the location of the mapr.keytab file in the
+   conf/mapr.login.conf file. The default location for mapr.keytab is
+   /opt/mapr/conf.
+
+Updating the keytab File
+
+   You can use the kadmin tool to update the server keys that are stored
+   in the keytab file. Because the server tickets used to authenticate to
+   the CLDB use the new keys immediately, you must copy the new keytab
+   file to all the CLDB servers in the cluster immediately after updating
+   the server keys.
+
+   To update the keytab file with a new key, run the following command:
+kadmin
+        : ktadd -k /opt/mapr/conf/mapr.keytab mapr/my.cluster.com
+
+   The CLDB automatically detects changes to the keytab file on systems
+   that use Java 7 or later. Systems that use Java 6 require a CLDB
+   restart to detect changes to the keytab file.
+   Note:
+
+   Starting with the 4.0.1 release of the MapR software, Java 6 is
+   deprecated in favor of Java 7 and Java 8.
+
+Running configure.sh
+
+   After a Kerberos principal is created for the CLDB, that principal is
+   added to the mapr.keytab file, and the mapr.keytab file is copied to
+   all the CLDB servers, Kerberos user authentication is fully enabled for
+   the MapR cluster.
+
+   Two configure.sh parameters are important for Kerberos:
+     * -K|-kerberosEnable - lets the rest of the cluster know that
+       Kerberos is enabled, so that clients can auto detect Kerberos
+       tickets and use them to get MapR tickets.
+     * -P "<cldbPrincipal>"- specifies the Kerberos instance which is used
+       to form the CLDB Kerberos principal in the form of
+       mapr/<instance-name>@<realm-name>. Enclose this value in quotes
+       (").
+
+   Run configure.sh on each MapR cluster node, and each MapR client node
+   that will communicate with one or more clusters. For more information
+   on , see [5]configure.sh.
+configure.sh -K -P "<cldbPrincipal>"
+
+   Running configure.sh on each node enters the Kerberos information into
+   the local clusters.conf file, so that the following command is all that
+   is required for the client to access the cluster:
+hadoop fs -ls
+
+   If you do not run configure.sh on each node, the following two commands
+   are required from the client:
+maprlogin kerberos
+hadoop fs -ls
+
+Kerberos Command Summary
+
+     * kinit: Creates a Kerberos ticket. Prompts the user for userid and
+       password. After validating, Kerberos creates a ticket file in /tmp
+       that is owned by the user. Use the -R option to renew an existing
+       ticket. Kerberos credentials expire in 8-10 hours. Expired
+       credentials must be renewed or replaced. By default, tickets can be
+       renewed for up to 24 hours.
+     * klist: Lists the contents of the user's ticket file.
+     * kdestroy: Destroys the contents of the user's ticket file. The user
+       is no longer authenticated.
+     * kadmin: Used to administer Kerberos. The login for this command is
+       implicitly <userid>/admin, since administrator ids typically end in
+       /admin.
+     * ktutil: Kerberos keytab maintenance utility. Used to combine, or
+       alter Kerberos keytabs.
+
+Disabling Replay Detection for Kerberos Authentication
+
+   You can set an option in mapr-clusters.conf to disable replay detection
+   for Kerberos runtime authentication.
+disableReplayDetection=true
+
+   By default, this parameter is set to false, meaning that MapR clients
+   enable Kerberos replay detection. Typically, replay detection is
+   enabled to prevent potential attacks such as the replay of Kerberos
+   packets or multiple login attempts with the same user ID. Set this
+   parameter to true only if you want MapR clients not to enforce this
+   detection.
+
+   This parameter applies when users attempt an implicit or explicit
+   maprlogin, such as by using the maprlogin kerberos command or by
+   submitting jobs and other operations with kerberosEnable=true set in
+   the mapr-clusters.conf file.
+
+   This parameter is used when applications connect to the cluster using
+   Kerberos; mapr-clusters.conf only needs to be updated when it is used
+   by such applications. If all Kerberos access to the cluster is from
+   clients outside the cluster, only the mapr-clusters.conf file on those
+   client machines has to be updated. If Kerberos is used from
+   applications running on the cluster, mapr-clusters.conf should be
+   updated there as well.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Tickets.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Enable-wire-level-security.html
+   3. http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh

@@ -1,0 +1,67 @@
+Replication Role Balancer
+
+   The replication role balancer manages containers to optimize the
+   following:
+     * Network bandwidth during the replication process
+     * Disk I/O and CPU when serving read requests
+
+   The replication role balancer switches the replication roles of name
+   and data containers to balance them across each storage pool in a
+   volume. You can modify the cldb.role.balancer.strategy parameter from
+   the maprcli to change how the role balancer manages the containers,
+   either by size or count. You can also run the dump rolebalancerinfo
+   command to see the status of active role switches or how container
+   roles are balanced across each storage pool for a particular volume.
+
+Replicated Containers
+
+   The name container is the first container created in every volume. Name
+   containers can have either a master or a replica role. Data containers
+   can have a master, intermediate, or tail role. By default, each name
+   and data container is replicated across the cluster three times, with
+   the master being the first container written. The master is
+   sequentially replicated two more times, into a container with either an
+   intermediate or a tail container role. If too many master or
+   intermediate containers exist on a storage pool or if the master and
+   intermediate containers are too large, the role balancer switches some
+   of these containers to tail containers.
+
+   By default, the role balancer compares the size of the master and tail
+   containers to determine if containers within a storage pool are
+   balanced. For the best performance, the size of the master containers
+   in a volume should be evenly distributed across storage pools. The role
+   balancer maintains this balance by ensuring that each type of container
+   (master, intermediate, and tail) accounts for 1/ReplicationFactor of
+   the total container size in a volume.
+
+   If the role balancer is configured to manage containers by count, it
+   compares the number of master and tail containers and balances the
+   roles such that each type of container accounts for 1/ReplicationFactor
+   of the total number of containers in a volume. For example, if the
+   replication factor is set to 3, the role balancer maintains a balance
+   of ⅓ master, ⅓ intermediate, and ⅓ tail containers in each volume.
+
+MapR-DB Considerations
+
+   To optimize MapR-DB performance, you should configure the role balancer
+   to manage containers by size. As described at [1]MapR-DB and MapR-FS,
+   MapR-DB shards tables into tablets and stores the tablets in data
+   containers. Only master data containers serve reads. So, configuring
+   the role balancer by size spreads read requests evenly across the
+   storage pools for a volume. To ensure the most optimal balancing for
+   your MapR-DB tables, you should consider storing them on dedicated
+   volumes.
+
+Assign Cache
+
+   The assign cache is a list of reserved containers on a particular
+   fileserver node that are allocated by the CLDB (container location
+   database). The replication role balancer does not balance the
+   containers in the assign cache and does not include them when balancing
+   the roles. See the [2]maprcli dump rolebalancerinfo command for assign
+   cache values and details.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Architecture-MapRDBandMAPRFS.html#Architecture-MapRDBandMapRFS
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dump-rolebalancerinfo.html#dumprolebalancerinfo

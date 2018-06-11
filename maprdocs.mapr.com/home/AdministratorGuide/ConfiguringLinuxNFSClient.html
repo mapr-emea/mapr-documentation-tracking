@@ -1,0 +1,34 @@
+Configuring the Linux NFS Client
+
+   The default RPC requests configuration can negatively impact
+   performance and memory. To avoid performance and memory issues,
+   configure the number of outstanding RPC requests to the NFS server to
+   be 128.
+
+   Perform the following steps as the root user on each NFS client
+   machine:
+    1. To enable the configuration to persist after a reboot of the NFS
+       client machine, issue the following commands to create the
+       sunrpc.conf file under /etc/modprobe.d with the recommended
+       configuration:
+echo "options sunrpc tcp_slot_table_entries=128" >> /etc/modprobe.d/sunrpc.conf
+echo "options sunrpc tcp_max_slot_table_entries=128" >> /etc/modprobe.d/sunrpc.c
+onf
+    2. To enable the configuration to take effect after you remount the
+       NFS client to the NFS gateway, issue the following echo commands:
+echo 128 > /proc/sys/sunrpc/tcp_slot_table_entries
+echo 128 > /proc/sys/sunrpc/tcp_max_slot_table_entries
+    3. Remount the NFS client to the NFS gateway. For example, the
+       following commands unmount and mount the NFS assuming that the
+       cluster is mounted at /mapr:
+# umount /mapr
+# mount -o hard,nolock <hostname>:/mapr /mapr
+       Note: Failure to configure this property may result in the
+       following error in /opt/mapr/logs/nfsserver.log:
+ERROR nfsserver[38960] fs/nfsd/requesthandle.cc:791 0.0.0.0[0]
+cannot allocate more OncRpcContexts: [numDropped=2556001]
+dropping connection from nfsc=10.13.64.225:0
+       Note: CentOS Troubleshooting Tip: After the reboot of the node, if
+       the /proc/sys/sunrpc directory not available or if rpcidmapd is not
+       running, start the rpcidmapd service using the following command:
+       service rpcidmapd start

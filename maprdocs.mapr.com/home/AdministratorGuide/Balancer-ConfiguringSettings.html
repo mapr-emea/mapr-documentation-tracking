@@ -1,0 +1,50 @@
+Configuring Balancer Settings
+
+   You can use the disk space balancer and the replication role balancer
+   to redistribute data and containers in the MapR storage layer to ensure
+   maximum performance and efficient use of space. The disk space balancer
+   works to ensure that the percentage of space utilized on all storage
+   pools in the cluster is similar and prevent nodes from being
+   overloaded. The replication role balancer changes the replication roles
+   of containers so that the replication process uses network bandwidth
+   evenly.
+
+   You can pipe the [1]maprcli config load command through grep to view
+   the balancer configuration values.
+   Example:
+# maprcli config load -json | grep balancer
+         "cldb.balancer.disk.deltaToRepopulateStoragePoolsBins":"5",
+         "cldb.balancer.disk.deltatorepopulatestoragepoolsbins":"5",
+         "cldb.balancer.disk.max.switches.in.nodes.percentage":"10",
+         "cldb.balancer.disk.overused.threshold":"90",
+         "cldb.balancer.disk.sleep.interval.sec":"120",
+         "cldb.balancer.disk.threshold.percentage":"70",
+         "cldb.balancer.logging":"0",
+         "cldb.balancer.role.max.switches.in.nodes.percentage":"10",
+         "cldb.balancer.role.paused":"1",
+         "cldb.balancer.role.skip.container.active.sec":"600",
+         "cldb.balancer.role.sleep.interval.sec":"900",
+         "cldb.balancer.startup.interval.sec":"1800",
+         "cldb.disk.balancer.enable":"0",
+         "cldb.role.balancer.replicascount.tolerance":"1",
+         "cldb.role.balancer.replicassize.tolerance":"5",
+         "cldb.role.balancer.strategy":"BySize",
+
+   You can use the [2]config save command to set the appropriate balancer
+   configuration values.
+   Example:
+# maprcli config save -values {"cldb.balancer.disk.max.switches.in.nodes.percent
+age":"20"}
+
+   Note: By default, the balancers are turned off.
+     * To turn on the disk space balancer, use [3]config save to set
+       cldb.balancer.disk.paused to 0.
+     * To turn on the replication role balancer, use [4]config save to set
+       cldb.balancer.role.paused to 0.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/config-load.html#configload
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/config-save.html#configsave
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/config-save.html#configsave
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/config-save.html#configsave

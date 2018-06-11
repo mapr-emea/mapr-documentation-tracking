@@ -1,0 +1,66 @@
+Kafka REST 2.0.1: GET /topics/{topic:string}
+
+   Retrieves metadata about a specific topic.
+
+Description
+
+   Depending on the configuration, the type of information retrieved has
+   different behavior. See the streams.default.stream parameter in
+   [1]Kafka REST 2.0.1: Configuration Parameters
+
+   CAPTION: Table 1. Response Behahavior
+
+   Parameters Defined Response
+   streams.default.stream is defined Gets metadata about a specific
+   MapR-ES topic. A fully qualified topic name can be passed or not. If
+   the topic name is not fully qualified, the metadata is retrieved and
+   appended to the default stream path. For example, topic1 is equivalent
+   to default_stream:topic1
+   streams.default.stream is not defined Gets metadata about a specific
+   MapR-ES topic. A fully qualified topic name is passed that contains the
+   stream path.
+   Note: The full name for the MapR-ES topic contains characters such as a
+   forward slash (/) and a colon (:), therefore, it should be encoded. For
+   example, /streaming_data/stream:topic-1 is equivalent to
+   %2Fstreaming_data%2Fstream%3Atopic-1.
+
+   CAPTION: Table 2. Parameters
+
+        Parameters                   Description
+   topic_name (string) Name of the topic to get metadata about.
+
+Syntax
+
+   Syntax for a topic in a default stream where the default stream is
+   configured:
+http://<host>:8082/topics/<topic_string>
+
+   Syntax for a topic where the fully qualified topic name is specified:
+http://<host>:8082/topics/%2F<streaming_data>%2F<stream>%3A<topic1>
+
+Request Example
+
+curl "http://localhost:8082/topics/test"
+
+Response Example
+
+{
+  "name":"test",
+  "configs":null,
+  "partitions":
+    [
+      {
+        "partition":0,
+        "leader":0,
+        "replicas":
+          [
+            {"broker":0,"leader":true, "in_sync":true},
+            {"broker":0,"leader":false, "in_sync":true}
+           ]
+       }
+    ]
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Kafka/REST-config-parameters-201.html

@@ -1,0 +1,48 @@
+fcdebug
+
+   The fcdebug utility can be used to dynamically set the loglevel to
+   debug a library.
+
+   The core-site.xml file can be modified to set the loglevel of all
+   modules using the fs.mapr.trace property. However, FUSE must be
+   restarted for the change to take effect. The fcdebug utility allows you
+   to debug a specific library (at runtime) without restarting FUSE.
+   Note: You may have to run this command once per library (to debug).
+
+Syntax
+
+/opt/mapr/server/tools/fcdebug [-i] -s <shmid> [-m <module>] [-l <level>]
+
+Parameters
+
+   Parameter Description
+   -i Lists the current debug level of all modules.
+   -l Specifies the log level. Value can be one of the following: FATAL,
+   ERROR, WARN, INFO, DEBUG.
+   Note: If this is not specified, the default level is applied for the
+   module.
+   -m Refers to the module. The list of modules can be retrieved by
+   running fcdebug -i -s <shmid> command.
+   Note: If this is not specified, the loglevel is set on all modules.
+   -s Specifies the process ID of the fileclient or FUSE-based POSIX
+   client. If the process ID is not available, specify the ID of the
+   shared memory segment, which has the size of 1234 bytes.
+
+Examples
+
+   The following command retrieves the list of modules:
+/opt/mapr/server/tools/fcdebug -i -s 196614
+
+   Note: You can run this command after dynamically setting the loglevel
+   to also verify the setting.
+   The following command dynamically sets the log level to DEBUG on the
+   given module:
+/opt/mapr/server/tools/fcdebug -s 196614 -m FuseOps -l DEBUG
+
+   Note: It may take up to a minute for the changes to take effect.
+   The following command sets loglevel to DEBUG on all the modules:
+/opt/mapr/server/tools/fcdebug -s 196614 -l DEBUG
+
+   The following command resets the log level to the default value on all
+   the modules:
+/opt/mapr/server/tools/fcdebug -s 196614

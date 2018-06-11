@@ -1,0 +1,143 @@
+Cluster Design Objectives
+
+   This section describes some of the work that your cluster will perform
+   and identifies key design considerations.
+
+   Begin by understanding the work that the cluster will perform.
+   Establish metrics for data storage capacity, throughput, and
+   characterize the data processing that will typically be performed.
+
+Data Workload
+
+   While MapR is relatively easy to install and administer, designing and
+   tuning a large production MapReduce cluster is a complex task that
+   begins with understanding your data needs. Consider the kind of data
+   processing that will occur and estimate the storage capacity and
+   throughput speed required. Data movement, independent of MapReduce
+   operations, is also a consideration. Plan for how data will arrive at
+   the cluster, and how it will be made useful elsewhere.
+
+   Network bandwidth and disk I/O speeds are related; either can become a
+   bottleneck. CPU-intensive workloads reduce the relative importance of
+   disk or network speed. If the cluster will be performing a large number
+   of big reduces, network bandwidth is important, suggesting that the
+   hardware plan include multiple NICs per node. The MapR Core can
+   natively take advantage of multiple NICs and distribute workload across
+   them. In general, the more network bandwidth, the faster things will
+   run.
+
+   Running NFS on multiple data nodes can improve data transfer
+   performance and make direct loading and unloading of data possible, but
+   multiple NFS instances requires an Converged Enterprise Edition, Hadoop
+   module license. For more information about NFS, see [1]Setting Up MapR
+   NFS.
+
+   Plan which nodes will provide NFS access according to your anticipated
+   traffic. For instance, if you need 5Gb/s of write throughput and 5Gb/s
+   of read throughput, the following node configurations would be
+   suitable:
+     * 12 NFS nodes with a single 1GbE connection each
+     * 6 NFS nodes with dual 1GbE connections each
+     * 4 NFS nodes with quadruple 1GbE connections each
+
+   When you set up NFS on all of the file server nodes, you enable a
+   self-mounted NFS point for each node. A cluster made up of nodes with
+   self-mounted NFS points enable you to run native applications as tasks.
+   You can use round-robin DNS or a hardware load balancer to mount NFS on
+   one or more dedicated gateways outside the cluster to allow controlled
+   access.
+
+High Availability
+
+   A properly licensed and configured MapR cluster provides automatic
+   failover for continuity throughout the MapR Core stack. Configuring a
+   cluster for HA involves redundant instances of specific services, as
+   well as a correct configuration of the MapR NFS service. HA features
+   are not available with the Converged Community Edition.
+
+   The following table describes redundant services used for HA:
+
+   Service
+
+   Strategy
+
+   Min. instances
+
+   CLDB
+
+   Master/slave--two instances in case one fails.
+
+   2
+
+   ZooKeeper
+
+   A majority of ZK nodes (a quorum) must be up.
+
+   3
+   ResourceManager One active and one or more standby instances. If the
+   active one fails, one standby instance takes over. This is configured
+   automatically using [2]Zero Configuration. 2
+
+   NFS
+
+   The more redundant NFS services, the better.
+
+   2
+   OpenTSDB
+
+   At least one instance should be up.
+   3
+   Elasticsearch
+
+   At least two instances should be up.
+   3
+   Note: You should use an odd number of ZooKeeper instances. Setting up
+   more than 5 ZooKeeper instances is not usually needed.
+
+   For a high availability cluster, use 5 ZooKeepers, so that the cluster
+   can tolerate 2 ZooKeeper nodes failing and still maintain a quorum.
+
+   On a large cluster, you may choose to have extra nodes available in
+   preparation for failover events. In this case, you keep spare, unused
+   nodes ready to replace nodes running control services, such as CLDB or
+   ZooKeeper in case of a hardware failure.
+
+Virtual IP Addresses
+
+   You can use virtual IP addresses (VIPs) for load balancing or failover
+   with Converged Enterprise Edition, Hadoop module. VIPs provide multiple
+   addresses that can be leveraged for round-robin DNS, allowing client
+   connections to be distributed among a pool of NFS nodes. VIPs also
+   enable high availability (HA) NFS. In a HA NFS system, when an NFS node
+   fails, data requests are satisfied by other NFS nodes in the pool. Use
+   a minimum of one VIP per NFS node per NIC that clients will use to
+   connect to the NFS server. If you have four nodes with four NICs each,
+   with each NIC connected to an individual IP subnet, use a minimum of 16
+   VIPs and direct clients to the VIPs in round-robin fashion. The VIPs
+   should be in the same IP subnet as the interfaces to which they will be
+   assigned. See [3]Setting Up VIPs for NFS for details on enabling VIPs
+   for your cluster.
+
+   If you plan to use VIPs on your cluster's NFS nodes, consider the
+   following tips:
+     * Set up NFS on at least three nodes if possible.
+     * All NFS nodes must be accessible over the network from the machines
+       where you want to mount them.
+     * To serve a large number of clients, set up dedicated NFS nodes and
+       load-balance between them. If the cluster is behind a firewall, you
+       can provide access through the firewall via a load balancer instead
+       of direct access to each NFS node. You can run NFS on all nodes in
+       the cluster, if needed.
+     * To provide maximum bandwidth to a specific client, install the NFS
+       service directly on the client machine. The NFS gateway on the
+       client manages how data is sent in or read back from the cluster,
+       using all its network interfaces (that are on the same subnet as
+       the cluster nodes) to transfer data via MapR APIs, balancing
+       operations among nodes as needed.
+     * Use VIPs to provide High Availability (HA) and failover.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/c_set_up_mapr_nfs.html#Setting-Up-MapR-NFS-TheMapRNFSservicelet-d3e72
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/RM-ZeroConfigFailover.html#Zero-Configuration-Failov-AsofMapR4.0.2youcan-d3e64
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Setting-Up-VIPs-for-NFS.html#Setting-Up-VIPs-for-NFS-Toaddaservertoa-d3e78

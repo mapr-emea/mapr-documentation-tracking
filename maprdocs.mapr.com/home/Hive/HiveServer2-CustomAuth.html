@@ -1,0 +1,47 @@
+Configure HiveServer 2 to use Custom Authentication
+
+    1. Create a custom Authenticator class derived from the following
+       interface:
+public interface PasswdAuthenticationProvider {
+  /**
+   * The Authenticate method is called by the HiveServer2 authentication layer
+   * to authenticate users for their requests.
+   * If a user is to be granted, return nothing/throw nothing.
+   * When a user is to be disallowed, throw an appropriate {@link Authentication
+Exception}.
+   *
+   * For an example implementation, see {@link LdapAuthenticationProviderImpl}.
+   *
+   * @param user - The username received over the connection request
+   * @param password - The password received over the connection request
+   * @throws AuthenticationException - When a user is found to be
+   * invalid by the implementation
+   */
+  void Authenticate(String user, String password) throws AuthenticationException
+;
+}
+       The [1]SampleAuthenticator.java code has an example implementation
+       that has stored usernames and passwords.
+    2. Configure the following properties in the hive-site.xml file on
+       each node where HiveServer2 is installed:
+
+   Property Value
+   hive.server2.authentication CUSTOM
+   hive.server2.custom.authentication.class The authentication class name.
+   For example, hive.server2.custom.authentication.class
+<property>
+<name>hive.server2.authentication</name>
+<value>CUSTOM</value>
+</property>
+
+<property>
+<name>hive.server2.custom.authentication.class</name>
+<value>hive.test.SampleAuthenticator</value>
+</property>
+    3. Restart Hiveserver2 to apply the changes:
+maprcli node services -name hs2 -action restart -nodes <comma separated list of
+nodes>
+
+References
+
+   1. http://maprdocs.mapr.com/attachments/SampleAuthenticator.java.html

@@ -1,0 +1,109 @@
+Java DSL for Specifying Filter Conditions
+
+   When loading data from MapR-DB as an Apache Spark RDD, you can use Java
+   DSL to specify filter conditions. This section shows examples of these
+   filter conditions.
+           Condition          Example
+   equality
+QueryCondition equality = MapRDB.newCondition().is("_id", QueryCondition.Op.EQUA
+L, "k2").build();
+
+   greatherThan
+QueryCondition greatherThan = QueryCondition simpleWithComparisonOperator = MapR
+DB.newCondition().is("a.b.c", QueryCondition.Op.GREATER, 10).build();
+
+   notexists
+QueryCondition notexists = MapRDB.newCondition().notExists("a.c.e").build();
+
+   IN
+List<ODate> odateList = new ArrayList<>();
+odateList.add(ODate.parse("2011-05-21"));
+odateList.add(ODate.parse("2013-02-22"));
+QueryCondition in = MapRDB.newCondition().in("a", odateList).build();
+
+   typeof
+QueryCondition typeOf = MapRDB.newCondition().typeOf("a.c.d", Value.Type.INT).bu
+ild();
+
+   complex condition with and
+QueryCondition complexConditionWithAnd = MapRDB.newCondition()
+.and()
+.condition(MapRDB.newCondition().in("a", Arrays.asList(5, 10)))
+.condition(MapRDB.newCondition().notIn("b", Arrays.asList("aaa", "bbb")))
+.close().build();
+
+   another complex condition
+QueryCondition anotherComplexCondition = MapRDB.newCondition()
+.and()
+.condition(MapRDB.newCondition().notExists("a.b"))
+.condition(MapRDB.newCondition().typeOf("p.q", Value.Type.DATE))
+.condition(MapRDB.newCondition().is("a.c.d", QueryCondition.Op.GREATER, 20L))
+.close().build();
+
+   The MapR-DB OJAI Connector for Apache Spark supports these predicates:
+     * is (LESS, LESS_OR_EQUAL, EQUAL, NOT_EQUAL, GREATER_OR_EQUAL,
+       GREATER)
+     * equals
+     * and
+     * exists
+     * in
+     * like
+     * matches
+     * notEquals
+     * notExists
+     * notIn
+     * notLike
+     * notMatches
+     * notTypeOf
+     * or
+     * sizeOf
+     * typeOf
+
+   Here are examples for these operators:
+     * MapRDB.newCondition().is("a", QueryCondition.Op.GREATER, 10);
+     * MapRDB.newCondition().is("a",QueryCondition.Op.GREATER_OR_EQUAL,
+       10);
+     * MapRDB.newCondition().is("a", QueryCondition.Op.LESS, 10);
+     * MapRDB.newCondition().is("a", QueryCondition.Op.LESS_OR_EQUAL, 10);
+     * MapRDB.newCondition().is("a", QueryCondition.Op.EQUAL, 10);
+     * MapRDB.newCondition().is("a", QueryCondition.Op.NOT_EQUAL, 10);
+     * MapRDB.newCondition().exists("a");
+     * MapRDB.newCondition().notIn("a", Arrays.asList(10, 20));
+     * MapRDB.newCondition().in("a", Arrays.asList(10, 20));
+     * MapRDB.newCondition().notExists("a");
+     * MapRDB.newCondition().typeOf("a", Value.Type.INT);
+     * MapRDB.newCondition().notTypeOf("a", Value.Type.INT);
+     * MapRDB.newCondition().like("a", "%s");
+     * MapRDB.newCondition().notLike("a", "%s");
+     * MapRDB.newCondition().matches("a", "*s");
+     * MapRDB.newCondition().notMatches("a", "*s");
+
+   For typeof, these are the right-hand side values:
+     * "INT"
+     * "INTEGER"
+     * "LONG"
+     * "BOOLEAN"
+     * "STRING"
+     * "SHORT"
+     * "BYTE"
+     * "NULL"
+     * "FLOAT"
+     * "DOUBLE"
+     * "DECIMAL"
+     * "DATE"
+     * "TIME"
+     * "TIMESTAMP"
+     * "INTERVAL"
+     * "BINARY"
+     * "MAP"
+     * "ARRAY"
+
+   The sizeOf operator can have the following operations:
+     * MapRDB.newCondition().sizeOf("a", QueryCondition.Op.EQUAL, 10);
+     * MapRDB.newCondition().sizeOf("a", QueryCondition.Op.LESS, 10);
+     * MapRDB.newCondition().sizeOf("a", QueryCondition.Op.GREATER, 10);
+     * MapRDB.newCondition().sizeOf("a", QueryCondition.Op.LESS_OR_EQUAL,
+       10);
+     * MapRDB.newCondition().sizeOf("a",
+       QueryCondition.Op.GREATER_OR_EQUAL, 10);
+     * MapRDB.newCondition().sizeOf("a", QueryCondition.Op.NOT_EQUAL, 10);

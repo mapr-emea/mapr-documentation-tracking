@@ -1,0 +1,19 @@
+Pre-Upgrade Steps for Hue
+
+   Complete the following steps before you upgrade Hue with or without the
+   MapR Installer.
+    1. Stop the Hue service:
+       maprcli node services -name hue -action stop -nodes <ip_address>
+    2. Create a Hue database dump as a JSON object:
+       For MySQL, PostgreSQL, or Oracle
+source /opt/mapr/hue/hue-<version>/build/env/bin/activate
+hue dumpdata > ~/dump-hue-<version>.json
+deactivate
+       For SQLite
+cd /opt/mapr/hue/hue-<version>/desktop
+sqlite3 desktop.db .dump > ~/dump-hue-<version>-sqlite.bak
+    3. Copy the configuration properties from
+       /opt/mapr/hue/hue-<version>/desktop/conf/ to a location outside
+       your MapR installation.
+       After upgrading, you can reapply changes to the updated Hue
+       installation using the backup.

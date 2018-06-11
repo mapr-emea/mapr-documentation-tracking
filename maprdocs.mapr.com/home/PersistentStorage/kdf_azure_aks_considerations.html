@@ -1,0 +1,54 @@
+Azure AKS Considerations
+
+   Microsoft Azure turns on PodSecurityPolicies by default. This means you
+   must create RBAC and PodSecurityPolicies for both the plug-in and any
+   containers that call the plug-in.
+
+   Here is an example of a PSP. It is recommended that you adapt this PSP
+   to the security best practices of your organization:
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: mapr-kdf-psp
+spec:
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+    - 'hostPath'
+    - 'flexVolume'
+  allowedHostPaths:
+    - pathPrefix: "/opt"
+    - pathPrefix: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+    - pathPrefix: "/etc/kubernetes"
+    - pathPrefix: "/etc/localtime"
+  allowedFlexVolumes:
+    - driver: mapr.com/maprfs
+  runAsUser:
+    rule: 'RunAsAny'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+
+   Azure uses a non-standard FlexVolume path:
+   /etc/kubernetes/volumeplugins. This path has already been changed in
+   kdf-plugin-azure.yaml.
+
+   You must set the KUBERNETES_SERVICE_LOCATION for Azure. You can find
+   the correct value by connecting to your Azure cluster using the kubectl
+   interface. Use the kubectl config view command, and find the server
+   name and port for the current context.
+
+   In Azure, the Kubelet process is running inside a hypercube container.
+   The MapR plug-in must run inside that container. This means that the
+   plug-in log is somewhat hidden. To view the plug-in log:
+docker ps <to find the hyperkube container>
+docker exec -it <hyperkube container ID> /bin/bash
+cd /opt/mapr/logs
+cat plugin plugin-k8s.log

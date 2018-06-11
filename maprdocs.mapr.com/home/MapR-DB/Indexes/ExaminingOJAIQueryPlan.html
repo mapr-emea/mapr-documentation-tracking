@@ -1,0 +1,51 @@
+Examining the OJAI Query Plan
+
+   This section provides general information on how to access and
+   interpret an OJAI query plan. You can examine the query plan to
+   determine if the OJAI client has chosen the appropriate execution path.
+
+   If you have determined that [1]your query directly accesses MapR-DB
+   JSON and does not use the OJAI Distributed Query Service, the following
+   describes how to enable generation of query plans and how to retrieve
+   them.
+     * [2]Java
+
+   You can enable OJAI tracing to generate query plans in your OJAI trace
+   logs. To do this, set the following property in your log4j.properties
+   file, located in the /opt/mapr/conf directory:
+log4j.logger.com.mapr.ojai.store.impl=TRACE, stdout
+
+   In the following logged output, the queryplan uses an index named
+   i1_Idx and projects field id1. It also limits the result to 2
+   documents:
+2017-10-18 11:29:32,876 TRACE [main] com.mapr.ojai.store.impl.OjaiDocumentStore
+- Query Plan: '[{"streamName":"DBDocumentStream","parameters":{"queryConditionPa
+th":false,"indexName":"i1_idx","projectionPath":["id1"],"primaryTable":"/tmp/tes
+t-728918932/tab"}},{"streamName":"LimitStream","parameters":{"limit":2}}]'
+
+   Alternatively, you can programmatically retrieve query plans by calling
+   [3]DocumentStream.getQueryPlan. The method returns a JSON document that
+   is a list of Maps. Each Map in the list represents a DocumentStream in
+   the query plan, which corresponds to an operation. The order of the
+   list represents the order the MapR-DB client processes each operation.
+   Each Map entry contains the name of the DocumentStream (streamName) and
+   its parameters. You may see Map entries corresponding to the following
+   DocumentStreams in a query plan:
+     * DBDocumentStream - Accesses MapR-DB without the OJAI Distributed
+       Query Service
+     * DrillDocumentStream - Uses the OJAI Distributed Query Service to
+       process the query
+     * LimitStream - Limits the number of documents to return
+     * OffsetStream - Skips past specified number of documents before
+       reading
+
+   Important: The DocumentStream names and their parameters are subject to
+   change from one release to the next. Take that into consideration if
+   you plan to write tools that interpret the contents of an OJAI query
+   plan
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/DeterminingQueryExecutionPath.html#concept_sv1_dxd_pbb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/ExaminingOJAIQueryPlan.html#div1entry1
+   3. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/DocumentStream.html#getQueryPlan--

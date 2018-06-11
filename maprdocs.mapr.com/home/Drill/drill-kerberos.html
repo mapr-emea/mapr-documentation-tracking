@@ -1,0 +1,95 @@
+Kerberos
+
+   Drill on MapR supports Kerberos v5 network security authentication and
+   encryption. Kerberos is a network authentication protocol built on
+   symmetric-key cryptography. Kerberos eliminates the need to store
+   passwords locally or send them over the network and reduces the risk of
+   impersonation.
+
+   Kerberos provides a security infrastructure called a Kerberos Realm. A
+   Kerberos Realm is comprised of clients, services or hosts, and a KDC
+   (key-distribution center). The KDC is a trusted third-party service
+   that generates tickets to coordinate authentication between a client
+   and server or host. Tickets are cached on the client machine, which
+   allows for single sign-on.
+
+   Clients use a password or a special file called a “keytab” to get
+   tickets from the KDC. Clients exchange the tickets and secret keys with
+   the KDC and service or host to prove their identity for access to the
+   requested service. This authentication process of exchanging tickets
+   and secret keys runs in the background, unseen by the user trying to
+   access the service. When a client request to access a service is
+   granted, a unique session key is established between the client and
+   service. The unique session key proves the authenticity of the user.
+   The session key is used for all communication between the client and
+   service. Kerberos also supports encryption between the client and
+   server to prevent data theft from a man-in-the-middle attack during
+   communication.
+   A KDC administrator must create the password or keytab for the clients
+   and servers, as well as a principal (a name for the user or server
+   identity) to securely authenticate using the Kerberos infrastructure.
+   Note: Proper setup, configuration, administration, and usage of a
+   Kerberos environment is beyond the scope of this documentation. See the
+   [1]MIT Kerberos documentation for more detailed information about
+   Kerberos.
+
+   The following sections list the prerequisites for using Kerberos with
+   Drill and describe the authentication process.
+
+Prerequisites
+
+     * The [2]MapR Drill driver includes the required Kerberos plugin to
+       authenticate to secure Kerberos Drill clusters. To use Kerberos
+       with Drill, you must have a working Kerberos infrastructure, which
+       Drill does not provide.
+     * Either a ticket granting ticket (TGT) is pre-generated on the
+       client node, or a keytab file and the client principal is available
+       to provide in the connection URL for Kerberos authentication
+       between the Drill client and Drill server. Drill does not generate
+       the TGT.
+     * You must be working in a Linux-based or Windows Active Directory
+       (AD) Kerberos environment with secure clusters and have a Drill
+       server configured for Kerberos.
+
+Client Authentication Process
+
+   This section provides a high-level overview of the Kerberos client
+   authentication process. For this overview, assume that Kerberos
+   credentials are present in the client.
+
+   The following diagram shows the process of authenticating a client:
+   [kerberos-auth-process.png]
+    1. The client sends a request for a ticket granting ticket that
+       contains the user principal to the Kerberos KDC, a network service
+       that supplies tickets and temporary session keys.
+    2. The authentication server validates the principal’s identity and
+       sends the client a ticket granting ticket and session key encrypted
+       with a secret key. A session key is a temporary encryption key used
+       for one login session.
+    3. Using the ticket granting ticket, the principal requests access to
+       a Drillbit service from the ticket granting server.
+    4. The ticket granting server checks for a valid ticket granting
+       ticket and the principal identity. If the request is valid, the
+       ticket granting server returns a ticket granting service ticket.
+    5. The client uses the service ticket to request access to the
+       Drillbit.
+    6. The Drillbit service has access to the keytab, a file that contains
+       a list of keys for principals. The key allows the service to
+       decrypt the client’s ticket granting service ticket, identify the
+       principal, and grant access.
+
+Server Authentication Process
+
+   For Kerberos server authentication information, see the [3]MIT Kerberos
+   administration documentation.
+
+Configuring Drill with Kerberos
+
+   The topics listed below provide configuration and connection
+   information.
+
+References
+
+   1. http://web.mit.edu/kerberos/
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill_connectors.html#drill_connectors
+   3. http://web.mit.edu/kerberos/

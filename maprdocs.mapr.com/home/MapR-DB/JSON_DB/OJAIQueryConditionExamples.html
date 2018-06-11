@@ -1,0 +1,109 @@
+OJAI Query Condition Examples
+
+   This section contains examples that show you how to use different OJAI
+   query condition operators in combination with different field
+   references and data types.
+
+   The examples in this section use the following JSON documents:
+{ "_id" : "001", "name" : "Ipod 001", "tags" : [ "electronics", "ipod", "apple"
+] }
+{ "_id" : "002", "name" : "Ipod 002", "tags" : "ipod" }
+{ "_id" : "003", "name" : "Ipod 003", "tags" : 10 }
+{ "_id" : "004", "name" : "Ipod 004", "tags" : [ 10, "ipod", { "t" : "ipod" } ]
+}
+{ "_id" : "005", "name" : "Ipod 005", "tags" : { "t" : "ipod" } }
+{ "_id" : "006", "name" : "Ipod 006", "tags" : [ { "t" : "ipod" }, { "t" : "appl
+e" } ] }
+{ "_id" : "007", "name" : "Ipod 007", "tags" : [ { "t" : "ipod", "v" : 10 }, { "
+t" : "apple", "v" : 9 } ] }
+{ "_id" : "008", "name" : "Ipod 008", "tags" : { "t" : "ipod", "v" : 10 } }
+
+                       Example                    Documents Returned
+{"$exists":"tags.v"}
+
+   Matches documents where tags is a nested document that has a v
+   subfield.
+   008
+{"$eq":{"tags":10}}
+
+   Matches documents where tags equals the scalar value 10.
+   003
+{"$eq":{"tags.t":"ipod"}}
+
+   Matches documents where tags is a nested document with a subfield t
+   equal to "ipod".
+   005, 008
+{"$eq":{"tags":{"t":"ipod"}}}
+
+   Matches documents where tags is a nested document with a single
+   subfield t equal to "ipod".
+   005
+{"$eq":{"tags":{"v":10,"t":"ipod"}}}
+
+   Matches documents where tags is a nested document with two subfields, v
+   and t. v is equal to 10, and t is equal to "ipod". The order of
+   subfields in the condition does not matter.
+   008
+{"$eq":{"tags":["electronics","ipod","apple"]}}
+
+   Matches documents where tags is an array with the three elements
+   listed.
+   001
+{"$eq":{"tags":["ipod","electronics","apple"]}}
+
+   This example does not match any document, whereas the previous does,
+   because the order of the elements in this example does not match the
+   order in document 001.
+   None
+{"$between":{"tags":[5,15]}}
+
+   Matches documents where tags is a scalar value between 5 and 15.
+   003
+{"$like":{"tags[1]":"ip%"}}
+
+   Matches documents where the first array element in tags qualifies the
+   wildcard string "ip%"
+   001, 004
+{"$typeof":{"tags":"map"}}
+
+   Matches documents where tags is a nested document.
+   005, 008
+{"$typeof":{"tags":"array"}}
+
+   Matches documents where tags is an array.
+   001, 004, 006, 007
+{"$sizeof":{"tags":{"$ge":3}}}
+
+   Matches documents where the size of the data in tags is greater than or
+   equal to three.
+     * 001 matches because the array has three elements
+     * 002 matches because the string is of length four
+     * 004 matches because the nested document has three subfields
+
+   001, 002, 004
+{"$in":{"tags":["ipod", 10, {"t":"ipod"}]}}
+
+   Matches documents where tags equals any of the values listed. Note that
+   the values can be of different types.
+   002, 003, 005
+{
+    "$and":[
+        {"$lt":{"tags[1].v":10}},
+        {"$matches":{"tags[1].t":"ap{2}"}}
+    ]
+}
+
+   Matches documents where the first array element in tags has a nested
+   document with a subfield v less than one, and the same nested document
+   also matches the regular expression "ap{2}".
+   007
+{
+    "$or":[
+        {"$exists":"tags.v"},
+        {"$typeof":{"tags":"string"}}
+    ]
+}
+
+   Matches documents where either tags is a nested document with a
+   subfield v, or tags is a scalar string.
+   002, 008

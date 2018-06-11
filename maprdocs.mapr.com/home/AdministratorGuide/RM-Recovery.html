@@ -1,0 +1,24 @@
+Recovery for the ResourceManager
+
+   After a restart or failover, the active ResourceManager recovers the
+   ResourceManager state based on the checkpoints provided in the
+   ResourceManager state store. During recovery, the ResourceManager
+   resumes applications and tasks that were running prior to the failover
+   but were not completed.
+
+   Two implementations of the ResourceManager state store are available:
+     * FileSystemRMStateStore. Enables implicit write access to a single
+       ResourceManager node. MapR-FS provides fencing implicitly and its
+       state store implementation provides better scalability and failover
+       performance than the ZKRMStateStore. The state store is also
+       naturally protected by MapR-FS replication. By default,
+       FileSystemRMStateStore is the state store implementation for the
+       ResourceManager and the ResourceManager state store is maintained
+       in the following MapR-FS volume: /var/mapr/cluster/yarn/rm/system.
+     * ZKRMStateStore. Enables implicit write access to a single
+       ResourceManager node. This is usually recommended for HA
+       implementations where YARN is running on HDFS. However,
+       FileSystemRMStateStore is recommended in a MapR cluster.
+
+   Note: For recovery to occur,all ResourceManager nodes must have access
+   to the ResourceManager state store.

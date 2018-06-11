@@ -1,0 +1,62 @@
+Configure Log Retention
+
+   By default, Elasticsearch indexes 2 days of logs. Based on your
+   requirements, you can configure a different retention period for
+   Elasticsearch.
+   The following cron job runs each day to purge logs based on the
+   retention period.
+$min $hour * * * $ES_HOME/bin/curator --config $ES_HOME/etc/elasticsearch/curato
+r.yml $ES_HOME/etc/elasticsearch/curator_actions/delete_indices.yml >> $ES_HOME/
+var/log/elasticsearch/purgeData.log 2>&1 "
+
+Log Retention for Elasticsearch
+
+   Complete the following steps to edit the log retention period for
+   Elasticsearch:
+    1. Open the
+       /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elasticsearch/c
+       urator_actions/delete_indices.yml file.
+    2. Update the unit and unit_count to the new retention period.
+
+   Property Description
+   unit The unit of measure for the retention period. Valid parameter
+   values: days and weeks.
+   unit_count The number of days or weeks.
+       For example, this version of the delete_indices.yml file retains
+       logs for 2 days.
+actions:
+  1:
+    action: delete_indices
+    description: >-
+      Delete indices older than 2 days (based on index name), for mapr_monitorin
+g-
+      prefixed indices. Ignore the error if the filter does not result in an
+      actionable list of indices (ignore_empty_list) and exit cleanly.
+    options:
+      ignore_empty_list: True
+      timeout_override:
+      continue_if_exception: False
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: prefix
+      value: mapr_monitoring-
+      exclude:
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y.%m.%d'
+      unit: days
+      unit_count: 2
+      exclude:
+
+Logs Retention for Kibana
+
+   Each time you start Kibana, it logs data to its log file. You cannot
+   delete the log file while Kibana is running.
+   To purge the log files:
+    1. Restart Kibana so that a new log file is created.
+maprcli node services -name kibana -nodes <kibana hostname/IPaddress> -action re
+start
+    2. Delete all the old log files (kibana.*.<#>) from the following
+       location: /opt/mapr/kibana/kibana-<version>/var/log/kibana/.

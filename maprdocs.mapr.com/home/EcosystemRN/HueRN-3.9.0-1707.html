@@ -1,0 +1,83 @@
+Hue 3.9.0-1707 Release Notes
+
+   This section provides reference information, including new features,
+   patches, known issues, and limitations for Hue 3.9.0-1707.
+
+   The notes below relate specifically to the MapR Distribution for Apache
+   Hadoop. You can find additional information on this [1]changelog or the
+   [2]Hue homepage.
+   Version                       3.9.0
+   Release Date                  August 2017
+   MapR Version Interoperability See [3]MEP Components and OS Support
+   Source on GitHub              [4]https://github.com/mapr/hue.git
+   GitHub Release Tag            3.9.0-mapr-1707
+   Package Names
+
+   See [5]Package Names for MapR Expansion Packs (MEPs)
+
+New in This Release
+
+   No new features.
+
+Patches
+
+   This MapR release includes the following patches on the base release:
+   GitHub Commit Number Date (YYYY-MM-DD) MapR Patch Number and
+   Description
+   8532e7f 2017-06-01 MAPR-27630 [HUE-3.9] Hue unable to connect to thrift
+   for some users
+
+   For complete details, refer to the commit log for this project in
+   GitHub.
+
+Known Issues and Limitations
+
+     * MapR does not support the integration between Hue 3.9.0 and the
+       following components:
+          + Sentry 1.4
+          + Solr Search
+          + ZooKeeper
+     * Integration between Hue 3.9.0 and Sentry 1.6 is supported on secure
+       clusters that use Kerberos authentication, but it is not supported
+       on secure clusters that use MapR-SASL authentication.
+     * Spark is available as a beta feature. R with Spark 1.3.1 and 1.4.1
+       is not supported.
+     * Hive SQL only works with Hive 1.2 and Oozie 4.2.0.
+     * MAPR-20358: Hive job from Job Designer examples fail on YARN mode
+       without the Oozie patch for 2015-10-23:
+     * HUE-2673: Hue displays a timeout error when a new session is not
+       started within 60 seconds due to the lack of YARN resources.
+     * MapR-18668: Hue does not work on RedHat/CentOS 7 when it is
+       configured to use a MySQL database. When this issue occurs, the
+       MapR Control System (MCS) displays the "Hue Down Alarm." Use this
+       workaround:
+         1. Run the following commands to install MariaDB and the RedHat 6
+            compatibility library:
+yum install mariadb
+rpm -ivh --nodeps http://yum.mariadb.org/$(rpm -qa mariadb|cut -d-
+-f2)/rhel7-amd64/rpms/MariaDB-$(rpm -qa mariadb|cut -d-
+-f2)-centos7-x86_64-compat.rpm
+
+         2. Run the following command to create a symlink for the Cyrus
+            SASL library:
+ln -s /lib64/libsasl2.so.3.0.0 /lib64/libsasl2.so.2
+         3. Run the following commands to reconfigure Hue:
+cd /opt/mapr/hue/hue-3.12.0/
+source ./build/env/bin/activate
+hue syncdb --noinput
+hue migrate
+deactivate
+         4. Run the following command to restart Hue:
+maprcli node services -name hue -action restart -nodes <node_with_hue>
+
+Resolved Issues
+
+   None.
+
+References
+
+   1. http://cloudera.github.io/hue/docs-3.9.0/release-notes/release-notes-3.9.0.html
+   2. http://gethue.com/
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/r_MEP_components.html#reference_pk5_5xb_tw
+   4. https://github.com/mapr/hue.git
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/EcosystemRN/MEPPkgNames.html#concept_zkc_jlh_hy

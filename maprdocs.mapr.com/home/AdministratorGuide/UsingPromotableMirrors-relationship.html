@@ -1,0 +1,93 @@
+Restoring the Mirror Relationship
+
+   If the primary datacenter comes back online, the administrator can
+   re-establish the mirror relationship between the original read-write
+   volume in the primary datacenter and the promoted read-write volume in
+   the secondary datacenter.
+
+   Note that the two read-write volumes will have different data, since
+   data was written to the promoted mirror while the original source
+   volume was down. The original source volume might also have different
+   data that was written after the last mirror operation, but before the
+   cluster went down. The administrator must decide which data to keep and
+   use as the source.
+   [28442771.png]
+   Warning: Some data loss is inevitable in a disaster recovery scenario.
+   To minimize potential data loss, use mirrors to provide a synchronized
+   copy of each volume with critical data, and in the event of
+   discrepancies, decide which data to preserve based on your company's
+   policies.
+
+   The following sections provide information about how to restore the
+   mirror relationship:
+
+   Preserving volA/Cluster1's Data
+          Suppose that volA in the primary datacenter contains crucial
+          data that must be preserved, and you want to mirror its data to
+          volA in the secondary datacenter (the same mirror relationship
+          that was established originally). To recreate the original
+          mirror relationship, convert the promoted volume, volA/Cluster2,
+          from a read-write volume to a mirror of volA/Cluster1 by running
+          the following command:
+
+Cluster2> maprcli volume modify -name volA -type mirror -source volA@Cluster1
+
+          To use the MCS to convert volA/Cluster2 from a read-write volume
+          to a mirror of volA/Cluster1, follow steps for [1]Changing a
+          Standard Volume to a Mirror Volume.
+
+   Preserving volA/Cluster2's Data on volA/Cluster1
+          Now suppose you want to preserve the data on volA/Cluster2 (in
+          the remote datacenter) but you still want volA/Cluster1 to be
+          the primary volume with volA/Cluster2 as its mirror. From the
+          command line or the MapR Control System, you can save
+          volA/Cluster2's data on volA/Cluster1 and reestablish the
+          original mirror relationship from volA/Cluster1 to
+          volA/Cluster2.
+
+   You can use either of the following methods to preserve the data:
+
+From the MapR Control System
+
+   Complete the following steps from the MapR Control System to save
+   volA/Cluster2's data on volA/Cluster1 and reestablish the original
+   mirror relationship from volA/Cluster1 to volA/Cluster2.
+    1. Stop writing new data to volA/Cluster2 by making this volume
+       read-only:
+       For detailed steps, see [2]Modifying a Volume.
+    2. Make volA/Cluster1 a mirror of volA/Cluster2.
+       For detailed steps, see [3]Changing a Standard Volume to a Mirror
+       Volume.
+    3. Start mirroring.
+       For detailed steps, see [4]Starting the Mirror.
+    4. Promote volA/Cluster1 to a read-write volume.
+       For detailed steps, see [5]Changing Mirror Volumes to Standard
+       Volumes.
+    5. Make volA/Cluster2 a mirror of volA/Cluster1.
+       For detailed steps, see [6]Changing a Standard Volume to a Mirror
+       Volume.
+
+From the Command Line
+
+    1. Stop writing new data to volA/Cluster2. To be sure no data is
+       written to this volume, make it read-only by running this command:
+Cluster2> maprcli volume modify -name volA -readonly true
+    2. Pull the data from volA/Cluster2 to volA/Cluster1 by making
+       volA/Cluster1 a mirror of volA/Cluster2.
+Cluster1> maprcli volume modify -name volA -type mirror -source volA@Cluster2
+    3. Start the mirror operation.
+Cluster1> maprcli volume mirror start -name volA
+    4. Once mirroring is done, promote volA/Cluster1 to a read-write
+       volume. Note that the mirror relationship breaks at this point.
+Cluster1> maprcli volume modify -name volA -type rw
+    5. Make volA/Cluster2 a mirror of volA/Cluster1.
+Cluster2> maprcli volume modify -name volA -type mirror -source volA@Cluster1
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/StdVols-Change.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/EditVolume.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/StdVols-Change.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/MirrorVols-MirrorStart.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/MirrorVols-Promote.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/StdVols-Change.html

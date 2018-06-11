@@ -1,0 +1,373 @@
+Creating Column Families
+
+   There are several methods that you can use to create column families in
+   MapR-DB tables. To create column families, you must have the following
+   permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path to the table
+     * createrenamefamilyperm on the table
+
+Creating Column Families Using MCS
+
+   To create a column family from MCS, under Data > Tables:
+    1. Click:
+          + Take me to Add Column Family after creating a new table.
+          + Add Column Family in the Column Families tab in the table
+            information page.
+            See [4]Viewing Table Information.
+    2. Specify the following properties to set up column families.
+          + [5]JSON Table
+          + [6]Binary Table
+
+   Column Family Name The name of the column family.
+   JSON Path The path to the column family in dotted notation. For
+   example, suppose the table contained JSON documents that were of this
+   general structure:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" :
+                    {
+                         "c" : "value",
+                    },
+               "e" : "value"
+          }
+}
+
+   If you want to create a column family at the field d nested within b,
+   your new path would be a.b.d.
+
+   Note: Ensure that the field at which you want to create the column
+   family does not yet exist. If the field exists, it could become
+   inaccessible after the column family is created.
+   Compression The compression setting to use for the column family. Valid
+   options are off, lzf, lz4, and zlib. The default setting is the same as
+   the compression setting for the directory where the table is located.
+   To find out whether a directory is compressed and the type of
+   compression, see [7]Turning Compression On or Off on Directories Using
+   the CLI.
+   Time-to-Live Specifies whether to purge data when the age of the data
+   in this column family exceeds the value specified here. Data can remain
+   forever or can be purged after specified amount of time (in seconds).
+   Setting the value to 0 is equivalent to allowing data to remain
+   indefinitely or forever.
+
+   Note: If the value for an existing column family in a JSON table is not
+   0, you cannot add another column family.
+   In Memory Determines whether preference is given to values of this
+   column family for storage with row keys. Because row keys are cached in
+   memory in preference to row data, column-family data that is stored
+   inline with the row keys is also cached in memory.
+
+   For all column families in a table together, up to 200 bytes of row
+   data will be stored inline with each row key. Storing data inline with
+   a row key might speed retrieval of the data from a column family
+   because disk access can often be avoided. For each column family, up to
+   32 bytes can be stored inline with each row key even if this is
+   disabled (No), but preference will be given to column families where
+   this is enabled (Yes). A column family can have more than 32 bytes
+   stored inline if this is enabled.
+   If the total number of bytes for all column families together exceeds
+   200 for a row, then preference for inclusion within the inline storage
+   for that row is given to column families that have this enabled.
+   Note: All of the data for a column family will be stored in-line with
+   the row key, or none will be. If the contents in a column family for a
+   particular row are larger than the maximum number of bytes that are
+   allowed to be stored for that column family, no data will be stored
+   in-line for that column family.
+   By default, this is enabled.
+
+   Column Family Name The name of the column family.
+   Version
+          + Minimum — The minimum number of versions of column values to
+            keep. The default is zero.
+          + Maximum — Maximum number of versions of column values to keep.
+            The default is one.
+
+   Compression The compression setting to use for the column family. Valid
+   options are off, lzf, lz4, and zlib. The default setting is the same as
+   the compression setting for the directory where the table is located.
+   To find out whether a directory is compressed and the type of
+   compression, see [8]Turning Compression On or Off on Directories Using
+   the CLI.
+   Time-to-Live Specifies whether to purge data when the age of the data
+   in this column family exceeds the value specified here. Data can remain
+   forever or can be purged after specified amount of time (in seconds).
+   Setting the value to 0 is equivalent to allowing data to remain
+   indefinitely or forever.
+   In Memory Determines whether preference is given to values of this
+   column family for storage with row keys. Because row keys are cached in
+   memory in preference to row data, column-family data that is stored
+   inline with the row keys is also cached in memory.
+
+   For all column families in a table together, up to 200 bytes of row
+   data will be stored inline with each row key. Storing data inline with
+   a row key might speed retrieval of the data from a column family
+   because disk access can often be avoided. For each column family, up to
+   32 bytes can be stored inline with each row key even if this is
+   disabled (No), but preference will be given to column families where
+   this is enabled (Yes). A column family can have more than 32 bytes
+   stored inline if this is enabled.
+   If the total number of bytes for all column families together exceeds
+   200 for a row, then preference for inclusion within the inline storage
+   for that row is given to column families that have this enabled.
+   Note: All of the data for a column family will be stored in-line with
+   the row key, or none will be. If the contents in a column family for a
+   particular row are larger than the maximum number of bytes that are
+   allowed to be stored for that column family, no data will be stored
+   in-line for that column family.
+   By default, this is enabled.
+    3. Set up access to column families for users, groups, and/or roles.
+       You can use either the default permissions or proceed to define new
+       permissions for this column family.
+          + [9]JSON Table
+          + [10]Binary Table
+
+   Read Data Can do column reads. Reads require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Write Data Can do column writes. Writes require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Traverse Data Can pass over fields in JSON documents. For example,
+   suppose that a JSON table contains documents of this general structure:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" : "value",
+               "c" : "value"
+          }
+}
+
+   Suppose further that the user sjohnson has read permission on a.b, but
+   not on a. For sjohnson to read a.b, the user needs the traverse
+   permission on a. The user can then pass over field a to a.b. This
+   permission is inherited by fields within the column family.
+   Set Version Can set or change the maximum and minimum number of
+   versions of column values to keep.
+   Set Compression Can set or change the compression setting for the
+   column family.
+
+   Read Data Can do column reads. Reads require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Write Data Can do column writes. Writes require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Append Data Can do column appends. Column appends require permission
+   both at the column-family level and at the column level.
+   Set Version Can set or change the maximum and minimum number of
+   versions of column values to keep.
+   Set Compression Can set or change the compression setting for the
+   column family.
+       By default, all permissions are given to the user creating the
+       table.
+       To grant or block access to users, groups, and/or roles, from the:
+          + Basic settings, select the type — public, (OR) user, group, or
+            role — from the drop-down menu, specify the name of the user,
+            group, or role, and select one or more checkbox to grant
+            permissions.
+            Tip: Click [cloneACE.png] to create a copy of the associated
+            access control setting. Click [deleteRow.png] to remove the
+            associated access control expression.
+            To add access control expressions for another user, group, or
+            role, click Add Another and repeat this step.
+          + Advanced settings, or specify public (p) or user (u), group
+            (g), and/or role (r) who have and/or do not have the type of
+            access using the following boolean expressions and
+            subexpressions:
+               o ! — Negation operator.
+               o & — AND operation.
+               o | — OR operation.
+            Use (), parentheses, for subexpressions.
+            Note: You cannot specify user, group, or role individually if
+            access is granted to all users (public).
+            Alternatively, click [editPencil.png] associated with the type
+            of access to use the Access Control Expression window to
+            define access for public or users, group, and/or role. See
+            [11]Defining ACEs for more information.
+       Note: If you switch from Basic to Advanced, the basic settings, if
+       any, will be carried over to the advanced settings. If you switch
+       from Advanced to Basic, all the settings will be lost because the
+       subexpressions and AND (&) and negation (!) operations that are
+       supported by advanced settings are not supported in the basic
+       settings.
+    4. Specify:
+
+        Field Permissions (for JSON Tables)
+                Specify a name for the field and the permissions to access
+                the field. By default, a field inherits permissions from
+                the column in which the field is located. Permissions set
+                at this level override permissions inherited from the
+                column. You can set the following permissions by selecting
+                the associated checkbox:
+
+   Read Data Can read from the field. This permission extends to fields
+   that are nested below as well unless explicitly denied on any of the
+   nested fields.
+   Write Data Can delete the field, insert a value into the field, or
+   overwrite the field's value.
+
+   Note: Deleting a field also deletes all fields that are nested within
+   that field, even those fields on which the write permission is
+   explicitly denied.
+   JSON Traverse Can descend a hierarchy of fields to access the fields to
+   read or write.
+
+                By default, all permissions are given to the user creating
+                the table. See [12]Permission Types for Fields and Column
+                Families in JSON Tables for more information.
+
+        Column Permission (for Binary Tables)
+                Create (by clicking Add Column and specifying a name in
+                the Column Name field) and set permissions for columns in
+                the column family. You can set the following permissions
+                by selecting the associated checkbox:
+
+   Read Data Can do column reads. Reads require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Write Data Can do column writes. Writes require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Append Data Can do column appends. Column appends require permission
+   both at the column-family level and at the column level.
+
+                Note: When a user, group, or role requests to read data
+                from, write data to, or append data to a column, MapR-DB
+                checks whether that user, group, or role has read or write
+                permission for the column family AND read or write
+                permission for the column. By default, columns allow read
+                and write access to all users; in such cases, only the
+                read or write permission for the column family matters.
+
+                However, suppose that a table contains columns col1 and
+                col2 in column family cf1, and these columns grant read
+                and write permission only to the table creator. A
+                different user tries to write data to these columns.
+                MapR-DB checks whether this user has write permission on
+                cf1 AND col1 AND col2. If the user does not have all three
+                permissions, MapR-DB returns an error that says access for
+                the write is denied.
+
+                If this user were to try to read from the same two
+                columns, MapR-DB would simply not return the data. If the
+                user tried to read from those two columns and additional
+                columns on which the user had read permissions, the
+                results would contain the data for those additional
+                columns, but exclude the data for col1 and col2.
+
+                You can add columns to a table at any time. Null columns
+                for a given row don't take up any storage space.
+
+                Note: Extremely wide tables with very large numbers of
+                columns can sometimes reach the recommended size for a
+                table split at a comparatively small number of rows
+                because MapR-DB tables split at the row level, not the
+                column level.
+
+       To grant or block access to users, groups, and/or roles, from the:
+          + Basic settings, select the type — public, (OR) user, group, or
+            role — from the drop-down menu, specify the name of the user,
+            group, or role, and select one or more checkbox to grant
+            permissions.
+            Tip: Click [cloneACE.png] to create a copy of the associated
+            access control setting. Click [deleteRow.png] to remove the
+            associated access control expression.
+            To add access control expressions for another user, group, or
+            role, click Add Another and repeat this step.
+          + Advanced settings, or specify public (p) or user (u), group
+            (g), and/or role (r) who have and/or do not have the type of
+            access using the following boolean expressions and
+            subexpressions:
+               o ! — Negation operator.
+               o & — AND operation.
+               o | — OR operation.
+            Use (), parentheses, for subexpressions.
+            Note: You cannot specify user, group, or role individually if
+            access is granted to all users (public).
+            Alternatively, click [editPencil.png] associated with the type
+            of access to use the Access Control Expression window to
+            define access for public or users, group, and/or role. See
+            [13]Defining ACEs for more information.
+       Note: If you switch from Basic to Advanced, the basic settings, if
+       any, will be carried over to the advanced settings. If you switch
+       from Advanced to Basic, all the settings will be lost because the
+       subexpressions and AND (&) and negation (!) operations that are
+       supported by advanced settings are not supported in the basic
+       settings.
+    5. Click Add Column Family to add the column family to the table.
+
+Creating Column Families Using CLI or the REST API
+
+     * [14]JSON Table
+     * [15]Binary Table
+
+   To create a column family in a JSON table, include the parameters
+   -jsonpath and -force :
+maprcli table cf create -path <path> -cfname <name_of_column_family> -jsonpath
+                                <path> -force true
+
+   For the full list of options for this command, see [16]table cf create.
+   The -jsonpath parameter specifies the path to the column family. The
+   path is in dotted notation. For example, suppose the table contained
+   JSON documents that were of this general structure:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" :
+                    {
+                         "c" : "value",
+                    },
+               "e" : "value"
+          }
+}
+
+   You want to create a column family at the field d in the new path a.b.d
+   because you plan to store image files in fields in that column family.
+   Important: Ensure that the field at which you want to create the column
+   family does not yet exist. Also ensure that there are no secondary
+   indexes defined on the field. If the field does exist or is a field in
+   an index, the data in the field could become inaccessible after you
+   create the column family.
+
+   By default, every time you try to create a non-default column family in
+   a JSON table, this command fails and returns a warning message that you
+   should ensure there is no existing data at the specified path. Set the
+   -force parameter to true if you want to override this warning mechanism
+   and create a column family.
+   The command to create a column family for a binary table is:
+maprcli table cf create -path <path> -cfname <name_of_column_family>
+
+   For the full list of options for this command, see [17]table cf create.
+
+   The format of the value of the -path parameter depends on whether you
+   are creating a table on a local cluster or a remote cluster.
+
+Creating a Column Family for a Binary Table Using HBase Shell
+
+   After starting the HBase shell, run the alter command. Type help to see
+   a list of commands and their syntax.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/tables/ViewTableDetails.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/tables/ColumnFamilies-Create.html#div1entry1
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/tables/ColumnFamilies-Create.html#div1entry2
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/TurningCompressionOnOff.html#concept_cxv_4k3_f5
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/TurningCompressionOnOff.html#concept_cxv_4k3_f5
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/tables/ColumnFamilies-Create.html#div2entry1
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/tables/ColumnFamilies-Create.html#div2entry2
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/ACE-Builder.html
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/granting_or_denying_access_to_fields_with_aces.html
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/ACE-Builder.html
+  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/tables/ColumnFamilies-Create.html#div4entry1
+  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/tables/ColumnFamilies-Create.html#div4entry2
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-cf-create.html#tablecfcreate
+  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-cf-create.html#tablecfcreate

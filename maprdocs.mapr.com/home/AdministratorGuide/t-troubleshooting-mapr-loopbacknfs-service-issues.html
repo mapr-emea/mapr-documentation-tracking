@@ -1,0 +1,34 @@
+Troubleshooting mapr-loopbacknfs Service Issues
+
+   To debug authentication issues, follow these steps:
+    1. If you receive a standard error (stderr):
+          + Make sure rpcinfo/portmap is installed and/or run service
+            portmap start.
+          + Run service rpcbind restart.
+    2. Examine the log files for error messages:
+/usr/local/mapr-loopbacknfs/logs/loopbacknfs.log
+/usr/local/mapr-loopbacknfs/logs/mount_local_fs.log
+       Error messages in loopbacknfs.log file:
+
+   Error Message Solution
+   Refresh User tickets failed as security layer could not be initialized
+   with user ticket /tmp/maprticket_0 Unset MAPR_TICKETFILE_LOCATION in
+   initscripts/mapr-loopbacknfs.
+   exiting: license only allows 10 NFS/mfs server(s), currently alive=10
+   If you have multiple clusters listed in the mapr-clusters.conf file on
+   the client, make sure the first one listed is a MapR 4.0.2 or later
+   cluster. If that is not the problem, you will probably need to purchase
+   additional licenses, or reduce number of installations of the
+   mapr-loopbacknfs service.
+    3. Verify that settings in configuration files are correct.
+          + For all clusters:
+            /usr/local/mapr-loopbacknfs/conf/mapr-clusters.conf
+          + For secure clusters: MAPR_TICKETFILE_LOCATION
+    4. Check for “stale” mounts.
+          + The mount_local_fs.pl script can cause the initscript wrapper
+            to force unmounts of the mounted file systems.
+          + Always check for stale mounts after stopping the service:
+               o df -k should return instantly.
+               o Use umount –f <mount_point> to force the unmount.
+               o Use ps –ef | grep mount_local to confirm that the script
+                 is not stuck.

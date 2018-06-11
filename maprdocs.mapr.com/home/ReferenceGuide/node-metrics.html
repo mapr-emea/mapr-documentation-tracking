@@ -1,0 +1,362 @@
+node metrics
+
+   Retrieves metrics information for nodes in a cluster.
+   Warning: This command is deprecated. See [1]Using MapR Monitoring
+   (Spyglass Initiative) for information about viewing metrics and logs
+   for nodes, services, and applications.
+
+   This command retrieves and displays various metrics related to the
+   operation of nodes. The data displayed comes from the files that each
+   node updates periodically that are stored in the node local volume on
+   each node in the cluster.
+
+Syntax
+
+   CLI
+
+maprcli node metrics
+         -nodes <hostname>
+         -start <start time>
+         -end <end time>
+        [ -interval <interval timestamp> ]
+        [ -events true|false ]
+        [ -columns <column names> ]
+        [ -cluster <cluster name> ]
+
+Parameters
+
+   Parameter
+
+   Description
+
+   nodes
+
+   A space-separated list of host names. The host name must be either the
+   specific hostname (use the maprcli node list -columns hostname command
+   to obtain the hostname value) or the name "hostname" if using the
+   command line on the actual node. The IP address and "localhost" can not
+   be used.
+
+   start
+
+   The start of the time range. Can be a UTC timestamp (in this case, a
+   Java millisecond timestamp) or a UTC date in MM/DD/YY or MM/DD/YYYY
+   format.
+
+   end
+
+   The end of the time range. Can be a UTC timestamp (in this case, a Java
+   millisecond timestamp) or a UTC date in MM/DD/YY or MM/DD/YYYY format.
+
+   interval
+
+   Data measurement interval in seconds. The minimum value is 10 seconds.
+
+   events
+
+   Specify TRUE to return node events only. The default value of this
+   parameter is FALSE.
+
+   columns
+
+   Comma-separated list of column names to return.
+
+   cluster
+
+   Cluster name.
+
+   Column Name Parameters
+
+   The node metrics API always returns the NODE (node name) and TIMESTAMP
+   (integer timestamp) columns. Use the -columns flag to specify a
+   comma-separated list of column names to return.
+   Warning: The CPUNICE, CPUUSER, and CPUSYSTEM parameters return
+   information in jiffies. This unit measures one tick of the system timer
+   interrupt and is usually equivalent to 10 milliseconds, but may vary
+   depending on your particular node configuration. The reporting interval
+   is the maximum possible value. In addition, the CPU* parameters
+   accumulate and do not reset from report to report. Call
+   sysconf(_SC_CLK_TCK) to determine the exact value for your node.
+
+   Parameter
+
+   Description
+
+   Notes
+
+   CPUNICE
+
+   Amount of CPU time used by processes with a positive nice value.
+
+   CPUUSER
+
+   Amount of CPU time used by user processes.
+
+   CPUSYSTEM
+
+   Amount of CPU time used by system processes.
+
+   LOAD5PERCENT
+
+   Percentage of time this node spent at load 5 or below
+
+   LOAD1PERCENT
+
+   Percentage of time this node spent at load 1 or below
+
+   MEMORYCACHED
+
+   Memory cache size in bytes
+
+   MEMORYSHARED
+
+   Shared memory size in bytes
+
+   MEMORYBUFFERS
+
+   Memory buffer size in bytes
+
+   MEMORYUSED
+
+   Memory used in megabytes
+
+   PROCRUN
+
+   Number of processes running
+
+   RPCCOUNT
+
+   Number of MapR RPC calls
+
+   RPCINBYTES
+
+   Number of bytes passed in by MapR RPC calls
+
+   RPCOUTBYTES
+
+   Number of bytes passed out by MapR RPC calls
+
+   SERVAVAILSIZEMB
+
+   Server storage available in megabytes
+
+   SERVUSEDSIZEMB
+
+   Server storage used in megabytes
+
+   SWAPFREE
+
+   Free swap space in bytes
+
+   TTMAPUSED
+
+   Number of TaskTracker slots used for map tasks
+
+   TTREDUCEUSED
+
+   Number of TaskTracker slots used for reduce tasks
+
+   Three column name parameters return data that is too granular to
+   display in a standard table. Use the -json option to return this
+   information as a JSON object.
+
+   Parameter
+
+   Description
+
+   Metrics Returned
+
+   CPUS
+
+   Activity on this node's CPUs. Each CPU on the node is numbered from
+   zero, cpu0 to cpuN. Metrics returned are for each CPU.
+
+   CPUIDLE: Amount of CPU time spent idle. Reported as jiffies. CPUIOWAIT:
+   Amount of CPU time spent waiting for I/O operations. Reported as
+   jiffies. CPUTOTAL: Total amount of CPU time. Reported as jiffies.
+
+   DISKS
+
+   Activity on this node's disks. Metrics returned are for each partition.
+
+   READOPS: Number of read operations. READKB: Number of kilobytes read.
+   WRITEOPS: Number of write operations. WRITEKB: Number of kilobytes
+   written.
+
+   NETWORK
+
+   Activity on this node's network interfaces. Metrics returned are for
+   each interface.
+
+   BYTESIN: Number of bytes received. BYTESOUT: Number of bytes sent.
+   PKTSIN: Number of packets received. PKTSOUT: Number of packets sent.
+
+Examples
+
+   Retrieving the percentage of time that a node spent at the 1 and 5 load
+   levels between dates
+$ maprcli node metrics
+        -nodes centos24.lab
+        -start 08/02/15
+        -end 08/03/15
+        -interval 7200
+        -columns LOAD5PERCENT,LOAD1PERCENT
+
+   Sample Output
+NODE          LOAD5PERCENT  LOAD1PERCENT  TIMESTAMPSTR                  TIMESTAM
+P
+centos24.lab  15            9             Sat Aug 01 17:00:08 PDT 2015  14384736
+08000
+centos24.lab  20            20            Sat Aug 01 19:00:13 PDT 2015  14384808
+13000
+centos24.lab  14            9             Sat Aug 01 21:00:18 PDT 2015  14384880
+18000
+centos24.lab  13            11            Sat Aug 01 23:00:24 PDT 2015  14384952
+24000
+centos24.lab  11            1             Sun Aug 02 01:00:29 PDT 2015  14385024
+29000
+centos24.lab  14            8             Sun Aug 02 03:00:34 PDT 2015  14385096
+34000
+centos24.lab  13            22            Sun Aug 02 05:00:39 PDT 2015  14385168
+39000
+centos24.lab  24            46            Sun Aug 02 07:00:44 PDT 2015  14385240
+44000
+centos24.lab  18            21            Sun Aug 02 09:00:49 PDT 2015  14385312
+49000
+centos24.lab  10            2             Sun Aug 02 11:00:54 PDT 2015  14385384
+54000
+centos24.lab  24            24            Sun Aug 02 13:00:59 PDT 2015  14385456
+59000
+centos24.lab  8             0             Sun Aug 02 15:01:04 PDT 2015  14385528
+64000
+centos24.lab  14            10            Sun Aug 02 17:01:09 PDT 2015  14385600
+69000
+centos24.lab  10            2             Sun Aug 02 19:01:14 PDT 2015  14385672
+74000
+centos24.lab  17            21            Sun Aug 02 21:01:19 PDT 2015  14385744
+79000
+centos24.lab  15            8             Sun Aug 02 23:01:24 PDT 2015  14385816
+84000
+centos24.lab  28            66            Mon Aug 03 01:01:29 PDT 2015  14385888
+89000
+centos24.lab  16            28            Mon Aug 03 03:01:34 PDT 2015  14385960
+94000
+centos24.lab  20            26            Mon Aug 03 05:01:40 PDT 2015  14386033
+00000
+centos24.lab  22            39            Mon Aug 03 07:01:45 PDT 2015  14386105
+05000
+centos24.lab  16            18            Mon Aug 03 09:01:50 PDT 2015  14386177
+10000
+centos24.lab  16            17            Mon Aug 03 11:01:55 PDT 2015  14386249
+15000
+centos24.lab  18            35            Mon Aug 03 13:02:00 PDT 2015  14386321
+20000
+centos24.lab  11            10            Mon Aug 03 15:02:05 PDT 2015  14386393
+25000
+
+   Retrieving time percentage at load 1 and 5 levels and CPU usage between
+   timestamps
+$ maprcli node metrics
+        -nodes centos24.lab
+        -start 1438502429000
+        -end 1438581684000
+        -interval 28800
+        -columns LOAD5PERCENT,LOAD1PERCENT,CPUS
+        -json
+
+   Sample JSON output
+{
+    "timestamp":1438819022412,
+    "timeofday":"2015-08-05 04:57:02.412 GMT-0700",
+    "status":"OK",
+    "total":3,
+    "data":[
+        {
+            "NODE":"centos24.lab",
+            "TIMESTAMPSTR":"Sat Aug 01 18:00:01 PDT 2015",
+            "TIMESTAMP":1438477201000,
+            "CPUS":{
+                "cpu0":{
+                    "CPUIDLE":491625764,
+                    "CPUIOWAIT":48455544,
+                    "CPUTOTAL":571787058
+                }
+            },
+            "LOAD1PERCENT":8,
+            "LOAD5PERCENT":18
+        },
+        {
+            "NODE":"centos24.lab",
+            "TIMESTAMPSTR":"Sun Aug 02 02:00:01 PDT 2015",
+            "TIMESTAMP":1438506001000,
+            "CPUS":{
+                "cpu0":{
+                    "CPUIDLE":494046587,
+                    "CPUIOWAIT":48483715,
+                    "CPUTOTAL":574608277
+                }
+            },
+            "LOAD1PERCENT":26,
+            "LOAD5PERCENT":23
+        },
+        {
+            "NODE":"centos24.lab",
+            "TIMESTAMPSTR":"Sun Aug 02 10:00:01 PDT 2015",
+            "TIMESTAMP":1438534801000,
+            "CPUS":{
+                "cpu0":{
+                    "CPUIDLE":496468384,
+                    "CPUIOWAIT":48512056,
+                    "CPUTOTAL":577430149
+                }
+            },
+            "LOAD1PERCENT":6,
+            "LOAD5PERCENT":11
+        }
+    ]
+}
+
+   Retrieving data at the 1 and 5 load levels to the last even hour
+maprcli node metrics
+     -nodes $(ls /mapr/se1/var/mapr/local/)
+     -start $(date -u -d '2 minutes ago' +%s000)
+     -end $(date -u -d 'now' +%s000)
+     -interval 60
+     -columns CPUNICE,CPUUSER,CPUSYSTEM,LOAD1PERCENT,LOAD5PERCENT
+     true
+    -json
+
+   Sample Output
+{
+    "timestamp":1436395101882,
+    "timeofday":"2015-07-08 10:38:21.882 GMT+0000",
+    "status":"OK",
+    "total":150,
+    "data":[
+        {
+            "NODE":"se-node10.se.lab",
+            "TIMESTAMPSTR":"Wed Jul 08 22:00:09 UTC 2015",
+            "TIMESTAMP":1436392809000
+        },
+        {
+            "NODE":"se-node10.se.lab",
+            "TIMESTAMPSTR":"Wed Jul 08 22:01:10 UTC 2015",
+            "TIMESTAMP":1436392870000
+        },
+        {
+            "NODE":"se-node10.se.lab",
+            "TIMESTAMPSTR":"Wed Jul 08 22:02:13 UTC 2015",
+            "TIMESTAMP":1436392933000
+        },
+...
+        {
+            "NODE":"se-node13.se.lab",
+            "TIMESTAMPSTR":"Wed Jul 08 22:38:10 UTC 2015",
+            "TIMESTAMP":1436395090000
+        }
+    ]
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Monitoring.html#concept_gvl_jm5_vv

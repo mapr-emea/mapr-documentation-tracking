@@ -1,0 +1,67 @@
+Additional Drill-on-YARN Configuration Options
+
+   You can include additional configuration options in the
+   $DRILL_SITE/drill-on-yarn.conf file for specialized cases. For example,
+   you can customize the Application Master web UI port or Application
+   Master settings.
+
+   Refer to the drill-on-yarn-example.conf file in $DRILL_HOME/conf to see
+   examples of the additional options. Do not use the example file.
+   The following list describes the changes that you can make for several
+   of the Drill-on-YARN components:
+
+   Application Name
+          You can customize the application name that appears when
+          starting or stopping the Drill cluster and in the Drill-on-YARN
+          web UI. Change the value of the following option to a name you
+          prefer:
+
+app-name: "My Drill Cluster"
+
+   Application Master Web UI Port
+          If you run multiple Drill clusters in a YARN cluster, YARN may
+          assign two Drill Application Master processes on the same node.
+          To avoid port conflicts, change the HTTP port for one or both of
+          the Drill clusters. Change the value of the following option to
+          a different port number:
+
+drill.yarn:
+ http: {
+   port: 12345
+ }
+}
+
+   Application Master Settings
+          You can customize certain Application Master properties. All of
+          the Application Master properties are prefixed with
+          drill.yarn.am, for example drill.yarn.am.heap.
+
+          The following table lists the Application Master properties with
+          their default settings:
+
+         Name      Description                                           Default
+         memory-mb Memory, in MB, to allocate to the Application Master. 14336
+         vcores    Number of CPUS to allocate to the Application Master. 1
+         heap      Java heap for the Application Master.                 450M
+
+   Drillbit
+          You can customize certain properties that control the drillbit
+          processes. All of the drillbit properties are prefixed with
+          drill.yarn.drillbit, for example drill.yarn.drillbit.disks.
+
+          Note: You can specify Drill disk usage to YARN, however Drill
+          uses all disks regardless of the setting.
+
+          The following table lists the drillbit properties with their
+          default settings:
+
+   Name Description Default
+   code-cache Code cache that holds classes generated at runtime. 1G
+   memory-mb Memory, in MB, to allocate to the Drillbit. 13000
+   vcores Number of CPUS to allocate to the AM. 4
+   disks Number of disk equivalents consumed by Drill (on versions of YARN
+   that support disk resources.) 1
+   heap Java heap memory. 4G
+   max-direct-memory Direct (off-heap) memory for the drillbit. 4G
+   log-gc Enables Java garbage collector logging. false
+   class-path Additional class-path entries. blank

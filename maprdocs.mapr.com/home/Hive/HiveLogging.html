@@ -1,0 +1,81 @@
+Hive Logging
+
+   This section relates to Hive-2.1+ starting from the MEP-1803 release.
+
+Default log folder structure
+
+   Hive logs have the following folder structure:
+${HIVE_HOME}/log
+${HIVE_HOME}/log/hive-${ADMIN_USER}-hiveserver2-${HOSTNAME}.out
+${HIVE_HOME}/log/hive-${ADMIN_USER}-metastore-${HOSTNAME}.out
+${HIVE_HOME}/log/init_derby_db_${TIMESTAMP}.log
+${HIVE_HOME}/log/${ADMIN_USER}
+${HIVE_HOME}/log/${ADMIN_USER}/${ADMIN_USER}-hiveserver2-${HOSTNAME}.log
+${HIVE_HOME}/log/${ADMIN_USER}/${ADMIN_USER}-metastore-${HOSTNAME}.log
+${HIVE_HOME}/log/${ADMIN_USER}/webhcat/
+${HIVE_HOME}/log/${ADMIN_USER}/webhcat/webhcat.log
+${HIVE_HOME}/log/${ADMIN_USER}/webhcat/webhcat-console.log
+${HIVE_HOME}/log/${ADMIN_USER}/webhcat/webhcat-console-error.log
+${HIVE_HOME}/log/${OTHER_USER}
+${HIVE_HOME}/log/${OTHER_USER}/${OTHER_USER}-hiveserver2-${HOSTNAME}.log
+
+   Here:
+${HIVE_HOME} - Hive home folder. Usually this is /opt/mapr/hive/hive.
+${ADMIN_USER} – Admin user of cluster that runs HiveServer2 and HiveMetastore da
+emons. Usually this is mapr.
+${HOSTNAME} – Name of the host where a daemon runs.
+${TIMESTAMP} – Date and time of log creation.
+${OTHER_USER} – Not an admin user. Admin user impersonates the ${OTHER_USER}.
+
+Content of log files
+
+   Files $HIVE_HOME/log/hive-${ADMIN_USER}-hiveserver2-${HOSTNAME}.out and
+   $HIVE_HOME/log/hive-${ADMIN_USER}-metastore-${HOSTNAME}.out contain
+   information about when HiveServer2 and HiveMetastore daemons are
+   stated, and what are their PIDs.
+
+   Files
+   $HIVE_HOME/log/${ADMIN_USER}/${ADMIN_USER}-hiveserver2-${HOSTNAME}.log
+   and
+   $HIVE_HOME/log/${ADMIN_USER}/${ADMIN_USER}-hiveserver2-${HOSTNAME}.log
+   contain information from HiveServer2 and HiveMetastore daemons. File
+   ${ADMIN_USER}-hiveserver2-${HOSTNAME}.log also contains job progress.
+
+   The
+   ${HIVE_HOME}/log/${OTHER_USER}/${OTHER_USER}-hiveserver2-${HOSTNAME}.lo
+   g file is created when somebody runs Hive CLI over the ${OTHER_USER}.
+   The ${OTHER_USER}-hiveserver2-${HOSTNAME}.log file contains job
+   progress.
+
+   The ${HIVE_HOME}/log/init_derby_db_${TIMESTAMP}.log file is created if
+   and only if Hive was configured for Derby Db through cluster
+   installation.
+
+   Log files on multi node Hive installation
+
+   Consider Hive multi node installation (that is Hive packages are
+   installed on different nodes). See Table 1:
+
+   CAPTION: Table 1. Cluster Configuration
+
+         Hive Metastore HiveServer2 HiveWebHCat
+   node1 *
+   node2                *
+   node3                            *
+
+   See Table 2 for log configurations.
+
+   CAPTION: Table 2. Logs Configuration on Hive Multi-Node Installation
+
+     node1 node2 node3
+   ${HIVE_HOME}/logs/hive-${ADMIN_USER}-metastore- ${HOSTNAME}.out *
+   ${HIVE_HOME}/logs/${ADMIN_USER}/${ADMIN_USER}-metastore-
+   ${HOSTNAME}.log *
+   ${HIVE_HOME}/logs/hive-${ADMIN_USER}-hiveserver2- ${HOSTNAME}.out   *
+   ${HIVE_HOME}/logs/${ADMIN_USER}/${ADMIN_USER}-hiveserver2-
+   ${HOSTNAME}.log   *
+   ${HIVE_HOME}/logs/${ADMIN_USER}/webhcat/     *
+   ${HIVE_HOME}/logs/${ADMIN_USER}/webhcat/webhcat.log     *
+   ${HIVE_HOME}/logs/${ADMIN_USER}/webhcat/webhcat-console.log     *
+   ${HIVE_HOME}/logs/${ADMIN_USER}/webhcat/webhcat-console-error.log     *
+   ${HIVE_HOME}/logs/${ADMIN_USER} * * *

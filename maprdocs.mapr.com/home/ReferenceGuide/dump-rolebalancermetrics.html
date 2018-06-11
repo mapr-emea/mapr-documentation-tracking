@@ -1,0 +1,97 @@
+dump rolebalancermetrics
+
+   Returns the cumulative number of times that the replication role
+   balancer has switched the replication role of name containers and data
+   containers on the cluster.
+
+   The maprcli dump rolebalancermetrics command enables you to view the
+   number of times that the replication role balancer has switched the
+   replication role of the name containers and data containers to ensure
+   that containers are balanced across the nodes in the cluster. For best
+   results, use the -json option when running dump rolebalancermetrics
+   from the command line.
+
+   The replication role balancer is a tool that switches the replication
+   roles of containers to ensure that every node has an equal share of
+   master and replica containers (for name containers) and an equal share
+   of master, intermediate, and tail containers (for data containers).
+
+   The replication role balancer changes the replication role of the
+   containers in a cluster so that network bandwidth is spread evenly
+   across all nodes during the replication process. A container's
+   replication role determines how it is replicated to the other nodes in
+   the cluster. For name containers (the volume's first container),
+   replication occurs simultaneously from the master to all replica
+   containers. For data containers, replication proceeds from the master
+   to the intermediate container(s) until it reaches the tail containers.
+   For more information, see [1]Replication Role Balancer.
+
+Syntax
+
+   CLI
+
+maprcli dump rolebalancermetrics
+    [-cluster <cluster name>]
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster The cluster on which to run the command. If this parameter is
+   omitted, the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+
+Output
+
+   The maprcli dump rolebalancerinfo command returns the cumulative number
+   of times that the replication role balancer has switched the
+   replication role of name containers and data containers on the cluster.
+# maprcli dump rolebalancermetrics -json
+{
+        "timestamp":1433372048169,
+    "timeofday":"2015-06-03 10:54:08.169 GMT+0000",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "numNameContainerSwitches":60,
+                        "numDataContainerSwitches":28,
+                        "timeOfLastMove":"Wed May 23 05:48:00 PDT 2015"
+                }
+        ]
+}
+
+   Output fields
+
+   Field
+
+   Description
+
+   numNameContainerSwitches
+
+   The number of times that the replication role balancer has switched the
+   replication role of name containers.
+
+   numDataContainerSwitches
+
+   The number of times that the replication role balancer has switched the
+   replication role of data containers.
+
+   timeOfLastMove
+
+   The date and time of the last replication role change.
+
+Example
+
+   CLI
+
+maprcli dump rolebalancermetrics -json
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/ReplicationRoleBalancer.html#ConfiguringBalancerSettin_26982510-d3e396

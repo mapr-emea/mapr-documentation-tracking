@@ -1,0 +1,51 @@
+Hadoop Commands
+
+   You can set, retrieve, and remove extended attributes on files,
+   directories, and FUSE mounted file path using the [1]hadoop fs command.
+   When setting an extended attribute:
+     * The name must be prefixed with a namespace.
+     * The extended attribute value, there are three ways to encode the
+       value:
+
+   text The given string must be enclosed in double quotes to be treated
+   as text.
+   hex The given string must begin with 0x or 0X to be treated as
+   hexadecimal number.
+   base64 The given string must begin with 0s or 0S to be treated as
+   base64 encoding.
+
+   Note: You must have the right permissions to set, retrieve, and/or
+   remove extended attributes.
+
+Set Extended Attributes
+
+   To set an extended attribute name and value for a file or directory,
+   run the following command:
+hadoop fs -setfattr -n name [-v value] <path>
+
+   For example:
+hadoop fs -setfattr -n user.key1 -v val1 /xattrs/m7user1/file1.txt
+
+Retrieve Extended Attributes
+
+   To retrieve the extended attributes associated with a file or
+   directory, run the following command:
+hadoop fs -getfattr [-R] -n name | -d [-e en] <path>
+
+   For example:
+hadoop fs -getfattr -d /xattr/m7user1/file1
+# file: /xattr/m7user1/file1
+user.key2="value2"
+user.key1="value1"
+
+Remove Extended Attributes
+
+   To remove an extended attribute by name, run the following command:
+hadoop fs -setfattr -x name <path>
+
+   For example:
+hadoop fs -setfattr -x user.key1 /xattrs/m7user1/dir1
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-fs.html#hadoopfs

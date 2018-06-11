@@ -1,0 +1,43 @@
+Configure the Collectd Service Heap Size
+
+   The collectd service uses an embedded JVM when it gathers metrics from
+   the CLDB, Node Manager, Resource Manager, and Drill. You can edit the
+   Plugin Java section of collectd.conf to configure limits to the
+   collectd virtual memory footprint.
+   Note: The Plugin Java section of the collectd.conf file may be
+   commented or uncommented. The configure.sh utility will uncomment the
+   Plugin Java section when collectd runs on a node that requires an
+   embedded JVM. Therefore, when you update the file, do not add or remove
+   comment symbols (#) in the Plugin java section
+
+   Complete the following steps on each collectd node:
+    1. Open the /opt/mapr/collectd/collectd-<version>/etc/collectd.conf
+       file.
+    2. Look for the following section:
+## **** MAPR_CONF_JMX_TAG: MAPR CONFIGURATION - DO NOT EDIT or REMOVE TAG/BLOCK
+***
+ <Plugin java>
+JVMArg "-Djava.class.path=......
+    3. Update Xms and Xmx options in the Plugin java section.
+       Xms defines the amount of memory allocated to the service when it
+       starts. Xmx defines the maximum amount of memory allocated to the
+       service.
+       If the <Plugin java> section is not commented out, the
+       configuration may look like this:
+## **** MAPR_CONF_JMX_TAG: MAPR CONFIGURATION - DO NOT EDIT or REMOVE TAG/BLOCK
+***
+<Plugin java>
+JVMArg "-Djava.class.path=......
+JVMArg "-Xms32m"
+JVMArg "-Xmx128m"
+       If the <Plugin java> section is commented out, the configuration
+       may look like this:
+### **** MAPR_CONF_JMX_TAG: MAPR CONFIGURATION - DO NOT EDIT or REMOVE TAG/BLOCK
+ ***
+#<Plugin java>
+# JVMArg "-Djava.class.path=......
+# JVMArg "-Xms32m"
+# JVMArg "-Xmx128m"
+    4. Restart the collectd service.
+maprcli node services -name collectd -nodes <space separated list of hostname/IP
+addresses> -action restart

@@ -1,0 +1,218 @@
+config
+
+   Manages configuration values for the MapR cluster.
+
+Configuration Fields
+
+   The following fields are configurable.
+
+   Field
+
+   Default Value
+
+   Description
+   cldb.balancer.disk.max.switches.in.nodes.percentage 10 The maximum
+   number of containers that can be balanced in parallel by the disk
+   balancer. The value is a percentage of the number of nodes in the
+   system.
+   cldb.balancer.disk.paused 1 Enables or disables the Disk Balancer.
+   cldb.balancer.disk.sleep.interval.sec 2 * 60 The sleep interval (in
+   seconds) between two successive runs of the Disk Balancer.
+   cldb.balancer.disk.threshold.percentage 70 Percentage of used space
+   that causes containers in a storage pool to be distributed across other
+   less used storage pools.
+   cldb.balancer.logging 0 Disables (0) or enables (1) the logging of
+   messages in Disk Balancer and Role Balancer.
+   cldb.balancer.role.max.switches.in.nodes.percentage 10 The percentage
+   (of the number of nodes in the system) to use to determine the maximum
+   number of containers whose roles (Masters and Tails) will be balanced
+   in parallel by the Role Balancer.
+
+   For example, suppose there are 500 nodes and this value is 10(%). The
+   number of containers whose roles are balanced in parallel is
+   (10/100)*500=50.
+   cldb.balancer.role.paused 1 Enables (1) or Disables (0) the Role
+   Balancer.
+   cldb.balancer.role.sleep.interval.sec 15 * 60 The sleep interval (in
+   seconds) between two successive runs of the Role Balancer.
+   cldb.balancer.startup.interval.sec 30 * 60 The initial startup delay of
+   the Role Balancer for existing clusters.
+   cldb.cluster.almost.full.percentage 90 The percentage at which the
+   CLUSTER_ALARM_CLUSTER_ALMOST_FULL alarm is triggered.
+   cldb.container.alloc.selector.algo 0 The allocation algorithm to use
+   when creating new containers. Values can be:
+     * 1 - indicates RoundRobin algorithm. If selected, containers are
+       allocated across nodes in a topology in a roundrobin fashion.
+     * 2 - indicates Randomized algorithm. If selected, containers are
+       allocated across nodes in a randomized way.
+     * 0 - indicates RoundRobin algorithm if the number of nodes is less
+       than or equal to 100, Randomized algorithm otherwise.
+
+   cldb.container.assign.buffer.sizemb 1 * 1024 The size of the container
+   that should be used as a buffer. When allocating a new container, this
+   size is deducted from the maximum container size.
+   Note: When cldb.container.sizemb value is modified, check and update
+   the value of cldb.container.assign.buffer.sizemb to prevent new
+   containers from being created when existing containers are not full.
+   cldb.container.create.diskfull.threshold 85
+
+   The percentage of space on a fileserver to use to classify the
+   fileserver as FULL.
+   cldb.container.sizemb 32 * 1024
+
+   The maximum size for containers. This is a soft limit.
+   Note: When cldb.container.sizemb value is modified, check and update
+   the value of cldb.container.assign.buffer.sizemb to prevent new
+   containers from being created when existing containers are not full.
+   cldb.default.chunk.sizemb 256
+
+   The size of each chunk that make up a file in the MapR-FS.
+   cldb.default.volume.topology /data
+
+   The default topology for new volumes.
+   cldb.dialhome.metrics.file.rotation.period 365
+
+   The retention period of the files (in days) used to record Dialhome
+   metrics. Files that are past their retention period are automatically
+   deleted.
+   cldb.fs.mark.rereplicate.sec 60 * 60
+
+   The number of seconds a node can fail to heartbeat before it is
+   considered dead. Once a node is considered dead, the CLDB re-replicates
+   any data contained on the node.
+   cldb.fs.reregistration.wait.time 15 The amount of time (in minutes) to
+   wait before checking for inactive nodes.
+   Note: Reduce the value to raise [1]alarm without delay after CLDB
+   failover. To avoid spurious alarms, do not reduce value below 5
+   (minutes).
+   cldb.log.fileserver.timeskew.interval.mins 60
+
+   The frequency in minutes at which CLDB should log messages about
+   fileserver's time skew.
+   cldb.max.parallel.resyncs.star 3
+
+   The number of container replicas that can resync in parallel from the
+   source for low_latency (star-replicated) volumes.
+   cldb.mfs.heartbeat.timeout.multiple 10
+
+   Specifies a heartbeat timeout multiple. For small clusters, the
+   heartbeat interval is 1 second and the multiple is 10 by default, which
+   makes the heartbeat timeout 10 seconds.
+   cldb.min.fileservers 1
+
+   The number of fileservers hosting the CLDB volume required for the
+   master CLDB to complete the bootstrap process.
+   cldb.replication.manager.critical.paused 0
+
+   Disables (0) or enables (1) the processing of critically
+   under-replicated containers. If enabled, the critically
+   under-replicated containers are processed on a priority basis to
+   increase the number of copies.
+   cldb.replication.manager.max.resyncs.in.nodes.percentage 1200
+
+   The number of containers that can be replicated in parallel, expressed
+   as a percentage of the number of active nodes. If the value is 1200,
+   the number of containers that can be replicated is 12 times the number
+   of active nodes.
+   cldb.replication.manager.over.paused 0
+
+   Disables (0) or enables (1) the processing of over-replicated
+   containers. Over-replicated containers are processed to delete extra
+   copies, which is when the number of copies is more than the desired
+   replication factor.
+   cldb.replication.manager.start.mins 15
+
+   The delay between CLDB startup and replication manager startup, to
+   allow all nodes to register and heartbeat
+   cldb.replication.max.in.transit.containers.per.sp 4
+
+   The maximum number of containers that can be in transit on an SP.
+   Containers that are serving either as the source or destination of a
+   resync operation are considered as being in ‘transit’.
+   cldb.replication.sleep.interval.sec 15
+
+   The sleep duration (in seconds) between consecutive runs of the
+   Replication Manager.
+   cldb.replication.tablescan.interval.sec 2 * 60
+
+   The sleep duration (in seconds) between consecutive runs of the
+   Replication Scanner. While the Replication Scanner bucketizes
+   containers into different classes, the Manager thread either replicates
+   or removes additional copies.
+   cldb.security.user.ticket.duration.seconds 1209600 The length of time
+   before the user ticket (generated using [2]maprlogin password command)
+   expires.
+   cldb.security.user.ticket.max.duration.seconds 2592000 The maximum
+   amount of time allowed for the user ticket (generated using the
+   [3]maprlogin password command).
+   cldb.security.user.ticket.renew.duration.seconds 2592000 The length of
+   time to renew the user ticket (generated using [4]maprlogin password
+   command).
+   cldb.security.user.ticket.renew.max.duration.seconds 7776000 The
+   maximum duration (7776000, by default) allowed for a user ticket
+   (generated using [5]maprlogin password command) renewal.
+   cldb.topology.almost.full.percentage 90 The threshold percentage that
+   is used to raise alarms when the used space on the nodes of a topology
+   exceed a certain percentage of total space.
+   cldb.volume.epoch The starting epoch of a new Container. Epoch are used
+   internally in the election of the master container etc.
+
+   cldb.volumes.namespace.default.min.replication
+
+   2
+
+   The minimum replication factor for the name container. Containers with
+   fewer copies than this value are replicated on a priority basis.
+   Note: To modify, run the [6]maprli volume modify -name <volume name>
+   -nsminreplication <replication factor> command.
+
+   cldb.volumes.namespace.default.replication
+
+   3
+
+   The desired replication factor for the name container.
+   Note: To modify, run the [7]maprli volume modify -name <volume name>
+   -nsreplication <replication factor> command.
+   mapr.fs.nocompression "bz2,gz,tgz,tbz2, zip,z,Z,mp3,jpg,
+   jpeg,mpg,mpeg,avi, gif,png,lzo,jar" The file types that should not be
+   compressed. See [8]File Extensions of Compressed Files.
+   mapr.fs.permissions.supergroup root The [9]super group of the MapR-FS
+   layer.
+   mapr.fs.permissions.superuser mapr The [10]super user of the MapR-FS
+   layer.
+   mapr.targetversion The configuration variable to set the current
+   version of mapr distribution. Failing to set this variable on an
+   upgrade will cause alarms to be missed when all the nodes in a cluster
+   are not at the same version of the software.
+   mfs.db.parallel.copyregions 4 The number of parallel copy regions per
+   MFS instance. Setting this field to a larger value increases the
+   parallelism for data transfers during index updates, CDC propagation,
+   and table replication. This increases the transfer rate and reduces the
+   initial synchronization time, but uses more system resources. The
+   latter may impact the response time and performance of applications
+   reading data from the same nodes.
+   mfs.high.memory.alarm.threshold 110 (percentage of allocated memory)
+   Threshold for raising [11]NODE_ALARM_HIGH_MFS_MEMORY alarm.
+   mfs.feature.db.json.support 1 for new MapR installations, 0 for
+   upgraded MapR installations. Disables (0) or enables (1) MapR streams
+   and support in MapR-DB for JSON documents and tables.
+   mfs.feature.devicefile.support 1 Defines whether named pipes can be
+   used over NFS.
+   pernode.numcntrs.alarm.thr 50000 The maximum number of RW containers on
+   each node beyond which performance may not be optimal. The optimal
+   number for RW and snapshot containers combined is 10 times the value of
+   this parameter.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/NodeAlarms-NoHeartbeatAlarm.html#concept_oqg_g2n_vt
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ThemaprloginUtility.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ThemaprloginUtility.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ThemaprloginUtility.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ThemaprloginUtility.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/FileExtensionOfCompressedFiles.html
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/Glossary.html
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/Glossary.html
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/NodeAlarms-MFS-HighMemoryAlarm.html

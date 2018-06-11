@@ -1,0 +1,40 @@
+Running MapReduce Applications
+
+   This example uses a sample MapReduce program named
+   [1]HCatalogMRTest.java.
+    1. From the command line, issue the following commands to define the
+       environment:
+export LIB_JARS=
+$HCAT_HOME/share/hcatalog/hcatalog-core-<version>-mapr.jar,
+$HIVE_HOME/lib/hive-metastore-<version>-mapr.jar,
+$HIVE_HOME/lib/libthrift-<version>.jar,
+$HIVE_HOME/lib/hive-exec-<version>-mapr.jar,
+$HIVE_HOME/lib/libfb303-<version>.jar,
+$HIVE_HOME/lib/jdo2-api-<version>-ec.jar,
+$HIVE_HOME/lib/slf4j-api-<version>.jar
+
+export HADOOP_CLASSPATH=
+$HCAT_HOME/share/hcatalog/hcatalog-core-<version>-mapr.jar:
+$HIVE_HOME/lib/hive-metastore-<version>-mapr.jar:
+$HIVE_HOME/lib/libthrift-<version>.jar:
+$HIVE_HOME/lib/hive-exec-<version>-mapr.jar:
+$HIVE_HOME/lib/libfb303-<version>.jar:
+$HIVE_HOME/lib/jdo2-api-<version>-ec.jar:
+$HIVE_HOME/conf:
+$HADOOP_HOME/conf:
+$HIVE_HOME/lib/slf4j-api-<version>.jar
+    2. Compile HCatalogMRTest.java:
+javac -cp `hadoop classpath`:${HCAT_HOME}/share/hcatalog/hcatalog-core-<version>
+-mapr.jar HCatalogMRTest.java -d .
+    3. Create a JAR file:
+jar -cf hcatmrtest.jar org
+    4. Create an output table:
+hcat -e "create table hcatpigoutput(key int, value int)"
+    5. Run the job: At the end of the job, the file hcatpigoutput should
+       have entries in the form key, count.
+hadoop --config $HADOOP_HOME/conf jar ./hcatmrtest.jar org.myorg.HCatalogMRTest
+-libjars $LIB_JARS hcatpig hcatpigoutput
+
+References
+
+   1. http://maprdocs.mapr.com/attachments/HCatalogMRTest.zip

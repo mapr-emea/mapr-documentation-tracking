@@ -1,0 +1,80 @@
+Working with Multiple Instances of the MapR-FS
+
+   The Multi-MFS feature allows multiple instances of the FileServer to
+   run on a single node in a single process.
+
+   Multiple instances of the MapR FileServer can run on a single node in a
+   single process with the installation of MapR-XD or the MapR-DB
+   software. On servers with SSDs with at least 2 storage pools (SP), two
+   instances (per node) are configured by default. On servers without
+   SSDs, a single instance is configured by default. Each instance runs as
+   a separate library that is dynamically loaded into a single process. In
+   this mode, each instance has a separate host ID; however, all of the
+   instances share the same hostname.
+
+   The maximum number of supported instances is 32. Instances should be
+   configured based on the available CPU, memory, disks, and SPs. Each
+   instance will need minimum of 2GB and instances should not exceed:
+     * Number of CPUs / 2
+     * Number of SPs (enforced)
+
+File Server Instances
+
+   On MapR-XD and MapR-DB installations, nodes with SSDs can run multiple
+   FileServer instances. To determine whether a node has SSDs, MapR uses
+   the value of mfs.disk.is.ssd in [1]mfs.conf file, which must be set to
+   1.
+
+   For clusters with MapR-XD or MapR-DB license, if mfs.disk.is.ssd in
+   [2]mfs.conf file is set to 1, CLDB configures nodes with SSDs to have 2
+   FileServer instances by default. On homogeneous clusters, you can
+   modify the number of instances by [3]changing the value of
+   multimfs.numsps.perinstance parameter.
+
+Ports for Multi-MFS
+
+   Each instance listens on its own set of ports. Ensure that the ports
+   are open for this feature. For example, instance 0 will use four ports
+   from 5660, 5692 (5660+32), 5724 (5660+64), and 5756 (5660+96), instance
+   1 will use four ports from 5661, 5693, 5725, 5757, and so on for every
+   additional instance. The topology of all instances is the same.
+
+   To verify that these ports are open, run the following command from a
+   remote machine:
+mrconfig -i -h <ip> -p <port number> info threads
+
+   An error indicates that the port is not open. If a port (for example,
+   port 5661) is blocked, this command will print something similar to the
+   following:
+------------------
+|From Instance 5661::|
+------------------
+<...> rpc failed <...>
+
+Log Files
+
+   Each instance has its own set of log files in $MAPR_HOME/logs. When
+   multiple instances are configured, the log files have the same name
+   with a different instance ID; for example, mfs.log.<N>-3 where N is the
+   instance number.
+   Note: For the primary instance, the log file name does not include the
+   instance number.
+
+   The RPC and security trace information are in a separate file per
+   instance, mfs-<N>.err, where N is the instance number. For the primary
+   instance, the file name does not include the instance number.
+
+   For example, suppose there are 2 instances running on ports 5660 and
+   5661. There will be 2 sets of log files, one per instance:
+     * mfs.log-3 for the primary instance
+     * mfs.log.1-3 for the second instance
+
+   The RPC and security trace information will be in these files:
+     * mfs.err for the primary instance
+     * mfs-1.err for the second instance
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mfs.conf.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mfs.conf.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Multi-MFS-Configuring.html

@@ -1,0 +1,416 @@
+volume modify
+
+   Modifies an existing volume. Permissions required: m or fc on the
+   volume.
+
+   An error occurs if the name or path refers to a non-existent volume, or
+   cannot be resolved.
+
+Syntax
+
+   CLI
+
+maprcli volume modify
+    [ -cluster <cluster name> ]
+    -name <volume name>
+    [ -advisoryquota <advisory quota> ]
+    [ -ae <accounting entity> ]
+    [ -aetype <aetype> ]
+    [ -allowgrant true|false ]
+    [ -auditenabled true|false ]
+    [ -coalesce <interval in mins> ]
+    [ -containerallocationfactor <positive integer> ]
+    [ -criticalrereplicationtimeoutsec ]
+    [ -dataauditops <+|- operations> ]
+    [ -enforceminreplicationforio true|false ]
+    [ -dbindexlagsecalarmthresh <threshold> ]
+    [ -dbrepllagsecalarmthresh <threshold> ]
+    [ -forceauditenable true|false ]
+    [ -group <list of group:allowMask> ]
+    [ -maxinodesalarmthreshold <threshold> ]
+    [ -maxnssizembalarmthreshold <threshold> ]
+    [ -metricsenabled true|false ]
+    [ -minreplication <minimum replication> ]
+    [ -mirrorschedule <mirror schedule ID> ]
+    [ -mirrorthrottle true|false ]
+    [ -namecontainerdatathreshold <size>  ] (available from version 6.0.1)
+    [ -nsminreplication <minimum replication factor> ]
+    [ -nsreplication <replication factor> ]
+    [ -quota <quota> ]
+    [ -readAce <Access Control Expression> ]
+    [ -readonly <readonly> ]
+    [ -replication <replication> ]
+    [ -rereplicationtimeoutsec <timeout in seconds> ]
+    [ -schedule <schedule ID> ]
+    [ -source <source volume> ]
+    [ -type rw|mirror ]
+    [ -user <list of user:allowMask> ]
+    [ -wiresecurityenabled true|false ]
+    [ -writeAce <Access Control Expression> ]
+
+   REST
+          Request Type: POST
+
+          Request URL:
+
+http[s]://<host>:<port>/rest/volume/modify?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   advisoryquota The advisory quota for the volume as integer plus unit.
+   Example: quota=500G; Units: B, K, M, G, T, P
+   ae The accounting entity that owns the volume.
+   aetype The type of accounting entity:
+     * 0=user
+     * 1=group
+
+   allowgrant Specifies whether the volume as a parent grants permission
+   for a child volume to inherit its properties. True or false. Default:
+   false.
+   auditenabled Specifies whether to turn auditing on for the volume. If
+   auditing is also enabled at the cluster level with the [1]maprcli audit
+   data command, setting this value to true causes auditing to start for
+   any directories, files, tables, or streams that are already enabled for
+   auditing. If none are yet so enabled, enabling auditing on any of them
+   causes auditing of them to start.
+   Note: This must be set to true to enable auditing on directories,
+   files, tables, and streams in the volume.
+   You must have the fc permission on the cluster to use this parameter.
+   See [2]acl for details about this permission.
+   cluster The cluster on which to run the command.
+   coalesce The interval of time during which READ, WRITE, or GETATTR
+   operations on one file from one client IP address are logged only once,
+   if auditing is enabled.
+
+   For example, suppose that a client application reads a single file
+   three times in 6 minutes, so that there is one read at 0 minutes,
+   another at 3 minutes, and a final read at 6 minutes. If the coalesce
+   interval is at least 6 minutes, then only the first read operation is
+   logged. However, if the interval is between 4 minutes, then only the
+   first and third read operations are logged. If the interval is 2
+   minutes, all three read operations are logged.
+
+   The default value is 60 minutes. Setting this field to a larger number
+   helps prevent audit logs from growing quickly.
+   containerallocationfactor Specifies the number of containers to create
+   when the first write from a remote client is sent to the volume. The
+   pre-created containers are distributed equally across topologies,
+   servers, MFS instances, SPs, and CLDB also takes into consideration the
+   load (IO/Space) when selecting target SPs for containers. Value must be
+   a positive integer. The default value is 0. Value can be up to twice
+   the number of SPs in the volume’s topology.
+   criticalrereplicationtimeoutsec Timeout (in seconds) before
+   re-replicating critically under-replicated containers only. If both
+   rereplicationtimeoutsec and criticalrereplicationtimeoutsec are set and
+   if the value of:
+     * rereplicationtimeoutsec is less than
+       criticalrereplicationtimeoutsec, rereplicationtimeoutsec will
+       override criticalrereplicationtimeoutsec setting for both
+       under-replicated and critically under-replicated containers.
+     * rereplicationtimeoutsec is greater than
+       criticalrereplicationtimeoutsec, criticalrereplicationtimeoutsec
+       will override rereplicationtimeoutsec setting for critically
+       under-replicated containers only; rereplicationtimeoutsec setting
+       is still applicable for under-replicated containers.
+
+   Default value for this parameter is 0 (which indicates no timeout).
+   Value can be 0, or >= 300 seconds and <= 3600 seconds.
+   dataauditops The comma separated list of filesystem operations to
+   include (specified with a preceding plus sign (+)) or exclude
+   (specified with a preceding minus sign (-)) from auditing.
+   Note: If the first operation in the list (of operations) is to be
+   excluded from auditing, it must be preceded by two minus (--) signs.
+   Subsequent operations to exclude must be preceded by only a single
+   minus (-) sign, whether or not the first operation was included (using
+   a plus (+) sign) or excluded (using two minus (--) signs). If neither
+   sign is specified, the given operation is included for auditing.
+   The operations that can be included (+) or excluded (-) from auditing
+   are listed [3]here. You can, alternatively, group all the operations
+   using the keyword all, which:
+     * If included (+), cannot be specified with a list of other included
+       operations.
+     * If excluded (-), cannot be specified with a list of other excluded
+       operations.
+
+   You can specify a mixed list of included and excluded operations. There
+   will be no change to operations that are not specified with the
+   command.
+   Tip: For more information, see [4]Selective Auditing of Filesystem and
+   Table Operations.
+   dbindexlagsecalarmthresh Specifies the threshold (in seconds) to raise
+   an alarm for index update lag. Default: 0
+   dbrepllagsecalarmthresh Specifies the threshold (in seconds) to raise
+   an alarm for DB replication lag. Default: 0
+   enforceminreplicationforio Specifies whether (true) or not (false) to
+   enforce minimum number of replicas for the (read-write) volume during
+   IO. This ensures that further updates (writes) to volume are successful
+   only when minimum number of copies of the container is available.
+   Setting this to true ensures that if writes succeed, then it has been
+   applied to at least the minimum number of copies and if writes fail, it
+   may have been applied to zero or more copies.
+   Note: If this is enabled, volume dump and volume snapshot create
+   operations may stall if the minimum number of copies of the container
+   are not available.
+   If this parameter was not set on a volume or if this parameter was
+   modified from false to true, restart all the nodes where the containers
+   associated with the volume exist for the changes to take effect.
+   Note: This flag, if set on Mirror Volumes, is ignored.
+   forceauditenable Specifies whether (1) or not (0) to force audit of
+   operations on all files, tables, and streams in the volume if auditing
+   is enabled at the cluster level and at the volume level, irrespective
+   of the audit setting on the individual directory, file, table, and
+   stream. Value can be:
+     * true — force audit of all content
+     * false — do not force audit
+
+   By default, this is disabled (0). To force audit of all directories,
+   files, tables, and streams in the volume irrespective of the audit
+   setting on the directories, files, tables, and streams, the
+   auditenabled parameter value must also be set to true.
+   group Space-separated list of group:permission pairs.
+   maxinodesalarmthreshold The number of inodes, which when exceeded
+   raises the [5]INODES_EXCEEDED alarm.
+   maxnssizembalarmthreshold The namespace container size, which when
+   exceeded raises the [6]INODES_EXCEEDED alarm.
+   metricsenabled Specifies whether (true) or not (false) to enable
+   metrics collection for a volume.
+   minreplication The minimum replication level. Default: 0
+   Tip: For more information, see [7]Understanding Replication.
+   mirrorschedule The schedule ID corresponding to the schedule to be used
+   for mirroring. Pre-assigned IDs include 1 for critical data, 2 for
+   important data, and 3 for normal data. Custom schedules are assigned ID
+   numbers in sequence. To determine the ID number, use the schedule list
+   command.
+   mirrorthrottle Specifies whether mirror throttling is enabled (true) or
+   disabled (false). The default is true. Throttling is set on the source
+   volume and applies to all its mirrors.
+   namecontainerdatathreshold (Available from v6.0.1) Limits the size of
+   the name container. Value must be in MB. If this is set and the name
+   container size limit:
+     * Has not yet been reached, the first 64 KB of data is stored in the
+       name container until the limit is reached. Once the limit is
+       reached, only the metadata is stored in the name container and data
+       is stored in data containers.
+     * Has already been reached, only metadata is stored in the name
+       container and all new data is spread across data containers. For
+       example, if the current name container size is 200GB and the limit
+       is set to 100GB, all new data is stored in data containers.
+
+   nsminreplication The minimum replication level for the namespace
+   container. Default: 2 When the replication factor falls below this
+   minimum, re-replication occurs as aggressively as possible to restore
+   the replication level. If any containers in the CLDB volume fall below
+   the minimum replication factor, writes are disabled until aggressive
+   re-replication restores the minimum level of replication. When enabled,
+   the CLDB manages the namespace container replication separate from the
+   data container replication. This capability is used when you have low
+   volume replication but want to have higher namespace replication.
+   Note: This parameter must be the same or larger than the equivalent
+   data replication parameter, minreplication.
+   See also: [8]Understanding Replication.
+   nsreplication The desired namespace container replication level.
+   Default: 3. When the number of copies falls below the desired
+   replication factor, but remains equal to or above the minimum
+   replication factor, re-replication occurs after the timeout specified
+   in the cldb.fs.mark.rereplicate.sec parameter. This timeout is the time
+   given for a down node to come back online. After this timeout period,
+   the CLDB takes action to restore the replication factor. When enabled,
+   the CLDB manages the namespace container replication separate from the
+   data container replication. This capability is used when you have low
+   volume replication but want to have higher namespace replication.
+   Note: This parameter must be the same or larger than the equivalent
+   data replication parameter, replication.
+   See also: [9]Understanding Replication.
+   name The name of the volume to modify.
+   quota The quota for the volume as integer plus unit. Example:
+   quota=500G; Units: B, K, M, G, T, P
+
+   Note that quotas for source and mirror volumes must match.
+   readAce Specifies [10]Access Control Expressions (ACEs) that grant
+   permissions at the volume level to read files and tables in the volume.
+   The default value is p, which grants access to all users.
+   Note: An ACE (up to 2KB in length) is a combination of users, groups,
+   and/or roles for whom access (to volume data) is defined using boolean
+   expressions and subexpressions within single quotes. When you pass in
+   an access type that has already been set, the new value will replace
+   the existing value for that access type. There will be no change to
+   access types that are not passed in with the command, whether or not
+   they were set.
+   readonly Specifies whether the volume is read-only.
+     * 0 = read/write
+     * 1 = read-only
+
+   replication The desired replication level. Default: 0
+   Tip: For more information, see [11]Understanding Replication.
+   rereplicationtimeoutsec Timeout (in seconds) before attempting
+   re-replication of replica containers. This volume property defines the
+   timeout period until CLDB starts re-replicating the containers on the
+   node of the volume when CLDB stops receiving a heartbeat from the node.
+
+   When a node is down, CLDB gives the node an hour to come back online
+   before it takes any action for the containers on this node. This
+   parameter can be set on volumes to reduce the default 1 hour to a
+   shorter time period. This option is provided mainly for local volumes,
+   repl=1 so that when an mfs is down, CLDB can give up quickly and decide
+   that the container has no master. This forces the TT to give up on
+   local containers and take appropriate recovery action of deleting the
+   mapred volume and creating another one.
+   schedule A schedule ID. If a schedule ID is provided, then the volume
+   will automatically create snapshots (normal volume) or sync with its
+   source volume (mirror volume) on the specified schedule.
+   source (Mirror volumes only) The source volume from which a mirror
+   volume receives updates, specified in the format <volume>@<cluster>.
+   type If type = mirror, the volume is converted from a rw (read/write)
+   volume to a mirror volume.
+
+   If type = rw, the volume is converted from a mirror volume to a rw
+   (read/write) volume.
+   user Space-separated list of user:permission pairs.
+   wiresecurityenabled Enables (true) or disables (false) on-wire
+   encryption for all files, tables, and streams in the volume. If true,
+   this setting overrides all file, table, and stream level encryption
+   settings (set using hadoop mfs command) and enables on-wire encryption
+   for all files, tables, and streams. If this is disabled (false) at the
+   volume level and is enabled at the file, table, and/or stream level,
+   the file, table, and/or stream level encryption setting overrides this
+   setting on those files, tables, and streams where it is enabled; for
+   all other files, tables, and streams where encryption is not enabled at
+   the file, table, and/or stream level, on-wire encryption is disabled.
+   writeAce Specifies [12]Access Control Expressions (ACEs) that grant
+   permission at the volume level to write to files and tables in the
+   volume. The default value is p, which grants access to all users.
+   Note: An ACE (up to 2KB in length) is a combination of users, groups,
+   and/or roles for whom access is defined using boolean expressions and
+   subexpressions within single quotes. When you pass in an access type
+   that has already been set, the new value will replace the existing
+   value for that access type. There will be no change to access types
+   that are not passed in with the command, whether or not they were set.
+
+Examples
+
+   Change the source volume of the mirror "test-mirror":
+     * [13]CLI
+     * [14]REST
+
+maprcli volume modify -name test-mirror -source volume-2@my-cluster
+
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=test-mirror&sour
+ce=volume-2@my-cluster' --user mapr:mapr
+
+   Create a volume with namespace container replicas
+     * [15]CLI
+     * [16]REST
+
+# maprcli volume modify -name testVol -nsminreplication 2 -nsreplication 4 -json
+{
+        "timestamp":1526528489360,
+        "timeofday":"2018-05-16 08:41:29.360 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=testVol&nsminr
+eplication=2&nsreplication=4' --user mapr:mapr
+{"timestamp":1526528556748,"timeofday":"2018-05-16 08:42:36.748 GMT-0700 PM","st
+atus":"OK","total":0,"data":[]}
+
+   Modify a volume to allow inheritance by a child volume
+
+   Sub-volumes (children) can inherit properties from their parent volume.
+   The maprcli volume create and volume modify commands provide parameters
+   for setting the inheritance feature. In order for child volume to
+   inherit from a parent volume, the parent volume must grant permission
+   and the child volume must be created specifying the volume name of the
+   parent. In the following example, the parent volume, parentVol, grants
+   of inheritance to child volumes.
+     * [17]CLI
+     * [18]REST
+
+maprcli volume modify -name parentVol -allowgrant true
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=parentVol?allo
+wgrant=true' --user mapr:mapr
+
+   Set and modify ACEs on a volume
+   In the following example, the command will set and modify access
+   (defined using ACEs) to the volume data. When the command runs, new
+   values will:
+     * Overwrite existing values for access types that were previously
+       set.
+     * Be set for access types that were not set.
+
+   Note: There will be no change to the readAce access type, which is not
+   specified with the command, whether or not it was set before.
+     * [19]CLI
+     * [20]REST
+
+maprcli volume modify -name testVol -writeAce 'g:group1&(!u:user1|!r:role1)'
+
+curl -k -X POST 'https://10.10.82.24:8443/rest/volume/modify?name=testVol&writeA
+ce=g%3Agroup1%26%28%21u%3Auser1%7C%21r%3Arole1%29' --user mapr:mapr
+
+   Modify the list of operations that are audited
+
+   In the following example, the create operation is included for auditing
+   and the lookup operation is excluded from auditing. There are no
+   changes to operations that are not specified.
+     * [21]CLI
+     * [22]RETST
+
+maprcli volume modify -name parentVol -dataauditops +create,-lookup
+
+curl -k -X POST 'https://10.10.82.24:8443/rest/volume/modify?name=p1&dataauditop
+s=%2Bcreate%2C-lookup' --user mapr:mapr
+
+   Modify an existing volume to enable on-wire encryption:
+     * [23]CLI
+     * [24]REST
+
+# maprcli volume modify -name local2 -wiresecurityenabled true -json
+{
+        "timestamp":1505205889697,
+        "timeofday":"2017-09-12 01:44:49.697 GMT-0700",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ]
+}
+
+# curl -k -X POST 'https://10.10.82.24:8443/rest/volume/modify?name=p1&wiresecur
+ityenabled=true' --user mapr:mapr
+{"timestamp":1526569299139,"timeofday":"2018-05-17 08:01:39.139 GMT-0700 AM","st
+atus":"OK","total":0,"data":[]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/audit-data.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/acl.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Auditing-FilesystemTableOperations.html#AuditingofFilesystemOperationsandTableOperations
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SelectiveAuditingOfOperations.html#concept_nzd_j5g_h5
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/VolumeAlarms.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/VolumeAlarms.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div1entry1
+  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div1entry2
+  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div2entry1
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div2entry2
+  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div3entry1
+  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div3entry2
+  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div4entry1
+  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div4entry2
+  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div5entry1
+  22. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div5entry2
+  23. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div6entry1
+  24. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#div6entry2

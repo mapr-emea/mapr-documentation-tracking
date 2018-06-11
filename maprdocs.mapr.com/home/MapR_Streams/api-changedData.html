@@ -1,0 +1,91 @@
+Consuming CDC Records
+
+   Changed data records (propagated by the Change Data Capture feature)
+   are consumed by using OJAI changelog interfaces.
+
+   The following topics provide information you need to understand the CDC
+   feature, to setup and use CDC, the maprcli commands used performing
+   tasks, and to consume the data via your application.
+
+   The following diagram shows the big picture flow of setting up CDC and
+   consuming CDC changed data records. This diagram provides hotspot
+   links.
+   [1][USEMAP:cdc-nav.png]
+
+Javadoc
+
+   [2]Java OJAI CDC API
+
+Deserializer for consuming CDC records
+
+   The MapR ChangeData deserializer must be registered when creating a CDC
+   consumer. The deserializer converts the stream messages into individual
+   change data records. It is a MapR custom Kafka consumer that polls for
+   Map-ES changed data records from a MapR-ES stream topic. The
+   deserializer is registered by setting the value.deserializer
+   configuration parameter. to
+   com.mapr.db.cdc.ChangeDataRecordDeserializer.
+
+Interfaces for working with CDC records
+
+   The following OJAI interfaces and enumerations are used to create a
+   consumer for CDC changed data.
+     * [3]ChangeNode - This interface contains the change to a single
+       field in a document.
+     * [4]ChangeEvent - This interface identifies the change event
+       associated with the current change node. The values of ChangeEvent
+       can be one of the following:
+          + NULL (no event)
+          + NODE (a change with real value)
+          + START_MAP (a node representing the beginning of a map)
+          + END_MAP (a node representing the end of a map)
+          + START_ARRAY (a node representing the beginning of an array)
+          + END_ARRAY(a node representing the end of an array)
+     * [5]ChangeOp - This interface identifies the type of the operation
+       made on the current field. The values of ChangeOp can be one of the
+       following:
+          + NULL (no operation)
+          + SET (replace the current field with the given value)
+          + PUT(add an extra version of the value)
+          + MERGE (combine the given value with the existing values in the
+            table)
+          + DELETE (delete all values older than or equal to the delete
+            operation timestamp were deleted)
+          + DELETE_EXACT (delete the version of the value with the given
+            timestamp)
+     * [6]ChangeDataRecord - This interface contains all the changes that
+       were performed on a single document/row in the source table.
+     * [7]ChangeDataRecordType - This interface specifies the mode of
+       change for the change data record. The following values are
+       specified:
+          + RECORD_INSERT
+          + RECORD_UPDATE
+          + RECORD_DELETE
+     * [8]ChangeDataReader - This interface is a parser that traverses
+       over the individual change tree nodes on a change data record. It
+       provides a cursor-like semantics which can be moved, one tree node
+       at a time by invoking the next method.
+       The properties of individual change node (for example: data type,
+       field name, field value, and so on) can be retrieved using various
+       methods of this interface.
+
+References
+
+   1. LYNXIMGMAP:file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/api-changedData.html#d1034877e44
+   2. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/cdc/package-summary.html
+   3. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/cdc/ChangeNode.html
+   4. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/cdc/ChangeEvent.html
+   5. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/cdc/ChangeOp.html
+   6. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/cdc/ChangeDataRecord.html
+   7. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/cdc/ChangeDataRecordType.html
+   8. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/cdc/ChangeDataReader.html
+
+[USEMAP]
+file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/api-changedData.html#d1034877e44
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/changeData-overview.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/admin-changeData.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/cdc-build-app.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr_dbshell.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/develop-apps-jsonDB.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/HBaseShellforMapR-DB.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/developing_client_applications_that_access_binary_tables.html

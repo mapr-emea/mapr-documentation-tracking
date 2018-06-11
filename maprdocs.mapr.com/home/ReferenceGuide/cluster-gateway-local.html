@@ -1,0 +1,72 @@
+cluster gateway local
+
+   Lists the gateways that are configured on the MapR cluster where this
+   command is run.
+
+Syntax
+
+   CLI
+
+maprcli cluster gateway local
+    [ -format dns|text ]
+    [ -cluster <cluster on which command to be run> ]
+
+   REST
+
+http[s]://<host>:<port>/rest/cluster/gateway/local
+
+Parameters
+
+   Parameter                           Description
+   format The output format. Value types: dns or text. Default: text.
+   Note:
+     * If the output is formatted as DNS, you can copy and paste the
+       output into a DNS record in the zone file for your domain. The
+       source MapR cluster can then locate the gateways by doing a DNS
+       lookup.
+     * If the output is formatted as text, you can copy and paste that
+       text into the -gateways parameter of the maprcli cluster gateway
+       set command. Running this command is an alternative way of
+       specifying the location of these gateways to the source MapR
+       cluster.
+
+   cluster If you are not on a MapR cluster where one or more gateways are
+   configured, provide the name of the cluster.
+     * When replicating MapR-DB table data to one or more replicas on this
+       cluster, then the cluster is a destination MapR cluster.
+     * When indexing MapR-DB table data in one or more Elasticsearch
+       cluster, then the current cluster is a source MapR cluster where
+       the tables being indexed are located.
+
+Example
+
+   This example shows text output of the list of gateways that are
+   configured on a MapR cluster:
+
+   CLI
+
+maprcli cluster gateway local
+
+   REST
+          https://<host>:<port>/rest/cluster/gateway/local
+
+   Example Output
+
+gatewayinfo
+centos23 centos22
+
+   This example shows DNS output of the list of gateways that are
+   configured on a MapR cluster:
+
+   CLI
+
+maprcli cluster gateway local -format dns
+
+   REST
+          https://<host>:<port>/rest/cluster/gateway/local?format=dns
+
+   Example Output
+
+gatewaydnsinfo
+; TXT Record addresses
+gateway.mycluster IN TXT "centos23 centos22"

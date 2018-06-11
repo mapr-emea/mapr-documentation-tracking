@@ -1,0 +1,247 @@
+node list
+
+   Lists nodes in the cluster.
+
+   You can specify a set of nodes for which to retrieve information in
+   several ways:
+     * To list only nodes with raised alarms, set alarmednodes to 1.
+     * To list only NFS nodes, set nfsnodes to 1.
+     * To window the list, use the start and limit options to select only
+       a portion of the results.
+     * To list nodes that match certain criteria, pass a filter to the
+       filter parameter. See the Fields table on the [1]node page for the
+       fields available to filter. See the [2]maprcli and REST API Syntax
+       page for information on filters.
+
+Syntax
+
+   CLI
+
+maprcli node list
+    [ -alarmednodes 0|1 ]
+    [ -cluster <cluster> ]
+    [ -columns <columns>]
+    [ -filter <filter> ]
+    [ -limit <limit> ]
+    [ -nfsnodes 0|1 ]
+    [ -output terse|verbose ]
+    [ -sortby ]
+    [ -start <offset> ]
+    [ -zkconnect <ZooKeeper Connect String> ]
+
+   REST
+
+http[s]://<host>:<port>/rest/node/list?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   alarmednodes If set to 1, displays only nodes with raised alarms.
+   Cannot be used if nfsnodes is set.
+   cluster The cluster on which to run the command.
+   columns A comma-separated list of fields to return in the query,
+   specified by the short names.
+   Note: When specifying this option, the ip and hostname columns are
+   always returned in the query.
+   filter A filter specifying nodes on which to start or stop services.
+   See the Fields table on the [3]node page for the fields available to
+   filter. See the [4]maprcli and REST API Syntax page for information on
+   filters.
+   limit The number of rows to return, beginning at start. Default: 0
+   nfsnodes If set to 1, displays only nodes running NFS. Cannot be used
+   if alarmednodes is set.
+   output Specifies whether the output should be terse or verbose.
+   sortby Specifies one of the following attributes to sort the list of
+   nodes by: nodeid, nodeip, nodehostname, noderackpath, nodeswitchpath,
+   nodestatus, nodeservices, nodefshb, nodejthb, nodedisktotal,
+   nodediskused, nodediskavail, noderpc, noderpcin, noderpcout,
+   nodediskcount, nodediskreadops, nodediskreadkbytes, nodediskwriteops,
+   nodediskwritekbytes, nodecpucount, nodecpuutil, nodememtotal,
+   nodememused, nodefaileddisks, nodevirtualip, nodevirtualipend,
+   nodenetmaskvnodemacaddress, nodegateway, nodebytesreceived,
+   nodebytessent, nodecpuuptime, nodemaprdiskcount, nodestatusdesc,
+   nodeblockmovesout, nodeblockmovesinvnodemaxcontainersthreshold,
+   nodenuminstances, nodenumspsperinstance, nodenfsstate,
+   nodeisposixclient, nodeisloopbacknfs, nodeisloopbacknfsrunning
+   start The offset from the starting row according to sort. Default: 0
+   zkconnect [5]ZooKeeper Connect String
+
+Output
+
+   Information about the nodes.See the Fields table below.
+
+   Sample Output
+# /opt/mapr/bin/maprcli node list -json
+{
+        "timestamp":1521121710003,
+        "timeofday":"2018-03-15 06:48:30.003 GMT-0700 AM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "id":"2420737303527197275",
+                        "ip":"10.20.30.40",
+                        "hostname":"sample.lab",
+                        "racktopo":"/data/default-rack/sample.lab",
+                        "health":2,
+                        "healthDesc":"One or more alarms raised",
+                        "service":"resourcemanager,fileserver,cldb,nodemanager,g
+ateway,hoststats,apiserver",
+                        "configuredservice":"resourcemanager,fileserver,cldb,nod
+emanager,hoststats,apiserver",
+                        "fs-heartbeat":0,
+                        "jt-heartbeat":2,
+                        "dtotal":273,
+                        "dused":0,
+                        "davail":272,
+                        "rpcs":0,
+                        "rpcin":205,
+                        "rpcout":501,
+                        "disks":5,
+                        "MapRfs disks":3,
+                        "faileddisks":0,
+                        "dreads":0,
+                        "dreadK":0,
+                        "dwrites":12,
+                        "dwriteK":128,
+                        "cpus":8,
+                        "utilization":23,
+                        "uptime":"Sat Feb 10 14:53:05 PST 2018",
+                        "mtotal":15886,
+                        "mused":10288,
+                        "ttmapSlots":0,
+                        "ttmapUsed":0,
+                        "ttReduceSlots":0,
+                        "ttReduceUsed":0,
+                        "bytesReceived":612,
+                        "bytesSent":368,
+                        "numResyncSlots":16,
+                        "blockMovesOut":false,
+                        "blockMovesIn":false,
+                        "numInstances":"1",
+                        "numReportedInstances":"1",
+                        "spsPerInstance":"0",
+                        "numPutsInLastTenSeconds":0,
+                        "numPutsInLastMinute":0,
+                        "numPutsInLastFiveMinutes":0,
+                        "numPutsInLastFifteenMinutes":0,
+                        "numGetsInLastTenSeconds":0,
+                        "numGetsInLastMinute":0,
+                        "numGetsInLastFiveMinutes":0,
+                        "numGetsInLastFifteenMinutes":0,
+                        "numScansInLastTenSeconds":0,
+                        "numScansInLastMinute":0,
+                        "numScansInLastFiveMinutes":0,
+                        "numScansInLastFifteenMinutes":0,
+                        "LogLevelAlarm":1521059886739,
+                        "ServiceCLDBDownNotRunningAlarm":0,
+                        "ServiceFileserverDownNotRunningAlarm":0,
+                        "ServiceJTDownNotRunningAlarm":0,
+                        "ServiceTTDownNotRunningAlarm":0,
+                        "ServiceHBMasterDownNotRunningAlarm":0,
+                        "ServiceHBRegionDownNotRunningAlarm":0,
+                        "ServiceNFSDownNotRunningAlarm":0,
+                        "ServiceWebserverDownNotRunningAlarm":0,
+                        "ServiceHoststatsDownNotRunningAlarm":0,
+                        "DiskFailureAlarm":0,
+                        "VersionMismatchAlarm":0,
+                        "TimeSkewAlarm":0,
+                        "HbProcessingSlow":0,
+                        "RootPartitionFullAlarm":0,
+                        "HomeMapRFullAlarm":0,
+                        "CorePresentAlarm":0,
+                        "HighMfsMemoryAlarm":0,
+                        "PamMisconfiguredAlarm":0,
+                        "TTLocaldirFullAlarm":0,
+                        "NodeNoHeartbeatAlarm":0,
+                        "NodeMaprUserMismatchAlarm":0,
+                        "NodeDuplicateHostIdAlarm":0,
+                        "NodeMetricsWriteProblemAlarm":0,
+                        "NodeTooManyContainersAlarm":0,
+                        "IncorrectTopologyAlarm":0,
+                        "ServiceHueDownNotRunningAlarm":0,
+                        "ServiceHttpfsDownNotRunningAlarm":0,
+                        "ServiceBeeswaxDownNotRunningAlarm":0,
+                        "ServiceHiveDownNotRunningAlarm":0,
+                        "ServiceHs2DownNotRunningAlarm":0,
+                        "ServiceOozieDownNotRunningAlarm":0,
+                        "NodeManagerDown":0,
+                        "GatewayServiceDown":0,
+                        "InstanceMismatch":0,
+                        "ResourceManagerDown":0,
+                        "Insufficient memory for buckets":0,
+                        "NoDiskAttached":0,
+                        "MemoryAllocationAlarm":0,
+                        "MemorySwapping":0,
+                        "ApiServerDown":0
+                }
+        ]
+}
+
+Fields
+
+   For definitions of the output fields, and short names for use with
+   filters, see the [6]Fields table on the [7]node command page.
+
+Examples
+
+   List all nodes:
+
+   For best results, use the -json option when listing all nodes or a
+   large subset of node information.
+
+   CLI
+
+maprcli node list -json
+
+   REST
+
+https://r1n1.sj.us:8443/rest/node/list
+
+   List the health and configuredservice of all nodes:
+
+   The following examples also show the use of short forms for the column
+   parameter.
+
+   CLI
+
+maprcli node list -columns service,health,configuredservice
+maprcli node list -columns svc,h,csvc
+
+   REST
+
+https://10.10.82.23:8443/rest/node/list?columns=service,health,configuredservice
+https://10.10.82.23:8443/rest/node/list?columns=svc,h,csvs
+
+   List the number of slots on all nodes:
+
+   CLI
+
+maprcli node list -columns ip,ttmapSlots,ttmapUsed,ttReduceSlots,ttReduceUsed
+
+   REST
+
+https://r1n1.sj.us:8443/rest/node/list?columns=ip,ttmapSlots,ttmapUsed,ttReduceS
+lots,ttReduceUsed
+
+   List nodes on a particular subnet:
+
+   CLI
+
+maprcli node list -filter [ip==192.168.10.*]
+
+   REST
+
+https://r1n1.sj.us:8443/rest/node/list?filter=%5Bip%3D%3D192.168.10.*%5D
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/node.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html#concept_znz_qxz_5t
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/node.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html#concept_znz_qxz_5t
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/maprcli-REST-API-Syntax-CommonParameters.html#concept_ymb_yxz_5t
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/node.html#node__fields
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/node.html

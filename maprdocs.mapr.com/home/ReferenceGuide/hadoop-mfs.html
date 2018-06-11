@@ -1,0 +1,576 @@
+hadoop mfs
+
+   The hadoop mfs command performs operations on files and directories in
+   the cluster.
+
+   The main purposes of hadoop mfs are to display directory information
+   and contents, to create symbolic links and hard links, to set, get, and
+   remove Access Control Expressions (ACE) on files and directories, and
+   to set compression and chunk size on a directory.
+
+Syntax
+
+hadoop mfs
+  [ -count <path> ]
+  [ -delace [-R] <path> ]
+  [ -getace [-R] <path> ]
+  [ -help <command> ]
+  [ -ln <target> <symlink> ]
+  [ -lnh <target> <hardlink> ]
+  [ -ls <path> ]
+  [ -lsd <path> ]
+  [ -lso <path> ]
+  [ -lsor <path> ]
+  [ -lsr <path> ]
+  [ -Lsr <path> ]
+  [ -lsrv <path> ]
+  [ -lss <path> ]
+
+  [ -rmr <path> ]
+  [ -setace [-R]
+     [-readfile <ace>] [-writefile <ace>] [-executefile <ace>]
+     [-addchild <ace>] [-deletechild <ace>] [-lookupdir <ace>] [-readdir <ace>]
+     [-aces "[rf:<ace>],[wf:<ace>],[ef:<ace>],[ac:<ace>],[dc:<ace>],[rd:<ace>],[
+ld:<ace>]"]
+     [-preservemodebits <true|false>] [-setinherit <true|false>] <path> ]
+  [ -setaudit  on|off <dir|file|table> ]
+  [ -setcompression  on|off|lzf|lz4|zlib <dir|table> ]
+  [ -setchunksize <size> <dir> ]
+  [ -setdiskflush on|off <path> ] (available from v6.0.1)
+  [ -setnetworkencryption on|off <target> ]
+  [ -stat <path> ]
+
+Parameters
+
+   The normal command syntax is to specify a single option from the
+   following table, along with its corresponding arguments. If compression
+   and chunk size are not set explicitly for a given directory, the values
+   are inherited from the parent directory.
+
+   Parameter
+
+   Description
+   -count <path> Counts and returns the number of directories and
+   (regular, symbolic link, volume link, kvstores, and device) files in
+   the specified path (recursively).
+   -delace [-R] <path> Deletes all [1]ACEs associated with the specified
+   file or directory and sets ACEs for the specified file or directory to
+   the default value, which is the empty string. Here:
+     * [-R] — Enables recursion allowing you to perform the operation in
+       subdirectories as well.
+     * <path> — Specifies path to file or directory.
+
+   Note: You cannot delete specific access types with this parameter.
+   Instead, if necessary, reset the value for the specific access type to
+   the empty string using -setace parameter. If the empty string is used
+   to deny a specific type of access, that type of access will be denied
+   to all users. To deny specific types of access to specific users only,
+   use the negation operator (!). The mode bits corresponding to the ACEs
+   being deleted will not change.
+   -getace [-R] <path> Returns the permissions -- POSIX mode bits and
+   [2]ACEs -- for the given file or (recursively) for the directory.
+   Recursion is enabled only if -R is specified; if -R is not specified,
+   returns the permissions for the given directory only. Here:
+     * [-R] — (Optional) Enables recursion allowing you to perform the
+       operation in subdirectories as well.
+     * <path> — (Required) Specifies path to file or directory.
+
+   Note: If one or more ACEs are available for the file or directory, a
+   plus sign (+), which indicates that both ACEs and POSIX mode bits are
+   set for the given file or directory, will also be returned. If the ACE
+   on the file or directory is an empty string, the plus sign will not be
+   returned.
+   -help <command> Displays help for the hadoop mfs command.
+   -ln <target> <symlink> Creates a symbolic link <symlink> that points to
+   the target path <target>, similar to the standard Linux ln -s command.
+   -lnh <target> <hardlink> Creates a hardlink that associates a new
+   name/file path with an existing file. You must specify the following:
+
+   <target>
+          File name, including the full path, of the file to link to.
+
+   <hardlink>
+          New name, including the full path, of the file to link with.
+
+   -ls <path> Lists files in the directory specified by <path>. The hadoop
+   mfs -ls command corresponds to the standard hadoop fs -ls command, but
+   provides the following additional information:
+     * Chunks used for each file
+     * Server where each chunk resides
+     * Whether compression is enabled for each file
+     * Whether encryption is enabled for each file
+     * Whether audit is enabled (A) or disabled (U) for each file
+
+   -lsd <path> Lists files in the directory specified by <path>, and also
+   provides information about the specified directory itself:
+     * Whether compression is enabled for the directory (indicated by z )
+     * The configured chunk size (in bytes) for the directory.
+
+   -lso <path> Lists files in the directory specified by <path>. The
+   hadoop mfs -lso command corresponds to the standard hadoop fs -ls
+   command, but provides the following additional information:
+     * Whether compression is enabled for each file
+     * Whether encryption is enabled for each file
+     * Whether audit is enabled (A) or disabled (U) for each file
+
+   This command is faster than hadoop fs -ls as it uses optimized printing
+   method to dump data on screen.
+   -lsor <path> Lists files in the directory specified by <path>
+   recursively. This command is the recursive variant of the hadoop mfs
+   -lso command.
+   -lsr <path> Lists files in the directory and subdirectories specified
+   by <path>, recursively, including dereferencing symbolic links. The
+   hadoop mfs -lsr command corresponds to the standard hadoop fs -lsr
+   command, but provides the following additional information:
+     * Chunks used for each file
+     * Server where each chunk resides
+
+   -Lsr <path> Equivalent to lsr, but additionally dereferences symbolic
+   links
+   -lsrv <path> Lists all paths recursively without crossing volume links.
+   -lss <path> Lists files in the directory specified by <path>, with an
+   additional column that displays the number of disk blocks per file.
+   Disk blocks are 8192 bytes.
+   -rmr <path> Deletes files and directories in the specified path
+   recursively. This is a highly optimized version of the normal generic
+   hadoop fs rmr command and is 10X faster for large directories. This
+   option is useful when one or more directories in the specified path
+   contains many (millions of) files.
+   -setace [-R] [-readfile <ace>] [-writefile <ace>] [-executefile <ace>]
+   [-addchild <ace>] [-deletechild <ace>] [-lookupdir <ace>] [-readdir
+   <ace>] [-aces
+   "[rf:<ace>],[wf:<ace>],[ef:<ace>],[ac:<ace>],[dc:<ace>],[rd:<ace>],[ld:
+   <ace>]"] [-preservemodebits <true|false>] [-setinherit <true|false>]
+   <path> Sets or modifies the read, write, and/or execute [3]permissions
+   for files or directories. This argument will
+     * Overwrite existing values with new values, if specified, for access
+       types that were previously set.
+     * Set new values for access types that have not yet been set.
+     * Not set or modify access types that were not passed in with the
+       command, whether they were previously set or are unset.
+
+   Note: ACEs must be specified immediately after the -setace parameter.
+   All other arguments, if specified, must be given after the ACEs.
+   Here:
+
+   -R
+          Enables recursion allowing you to perform the operation in
+          subdirectories as well. Recursion is enabled only if -R is
+          specified; if -R is not specified, sets or modifies the
+          permissions for the given directory only.
+
+   <ace>
+          [4]Access Control Expressions defined using boolean expressions
+          and sub-expressions.
+
+   -readfile
+   -writefile
+   -executefile
+          Specifies permissions (defined using ACE) for reading, writing,
+          and/or executing the file.
+
+   -readdir
+   -lookupdir
+          Specifies permissions (defined using ACE) for accessing the
+          directory. To read the files in the directory, the user must be
+          granted lookupdir access and to write to or execute files in the
+          directory, the user must be granted readdir and lookupdir access
+          types.
+
+   -addchild
+   -deletechild
+          Specifies permissions (defined using ACE) for adding or deleting
+          subdirectories.
+
+   -aces
+          Specifies ACEs as a single string. Specify a comma-separated
+          list of ACEs within quotes. The following permissions can be
+          set.
+
+   rf Refers to read file access.
+   wf Refers to write file access
+   ef Refers to execute file access
+   rd Refers to read directory access.
+
+   Note: To write to or execute files in the directory, the user must be
+   granted both rd and ld permissions.
+   ld Refers to lookup directory access.
+
+   Note: To read the files in the directory, the user must be granted ld
+   access and to write to or execute files in the directory, the user must
+   be granted both rd and ld permissions.
+   ac Refers to add child directory access.
+   dc Refers to delete child directory access.
+
+          Note: ACEs can be up to 60KB in length.
+
+   -preservemodebits
+          Indicates whether to preserve or modify POSIX mode bits. Values
+          can be:
+
+          + true - preserve existing POSIX mode bits
+          + false - change POSIX mode bits to match the given ACE setting
+
+          By default, this is set to false.
+
+   -setinherit
+          Indicates whether or not to allow all files and subdirectories
+          under the specified directory to inherit the ACE of the parent
+          directory. Values can be:
+
+          + true - inherit ACE from parent
+          + false - do not inherit ACE from parent
+
+          By default, this is set to true.
+
+          If true, new files and directories under the parent will inherit
+          the ACEs and corresponding POSIX mode bits from the parent
+          directory.
+
+          If false, files and directories under the parent will not
+          inherit the ACE of the parent directory. Instead, by default,
+          the files and directories will get the default ACE, which is the
+          empty string for all access types; POSIX mode bits will be set
+          on the files and directories in the traditional way.
+
+   <path>
+          Specifies path to file or directory.
+
+   -setaudit on|off <dir|file|table> Enables auditing of the specified
+   directory, file, or MapR-DB table.
+
+   Enabling auditing of a directory does not enable auditing of files and
+   subdirectories that exist in the directory. You must enable auditing on
+   those existing files and subdirectories. However, any new files and
+   subdirectories that you create will automatically be enabled for
+   auditing. See [5]Checking Whether Auditing is Enabled for a Directory,
+   File, or MapR-DB Table.
+
+   For operations on the object to be logged, auditing also needs to be
+   enabled on the cluster and the volume in which the object is located.
+   See [6]Enabling Auditing for details. If auditing is enabled for a
+   directory, new files and directories created within that directory are
+   also enabled for auditing.
+   -setchunksize <size> <dir> Sets the chunk size in bytes for the
+   directory specified in <dir>. The <size> parameter must be a multiple
+   of 65536.
+   -setcompression on|off|lzf|lz4|zlib <dirtable> Turns compression on or
+   off on the directory specified in <dir> or on the specified table, and
+   sets the compression type to one of the following if compression is not
+   turned off:
+     * on — turns on compression using the default algorithm (LZ4)
+     * lzf — turns on compression and sets the algorithm to LZF
+     * lz4 — turns on compression and sets the algorithm to LZ4
+     * zlib — turns on compression and sets the algorithm to ZLIB
+
+   -setdiskflush on|off <path> (Available starting with v6.0.1) Specifies
+   when to acknowledge client writes to files. If enabled (on),
+   acknowledges to client only after flushing writes to disk on all
+   replicas and if disabled (off), acknowledges to client before flushing
+   writes in the buffer cache. By default, this is disabled. This can be
+   set on files and directories (using the <path> parameter). If set on
+   directories, new files in the directory automatically inherit this
+   attribute. This is not supported for tables and streams.
+   -setnetworkencryption on|off <target> Sets network encryption on or off
+   for the filesystem object defined in <target>. The cluster encrypts
+   network target to or from a file, directory, or MapR table with network
+   security enabled.
+   -stat <path> Displays the statistics for the given file. Only the root
+   user and the MAPR_USER user (user name under which MapR services run)
+   have permissions to run this command.
+
+   The path is required and specifies the path (to the file) on which to
+   run the command. The output fields for this command are described
+   [7]below.
+
+Output
+
+   When used with -ls, -lsd, -lso, -lsor, or -lsr, -lss, hadoop mfs
+   displays information about files and directories. For each file or
+   directory hadoop mfs displays a line of basic information followed by
+   lines listing the chunks that make up the file, in the following
+   format:
+
+   {mode} {compression} {encryption} {audit} {replication} {owner} {group}
+   {size} {date} {chunk size} {name} {chunk} {fid} {host} [{host}...]
+   {chunk} {fid} {host} [{host}...] ...
+
+   Volume links are displayed as follows:
+
+   {mode} {compression} {encryption} {audit} {replication} {owner} {group}
+   {size} {date} {chunk size} {name} {chunk} {target volume name}
+   {writability} {fid} -> {fid} [{host}...]
+
+   The following table describes the values:
+
+   mode
+
+   A text string indicating the read, write, and execute permissions for
+   the owner, group, and other permissions. See also [8]Managing
+   Permissions.
+
+   compression
+     * U: uncompressed
+     * L: LZf
+     * Z (Uppercase): LZ4
+     * z (Lowercase): ZLIB
+
+   encryption         U: unencrypted; E: encrypted
+   audit              U: disabled; A: enabled
+
+   replication
+
+   The replication factor of the file (directories display a dash instead)
+
+   owner
+
+   The owner of the file or directory
+
+   group
+
+   The group of the file of directory
+
+   size
+
+   The size of the file or directory
+
+   date
+
+   The date the file or directory was last modified
+
+   chunk size
+
+   The chunk size of the file or directory
+
+   name
+
+   The name of the file or directory
+
+   chunk
+
+   The chunk number. The first chunk is a primary chunk labeled "p", a 64K
+   chunk containing the root of the file. Subsequent chunks are numbered
+   in order.
+
+   fid
+
+   The chunk's file ID, which consists of three parts:
+     * The ID of the container where the file is stored
+     * The inode of the file within the container
+     * An internal version number
+
+   Note: For volume links, the first fid is the chunk that stores the
+   volume link itself; the fid after the arrow (->) is the first chunk in
+   the target volume.
+
+   host
+
+   The host on which the chunk resides. When several hosts are listed, the
+   first host is the first copy of the chunk and subsequent hosts are
+   replicas.
+
+   target volume name
+
+   The name of the volume pointed to by a volume link.
+
+   writability
+
+   Displays whether the volume is writable.
+
+   When used with -stat <path>, hadoop mfs displays statistics for the
+   given file. For each file, it displays the following:
+   Output field Description
+   uid The user ID of the owner.
+   atime The last access time.
+   mtime The last modified time.
+   nlink The number of hard links.
+   type The type of the file. Value can be:
+     * regular
+     * directory
+     * symlink
+     * vollink
+     * kvstore
+     * device
+
+   size The size of the file/directory. Depending on the type of file, it
+   can be the actual size or the number of entries.
+   mode The UNIX style permission mode bits for the file/directory.
+   networkencryption The network encryption setting. If the network
+   encryption is enabled for this file or not.
+   subtype The subtype for the specified type. The following subtypes are
+   supported for some of the types:
+
+   regular
+
+          + FSTRegBucket
+          + FSTRegCF
+          + FSTRegKeyMap
+
+   kvstore
+
+          + FSTKvTable
+          + FSTKvTabletMap
+          + FSTKvSchema
+          + FSTKvTablet
+          + FSTKvSegMap
+          + FSTKvSpillMap
+          + FSTKvKeyMap
+          + FSTKvXattr
+
+   device
+
+          + FSTDevPipe
+          + FSTDevSocket
+          + FSTDevBlock
+          + FSTDevChar
+
+   Note: For all other types, subtypes are not valid.
+   gid The group ID.
+   compression The compression setting.
+
+Examples
+
+   View File Information
+
+   The hadoop mfs command is used to view file contents. You can use this
+   command to check if compression is turned off in a directory or mounted
+   volume. For example,
+# hadoop mfs -ls /
+Found 23 items
+vrwxr-xr-x Z U U   3 root root         13 2015-11-29 10:24  268435456 /.rw
+               p mapr.cluster.root writeable 2049.35.16584 -> 2049.16.2  scale-5
+0.scale.lab:5660 scale-51.scale.lab:5660 scale-52.scale.lab:5660
+vrwxr-xr-x U U U   3 root root          7 2015-11-28 22:16   67108864 /hbase
+               p mapr.hbase default 2049.32.16578 -> 2050.16.2  scale-50.scale.l
+ab:5660 scale-51.scale.lab:5660 scale-52.scale.lab:5660
+drwxr-xr-x Z U U   3 root root          0 2015-11-29 09:14  268435456 /tmp
+               p 2049.41.16596  scale-50.scale.lab:5660 scale-51.scale.lab:5660
+scale-52.scale.lab:5660
+vrwxr-xr-x Z U A   3 root root          1 2015-11-27 22:59  268435456 /user
+               p users default 2049.36.16586 -> 2055.16.2  scale-50.scale.lab:56
+60 scale-52.scale.lab:5660 scale-51.scale.lab:5660
+drwxr-xr-x Z U U   3 root root          1 2015-11-27 22:37  268435456 /var
+               p 2049.33.16580  scale-50.scale.lab:5660 scale-51.scale.lab:5660
+scale-52.scale.lab:5660
+
+   In the above example, the letter Z indicates LZ4 compression on the
+   directory; the letter U indicates that the directory is uncompressed.
+   In the following example, the listed item is both uncompressed (first
+   U) and unencrypted (second U).
+[root@node1-302 ~]# hadoop mfs -ls /hbase
+Found 10 items
+drwxr-xr-x U U U   3 mapr mapr          3 2015-11-28 12:05   67108864 /hbase/-RO
+OT-
+                 p 2050.34.3674200  node2-302:5660 node1-302:5660 node3-302:5660
+...
+
+   Set ACEs
+
+   Example 1: The following command shows how to set separate read, write,
+   and execute permissions (using ACE) on a file:
+hadoop mfs -setace -readfile p -writefile 'g:group1&!u:user1' -executefile p /fi
+le
+
+   When the command shown above runs, the POSIX mode bits for:
+     * Read access is set for owner, owning group, and others.
+     * Write access is set for none.
+     * Execute access is set for owner, owning group, others.
+
+   All other POSIX mode bits are set to 0.
+   Example 2: The following command shows how to set read, write, and
+   execute permissions (using ACE) as a single string on the specified
+   directory and force all files and subdirectories under the specified
+   directory to inherit the parent ACE. ACEs that are not specified will
+   be set to the empty string.
+hadoop mfs -setace -aces "rf:u:root,wf:group1&!user1,ef:p,rd:u:m7user1" -setinhe
+rit true /dir
+
+   When the command shown above runs, the POSIX mode bits for listing the
+   contents (r) of the directory is set for owner/user and all other POSIX
+   mode bits on the directory are set to 0; all new directories under this
+   directory will inherit the parent POSIX mode bits. Also, new files in
+   the directory will inherit the following POSIX mode bits:
+     * Read access is set to owner/user.
+     * Write access is set to none.
+     * Execute access set for others.
+
+   All other POSIX mode bits are set to 0.
+   Example 3: The following command shows how to set permissions (using
+   ACE) as a single string on the specified directory and all the files
+   and subdirectories recursively.
+hadoop mfs -setace -R -aces "rf:p,wf:g:group1&!u:user1,ef:p" -preservemodebits t
+rue /dir
+
+   When the command shown above runs, the POSIX mode bits are not modified
+   to match the ACE setting.
+   Example 4: The following command shows how to deny a specific type of
+   access, writefile, which was set in the first example above, without
+   removing all other access types associated with the file. The empty
+   string used in the following example will deny write access to all
+   users, roles, and groups.
+hadoop mfs -setace -writefile "" -preservemodebits false /file
+
+   When the command shown above runs, the POSIX mode bit for writing to
+   the file is set to 0.
+
+   Get ACEs
+   The following command shows the ACEs and POSIX mode bits for the
+   specified file only.
+hadoop mfs -getace /m7user1/file1.txt
+
+   Output
+Path: /m7user1/file1.txt
+  readfile: !u:m7user1
+  writefile: !u:m7user1
+  executefile: !u:m7user1
+  mode: ---------
+
+   Delete ACEs
+   The following command deletes all ACEs associated with the specified
+   file and sets the ACE for the file to the empty string.
+hadoop mfs -delace /file
+
+   The following command deletes all ACEs associated with the specified
+   directory.
+hadoop mfs -delace /dir
+
+   The following command deletes all ACEs associated with the specified
+   directory and ACEs associated with the files and directories
+   (recursively) below the specified directory.
+hadoop mfs -delace -R /dir
+
+   Create a Hard Link to File
+   The following command shows how to create a hard link to the file,
+   file1, using a new name, file2.
+# hadoop mfs -lnh /madvol1/file1 /madvol1/file2
+Creating Hardlink: /madvol1/file2 -> /madvol1/file1
+
+   Retrieve the Number of Hard Links
+   The following command shows how to retrieve the number of hard links
+   (and other statistics) associated with a given file.
+# hadoop mfs -stat /vol1/file1
+Path: /vol1/file1
+  fid: 23185.32.131232
+  uid: root
+  gid: root
+  atime: 2016-06-29 18:49:03
+  mtime: 2016-07-01 18:01:54
+  nlink: 2
+  type: FTRegular
+  subtype: FSTInval
+  size: 1024000000
+  blocksize: 268435456
+  mode: 644
+  networkencryption: false
+  compression: off
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ACEs.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ACEs.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ACEs.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/CheckingWhetherAuditingisEnabled.html#CheckingWhetherAuditingisEnabledforaDirectoryFileorMapR-DBTable
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Auditing-Prerequisites.html#EnablingAuditing
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs__stat-output-fields
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/c_setting_user_permissions_overview.html#SettingUserPermissions-Se_26982517-d3e207

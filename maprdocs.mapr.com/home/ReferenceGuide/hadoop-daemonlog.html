@@ -1,0 +1,87 @@
+hadoop daemonlog
+
+   The hadoop daemonlog command gets and sets the log level for each
+   daemon.
+
+   Hadoop daemons all produce logfiles that you can use to learn about
+   what is happening on the system. You can use the hadoop daemonlog
+   command to temporarily change the log level of a component when
+   debugging the system.
+
+Syntax
+
+hadoop daemonlog
+    -getlevel | -setlevel
+    <host>:<port>
+    <name>
+    [ <level> ]
+
+Parameters
+
+   The following command options are supported for hadoop daemonlog
+   command:
+
+   Parameter
+
+   Description
+
+   -getlevel <host:port><name>
+
+   Prints the log level of the daemon running at the specified host and
+   port, by querying
+http://<host>:<port>/logLevel?log=<name>
+     * <host>: The host on which to get the log level.
+     * <port>: The port by which to get the log level.
+     * <name>: The daemon on which to get the log level. Usually the fully
+       qualified classname of the daemon doing the logging. For example,
+       org.apache.hadoop.yarn.server.resourcemanager.resourcemanager for
+       the ResourceManager daemon.
+
+   -setlevel <host:port> <name> <level>
+
+   Sets the log level of the daemon running at the specified host and
+   port, by querying
+http://<host>:<port>/logLevel?log=<name>
+
+   * <host>: The host on which to set the log level.
+     * <port>: The port by which to set the log level.
+     * <name>: The daemon on which to set the log level.
+     * <level: The log level to set the daemon.
+
+Examples
+
+   Getting the log levels of a daemon
+
+   To get the log level for each daemon enter a command such as the
+   following:
+hadoop daemonlog -getlevel 10.250.1.15:50030 org.apache.hadoop.yarn.server.resou
+rcemanager.resourcemanager
+Connecting to http://10.250.1.15:50030/logLevel?log=org.apache.hadoop.yarn.serve
+r.resourcemanager.resourcemanager
+Submitted Log Name: org.apache.hadoop.yarn.server.resourcemanager.resourcemanage
+r
+Log Class: org.apache.commons.logging.impl.Log4JLogger
+Effective level: ALL
+
+   Setting the log level of a daemon
+
+   To temporarily set the log level for a daemon enter a command such as
+   the following:
+hadoop daemonlog -setlevel 10.250.1.15:50030 org.apache.hadoop.yarn.server.resou
+rcemanager.resourcemanager DEBUG
+Connecting to http://10.250.1.15:50030/logLevel?log=org.apache.hadoop.yarn.serve
+r.resourcemanager.resourcemanager&level=DEBUG
+Submitted Log Name: org.apache.hadoop.yarn.server.resourcemanager.resourcemanage
+r
+Log Class: org.apache.commons.logging.impl.Log4JLogger
+Submitted Level: DEBUG
+Setting Level to DEBUG ...
+Effective level: DEBUG
+
+   Using this method, the log level is automatically reset when the daemon
+   is restarted.
+
+   To make the change to log level of a daemon persistent, enter a command
+   such as the following:
+hadoop daemonlog -setlevel 10.250.1.15:50030 log4j.logger.org.apache.hadoop.yarn
+.server.resourcemanager.resourcemanager DEBUG

@@ -1,0 +1,94 @@
+Migrating Kafka C Applications to MapR-ES
+
+   With some modification, you can use existing Kafka C applications to
+   consume and produce topics in MapR-ES. The MapR-ES C Client is a
+   distribution of librdkafka that is compatible with MapR-ES.
+    1. Install and [1]configure the MapR Streams C Client.
+    2. When you refer to a topic in the application code, include the path
+       and name of the stream in which the topic is located:
+/<path and name of stream>:<name of topic>
+       For example, you might have a stream in a MapR cluster that is
+       named stream_A, and the stream might be in a volume named IoT and
+       in a directory named automobile_sensors. You want to redirect a
+       producer application to a topic in that stream. The syntax of the
+       path to the topic might look like this:
+       /mapr/IoT/automobile_sensors/stream_A:<name of topic>.
+       Note: Optionally, use the streams.consumer.default.stream and
+       streams.producer.default.stream configuration parameters. When you
+       configure these parameters, applications can specify just the topic
+       name to write or read from the default stream. To use these
+       MapR-specific parameters in your application, compile your
+       application with the rdkafka.h file
+       (/opt/mapr/include/librdkafka/rdkafka.h) that was installed with
+       the MapR-ES C Client. See the [2]Compile the Apps section of
+       [3]Developing a MapR-ES C Application.
+    3. See [4]Configuration Properties for MapR-ES C Client for the list
+       of supported configuration parameters, including a few parameters
+       that are MapR-specific. Make changes to your application, as
+       needed.
+       Note: SSL-related configuration parameters are ignored. When you
+       set these parameters, the MapR-ES Client issues a warning
+       indicating that the parameters are not supported.
+    4. Review the list of librdkafka APIs that are not supported by the
+       MapR-ES C Client and make changes to your application, as needed.
+
+        Simple/low level consumer APIs that are not supported
+
+               o rd_kafka_queue_new
+               o rd_kafka_queue_destroy
+               o rd_kafka_consume_start
+               o rd_kafka_consume_start_queue
+               o rd_kafka_consume_stop
+               o rd_kafka_consume
+               o rd_kafka_consume_batch
+               o rd_kafka_consume_callback
+               o rd_kafka_consume_queue
+               o rd_kafka_consume_batch_queue
+               o rd_kafka_consume_callback_queue
+               o rd_kafka_offset_store
+               o rd_kafka_pause_partitions
+               o rd_kafka_resume_partitions
+
+        Producer/Consumer common APIs that are not supported
+
+               o rd_kafka_conf_set_dr_cb
+               o rd_kafka_conf_set_throttle_cb
+               o rd_kafka_conf_set_stats_cb
+               o rd_kafka_conf_set_socket_cb
+               o rd_kafka_conf_set_open_cb
+               o rd_kafka_conf_dump
+               o rd_kafka_conf_dump_free
+               o rd_kafka_name
+               o rd_kafka_set_log_level
+               o rd_kafka_mem_free
+               o rd_kafka_set_log_level
+               o rd_kafka_mem_free
+
+        Topic APIs that are not supported
+
+               o rd_kafka_query_watermark_offsets
+                 Note: As of MapR 6.0.1, this API is supported.
+               o rd_kafka_get_watermark_offsets
+                 Note: As of MapR 6.0.1, this API is supported.
+
+        Cluster APIs that are not supported
+
+               o rd_kafka_memberid
+               o rd_kafka_metadata
+               o rd_kafka_metadata_destroy
+
+        Miscellaneous APIs that are not supported
+
+               o rd_kafka_version
+               o rd_kafka_version_str
+               o rd_kafka_get_debug_contexts
+               o rd_kafka_dump
+               o rd_kafka_thread_cnt
+               o rd_kafka_message_timestamp
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/MapRStreamCAPISetup.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/MapRStreamsCExample.html#concept_fbf_tdf_gz__compile-c-app
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/MapRStreamsCExample.html#concept_fbf_tdf_gz
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/StreamsConfigurationC.html#reference_q2k_wpq_fz

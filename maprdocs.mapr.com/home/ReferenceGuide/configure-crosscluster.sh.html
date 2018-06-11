@@ -1,0 +1,226 @@
+configure-crosscluster.sh
+
+   The configure-crosscluster.sh utility can be used to set up
+   cross-cluster security between two clusters. When this utility is run
+   with the create subcommand, it establishes the security between the
+   local cluster and a remote cluster. After the setup, communication
+   between the two clusters is bi-directional. This utility can be run on
+   any node in the source cluster to grant secure access to users and/or
+   servers (for replication, or mirroring purposes) on the destination
+   cluster.
+
+   When this utility is run, the utility prompts for the passwords for
+   both the local and remote clusters. All hosts on a cluster must have
+   the same password. If the password is omitted, ssh public key
+   authentication must have been configured between this node and the
+   other nodes in the local and remote clusters.
+
+Prerequisites
+
+   Before running this utility:
+     * Enable wire-level security for both the local and remote clusters.
+       That is, you must have secure=true in your cluster entry for
+       /opt/mapr/conf/mapr-clusters.conf for both the local and remote
+       clusters.
+     * Install the pssh (Parallel SSH) package from EPEL.
+     * Install the expect package.
+
+   If you plan to use a user other than the mapr administrative user for
+   mirroring or gateway/streams replication, that user must already exist.
+
+Syntax
+
+/opt/mapr/server/configure-crosscluster.sh create <cross-cluster-type>
+    [ -localcrossclusteruser <user> ]
+    [ -localhosts <path_to_file> ]
+    [ -localport <port_number> ]
+    [ -localuser <user> ]
+    [ -recover <id> ]
+    [ -remotecrossclusteruser <user> ]
+    [ -remotehosts <port_number> ]
+    -remoteip <ip_address>
+    [ -remoteport <port_number> ]
+    [ -remoteuser <user> ]
+
+Arguments
+
+   The <cross-cluster-type> argument specifies the type of entity for
+   which cross-cluster access is to be established. Value can be one of
+   the following:
+   user For direct data access for the given user. When the utility is run
+   with the user argument, it does the following on both the clusters:
+    1. Updates the /opt/mapr/conf/mapr-clusters.conf file to include the
+       first entry from the /opt/mapr/conf/mapr-clusters.conf file on the
+       other cluster.
+    2. Imports the other cluster's certificate in
+       /opt/mapr/conf/ssl_truststore file and copies the updated
+       /opt/mapr/conf/ssl_truststore file to all the other nodes on the
+       cluster.
+
+   server For MapR server access such as mirroring and replication. When
+   the utility is run with the server argument, it does the following on
+   both the clusters:
+    1. Generates a cross-cluster ticket on this cluster for the other
+       cluster and copies the ticket to the CLDB node on the other
+       cluster.
+    2. Merges the ticket with the /opt/mapr/conf/maprserverticket file on
+       the node on the other cluster and copies the updated
+       /opt/mapr/conf/maprserverticket file to all the other CLDB nodes on
+       the other cluster.
+
+   all For both user and server access. When the utility is run with the
+   all argument, it does the following on both the clusters:
+    1. Updates the /opt/mapr/conf/mapr-clusters.conf file to include the
+       first entry from the /opt/mapr/conf/mapr-clusters.conf file on the
+       other cluster.
+    2. Imports the other cluster's certificate in
+       /opt/mapr/conf/ssl_truststore file and copies the updated
+       /opt/mapr/conf/ssl_truststore file to all the other nodes on the
+       cluster.
+    3. Generates a cross-cluster ticket for the other cluster, copies the
+       ticket to the CLDB node on the other cluster, merges the ticket
+       with the /opt/mapr/conf/maprserverticket file on the node in the
+       other cluster, and copies the updated
+       /opt/mapr/conf/maprserverticket file to all other CLDB nodes on the
+       other cluster.
+
+Options
+
+   The following options are supported:
+   Option Description
+   localcrossclusteruser (Applicable for the server argument only) The
+   name of the local cross-cluster user, if different from the local user,
+   for mirroring and table/streams replication. The default value is the
+   local user.
+   localhosts The full or relative path to the file containing the list of
+   IP addresses or hostnames of the hosts in the local cluster to update.
+   Specify one host per line in the file, excluding the current host. If
+   this is specified, the utility updates the configuration on the host,
+   on which you are running the utility, and also the other nodes
+   specified in the file. If this is not specified, the utility copies
+   the:
+     * Updated server security configuration in the
+       /opt/mapr/conf/maprserverticket file to only the CLDB nodes in the
+       local cluster.
+     * Updated user security configuration in the
+       /opt/mapr/conf/mapr-clusters.conf file and
+       /opt/mapr/conf/ssl_trustore file to all the nodes in the local
+       cluster.
+
+   localport The port to use to connect (ssh or scp) to local cluster
+   hosts. The default value is 22.
+   localuser The name of the user for the local cluster. The default value
+   is mapr.
+   recover The option to recover from failure to copy files to nodes in
+   the local or remote cluster due to failed cluster nodes. Use the
+   special ID keyword "latest" to run with the contents of the most recent
+   run. See [1]Troubleshooting and Recovery for more information.
+   remotecrossclusteruser (Applicable for the server argument only) The
+   name of the remote cross-cluster user, if different from the remote
+   user. The default value is the remote user.
+   remotehosts The full or relative path to the file containing the list
+   of IP addresses or hostnames of the hosts in the remote cluster to
+   update. Specify one host per line in the file. If this is not
+   specified, the utility copies the:
+     * Updated server security configuration in the
+       /opt/mapr/conf/maprserverticket file to only the CLDB nodes in the
+       remote cluster.
+     * Updated user security configuration in the
+       /opt/mapr/conf/mapr-clusters.conf file and
+       /opt/mapr/conf/ssl_trustore file to all the nodes in the remote
+       cluster.
+
+   remoteip (Required) The host name or IP address of a host in the remote
+   cluster.
+   remoteport The port to use to connect (ssh or scp) to remote cluster
+   hosts. The default value is 22.
+   remoteuser The name of the user for the remote cluster. The default
+   value is the the local user.
+
+Verification
+
+   To verify that cross-cluster security is correctly set up, do the
+   following:
+     * If you ran the script using the cross-cluster type user or all and
+       the script completed successfully, you should be able to run remote
+       commands from the local node after obtaining a user ticket using
+       the [2]maprlogin utility. See [3]Configuring Secure Clusters for
+       Running Commands Remotely for more information.
+     * If you ran the script using the cross-cluster type server or all
+       and the script completed successfully, you should be able to
+       perform various service operations from local to remote cluster and
+       vice versa, including mounting volumes over NFS, volume mirroring,
+       and table and streams replication. See [4]Configuring Secure
+       Clusters for Cross-Cluster Mirroring and Replication for more
+       information.
+
+Sample Session
+
+   Run the utility on a CLDB host with wire-level security enabled to
+   configure cross-cluster security:
+# /opt/mapr/server/configure-crosscluster.sh create all -remoteip 10.10.30.96
+Remote IP is 10.10.30.96
+WARNING: Strict host key checking will be disabled for this script.
+Local user unset, defaulting to mapr
+Remote user unset, defaulting to local user mapr
+Enter password for mapr user (mapr) for local cluster:
+Enter password for mapr user (mapr) for remote cluster:
+Local cross-cluster user unset, defaulting to local user mapr
+Remote cross-cluster user unset, defaulting to remote user mapr
+Verifying connectivity to 10.10.30.96 and presence of mapr-clusters.conf
+MapR credentials of user 'mapr' for cluster 'myCluster.cluster.com' are written
+to '/tmp/maprticket_0'
+Local host is running the CLDB
+chyelin101.cluster.com secure=true qa-cnode101.lab:7222
+Configuring cross-cluster communication for users
+Certificate stored in file </tmp/mapr-xcs/29668/local_mapcert>
+Certificate stored in file </tmp/mapr-xcs/29668/remote_mapcert>
+Successfully exported certificate for remote cluster to /tmp/mapr-xcs/29668/remo
+te_mapcert
+Certificate was added to keystore
+Certificate was added to keystore
+Configuring cross-cluster communication for server-side operations
+Generating cross-cluster ticket for user mapr on remote node
+Generating cross-cluster ticket for mirroring for user mapr
+MapR credentials of user 'mapr' for cluster 'myCluster.cluster.com' are written
+to '/tmp/mapr-xcs/29668/local_crosscluster_ticket'
+SUCCESS
+This script has logged in to both the local and remote clusters. Please log out
+of
+the clusters if needed.
+
+Cleanup
+
+   After running the utility, you must perform 2 cleanup actions:
+    1. Log out of the local and remote clusters if needed using the
+       maprlogin logout command.
+    2. Delete the /tmp/mapr-xcs directory, if it is present, after
+       verifying that the cross-cluster setup is correct.
+       If run without the -recover option, the utility creates temporary
+       files in /tmp/mapr-xcs directory under the current process ID.
+       These directories contain sensitive information such as server
+       tickets, protected by Unix permissions, and are not deleted by the
+       utility in order to perform troubleshooting and recovery actions.
+       After verifying that the cross-cluster setup is correct, delete
+       this directory:
+$ /bin/rm -rf /tmp/mapr-xcs
+
+Post-Configuration Tasks
+
+   After executing this utility, cross-cluster security should be
+   successfully set up between the local and remote cluster. If you
+   specified either user or all cross-cluster type when running the
+   utility, to perform any operations on the remote cluster from the local
+   node, login to the remote cluster to obtain a user ticket using the
+   [5]maprlogin command.
+$ maprlogin password -cluster <remote-cluster-name>
+
+   Note: You must obtain a new ticket when your current ticket expires.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/TroubleshootingAndRecovering.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ThemaprloginUtility.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/RunningCommandsOnRemoteSecureClusters.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/AddingCross-ClusterTickets.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ThemaprloginUtility.html

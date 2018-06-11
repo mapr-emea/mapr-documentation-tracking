@@ -1,0 +1,56 @@
+Configure LDAP Authentication Between Hue and Hive
+
+   You can configure Hue to use LDAP Authentication when it communicates
+   with HiveServer2. Before you configure Hue to use LDAP authentication
+   with HiveServer2, verify that HiveServer2 is configured to use LDAP
+   authentication. For more information, see [1]Configure HiveServer2 to
+   use LDAP Authentication with OpenLDAP.
+
+   Complete the following steps to configure LDAP authentication between
+   Hue and Hive:
+    1. Configure Hue to connect to Hive with LDAP authentication:
+         a. Configure the [beeswax] section of the hue.ini: set mechanism
+            option.
+         b. For Hue 3.10 or later, set the auth_username and auth_password
+            options in the [desktop] or [beeswax] sections of hue.ini; for
+            Hue 3.9, set the ldap_username and ldap_password options in
+            the [desktop] section.
+       The following examples summarize these changes:
+       Example for Hue 3.10
+[desktop]
+  ...
+  # Default LDAP/PAM/.. username and password of the hue user used for authentic
+ations with other services.
+  # e.g. LDAP pass-through authentication for HiveServer2 or Impala. Apps can ov
+erride them individually.
+  auth_username=sampleuser
+  auth_password=123456
+  ...
+[beeswax]
+  ...
+  # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+  mechanism=LDAP
+
+       Example for Hue 3.9
+[desktop]
+  ...
+  # LDAP username and password of the hue user used for LDAP authentications.
+  # Set it to use LDAP Authentication with HiveServer2 and Impala.
+  ldap_username=sampleuser
+  ldap_password=123456
+  ...
+[beeswax]
+  ...
+  # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+  mechanism=LDAP
+
+    2. Optional: Configure Hue to authenticate users through LDAP. See
+       [2]Configure Hue with LDAP.
+    3. Restart Hue:
+maprcli node services -name hue -action restart -nodes <space delimited list of
+nodes>
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hive/HiveServer2-LDAPAuthUsingOpenLDAP.html#AuthenticationforHiveServ_29655365-d3e163
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hue/ConfigureHuewithLDAP.html

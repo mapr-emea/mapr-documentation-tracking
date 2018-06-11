@@ -1,0 +1,86 @@
+Configuring Authentication
+
+   An administrator can enable MapR Security as the only authentication
+   mechanism, or in addition to other mechanisms, such as Kerberos and
+   Plain authentication in drill-override.conf.
+   The following sections provide configuration examples for several
+   configuration scenarios:
+   Note: For client-side configuration, see [1]Drill Drivers.
+
+Example 1: Drill Client to Drillbit Authentication using MapR Security Only
+
+drill.exec:{
+              security: {
+                 user.auth.enabled: true,
+                 auth.mechanisms : ["MAPRSASL"]
+          }
+}
+
+   Note: Drill executes all queries as a service or process user when
+   impersonation is disabled.
+
+Example 2: Drill Client to Drillbit Authentication with User Impersonation
+using MapR Security
+
+drill.exec:{
+                security: {
+                   user.auth.enabled: true,
+                   auth.mechanisms : ["MAPRSASL"],
+                    }
+                impersonation: {
+                   enabled: true,
+                   max_chained_user_hops: 3
+              }
+        }
+
+   Note: Drill executes all queries as the authenticated (ticket) user
+   when impersonation is enabled.
+
+Example 3: Drill Client to Drillbit using Multiple Authentication Mechanisms
+
+drill.exec:{
+                 security: {
+                     user.auth.enabled: true,
+                     user.auth.impl: "pam4j",
+                     security.user.auth.packages += "org.apache.drill.exec.rpc.u
+ser.security",
+                     user.auth.pam_profiles: ["sudo", "login", "mapr-admin"],
+                     auth.mechanisms : ["MAPRSASL", "KERBEROS", "PLAIN"],
+                     auth.principal : "mapr/_host@REALM.COM",
+                     auth.keytab : "/opt/mapr/conf/mapr.keytab"
+                   },
+                  impersonation: {
+                    enabled: true,
+                    max_chained_user_hops: 3
+              }
+
+          }
+
+Example 4: Drillbit to Drillbit Authentication using MapR Security
+
+drill.exec:{
+             security: {
+                 bit.auth.enabled : true
+                 bit.auth.mechanisms : "MAPRSASL"
+                     }
+             }
+
+Example 5: Drill Client to Drillbit and Drillbit to Drillbit Authentication
+using MapR Security
+
+drill.exec {
+              security: {
+                  user.auth.enabled: true,
+                  auth.mechanisms : ["MAPRSASL"],
+                  bit.auth.enabled : true,
+                  bit.auth.mechanism : "MAPRSASL"
+                      },
+              impersonation: {
+                   enabled: true,
+                   max_chained_user_hops: 3
+              }
+            }
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill_connectors.html#drill_connectors

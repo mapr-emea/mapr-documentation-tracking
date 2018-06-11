@@ -1,0 +1,107 @@
+Identifying Secondary Index Lag
+
+   This section describes the commands you use to determine if updates to
+   a secondary index are lagging.
+
+   Secondary index lag can occur due to [1]aysnchronous secondary index
+   updates. Use [2]maprcli table index list and [3]mapr verifyindex to
+   assess if there is update lag in an index and to see details on the
+   updates that are lagging.
+
+Run maprcli table index list
+
+   The maprcli table index list command lists information about indexes
+   created on a table. To retrieve the most current status, specify the
+   optional refreshnow parameter. Examine the values of the following
+   fields to determine if an index is lagging:
+     * isUptodate - True if the index is up-to-date
+     * bytesPending - The number of bytes pending propagation to the index
+     * putsPending - Thue number of puts pending propagation to the index
+     * minPendingTS - The timestamp of the oldest put pending propagation
+       to the index
+     * maxPendingTS - The timestamp of the most recent put pending
+       progation to the index
+
+   In the sample output below, the index is up-to-date.
+maprcli table index list -path /demo/business -json
+{
+        "timestamp":1506617667735,
+        "timeofday":"2017-09-28 04:54:27.735 GMT+0000 PM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "cluster":"my.cluster.com",
+                        "type":"maprdb.si",
+                        "indexFid":"2049.93.10257820",
+                        "indexName":"i1",
+                        "hashed":false,
+                        "indexState":"REPLICA_STATE_REPLICATING",
+                        "idx":1,
+                        "indexedFields":"a.b:ASC",
+                        "isUptodate":true,
+                        "minPendingTS":0,
+                        "maxPendingTS":0,
+                        "bytesPending":0,
+                        "putsPending":0,
+                        "bucketsPending":0,
+                        "copyTableCompletionPercentage":100,
+                        "numTablets":1,
+                        "numRows":4,
+                        "totalSize":24576
+                }
+        ]
+}
+
+Run mapr verifyindex
+
+   If maprcli table index list shows that an index is lagging, use the
+   [4]mapr verifyindex command to gather more information. The following
+   example illustrates the output in the case where an index is lagging.
+   The following updates have not yet propagated to the index:
+     * Document with _id=997 not yet inserted into the index.
+     * Update to the city field in document with _id=998 not yet
+       propagated to the index.
+
+// Display contents of parent JSON table
+# mapr dbshell
+
+maprdb root:> find /t1
+{"_id":"1000","city":"city3","misc":{"a":"misc.a","b":2}}
+{"_id":"997","city":"city3","misc":{"a":"misc.a","b":2}}
+{"_id":"998","city":"city4","misc":{"a":"misc.a","b":2}}
+{"_id":"999","city":"city3","misc":{"a":"misc.a","b":2}}
+4 document(s) found.
+
+
+// Display contents of an index that is lagging.
+// Document with _id=997 is missing from the index and
+// there is a mismatch in the index data for document with _id=998
+maprdb root:> indexscan /t1 --indexname i2
+{"_id":"1000","city":"city3"}
+{"_id":"998","city":"city3"}
+{"_id":"999","city":"city3"}
+3 document(s) found.
+maprdb root:> quit
+
+
+// Output of verifyindex
+# mapr verifyindex -path /t1 -index i2
+
+Missing Document in Index:
+{"_id":"997","city":"city3"}
+
+Mismatch Document Found!!
+Table side-->{"_id":"998","city":"city4"}
+Index side-->{"_id":"998","city":"city3"}
+
+Number of rows in table but not in index: 1
+Number of rows in index but not in table: 0
+Mismatch row count: 1
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-consistency.html#indexes-consistency
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-index-list.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr-verifyindex.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr-verifyindex.html

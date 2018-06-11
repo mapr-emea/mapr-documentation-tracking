@@ -1,0 +1,91 @@
+MapR-DB Binary Tables
+
+   MapR-DB stores structured data as a nested series of maps. Each map
+   consists of a set of key-value pairs, where the value can be the key in
+   another map.
+
+   MapR-DB stores structured data as a nested series of maps. Each map
+   consists of a set of key-value pairs, where the value can be the key in
+   another map. Keys are kept in strict lexicographical order: 1, 10, and
+   113 come before 2, 20, and 213.
+
+   In descending order of granularity, the elements of a binary table are:
+     * Key: Keys identify the rows in a table. In MapR-DB, the maximum
+       supported size of a row key is 64 KB. However, the recommended
+       practice is to keep it lower than a few hundred bytes.
+     * Row: Rows span one or more column families and columns. In MapR-DB,
+       the maximum supported size of a row is 2 GB. However, the
+       recommended practice is to keep the size under 2 MB. In general,
+       MapR-DB performs better with many small rows, rather than with
+       fewer very large rows.
+     * Column family: A column family is a key associated with a set of
+       columns. Specify this association according to your individual use
+       case, creating sets of columns. A column family can contain an
+       arbitrary number of columns. MapR-DB binary tables support up to 64
+       column families.
+     * Column: Columns are keys that are associated with a series of
+       timestamps that define when the value in that column was updated.
+     * Timestamp: The timestamp in a column specifies a particular data
+       write to that column.
+     * Value: The data written to that column at the specific timestamp.
+
+   This structure results in versioned values that you can access flexibly
+   and quickly. Because MapR-DB binary tables are sparse, any of the
+   column values for a given key can be null.
+
+Example Table
+
+   This example uses JSON notation for representational clarity. In this
+   example, timestamps are arbitrarily assigned.
+
+   Queries return the most recent timestamp by default. For example, a
+   query for the value in
+   "arbitrarySecondKey"/"secondColumnFamily:firstColumn" returns
+   valueThree. Specifying a timestamp with a query for
+   "arbitrarySecondKey"/"secondColumnFamily:firstColumn"/11 returns
+   valueSeven.
+{
+ "arbitraryFirstKey" : {
+     "firstColumnFamily" : {
+          "firstColumn" : {
+               10 : "valueFive",
+               7 : "valueThree",
+               4 : "valueOne",
+               }
+          "secondColumn" : {
+               16 : "valueEight",
+               1 : "valueSeven",
+               }
+          }
+     "secondColumnFamily" : {
+          "firstColumn" : {
+               37 : "valueFive",
+               23 : "valueThree",
+               11 : "valueSeven",
+               4 : "valueOne",
+               }
+          "secondColumn" : {
+               15 : "valueEight",
+               }
+          }
+     }
+ "arbitrarySecondKey" : {
+     "firstColumnFamily" : {
+          "firstColumn" : {
+               10 : "valueFive",
+               4 : "valueOne",
+               }
+          "secondColumn" : {
+               16 : "valueEight",
+               7 : "valueThree",
+               1 : "valueSeven",
+               }
+          }
+     "secondColumnFamily" : {
+          "firstColumn" : {
+               23 : "valueThree",
+               11 : "valueSeven",
+               }
+          }
+     }
+}

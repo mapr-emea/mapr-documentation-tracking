@@ -1,0 +1,85 @@
+Kafka Connect 2.0.1: HDFS Example: Publish to MapR-FS
+
+   These examples provides sample code for streaming data to and from
+   MapR-FS.
+
+   This example shows a simple configuration for submitting a MapR Kafka
+   Connect task (with the HDFS connector) to stream data from Apache Kafka
+   to MapR-FS.
+POST /connectors HTTP/1.1
+        Host: connect.example.com
+        Content-Type: application/json
+        Accept: application/json
+
+        {
+        "name": "maprfs-sink-connector",
+        "config": {
+        "connector.class": "io.confluent.connect.hdfs.HdfsSinkConnector",
+        "tasks.max": "1",
+        "topics": "kafkatopic",
+        "hdfs.url": "maprfs:///",
+        "flush.size": "5",
+        "rotate.interval.ms": "1000"
+        }
+        }
+
+   This example provides sample code for streaming data from MapR-ES to
+   MapR-FS.
+POST /connectors HTTP/1.1
+        Host: connect.example.com
+        Content-Type: application/json
+        Accept: application/json
+
+        {
+        "name": "maprfs-sink-connector",
+        "config": {
+        "connector.class": "io.confluent.connect.hdfs.HdfsSinkConnector",
+        "tasks.max": "1",
+        "topics": "/kafka-connect:topic1",
+        "hdfs.url": "maprfs:///",
+        "flush.size": "5",
+        "rotate.interval.ms": "1000"
+        }
+        }
+
+   This example provides sample code for streaming data from MapR-ES to
+   MapR-FS in Parquet.
+POST /connectors HTTP/1.1
+        Host: connect.example.com
+        Content-Type: application/json
+        Accept: application/json
+
+        {
+        "name":"hdfs-connector-parquet",
+        "config":{
+        "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+        "tasks.max":"10",
+        "topics":"/kafka-connect:topic2",
+        "hdfs.url":"maprfs:///",
+        "format.class":"io.confluent.connect.hdfs.parquet.ParquetFormat",
+        "flush.size":"3"
+        }
+        }
+
+   This example provides sample code for streaming data from MapR-ES to
+   the Hive database.
+POST /connectors HTTP/1.1
+        Host: connect.example.com
+        Content-Type: application/json
+        Accept: application/json
+
+        {
+        "name":"hdfs-connector-hive",
+        "config":{
+        "hive.integration":"true",
+        "hive.database":"db3",
+        "hive.conf.dir":"/opt/mapr/hive/hive-1.2/conf",
+        "hive.metastore.uris":"thrift://localhost:9083",
+        "schema.compatibility":"BACKWARD",
+        "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+        "tasks.max":"1",
+        "topics":"/kafka-connect:topic3",
+        "hdfs.url":"maprfs:///",
+        "flush.size":"1"
+        }
+        }

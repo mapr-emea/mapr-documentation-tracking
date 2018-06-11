@@ -1,0 +1,66 @@
+alarm mute
+
+   Mutes an active alarm for the specified amount of time.
+
+Syntax
+
+   CLI
+
+maprcli alarm mute
+     -alarm <alarm name>[:<entity>][:aetype][:<mute_period>]
+     [ -cluster cluster_name ]
+     [ -muteminutes <mute_period> ]
+
+   REST API
+
+http[s]://<host>:<port>/rest/alarm/mute?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   alarm The comma-separated list of the active alarms to mute. To mute an
+   active alarm associated with an entity (such as volume, node, etc.) or
+   type of accountable entity, you must specify also the name of the
+   entity or the type of accountable entity separated by a colon (:).
+   cluster The cluster on which to run the command.
+   muteminutes The amount of time, in minutes, to mute the alarm.
+
+   This can be specified separately or specified after the colon
+   (:<mute_period>) immediately following the alarm name. For example, if
+   multiple alarms are being muted for different periods of time, use
+   colon (:<mute_period>) to specify the mute period for each alarm.
+
+   Specifying this separately is optional if colon (:<mute_period>) is
+   used to specify the amount of time to mute an alarm. For example, when
+   specifying a list of alarms to mute, use this parameter to specify the
+   amount of time to mute the alarm for which no time period is specified
+   using colon (:<mute_period>).
+   Note: Either the value for this parameter or colon (:<mute_period>) is
+   required to specify the amount of time to mute the alarm for.
+
+Examples
+
+   Mute an active alarm for 10 minutes using one of the following:
+maprcli alarm mute -alarm CLUSTER_ALARM_LICENSE_NEAR_EXPIRATION:10
+maprcli alarm mute -alarm CLUSTER_ALARM_LICENSE_NEAR_EXPIRATION -muteminutes 10
+
+   Mute an active volume alarm on volume1 for 10 minutes using one of the
+   following:
+maprcli alarm mute -alarm VOLUME_ALARM_DATA_UNDER_REPLICATED:volume1:10
+maprcli alarm mute -alarm VOLUME_ALARM_DATA_UNDER_REPLICATED:volume1 -muteminute
+s 10
+
+   Mute active volume alarm on volume1 for 10 minutes, active cluster
+   alarm for 20 minutes, and active volume alarm on volume2 for 30 minutes
+   using one of the following:
+maprcli alarm mute -alarm
+        VOLUME_ALARM_DATA_UNDER_REPLICATED:volume1:10,
+        CLUSTER_ALARM_LICENSE_NEAR_EXPIRATION:20,
+        VOLUME_ALARM_DATA_UNDER_REPLICATED:volume2:30
+maprcli alarm mute -alarm
+        VOLUME_ALARM_DATA_UNDER_REPLICATED:volume1:10,
+        CLUSTER_ALARM_LICENSE_NEAR_EXPIRATION:20,
+        VOLUME_ALARM_DATA_UNDER_REPLICATED:volume2
+        -muteminutes 30

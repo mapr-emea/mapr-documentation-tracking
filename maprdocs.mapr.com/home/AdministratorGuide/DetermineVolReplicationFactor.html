@@ -1,0 +1,126 @@
+Understanding Replication
+
+   Volumes are stored as pieces called containers that contain files,
+   directories, and other data. By default, the maximum container size is
+   32 GB. The maximum container size is set by the cldb.container.sizemb
+   parameter (see the [1]config commands). Containers are replicated to
+   protect data. Normally, each container has three copies stored on
+   separate nodes to provide uninterrupted access to all data, even if a
+   node fails.
+
+   For each volume, you can specify a desired and minimum data replication
+   factor and a desired and minimum namespace (name container) replication
+   factor.
+
+   When enabled, the CLDB manages the namespace container replication
+   separate from the data container replication. This capability is used
+   when you have low volume replication but want to have higher namespace
+   replication.
+   Note: The namespace container parameters, nsreplication or
+   nsminreplication must be the same or larger than the equivalent data
+   replication parameter, replication or minreplication.
+     * [2]Data Replication
+     * [3]Name Container Replication
+
+     * The replication factor is the number of replicated copies you want
+       for normal operation and data protection. When the number of copies
+       falls below the desired replication factor, but remains equal to or
+       above the minimum replication factor, the CLDB actively creates
+       additional copies of the container while trying to minimize the
+       impact of making an additional copy of the container.
+       Re-replication occurs after the timeout specified in the
+       cldb.fs.mark.rereplicate.sec parameter (configurable using the
+       config API). The minimum replication factor is 1 and the maximum is
+       6 (default: 3).
+     * The minimum replication factor is the smallest number of copies you
+       want in order to adequately protect against data loss. When the
+       replication factor falls below this minimum, re-replication occurs
+       aggressively if data is being actively written to the container. If
+       enforceminreplicationforio property is set to true, writes succeed
+       only when the minimum replication factor requirements are met. If
+       property is set to true and minimum number of copies are not
+       available, the client is asked to retry. In the case of a:
+          + Hard mount, the client might try for up to 10 mins and then
+            return an error
+          + Soft mount, the client might return an error
+       The minimum replication factor is 1 and the maximum is 6 (default:
+       2). In all cases, the minimum replication factor cannot be greater
+       than the replication factor. When you increase the minimum
+       replication factor, if enforceminreplicationforio property
+       (configurable at the volume level) is set to true, the minimum
+       number of copies requirement will not be enforced during writes
+       until new copies of all containers associated with the volume are
+       created.
+
+     * The namespace replication factor is the number of namespace
+       container replicated copies you want for normal operation and data
+       protection. When the number of copies falls below the desired
+       replication factor, but remains equal to or above the minimum
+       replication factor, the CLDB actively creates additional copies of
+       the container while trying to minimize the impact of making an
+       additional copy of the container. Re-replication occurs after the
+       timeout specified in the cldb.fs.mark.rereplicate.sec parameter
+       (configurable using the config API). The minimum replication factor
+       is 1 and the maximum is 6 (default: 3).
+     * The minimum namespace replication factor is the minimum number of
+       namespace container replicated copies you want in order to
+       adequately protect against data loss. When the replication factor
+       falls below this minimum, re-replication occurs aggressively if
+       data is being actively written to the container. If
+       enforcemineplicationforio property (configurable at the volume
+       level) is set to true, writes succeed only when the minimum
+       replication factor requirements are met. If property is set to true
+       and minimum number of copies are not available, the client is asked
+       to retry. In the case of a:
+          + Hard mount, the client might try for up to 10 mins and then
+            return an error
+          + Soft mount, the client might return an error
+       The system will not wait for lost replicas to become available
+       again. The minimum replication factor is 1 and the maximum is 6
+       (default: 2). In all cases, the minimum replication factor cannot
+       be greater than the replication factor. When you increase the
+       minimum replication factor, if enforceminreplicationforio property
+       is set to true, the presence of the minimum number of copies will
+       not be enforced during writes until new copies of all containers
+       associated with the volume are created.
+
+   If any containers in the CLDB volume fall below the minimum replication
+   factor, cluster is inaccessible until aggressive re-replication
+   restores the minimum level of replication. If a disk failure is
+   detected, any data stored on the failed disk is re-replicated without
+   regard to the timeout specified in the cldb.fs.mark.rereplicate.sec
+   parameter.
+
+   If all copies of a container, which is neither under nor over
+   replicated, are on the same rack, MapR automatically detects and
+   distributes the copies, such that they are all not on the same rack,
+   after 12 hours. If a container is under replicated and MapR is unable
+   to find a different rack for the new copy, the creation of the copy is
+   deferred. If another rack is unavailable for the new copy after 3
+   hours, MapR creates a copy of the container on the same rack and if
+   this results in all copies of the container being on the same rack,
+   MapR distributes the copies after 12 hours. Also, during replication,
+   MapR tries to defer the scenarios where all copies end up on the same
+   rack. As per deferring policy:
+     * If a container has copies less than the "minimum replication" but
+       greater than 2 and if both copies end up on the same rack, then
+       MapR tries to create the third copy on a different rack for up to 3
+       hours.
+     * If a container has copies more than the minimum but less than the
+       desired and if all copies are on the same rack, then MapR tries to
+       create the next copy on a different rack for up to 3 hours.
+
+   If namespace (NS) replication and minimum namespace replication are not
+   set explicitly, they assume the same values as (data) replication and
+   minimum replication respectively. This means that all changes to (data)
+   replication and minreplication parameters are also reflected in
+   nsreplication and nsminreplication. If nsreplication or
+   nsminreplication is modified or specified during creation,
+   nsreplication and nsminreplication start assuming values different from
+   replication and minreplication.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/config.html#config
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html#div1entry1
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html#div1entry2

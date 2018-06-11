@@ -1,0 +1,42 @@
+Mirror Types
+
+   You can check the status of your volumes in terms of their “mirror
+   type.” The maprcli volume info command returns the following mirrortype
+   values:
+   mirrortype Description Volume upgrade required (to support
+   promotability)
+   0 Old-format volume, created in an earlier release and present in the
+   cluster after an upgrade to Version 5.0 Yes, if the volume is intended
+   for use as a read-write mirror.
+   1 An old-format mirror volume whose source volume is a type 0 volume
+   (in any MapR version). These mirror volumes cannot be upgraded. No, not
+   allowed. The maprcli volume upgradeformat command returns an error for
+   these volumes.
+   2 New-format mirror volume that may be promoted to read-write (no
+   upgrade command required). No, not needed. These volumes are already in
+   the new format and are promotable.
+   3 New-format standard volume: either created new in 5.0 or upgraded in
+   5.0 via the maprcli volume promote command. No, not needed. These
+   volumes are already in the new format and are promotable.
+
+   To check the mirror types for your volumes in Version 5.0, run the
+   following command:
+maprcli volume list -columns volumename,mirrortype -json
+...
+ {
+   "volumename":"vol999",
+   "mirrortype":0
+  },
+  {
+   "volumename":"volume1",
+   "mirrortype":3
+  },
+  {
+   "volumename":"volume2",
+   "mirrortype":3
+  },
+  {
+   "volumename":"volume3",
+   "mirrortype":2
+  },
+...

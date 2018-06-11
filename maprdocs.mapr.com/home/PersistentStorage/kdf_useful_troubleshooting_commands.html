@@ -1,0 +1,134 @@
+Useful Troubleshooting Commands
+
+   The following Kubernetes commands can help you gather information about
+   the resources used by the MapR Data Fabric for Kubernetes:
+     * kubectl describe <resourcetype> <resource> -n <namespace>
+     * kubectl get <resourcetype> <resource> -n <namespace> -o yaml
+     * kubectl logs <pod-name> -n <namespace>
+     * journalctl -u kubelet -r (on the relevant node)
+
+kubectl describe command
+
+   In this example, the kubectl describe command displays information
+   about the mapr-kdfprovisioner-5dff68656-ln6vh Pod. Note that the
+   kubectl describe output includes an event section.
+kubectl describe pod mapr-kdfprovisioner-5dff68656-ln6vh -n mapr-system
+Name:         mapr-kdfprovisioner-5dff68656-ln6vh
+Namespace:    mapr-system
+Node:         qa101-139/10.10.101.139
+Start Time:   Fri, 09 Feb 2018 12:58:36 -0800
+Labels:       app=mapr-kdfprovisioner
+              pod-template-hash=189924212
+Annotations:  openshift.ix/scc-maprkdf-scc
+Status:       Running
+IP:           172.17.0.3
+ .             .
+ .             .
+ .             .
+Node-Selectors:  <none>
+Tolerations:     <none>
+Events:
+  Type    Reason                Age    From              Message
+  –––-    –––––                 –––     –––-              ––––––––-
+  Normal  Scheduled             8m    default-scheduler  Successfully assigned m
+apr-kdfprovisioner-5dff68656-ln6vh to qa101-139
+  Normal  SuccessfulMountVolume 8m    kubelet, qa101-139 MountVolume,SetUp succe
+eded for volume "logs"
+  Normal  SuccessfulMountVolume 8m    kubelet, qa101-139 MountVolume,SetUp succe
+eded for volume "timezone"
+  Normal  SuccessfulMountVolume 8m    kubelet, qa101-139 MountVolume,SetUp succe
+eded for volume "maprkdf-token-drqtt"
+  Normal  Pulling               8m    kubelet, qa101-139 pulling image "maprtech
+/kdf-provisioner:1.0.0.006_centos7"
+  Normal  Pulled                8m    kubelet, qa101-139 Successfully pulled ima
+ge "maprtech/kdf-provisioner:1.0.0.006_centos7"
+  Normal  Created               8m    kubelet, qa101-139 Created container
+  Normal  Started               8m    kubelet, qa101-139 Started container
+
+kubectl get command
+
+   In this example, the kubectl get returns the .yaml parameters for the
+   test-secure-provisioner86 Pod:
+kubectl get pods test-secure-provisioner86 -n mapr-examples -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: 2018-02-09T00:42:06Z
+  name: test-secure-provisioner86
+  namespace: mapr-examples
+  resourceVersion: "721689"
+  selfLink: /api/v1/namespaces/mapr-examples/pods/test-secure-provisioner86
+  uid: 0dd21274-0d32-11e8-bdd6-84a9c4fbf7cb
+spec:
+  containers:
+  - args:
+    - sleep
+    - "1000000"
+    image: busybox
+    imagePullPolicy: Always
+    name: busybox
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: file
+    volumeMounts:
+    - mountPath: /dynvolume
+      name: maprfs-pvc
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: default-token-zpv69
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  nodeName: qa108-165.qa.lab
+  restartPolicy: Never
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key:node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  -name: maprfs-pvc
+
+   Running the kubectl get command without the -o yaml parameter generates
+   less output:
+kubectl get pods test-secure-provisioner86 -n mapr-examples
+NAME                       READY    STATUS   RESTARTS   AGE
+test-secure-provisioner86  1/1      Running  0          14m
+
+kubectl logs command
+
+   In this example, the kubectl logs command returns logged output for the
+   mapr-kdfprovisioner-5dff68656-ln6vh Pod:
+kubectl logs mapr-kdfprovisioner-5dff68656-ln6vh -n mapr-system
+I0209 12:58:39.956822    1 controller.go:407] Starting provisioner controller 01
+3d58b3-0ddc-11e8-b0dd-0242acl10003!
+
+journalctl -u command
+
+   In this example, the journalctl command returns events for the kubelet
+   service for the node:
+journalctl -u kubelet -r
+–- Logs begin at Thu 2017-12-28 06:24:47 PST, end at Thu 2018-02-08 17:01:49 PST
+. --
+Feb 08 17:01:49 k8s-master kubelet[26521]: E0206 17:01:49,047595  26521 dns.go:1
+21] Search Line limits were exceeded, some search paths have been omitted, the a
+pplied search line
+Feb 08 17:01:45 k8s-master kubelet[26521]: E0206 17:01:45,396253  26521 dns.go:1
+80] CheckLimitsForResolvConf: Resolv,conf file '/etc/resolve.conf' contains sear
+ch line consisting
+Feb 08 17:01:15 k8s-master kubelet[26521]: E0206 17:01:15,396023  26521 dns.go:1
+00] CheckLimitsForResolvConf: Resolv,conf file '/etc/resolve.conf' contains sear
+ch line consisting
+Feb 08 17:00:48 k8s-master kubelet[26521]: E0206 17:00:48,047555  26521 dns.go:1
+21] Search Line limits were exceeded, some search paths have been omitted, the a
+pplied search line
+ .             .
+ .             .
+ .             .

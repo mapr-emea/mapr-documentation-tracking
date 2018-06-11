@@ -1,0 +1,1079 @@
+New Features in Hive 2.1
+
+   The following sections describe (with examples) some key new features
+   in Hive 2.1.
+
+New UDF functions
+
+   Substring_index
+          Returns the substring from string str before count occurrences
+          of the delimiter delim. If count is positive, everything to the
+          left of the final delimiter (counting from the left) is
+          returned. If count is negative, everything to the right of the
+          final delimiter (counting from the right) is returned.
+          SUBSTRING_INDEX() performs a case-sensitive match when searching
+          for delim.
+          Example Usage
+
+SELECT SUBSTRING_INDEX('www.apache.org', '.', 3);
+
+          Result: www.apache.org
+
+SELECT SUBSTRING_INDEX('www.apache.org', '.', 2);
+
+          Result: www.apache
+
+SELECT SUBSTRING_INDEX('www.apache.org', '.', 1);
+
+          Result: www
+
+SELECT SUBSTRING_INDEX('www.apache.org', '.', 0);
+
+          Result:
+
+SELECT SUBSTRING_INDEX('www.apache.org', '.', -1);
+
+          Result: org
+
+SELECT SUBSTRING_INDEX('www.apache.org', '.', -2);
+
+          Result: apache.org
+
+SELECT SUBSTRING_INDEX('www.apache.org', '.', -3);
+
+          Result: www.apache.org
+
+   Create quarter
+          The function QUARTER(date) would return the quarter from a
+          string/date/timestamp in the range 1 to 4. This will be useful
+          for different domains like retail, finance, and so on.
+          Example Usage:
+
+select quarter('2014-01-10');
+
+          Result: 1
+
+select quarter('2014-04-02');
+
+          Result: 2
+
+select quarter('2016-07-28');
+
+          Result: 3
+
+select quarter(cast('2014-01-10' as date));
+
+          Result: 1
+
+select quarter(cast('2014-04-02' as date));
+
+          Result: 2
+
+select quarter(cast('2016-07-28' as date));
+
+          Result: 3
+
+select quarter(cast('2014-01-10 00:00:00' as timestamp));
+
+          Result: 1
+
+select quarter(cast('2014-04-02 15:23:00' as timestamp));
+
+          Result: 2
+
+select quarter(cast('2016-07-28 15:23:00' as timestamp));
+
+          Result: 3
+
+select quarter('2014-01-10 00:00:00');
+
+          Result: 1
+
+select quarter('2014-04-02 15:23:00');
+
+          Result: 2
+
+select quarter('2016-07-28 15:23:00');
+
+          Result: 3
+
+Banker's rounding BROUND
+
+   Bankers Rounding is an algorithm for rounding quantities to integers,
+   in which numbers which are equidistant from the two nearest integers
+   are rounded to the nearest even integer. Thus, 0.5 rounds down to 0;
+   1.5 rounds up to 2. Suppose a data source provides data which is often
+   in exactly split quantities (such as half dollars, half cents, half
+   shares, etc.), but desires to return rounded-off quantities. Suppose
+   further that a data consumer is going to derive summary statistics from
+   the rounded data (for example, an average). Ideally, you want to take
+   an average of the raw data with as much precision as you can get. But
+   often, the averages of data has lost some precision. In such a
+   situation, the Banker’s Rounding algorithm produces better results
+   because it does not bias half-quantities consistently down or
+   consistently up. It assumes that on average, an equal number of
+   half-quantities will be rounded up or down, and the errors will cancel
+   out.
+
+   Example
+create table test_vector_bround(v0 double, v1 double) stored as orc;
+
+insert into table test_vector_bround
+values
+(2.5, 1.25),
+(3.5, 1.35),
+(-2.5, -1.25),
+(-3.5, -1.35),
+(2.49, 1.249),
+(3.49, 1.349),
+(2.51, 1.251),
+(3.51, 1.351);
+
+set hive.vectorized.execution.enabled=true;
+
+select bround(v0), bround(v1, 1) from test_vector_bround;
+
+   Result
+2.0   1.2
+4.0   1.4
+-2.0   -1.2
+-4.0   -1.4
+2.0   1.2
+3.0   1.3
+3.0   1.3
+4.0   1.4
+
+Aes_encrypt and Aes_decrypt UDFs
+
+   The popular and widely adopted symmetric encryption algorithm likely to
+   be encountered is the Advanced Encryption Standard (AES). It is at
+   least six times faster than triple DES. A replacement for DES was
+   needed as its key size was too small. With increasing computing power,
+   it was considered vulnerable against exhaustive key search attack.
+   Triple DES was designed to overcome this drawback, but it was slow.
+   The features of AES include:
+     * Symmetric key symmetric block cipher
+     * 128-bit data, 128/192/256-bit keys
+     * Stronger and faster than Triple-DES
+     * Provides full specification and design details
+
+   Encryption Example
+select
+base64(aes_encrypt('ABC', '1234567890123456')),
+base64(aes_encrypt('', '1234567890123456')),
+base64(aes_encrypt(binary('ABC'), binary('1234567890123456'))),
+base64(aes_encrypt(binary(''), binary('1234567890123456'))),
+aes_encrypt(cast(null as string), '1234567890123456'),
+aes_encrypt(cast(null as binary), binary('1234567890123456'));
+
+   Result
+y6Ss+zCYObpCbgfWfyNWTw== BQGHoM3lqYcsurCRq3PlUw==
+y6Ss+zCYObpCbgfWfyNWTw== BQGHoM3lqYcsurCRq3PlUw== NULL NULL
+
+   Decryption Example
+select
+aes_decrypt(unbase64("y6Ss+zCYObpCbgfWfyNWTw=="), '1234567890123456'),
+aes_decrypt(unbase64("y6Ss+zCYObpCbgfWfyNWTw=="), binary('1234567890123456')),
+aes_decrypt(unbase64("BQGHoM3lqYcsurCRq3PlUw=="), '1234567890123456') = binary('
+'),
+aes_decrypt(unbase64("BQGHoM3lqYcsurCRq3PlUw=="),
+binary('1234567890123456')) = binary(''),
+aes_decrypt(cast(null as binary), '1234567890123456'),
+aes_decrypt(cast(null as binary), binary('1234567890123456'));
+
+   Result
+ABC ABC true true NULL NULL
+
+   Example of encryption with bad key
+select
+aes_encrypt('ABC', '12345678901234567'), aes_encrypt(binary('ABC'),
+binary('123456789012345')), aes_encrypt('ABC', ''),
+aes_encrypt(binary('ABC'), binary('')),
+aes_encrypt('ABC', cast(null as string)),
+aes_encrypt(binary('ABC'), cast(null as binary));
+
+   Result
+NULL NULL NULL NULL NULL NULL
+
+   Example of decryption with bad key
+select
+aes_decrypt(unbase64("y6Ss+zCYObpCbgfWfyNWTw=="), '12345678901234567'),
+aes_decrypt(unbase64("y6Ss+zCYObpCbgfWfyNWTw=="), binary('123456789012345')),
+aes_decrypt(unbase64("y6Ss+zCYObpCbgfWfyNWTw=="), ''),
+aes_decrypt(unbase64("y6Ss+zCYObpCbgfWfyNWTw=="), binary('')),
+aes_decrypt(unbase64("y6Ss+zCYObpCbgfWfyNWTw=="), cast(null as string)),
+aes_decrypt(unbase64("y6Ss+zCYObpCbgfWfyNWTw=="), cast(null as binary));
+
+   Result
+NULL NULL NULL NULL NULL NULL
+
+Hive Parser to Support multi-col in clause (x,y..) in ((..),..., ())
+
+   The SQL IN condition (sometimes called the IN operator) allows you to
+   easily test if an expression matches any value in a list of values. It
+   is used to help reduce the need for multiple OR conditions in a SELECT,
+   INSERT, UPDATE, or DELETE statement.
+
+   Examples
+create table emps (empno int, deptno int, empname string);
+insert into table emps values (1,2,"11"),(1,2,"11"),(3,4,"33"),(1,3,"11"),(2,5,"
+22"),(2,5,"22");
+select * from emps where (int(empno+deptno/2), int(deptno/3)) in ((2,0),(3,2));
+
+   Result
+1 2 11
+1 2 11
+
+select * from emps where (int(empno+deptno/2), int(deptno/3)) not in ((2,0),(3,2
+));
+
+   Result
+3 4 33
+1 3 11
+2 5 22
+2 5 22
+
+select * from emps where ((empno*2)|1,substr(empname,1,1)) in ((empno+1,'2'),(em
+pno+2,'2'));
+
+   Result
+Empty
+
+select * from emps where ((empno*2)|1,substr(empname,1,1)) not in ((empno+1,'2')
+,(empno+2,'2'));
+
+   Result
+1 2 11
+1 2 11
+3 4 33
+1 3 11
+2 5 22
+2 5 22
+
+Support special characters in quoted table names
+
+   In previous Hive versions, table names could only be "[a-zA-z_0-9]+".
+   This feature allows to use special characters in table names such as
+   “/”.
+   To enable this feature, set following properties using Hive CLI or
+   Beeline:
+set hive.cbo.enable=true;
+set hive.exec.check.crossproducts=false;
+set hive.stats.fetch.column.stats=true;
+set hive.auto.convert.join=false;
+
+   Example
+
+   Create tables
+
+create table `c/b/o_t1`(key string, value string, c_int int, c_float float, c_bo
+olean boolean)
+partitioned by (dt string) row format delimited fields terminated by ',' STORED
+AS TEXTFILE;
+create table `//cbo_t2`(key string, value string, c_int int, c_float float, c_bo
+olean boolean)
+partitioned by (dt string) row format delimited fields terminated by ',' STORED
+AS TEXTFILE;
+create table `cbo_/t3////`(key string, value string, c_int int, c_float float, c
+_boolean boolean)
+row format delimited fields terminated by ',' STORED AS TEXTFILE;
+
+   Run analyze commands
+
+analyze table `c/b/o_t1` partition (dt) compute statistics;
+analyze table `c/b/o_t1` compute statistics for columns key, value, c_int, c_flo
+at, c_boolean;
+analyze table `//cbo_t2` partition (dt) compute statistics;
+analyze table `//cbo_t2` compute statistics for columns key, value, c_int, c_flo
+at, c_boolean;
+analyze table `cbo_/t3////` compute statistics;
+analyze table `cbo_/t3////` compute statistics for columns key, value, c_int, c_
+float, c_boolean;
+analyze table `src/_/cbo` compute statistics;
+analyze table `src/_/cbo` compute statistics for columns;
+analyze table `p/a/r/t` compute statistics;
+analyze table `p/a/r/t` compute statistics for columns;
+analyze table `line/item` compute statistics;
+analyze table `line/item` compute statistics for columns;
+
+   Result
+No errors. All query successfully launched.
+
+Show create database
+
+   This command allows us to see information about databases (comments,
+   location of database) that have been already created.
+
+   Example
+SHOW CREATE DATABASE default
+
+   Result
+OK
+CREATE DATABASE `test`
+LOCATION 'maprfs:/user/hive/warehouse/test.db'
+
+Carriage return and new line for LazySimpleSerDe
+
+   This adds the support of carriage return and new line characters in the
+   fields. Before, the user had to preprocess the text by replacing them
+   with some characters other than carriage return and new line in order
+   for the files to be properly processed. With this change, it will
+   automatically escape them if {{serialization.escape.crlf}} serde
+   property is set to true.
+   Note: Characters 'r' and 'n' cannot be used as separator or field
+   delimiter.
+   To enable this feature:
+set hive.fetch.task.conversion=more;
+
+   Example
+
+   Create table
+
+create table repo (lvalue string, charstring string) stored as parquet;
+
+   Load parquet data to table
+
+load data inpath '/test.parquet' overwrite into table repo;
+
+   Set property for session
+
+set hive.fetch.task.conversion=more;
+
+   Run query
+
+select * from repo;
+
+   Result
+1 newline
+here
+2 carriage return
+3 both
+here
+
+   Reset property
+
+set hive.fetch.task.conversion=none;
+
+   Run query
+
+select * from repo;
+
+   Result
+1 newline
+NULL NULL
+2 carriage return
+NULL NULL
+3 both
+NULL NULL
+
+Limited integer type promotion in ORC
+
+   ORC currently does not support schema-on-read. If you alter an ORC
+   table with 'int' type to 'bigint' and if you query the altered table,
+   ClassCastException will be thrown as the schema read from table
+   descriptor will expect LongWritable whereas ORC will return IntWritable
+   based on file schema stored within ORC file. OrcSerde currently does
+   not do any type conversions or type promotions for performance reasons
+   in inner loop. Since smallints, ints, and bigints are stored the same
+   way in ORC, it will be possible to allow such type promotions without
+   hurting performance. The following types of promotions can be supported
+   without any casting:
+     * smallint -> int
+     * smallint -> bigint
+     * int -> bigint
+
+   Note: Tinyint promotion is not possible without casting as tinyints are
+   stored using RLE byte writer whereas smallints, ints, and bigints are
+   stored using RLE integer writer.
+
+   Example
+
+   Create ORC table
+
+create table if not exists alltypes_orc (
+bo boolean,
+ti tinyint,
+si smallint,
+i int,
+bi bigint,
+f float,
+d double,
+de decimal(10,3),
+ts timestamp,
+da date,
+s string,
+c char(5),
+vc varchar(5),
+m map<string, string>,
+l array<int>,
+st struct<c1:int, c2:string>
+) stored as orc;
+
+   Alter table
+
+alter table alltypes_orc change si si int;
+alter table alltypes_orc change si si bigint;
+alter table alltypes_orc change i i bigint;
+
+ORC file dump in JSON format
+
+   ORC file dump uses custom format. This can be used to dump ORC metadata
+   in JSON format so that other tools can be built on top it.
+
+   Example
+
+   Create table
+
+Create ORC table:
+create table if not exists alltypes_orc (
+bo boolean,
+ti tinyint,
+si smallint,
+i int,
+bi bigint,
+f float,
+d double,
+de decimal(10,3),
+ts timestamp,
+da date,
+s string,
+c char(5),
+vc varchar(5),
+m map<string, string>,
+l array<int>,
+st struct<c1:int, c2:string>
+) stored as orc;
+
+   Load data to table
+
+load data local inpath '/opt/mapr/hive/<hive version>/examples/files/alltypes2.t
+xt' overwrite
+into table alltypes;
+
+insert overwrite table alltypes_orc select * from alltypes;
+
+   Dump ORC metadata in json format
+
+sudo -u mapr hive --orcfiledump -j -p maprfs:///user/hive/warehouse/alltypes_orc
+/000000_0
+
+Dynamically partitioned hash join for Tez
+
+   In Tez, it is possible to create a reduce-side join that uses unsorted
+   inputs in order to eliminate the sorting, which is faster than a
+   shuffle join. To join on unsorted inputs, use the hash join algorithm
+   to perform the join in the reducer. This requires the small tables in
+   the join to fit in the reducer/hash table.
+
+   Add to hive-site.xml
+
+<!-- TEZ hash join -->
+<property>
+  <name>hive.optimize.dynamic.partition.hashjoin</name>
+  <value>true</value>
+</property>
+<property>
+  <name>hive.auto.convert.join</name>
+  <value>true</value>
+</property>
+<!-- Dynamic partitioning -->
+<property>
+  <name>hive.exec.dynamic.partition</name>
+  <value>true</value>
+</property>
+<property>
+  <name>hive.exec.dynamic.partition.mode</name>
+  <value>nonstrict</value>
+</property>
+<property>
+  <name>hive.exec.max.dynamic.partitions.pernode</name>
+  <value>10</value>
+</property>
+<property>
+  <name>hive.exec.max.created.files</name>
+  <value>150000</value>
+</property>
+
+   Restart hiveserver2 and metastore
+
+   Create file
+
+nano raw_data.txt
+
+   Add dat
+
+1,AAA,2016,01,10
+1,AAA,2016,01,11
+1,AAA,2016,02,12
+1,AAA,2016,02,13
+2,BBB,2016,02,14
+2,BBB,2017,02,15
+2,BBB,2017,03,16
+2,BBB,2017,03,17
+2,BBB,2017,01,18
+
+   Run following querie
+
+CREATE TABLE raw_data (department_id INT, department_name STRING, year STRING, m
+onth STRING, day STRING)
+    ROW FORMAT DELIMITED FIELDS TERMINATED BY ",";
+LOAD DATA LOCAL INPATH '/home/mapr/raw_data.txt' INTO TABLE raw_data;
+CREATE TABLE department (department_id INT, department_name STRING)
+    PARTITIONED BY (year STRING, month STRING, day STRING)
+    ROW FORMAT DELIMITED FIELDS TERMINATED BY ",";
+INSERT OVERWRITE TABLE department PARTITION(year, month, day) SELECT * FROM raw_
+data;
+
+   Check partitions in maprfs
+
+hadoop fs -ls /user/hive/warehouse/department
+hadoop fs -ls /user/hive/warehouse/department/year=2016
+hadoop fs -ls /user/hive/warehouse/department/year=2016/month=01
+hadoop fs -ls /user/hive/warehouse/department/year=2016/month=01/day=10
+
+   Result
+drwxr-xr-x - mapr mapr 2 2017-03-03 15:32 /user/hive/warehouse/department/year=2
+016
+drwxr-xr-x - mapr mapr 3 2017-03-03 15:32 /user/hive/warehouse/department/year=2
+017
+drwxr-xr-x - mapr mapr 2 2017-03-03 15:32/user/hive/warehouse/department/year=20
+16/month=01
+drwxr-xr-x - mapr mapr 3 2017-03-03 15:32 /user/hive/warehouse/department/year=2
+016/month=02
+drwxr-xr-x - mapr mapr 1 2017-03-03 15:32 /user/hive/warehouse/department/year=2
+016/month=01/day=10
+drwxr-xr-x - mapr mapr 1 2017-03-03 15:32 /user/hive/warehouse/department/year=2
+016/month=01/day=11
+-rwxr-xr-x 3 mapr mapr 6 2017-03-03 15:32 /user/hive/warehouse/department/year=2
+016/month=01/day=10/000000_0
+
+Support aggregate push down through joins
+
+   AggregateJoinTransposeRule in CBO pushes Aggregate through Join
+   operators. The rule has been extended in Calcite 1.4 to cover complex
+   cases (for example, Aggregate operators comprising UDAF). The decision
+   on whether to push the Aggregate through Join or not should be
+   cost-driven.
+   Add the following to hive-site.xml and restart hiveserver2 and
+   metastore.
+<!-- aggregate push down -->
+<property>
+  <name>hive.transpose.aggr.join</name>
+  <value>true</value>
+</property>
+
+   Example
+     * Create files with sample data
+nano raw_t1.txt
+     * Add nano raw_t2.txt
+1,2,7
+1,2,8
+1,3,6
+1,1,4
+2,2,5
+5,5,8
+3,2,1
+     * Execute queries
+CREATE TABLE raw_t1(a INT, b INT, c INT) ROW FORMAT DELIMITED FIELDS TERMINATED
+BY ",";
+CREATE TABLE raw_t2(a INT, b INT, c INT) ROW FORMAT DELIMITED FIELDS TERMINATED
+BY ",";
+
+LOAD DATA LOCAL INPATH '/home/mapr/raw_t1.txt' INTO TABLE raw_t1;
+LOAD DATA LOCAL INPATH '/home/mapr/raw_t2.txt' INTO TABLE raw_t2;
+
+CREATE TABLE t1_orc(a INT, b INT, c INT) STORED AS ORC TBLPROPERTIES ("orc.compr
+ess"="NONE");
+CREATE TABLE t2_orc(a INT, b INT, c INT) STORED AS ORC TBLPROPERTIES ("orc.compr
+ess"="NONE");
+
+INSERT OVERWRITE TABLE t1_orc SELECT * FROM raw_t1;
+INSERT OVERWRITE TABLE t2_orc SELECT * FROM raw_t2;
+
+SELECT raw_t1.a, raw_t2.b, COUNT(raw_t1.a) FROM raw_t1 JOIN raw_t2 ON(raw_t1.a =
+ raw_t2.a) GROUP BY raw_t1.a, raw_t2.b;
+
+   Result
+1 1 4
+1 2 8
+3 2 1
+5 5 1
+
+Hive HPL/SQL
+
+   Note: This feature is available for experimental use and not
+   recommended for use in production.
+   The PL/HQL tool implements procedural SQL for Hive (actually any
+   SQL-on-Hadoop implementation and any JDBC source). For more
+   information, see:
+     * [1]https://cwiki.apache.org/confluence/pages/viewpage.action?pageId
+       =59690156
+     * [2]http://www.hplsql.org/doc
+
+   Example
+
+   Define Functions and Procedures in the Current Script
+
+nano test.sql
+
+   Add to file
+
+CREATE FUNCTION hello(text STRING)
+RETURNS STRING
+BEGIN
+ RETURN 'Hello, ' || text || '!';
+END;
+
+CREATE PROCEDURE set_message(IN name STRING, OUT result STRING)
+BEGIN
+ SET result = 'Hello, ' || name || '!';
+END;
+
+-- Invoke the function
+PRINT hello('world');
+
+-- Call the procedure and print the results
+DECLARE str STRING;
+CALL set_message('world', str);
+PRINT str;
+
+   Run script
+
+./hplsql -f test.sql
+
+   Result
+Hello, world!
+Hello, world!
+
+Add command to kill an ACID transaction
+
+   Note: This feature is available for experimental use and not
+   recommended for use in production.
+
+   Command to kill a (runaway) transaction as well as cleaning up all
+   state related to this txn. The initiator of this (if still alive) will
+   get an error trying to heartbeat/commit (that is, will become aware
+   that the txn is dead).
+
+   Example
+
+   Configure hive-site.xml with transactions properties
+
+<property>
+  <name>hive.support.concurrency</name>
+  <value>true</value>
+</property>
+<property>
+  <name>hive.enforce.bucketing</name>
+  <value>true</value>
+</property>
+<property>
+  <name>hive.exec.dynamic.partition.mode</name>
+  <value>nonstrict</value>
+</property>
+<property>
+  <name>hive.txn.manager</name>
+  <value>org.apache.hadoop.hive.ql.lockmgr.DbTxnManager</value>
+</property>
+<property>
+  <name>hive.compactor.initiator.on</name>
+  <value>true</value>
+</property>
+<property>
+  <name>hive.compactor.worker.threads</name>
+  <value>1</value>
+</property>
+
+   Create table
+
+CREATE EXTERNAL TABLE
+test (EmployeeID Int)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ",";
+
+   Create a text file with sample data and load it to table
+
+load data local inpath '<path to file with sample data>' into table test;
+
+   Create second table that will store data as orc and transactions
+          enabled
+
+create table HiveTest
+(EmployeeID Int)
+clustered by (EmployeeID) into 1 buckets
+stored as orc TBLPROPERTIES ('transactional'='true');
+
+   Insert data from first table to second
+
+from test
+insert into table HiveTest
+select EmployeeID;
+
+   To see current transactions
+
+SHOW TRANSACTIONS;
+
+   To abort transaction, use ABORT TRANSACTIONS command for defined
+          transaction ID
+
+ABORT TRANSACTIONS transactionID [, ...];
+
+   Verify that there is no data in second table
+
+select * from hivetest;
+
+   Result
+     * Transaction status should be: ABORTED.
+     * Also you will see an exception from aborted job.
+     * No data in table.
+
+MetadataUpdater to provide a mechanism to edit the basic statistics of a
+table (or a partition)
+
+   Developers/users can now modify the numRows and dataSize for a
+   table/partition. In previous version, although they are part of the
+   table properties, they will be set to -1 when the task is not coming
+   from a statsTask.
+
+   Example
+
+   Create first table
+
+CREATE TABLE src (key string, value string)
+            ROW FORMAT DELIMITED FIELDS TERMINATED BY ",";
+load data local inpath '/opt/mapr/hive/<hive version>/examples/files/srcbucket0.
+txt' into table src;
+
+   Create second table
+
+create table s as select * from src limit 10;
+
+   Verify that users can modify the numRows and dataSize for a
+          table/partition (for TEZ and MR)
+          MR
+
+explain select * from s;
+alter table s update statistics set('numRows'='12');
+explain select * from s;
+alter table s update statistics set('numRows'='1212', 'rawDataSize'='500500');
+explain select * from s;
+
+          TEZ
+
+describe extended s;
+alter table s update statistics set('numRows'='12');
+describe extended s;
+alter table s update statistics set('numRows'='1212', 'rawDataSize'='500500');
+describe extended s;
+
+   EXPECTED
+
+   Verify that numRows and rawDataSize is changed according to the alter
+   queries.
+
+Support Vectorization for TEXTFILE and other formats
+
+   Vectorized query execution is a Hive feature that greatly reduces the
+   CPU usage for typical query operations like scans, filters, aggregates,
+   and joins. A standard query execution system processes one row at a
+   time. This involves long code paths and significant metadata
+   interpretation in the inner loop of execution. Vectorized query
+   execution streamlines operations by processing a block of 1024 rows at
+   a time. Within the block, each column is stored as a vector (an array
+   of a primitive data type). Simple operations like arithmetic and
+   comparisons are done by quickly iterating through the vectors in a
+   tight loop, with very few or no function calls or conditional branches
+   inside the loop. These loops compile in a streamlined way that uses
+   relatively few instructions and finishes each instruction in fewer
+   clock cycles, on average, by effectively using the processor pipeline
+   and cache memory.
+
+   Example
+
+   Set properties (Execute from Hive CLI or from beeline)
+
+set hive.vectorized.execution.enabled=true;
+set hive.vectorized.use.vectorized.input.format=true;
+set hive.vectorized.use.vector.serde.deserialize=false;
+set hive.vectorized.use.row.serde.deserialize=false;
+
+   Create table and load test data
+
+CREATE TABLE part_add_int_permute_select(insert_num int, a INT, b STRING)
+            PARTITIONED BY(part INT);
+
+   Insert data
+
+insert into table part_add_int_permute_select partition(part=1) values
+            (1, 1, 'original'),
+            (2, 2, 'original'),
+            (3, 3, 'original'),
+            (4, 4, 'original');
+
+   Use explain to see how Hive plan the query
+
+explain select insert_num,part,a,b from part_add_int_permute_select order by ins
+ert_num;
+
+          Expected result
+
+          Plan optimized by CBO.
+
+Vertex dependency in root stage
+Reducer 2 <- Map 1 (SIMPLE_EDGE)
+
+Stage-0
+  Fetch Operator
+    limit:-1
+    Stage-1
+      Reducer 2 *vectorized*
+      File Output Operator [FS_6]
+        Select Operator [SEL_5] (rows=4 width=12)
+         Output:["_col0","_col1","_col2","_col3"]
+        <-Map 1 [SIMPLE_EDGE]
+         SHUFFLE [RS_2]
+          Select Operator [SEL_1] (rows=4 width=12)
+            Output:["_col0","_col1","_col2","_col3"]
+            TableScan [TS_0] (rows=4 width=12)
+
+default@part_add_int_permute_select,part_add_int_permute_select,
+       Tbl:COMPLETE,Col:NONE,Output:["insert_num","a","b"]
+
+   Try different select queries
+
+select insert_num,part,a,b from part_add_int_permute_select order by insert_num;
+
+select insert_num,part,a from part_add_int_permute_select order by insert_num;
+select insert_num,part from part_add_int_permute_select order by insert_num;
+
+   EXPECTED
+
+   All selects worked successfully.
+
+Implement support for NULLS FIRST/NULLS LAST
+
+   The NULLS FIRST and NULLS LAST options can be used to determine whether
+   nulls appear before or after non-null data values when the ORDER BY
+   clause is used. The NULLS FIRST and NULLS LAST options can be used to
+   determine whether nulls appear before or after non-null values in the
+   sort ordering. By default, null values sort as if larger than any
+   non-null value; that is, NULLS FIRST is the default for DESC order, and
+   NULLS LAST otherwise.
+   Note: The ordering options are considered independently for each sort
+   column. For example, ORDER BY x, y DESC means ORDER BY x ASC, y DESC,
+   which is not the same as ORDER BY x DESC, y DESC.
+
+   Example
+
+   Create table
+
+create table src_null (a int, b string);
+INSERT INTO TABLE src_null VALUES (1,'A'),(null,null),(3,null),(2,null),(2,'A'),
+(2,'B');
+
+   Try different select queries
+
+SELECT x.* FROM src_null x ORDER BY a asc nulls first;
+
+          Result
+
+NULL NULL
+1 A
+2 NULL
+2 A
+2 B
+3 NULL
+
+SELECT x.* FROM src_null x ORDER BY a desc nulls first;
+
+          Result
+
+NULL NULL
+3 NULL
+2 NULL
+2 A
+2 B
+1 A
+
+SELECT x.* FROM src_null x ORDER BY b asc nulls last;
+
+          Result
+
+1 A
+2 A
+2 B
+NULL NULL
+
+SELECT x.* FROM src_null x ORDER BY b desc nulls last;
+
+          Result
+
+2 B
+1 A
+2 A
+NULL NULL
+3 NULL
+2 NULL
+
+View's input/output formats are TEXT by default
+
+   Hive View's input/output formats are text by default for third party
+   compatibility. If hive.default.fileformat.managed is not none, use its
+   value as default fileformat, otherwise use hive.default.fileformat's
+   value.
+
+   Example
+     * The default value for hive.default.fileformat.managed is none
+     * The default value for hive.default.fileformat is TextFile
+
+   Verify the following:
+    1.
+hive> set hive.default.fileformat;
+       Result: hive.default.fileformat=TextFile
+    2.
+hive> set hive.default.fileformat.managed;
+       Result: hive.default.fileformat.managed=none
+
+Allow aggregate functions in over clause
+
+   Support to reference aggregate functions within the over clause.
+
+   Example
+
+   Create table
+
+create table cbo_t3(key string, value string, c_int int, c_float float, c_boolea
+n boolean)
+            row format delimited fields terminated by ',' STORED AS TEXTFILE;
+
+   Load data
+
+load data local inpath '/opt/mapr/hive/<hive version>/examples/files/cbo_t3.txt'
+ into table cbo_t3;
+
+   Try different select queries with aggregate functions in over clause
+
+select rank() over (order by sum(ws.c_int)) as return_rank from cbo_t3 ws group
+by ws.key;
+
+          Result:
+
+1
+2
+2
+2
+5
+5
+7
+
+select avg(cast(ws.key as int)) over (partition by min(ws.value) order by sum(ws
+.c_int))
+            as return_rank from cbo_t3 ws group by cast(ws.key as int);
+
+          Result:
+
+NULL
+1.0
+2.0
+3.0
+
+Support view column authorization
+
+   This feature allows us grant permission to let user to work only with
+   specific set of columns in view. To enable view column authorization,
+   there are several preparation steps. This feature is a part of SQL
+   based authorization.
+    1. Add the following properties to hive-site.xml.
+<property>
+  <name>hive.server2.enable.doAs</name>
+  <value>false</value>
+</property>
+<property>
+  <name>hive.users.in.admin.role</name>
+  <value>mapr</value>
+</property>
+<property>
+  <name>hive.security.metastore.authorization.manager</name>
+  <value>org.apache.hadoop.hive.ql.security.authorization.MetaStoreAuthzAPIAutho
+rizerEmbedOnly</value>
+</property>
+<property>
+  <name>hive.security.authorization.manager</name>
+  <value>org.apache.hadoop.hive.ql.security.authorization.DefaultHiveAuthorizati
+onProvider</value>
+</property>
+    2. Start metastore.
+    3. Start hiveserver2 with following keys:
+-hiveconf
+  hive.security.authorization.manager=org.apache.hadoop.hive.ql.security.authori
+zation.
+  plugin.sqlstd.SQLStdHiveAuthorizerFactory
+-hiveconf hive.security.authorization.enabled=true
+-hiveconf hive.security.authenticator.manager=org.apache.hadoop.hive.ql.security
+.SessionStateUserAuthenticator
+-hiveconf hive.metastore.uris=' ' (quotes with one space between them)
+
+   Example
+
+   Execute the following queries as user mapr
+
+CREATE TABLE src_autho_test (key STRING COMMENT 'default', value STRING COMMENT
+'default') STORED AS TEXTFILE;
+
+LOAD DATA LOCAL INPATH "/opt/mapr/hive/<hive-version>/examples/files/kv1.txt" IN
+TO TABLE src_autho_test;
+
+CREATE VIEW v AS SELECT * FROM src_autho_test;
+
+set hive.security.authorization.enabled=true;
+
+   Execute the following queries as user mapruser1
+
+select * from v order by key limit 10;
+
+          Result
+
+Authorization failed:No privilege 'Select' found for inputs { database:default,
+table:v,
+        columnName:value}. Use SHOW GRANT to get more details.
+
+select key from v order by key limit 10;
+
+          Result
+
+Authorization failed:No privilege 'Select' found for inputs { database:default,
+table:v,
+              columnName:key}. Use SHOW GRANT to get more details.
+
+   Execute the following query as user mapr
+
+grant select(key) on table src_autho_test to user mapruser1;
+
+   Execute the following queries as user mapruser1
+
+select * from v order by key limit 10;
+
+          Result
+
+Authorization failed:No privilege 'Select' found for inputs { database:default,
+table:v,
+              columnName:value}. Use SHOW GRANT to get more details.
+
+select key from v order by key limit 10;
+
+          Result
+
+0
+0
+0
+10
+100
+100
+103
+103
+104
+104
+
+References
+
+   1. https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=59690156
+   2. http://www.hplsql.org/doc

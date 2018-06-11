@@ -1,0 +1,152 @@
+MapR-DB Binary CopyTable
+
+   Copies data from one MapR-DB binary table to another MapR-DB binary
+   table.
+   The MapR-DB CopyTable utility is different from Apache HBase's
+   [1]CopyTable utility. This utility has the following capability:
+     * If the destination table does not exist, CopyTable creates the
+       target table with the same metadata (column families and access
+       control expressions) as the source table, and then copies data.
+     * If the destination table exists, CopyTable copies data only.
+     * If you manually set up replication to a MapR-DB table, CopyTable
+       can be used to perform an initial load of source data to the
+       replica before table replication begins.
+
+   Note: When copying data to MapR-DB tables, it is recommended that you
+   use the MapR-DB version of CopyTable.
+
+Required Permissions
+
+   The user that runs the CopyTable utility must have the following
+   permissions:
+     * The permission readAce on the volume where the source table is
+       located, and the permission writeAce on the volume where the
+       destination table is or will be located.
+     * The permission adminperm on the source table.
+     * The permission for column-family and column reads (readperm) on the
+       data in the source table that you want to copy.
+     * When bulkload = false, the permission for column writes (writeperm)
+       on the destination table.
+     * When bulkload = true (default), the permission to load the
+       destination table with bulk loads (bulkloadperm).
+     * If the destination table does not yet exist: createrenamefamily on
+       the source table.
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+   If CopyTable is run between tables on different clusters, the user that
+   runs the command must have the required permissions on each cluster.
+
+   For information about how to set permissions on volumes, see [2]Setting
+   Whole Volume ACEs.
+
+   For information about how to set permissions on tables, see [3]Enabling
+   Table and Stream Authorizations with ACEs.
+
+Syntax
+
+hbase com.mapr.fs.hbase.tools.mapreduce.CopyTable
+    -src <source table path> -dst <destination table path>
+    [-columns cf1[:col1],...] [-maxversions <max number of versions to copy>]
+    [-starttime <time>]
+    [-endtime <time>]
+    [-mapreduce <true|false> (default: true)]
+    [-bulkload <true|false> (default: true)]
+    [-numthreads <numThreads> (default:16, valid only when -mapreduce is false)]
+
+Parameters
+
+   Parameters Description
+   src
+
+   The path to the source table that you want to replicate.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named testsrc under a volume with a
+       mount point at /volume1, specify the following path:
+       /volume1/testsrc
+     * For a path on another cluster, you must also specify the cluster
+       name in the path. For example, for a table named customersrc under
+       volume1 in the sanfrancisco cluster, specify the following path:
+       /mapr/sanfrancisco/volume1/customersrc
+
+   dst
+
+   The path to the replica.
+     * For a table on the local cluster, start the path at the volume
+       mount point. For example, for a table named testdst under a volume
+       with a mount point at /volume1, specify the following path:
+       /volume1/testdst
+     * For a table on another cluster, you must also specify the cluster
+       name in the path. For example, for a table named customerdst under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customerdst
+
+   columns By default, all columns in the source table are copied. If you
+   do not want to copy all columns in the table, you can specify columns
+   to copy. Provide a comma-separated list of column families or columns
+   from a certain column family (column family:qualifier).
+
+   For example, use the following syntax to copy only the purchases column
+   family and the stars column in the reviews column family: -columns
+   purchases,reviews:stars
+   maxversions By default, all versions from the source table are copied.
+   If you do not want to copy all versions, use this parameter to specify
+   the number of versions to copy.
+   starttime By default, all table values regardless of their associated
+   timestamp are copied. You can specify a timestamp to indicate the table
+   cell version at which to start the copy. The timestamp is a long
+   integer value that is either user-defined or system-defined (epoch in
+   milliseconds). Values with timestamps lower than the specified
+   timestamp will not be copied to the destination.
+   endtime By default, all table values regardless of their associated
+   timestamp are copied. You can specify a timestamp to indicate the table
+   cell version at which to end the copy. The timestamp is a long integer
+   value that is either user-defined or system-defined (epoch in
+   milliseconds). Values with timestamps greater than or equal to the
+   specified timestamp will not be copied to the destination.
+   mapreduce
+
+   A Boolean value that specifies whether or not to use a MapReduce
+   program to perform the copying operation. The default, preferred method
+   is to use a MapReduce program (true).
+
+   When this parameter is set to false, a client process uses multiple
+   threads to read rows of the source table and write rows to the
+   destination table.
+   bulkload A Boolean value that specifies whether or not to perform a
+   full bulk load of the table. The default is to use bulk loading (true).
+   When you use bulk loading, the utility automatically unsets the bulk
+   load mode on the table to restore normal client operations at the end
+   of the table copy operation. For more information, see [4]Bulk Loading
+   and MapR-DB Tables.
+   numthreads When -mapreduce is false, this parameter specifies the
+   number of threads allocated to perform the copying of data. The default
+   is 16. If additional CPU resources are available, you might want to
+   increase the number of threads to achieve better performance.
+
+Monitoring the CopyTable Operation
+
+   Use one of the following methods to monitor the progress of the copying
+   of table data:
+     * If the copy table operation runs as a MapReduce v2 application,
+       monitor the application using the ResourceManager UI.
+     * If the copy table operation runs as a client process, go to the
+       Tables view of the destination table in the MapR Control System.
+       Then, on the Region tab, monitor the pace at which the number of
+       rows increases.
+
+Example
+
+   Copies table data with timestamp greater than 1423226300000 (Fri, 06
+   Feb 2015 12:38:20 GMT) from one MapR-DB table to another MapR-DB table:
+[user@hostname ~]$  hbase com.mapr.fs.hbase.tools.mapreduce.CopyTable -src /t1 -
+dst /t1_copy7  -starttime 1423226300000
+
+References
+
+   1. https://hbase.apache.org/0.94/apidocs/org/apache/hadoop/hbase/mapreduce/CopyTable.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetEditVolumeDataACE.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/EnablingTableAuthorizations.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/BulkLoadingandMapR-DBTables-binary.html

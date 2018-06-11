@@ -1,0 +1,43 @@
+Troubleshooting Changelogs
+
+checkandcreate topic failed with error 17
+
+   I'm getting a checkandcreate topic error while trying to edit a
+   changelog topic.
+   Because the maprcli table changelog add command is an asynchronous
+   command, the CDC relationship (same as replication relationship)
+   involves storing information at both the source and destination sides.
+   This results in the following behavior:
+     * When the maprcli table changelog add operation succeeds, it means
+       that the add request is received. To check whether there is an
+       error during the add operation, run the maprcli table changelog
+       list operation.
+     * The maprcli table changelog edit operation only modifies the
+       information on the source side, even if an error is display in the
+       maprcli table changelog list output, the changelog can still be
+       modified.
+
+   Troubleshooting methods:
+     * If the stream topic already exists in the destination and you are
+       getting an error, delete the topic. The maprcli table changelog add
+       operation automatically retries and finishes.
+     * If the error can not be fixed, delete the partial relationship from
+       the source side with the maprcli table changelog remove operation
+       and retry.
+
+Enabling/Disabling Propagation
+
+   Propagation of existing table data is enabled by default. If you do not
+   want to propagate existing source table data, set the
+   -propagateexistingdata parameter to false. The default is true.
+
+   Propagation is enabled as soon as the table changelog relationship is
+   added. If you do not want propagation to begin, set the -pause
+   parameter to true. The change data records are stored in a bucket until
+   you resume the changelog relationship; at this point, the stored change
+   data records are propagated to the stream topic. See [1]table changelog
+   resume for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-changelog-resume.html

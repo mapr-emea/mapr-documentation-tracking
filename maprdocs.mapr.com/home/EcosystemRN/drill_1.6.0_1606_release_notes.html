@@ -1,0 +1,73 @@
+Drill 1.6.0 - 1606 Release Notes
+
+   The following release notes apply to the 1.6.0 - 1606 version of the
+   Apache Drill component included in the MapR Converged Data Platform.
+   Drill Version 1.6.0
+   Release Date June 30, 2016
+   MapR Version Interoperability See [1]Interoperability Matrix and
+   [2]Drill Support Matrix.
+   Packages
+
+   Redhat
+          mapr-drill-1.6.0.201606241408-1.noarch.rpm
+
+   SuSe
+          mapr-drill-1.6.0.201606241408-1.noarch.rpm
+
+   Ubuntu
+          mapr-drill_1.6.0.201606241350_all.deb
+
+Resolved Issues
+
+   The following table lists resolved issues in Drill 1.6.0 - 1606:
+   Issue Description
+   DRILL-4715 Queries with multiple, non-trivial expressions no longer
+   cause compilation errors at runtime due to memory limits imposed by the
+   JVM.
+   DRILL-4694 Drill no longer adds extraneous NULL fields to JSON output
+   files when you issue the CTAS statement to create JSON output from an
+   existing JSON file. A new option, store.json.writer.skip_null_fields,
+   controls this behavior. By default, store.json.writer.skip_null_fields
+   = true and skips NULL fields. Setting
+   store.json.writer.skip_null_fields = false reverts the behavior.
+   DRILL-4693 Columns now appear in the correct order when you issue a
+   SELECT list expression with the COVERT_FROM function and the format
+   type is JSON.
+   DRILL-4679 Queries that contain the CONVERT_FROM function with the JSON
+   format type no longer fail with the following error when the input data
+   has 0 rows due to a filter condition:
+Error: SYSTEM ERROR: IllegalStateException: next() returned NONE without first r
+eturning OK_NEW_SCHEMA [#16, ProjectRecordBatch]Fragment 0:0
+
+   DRILL-4676 Canceling a query during planning no longer blocks the
+   drillbit from accepting new queries.
+   DRILL-4657 Running a query with the RANK function no longer produces
+   incorrect results when a frame does not fit into two batches of data.
+   DRILL-4654 Drill now uses JMX ([3]Java Management Extensions) to
+   monitor queries at runtime and provide the following new metrics
+   through the Drill Web Console and JConsole:
+     * pending/running/completed queries
+     * current memory usage (root allocator)
+
+   DRILL-4647 In instances when a drillbit is not running or query
+   submission fails, the C++ client correctly propagates failed connection
+   errors back to the application.
+   DRILL-4476 The UNION ALL operator now supports scenarios where the
+   query expression on either side of the UNION ALL operator references an
+   empty source.
+   DRILL-3714 Queries no longer remain in a CANCELLATION_REQUESTED state
+   until the drillbits are restarted.
+   MD-850 Queries that contain two numbers CAST as decimals and added
+   together no longer result in a data type mismatch.
+   MD-849 Queries on JSON files that contain two index levels no longer
+   fail with an IndexOutOfBoundsException error.
+   MD-815 Queries on INFORMATION_SCHEMA (hive metadata) are significantly
+   faster due to the use of a bulk load algorithm when the
+   exec.enable_bulk_load_table_list system option is set to true:
+ALTER SYSTEM SET `exec.enable_bulk_load_table_list` = true
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/c_matrix_intro.html#concept_nym_4pb_t5
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/r_drill_matrix.html#reference_lv3_2sb_t5
+   3. https://docs.oracle.com/javase/tutorial/jmx/

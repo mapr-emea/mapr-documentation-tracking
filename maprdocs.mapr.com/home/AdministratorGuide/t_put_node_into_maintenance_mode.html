@@ -1,0 +1,32 @@
+Putting a Node into Maintenance Mode
+
+   Before putting a node into maintenance mode, make sure that:
+     * All copies of CLDB volume exists if the node is a CLDB node. You
+       can shut down the CLDB service on a node only if the CLDB is a
+       slave CLDB or if high availability for CLDB is enabled.
+       Note: A node that is running both the CLDB and MFS services cannot
+       be put into maintenance mode. You can shut down the CLDB service on
+       the node as long as it is a secondary CLDB node or High
+       Availability for CLDB is enabled.
+     * All running processing tasks (such as NodeManager, Spark, etc.)
+       that depend on MFS have been stopped.
+
+   Warning: Do not put a node under maintenance if there are any volume
+   under-replicated alarms because doing so may make some data completely
+   offline.
+   To put a node into maintenance mode, follow this process:
+    1. From a terminal, issue the [1]node maintenance command:
+maprcli node maintenance -nodes <IP|hostname> -timeoutminutes <minutes>
+       When running this command, specify a timeout (in minutes) long
+       enough for you to perform necessary maintenance on the node.
+       Note: For the duration of the timeout, the cluster's CLDB does not
+       consider this node's data as lost and does not trigger a resync of
+       the data on this node. However, if a node is put under maintenance
+       for more than 5 minutes, MFS will be shut down on that node so that
+       any client(s) accessing containers on this node will get
+       appropriate error and retry other container copies.
+    2. Stop warden on the node.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/node-maintenance.html#nodemaintenance

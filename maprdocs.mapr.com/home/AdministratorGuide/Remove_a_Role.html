@@ -1,0 +1,23 @@
+Removing a Role
+
+   The following steps describe how to remove a role from a node:
+   Note: Do not use these steps to remove the CLDB, ZooKeeper, or
+   Fileserver role from a node.
+    1. If you are removing the NFS role, unmount any existing client
+       mounts.
+       Removing the NFS role from a node affects any Virtual IP (VIP)
+       pools that include this node.
+    2. If the cluster has only one CLDB, run configure.sh with the -C
+       option on all the nodes.
+    3. Stop the service for the role you want to remove, either through
+       the MapR Control System (MCS) or by issuing a maprcli command:
+% maprcli node services -name <service_name> -action stop -nodes <node-name>
+       The following example stops the webserver role on node "my-node":
+% maprcli node services -name webserver -action stop -nodes my-node
+    4. Purge the role packages with the apt-get, yum, or zypper commands,
+       depending on your operating system.
+    5. Run configure.sh -R on the node where you removed the role.
+       Warden picks up the new configuration automatically.
+    6. Issue the following command to restart Warden on the node where you
+       removed the role:
+% service mapr-warden restart

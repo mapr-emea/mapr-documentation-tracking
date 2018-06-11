@@ -1,0 +1,310 @@
+librdkafka APIs Supported by MapR-ES C Client
+
+   This topic lists the librdkafka APIs supported by the MapR-ES C Client.
+   It also describes behavior differences between librdkafka and the
+   MapR-ES C Client.
+
+   CAPTION: Table 1. Supported Apache Kafka librdkafka versions
+
+            MapR release          MEP Release Kafka librdkafka version
+   As of MapR 6.0.1               As of 5.0   0.11.3
+   As of MapR 5.2.1 through 6.0.0 As of 3.0   0.9.0
+   This topic contains the following supported APIs:
+     * [1]Producer APIs
+     * [2]Consumer APIs
+     * [3]Producer/Consumer Common APIs
+     * [4]Topic APIs
+     * [5]Queue APIs
+     * [6]Event APIs
+     * [7]Timestamp APIs
+     * [8]Interceptors APIs
+     * [9]Cluster Configuration APIs
+     * [10]Miscellaneous API
+
+Producer APIs
+
+   API Behavior
+   rd_kafka_flush Same as librdkafka. Available as of librdkafka 0.11.3.
+   Supported as of MapR 6.0.1.
+   rd_kafka_poll Same as librdkafka.
+   rd_kafka_produce When this API is called with NULL payload, an invalid
+   argument error is sent to the callback. librdkafka creates a message
+   with NULL payload and key value instead.
+   rd_kafka_producev Same as librdkafka. This API should be used with
+   either RD_KAFKA_V_TOPIC or RD_KAFKA_V_RKT. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_produce_batch When this API is called with NULL payload, an
+   invalid argument error is sent to the callback. librdkafka creates a
+   message with NULL payload and key value instead.
+   rd_kafka_outq_len This API returns a positive number to indicate that
+   messages are waiting to be produced to a MapR streams topic but the
+   value does not indicate the actual number of messages. librdkafka
+   returns the actual number of messages that are waiting to be sent to or
+   acknowledged by the broker.
+
+Consumer APIs
+
+   API Behavior
+   rd_kafka_assign If this API is called for a consumer that is already
+   subscribed to topics, no operation is performed.
+   rd_kafka_assignment This API returns the number of topic partitions the
+   consumer is assigned to. However, it returns 0 when topic partitions
+   have yet to be created by the producer. librdkafka returns the number
+   of partitions assigned to a consumer even when the partitions have not
+   been created.
+   Note: For this API to work, the argument partitions must be explicitly
+   allocated or initialized with either rd_kafka_topic_partition_list_t
+   *parts = NULL or rd_kafka_topic_partition_list_new(0);. For example:
+RD_EXPORT rd_kafka_resp_err_t
+rd_kafka_assignment (rd_kafka_t *rk,
+                     rd_kafka_topic_partition_list_t **partitions);
+
+   rd_kafka_commit Same as librdkafka.
+   rd_kafka_commit_message Same as librdkafka.
+   rd_kafka_committed Same as librdkafka.
+   Note: The MapR-ES offset starts at 1.
+   rd_kafka_consumer_close Same as librdkafka.
+   rd_kafka_consumer_poll Same as librdkafka.
+   Note:
+
+   For librdkafka 0.9: If the consume callback was set and messages were
+   polled using rd_kafka_consumer_poll(), then the consume callback gets
+   called and the messages can be consumed in the callback.
+
+   For librdkafka 0.11.3: If the consume callback is set and messages are
+   polled using rd_kafka_consumer_poll(), the consume callback is not
+   called. The result is that you cannot consume messages in the consume
+   callback when using rd_kafka_consumer_poll().
+   rd_kafka_group_list_destroy Same as librdkafka.
+   rd_kafka_list_groups This API can only be used by consumers that are
+   subscribed to at least one stream on the cluster and have a default
+   stream configured with the streams.consumer.default.stream parameter.
+   It returns the group list of subscribed consumers associated with the
+   default stream. librdkafka returns all consumer groups from the cluster
+   instead.
+   Note: This API returns RD_KAFKA_RESP_ERR__TIMED_OUT when the querying
+   consumer is not subscribed to any topic.
+   rd_kafka_message_destroy Same as librdkafka.
+   rd_kafka_poll_set_consumer Same as librdkafka.
+   rd_kafka_position This API returns 0 when the messages have not yet
+   been consumed from partitions. librdkafka returns -1001 instead.
+   rd_kafka_seek Same as librdkafka.
+   rd_kafka_subscribe Same as librdkafka.
+   rd_kafka_subscription This API allows either a list of topics from one
+   or more streams or a regex expression for topics from a single streams.
+   For example, regex expression /streamA:^t*a,/streamA:^t*b is supported
+   but /streamA:^t*a,/streamB:^t*a is not supported. librdkafka accepts
+   both options in the same call.
+   Note: You cannot use the rd_kafka_subscribe API to subscribe a consumer
+   to topics when that consumer is already assigned to topics. If you call
+   this API for an assigned consumer, error RD_KAFKA_RESP_ERR__CONFLICT is
+   returned.
+   rd_kafka_unsubscribe Same as librdkafka.
+
+Producer/Consumer Common APIs
+
+                  API                      Behavior
+   rd_kafka_conf_destroy              Same as librdkafka.
+   rd_kafka_conf_dup                  Same as librdkafka.
+   rd_kafka_conf_get                  Same as librdkafka.
+   rd_kafka_conf_new                  Same as librdkafka.
+   rd_kafka_conf_set                  Same as librdkafka.
+   rd_kafka_conf_set_consume_cb       Same as librdkafka.
+   rd_kafka_conf_set_dr_msg_cb        Same as librdkafka.
+   rd_kafka_conf_set_error_cb         Same as librdkafka.
+   rd_kafka_conf_set_offset_commit_cb Same as librdkafka.
+   rd_kafka_conf_set_opaque           Same as librdkafka.
+   rd_kafka_conf_set_rebalance_cb     Same as librdkafka.
+   rd_kafka_conf_set_throttle_cb      Same as librdkafka.
+   rd_kafka_destroy                   Same as librdkafka.
+   rd_kafka_new                       Same as librdkafka.
+   rd_kafka_opaque                    Same as librdkafka.
+   rd_kafka_wait_destroyed            Same as librdkafka.
+   rd_kafka_yield                     Same as librdkafka.
+
+Topic APIs
+
+                     API                          Behavior
+   rd_kafka_conf_set_default_topic_conf     Same as librdkafka.
+   rd_kafka_topic_conf_destroy              Same as librdkafka.
+   rd_kafka_topic_conf_dup                  Same as librdkafka.
+   rd_kafka_topic_conf_new                  Same as librdkafka.
+   rd_kafka_topic_conf_set                  Same as librdkafka.
+   rd_kafka_topic_conf_set_opaque           Same as librdkafka.
+   rd_kafka_topic_conf_set_partitioner_cb   Same as librdkafka.
+   rd_kafka_topic_destroy                   Same as librdkafka.
+   rd_kafka_topic_name                      Same as librdkafka.
+   rd_kafka_topic_new                       Same as librdkafka..
+   rd_kafka_topic_partition_list_add        Same as librdkafka.
+   rd_kafka_topic_partition_list_add_range  Same as librdkafka.
+   rd_kafka_topic_partition_list_copy       Same as librdkafka.
+   rd_kafka_topic_partition_list_del        Same as librdkafka.
+   rd_kafka_topic_partition_list_del_by_idx Same as librdkafka.
+   rd_kafka_topic_partition_list_destroy    Same as librdkafka.
+   rd_kafka_topic_partition_list_find       Same as librdkafka.
+   rd_kafka_topic_partition_list_new        Same as librdkafka.
+   rd_kafka_topic_partition_list_set_offset Same as librdkafka.
+
+Queue APIs
+
+   API Behavior
+   rd_kafka_queue_new Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_destroy Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_get_main For this API, produce events are batched as
+   well as the APIs that use this API, such as,
+   rd_kafka_event_message_count and rd_kafka_event_message_next. The
+   messages produce events can be consumed together in batches, wheras,
+   opensource librdkafka events are obtained one at a time.
+
+   Available as of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_get_consumer Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_length Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_poll Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_poll_callback Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_commit_queue Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_forward Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_set_log_queue Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_length Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_io_event_enable Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_queue_get_partition Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+
+Event APIs
+
+   API Behavior
+   rd_kafka_event_type Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_event_name Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_event_destroy Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_event_message_array Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_event_message_count Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_event_error Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_event_error_string Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_event_topic_partition_list Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_event_message_next Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_event_opaque Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+
+Timestamp APIs
+
+   API Behavior
+   rd_kafka_offsets_for_times Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_message_timestamp Same as librdkafka. Available as of
+   librdkafka 0.9.1. Supported as of MapR 6.0.1.
+
+Interceptors APIs
+
+   Attention: Modifying the message in interceptors is not supported and
+   can result in undefined behavior.
+   API Behavior
+   rd_kafka_interceptor_f_on_conf_set_t Same as librdkafka. Available as
+   of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_f_on_conf_dup_t Same as librdkafka. Available as
+   of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_f_on_conf_destroy_t Same as librdkafka. Available
+   as of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_f_on_new_t Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_f_on_destroy_t Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_f_on_send_t Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_f_on_acknowledgement_t Same as librdkafka.
+   Available as of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_f_on_consume_t Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_f_on_commit_t Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_conf_interceptor_add_on_conf_set Same as librdkafka. Available
+   as of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_conf_interceptor_add_on_conf_dup Same as librdkafka. Available
+   as of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_conf_interceptor_add_on_conf_destroy Same as librdkafka.
+   Available as of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_conf_interceptor_add_on_new Same as librdkafka. Available as
+   of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_conf_interceptor_add_on_destroy Same as librdkafka. Available
+   as of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_add_on_send Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_add_on_acknowledgement Same as librdkafka.
+   Available as of librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_add_on_consume Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+   rd_kafka_interceptor_add_on_commit Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+
+Cluster Configuration APIs
+
+           API          Behavior
+   rd_kafka_brokers_add
+
+   This API has no impact on MapR-ES since MapR-ES does not utilize Kafka
+   brokers. When this API is called, the MapR-ES client may print a
+   brokers are down error message to the console.
+
+Miscellaneous API
+
+   API Behavior
+   rd_kafka_err2name Same as librdkafka.
+   rd_kafka_err2str Same as librdkafka.
+   rd_kafka_errNo Same as librdkafka.
+   rd_kafka_errNo2err Same as librdkafka.
+   rd_kafka_get_err_descs Same as librdkafka.
+   rd_kafka_last_error Same as librdkafka.
+   rd_kafka_log_print Same as librdkafka.
+   rd_kafka_log_syslog Same as librdkafka.
+   rd_kafka_message_errstr Same as librdkafka.
+   rd_kafka_set_logger Same as librdkafka.
+   rd_kafka_query_watermark_offsets When you are querying or retrieving a
+   topic that is non-existent topic/partition (using
+   rd_kafka_query_watermark_offsets() and rd_kafka_get_watermark_offsets()
+   APIs), the timeout is honored even though you still receive the correct
+   error message.
+
+   Supported as of MapR 6.0.1.
+   rd_kafka_get_watermark_offsets When you are querying or retrieving a
+   topic that is non-existent topic/partition (using
+   rd_kafka_query_watermark_offsets() and rd_kafka_get_watermark_offsets()
+   APIs), the timeout is honored even though you still receive the correct
+   error message.
+
+   Supported as of MapR 6.0.1.
+
+Additional Information
+
+   For more information and API signatures, see [11]rdkafka.h.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__producer
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__consumer
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__common
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__topic
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__queue
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__event
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__timestamp
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__interceptors
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__cluster-config
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/librdkafka-supported-CAPI.html#supported-C-apis__misc
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/rdkafka.h.html

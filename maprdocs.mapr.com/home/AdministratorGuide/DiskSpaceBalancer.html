@@ -1,0 +1,88 @@
+Disk Space Balancer
+
+   The disk space balancer is a tool that balances disk space usage on a
+   cluster by moving containers between nodes (subject to the constraints
+   of the topology of the volume to which a container belongs). This
+   movement of containers ensures that the percentage of space used on all
+   the disks in the cluster is similar. The disk space balancer balances
+   at the level of storage pools (SPs), keeping them at the same
+   utilization level as the cluster average.
+   Note:
+     * Utilization Level of a SP = (Used space of the SP / Storage
+       capacity of the SP)
+     * Cluster Average = (Used space across all SPs / Capacity of all SPs)
+
+   The disk space balancer distributes containers from highly utilized
+   storage pools on one node in a cluster to less utilized storage pools
+   on other nodes in the same cluster. It accomplishes this by first
+   classifying storage pools into different bins (based on their
+   utilization level). It checks every storage pool on a regular basis
+   (every 2 minutes by default) and then classifies storage pools into
+   bins based on their percentage utilization.
+
+   After classifying the storage pools into bins, the disk space balancer
+   then moves containers (in two phases) out of the storage pools with
+   more containers to storage pools with fewer containers. That is, it
+   moves containers out of storage pools in higher bins to storage pools
+   in lower bins in two phases:
+     * Phase 1 — storage pools in ‘Overused’ and ‘Above Average’ bins are
+       balanced.
+     * Phase 2 — storage pools in ‘Average’ and ‘Below Average’ bins are
+       balanced.
+       Note: Movement of containers in phase 2 happens only when there are
+       not many containers scheduled to be moved in phase 1, because
+       movement of container at any point in time is throttled.
+
+   In both phases, the disk balancer attempts to move containers from
+   storage pools in the highest utilized bin (the source SP) to suitable
+   storage pools in the the lowest utilized bin (the destination SP). If a
+   suitable SP could not be found as the destination, the balancer
+   attempts to move a container to the next least utilized bin. An SP is
+   not deemed suitable as the destination if:
+     * Moving a container to that SP would cause the SP to move to the
+       next bin.
+     * Data movement into the file server to which the SP belongs is
+       blocked.
+     * SP is not in the same topology as specified by the volume.
+     * Certain number of containers are currently being moved into the SP.
+       Note: The number of simultaneous moves to a SP is capped at 2.
+     * SP is in the same bin as the source SP.
+
+   An SP or its containers are not considered for balancing if:
+     * Data movement from the file server to which the SP belongs is
+       blocked.
+     * Container was active (i.e., written to) in the previous 5 minutes.
+     * Containers were deleted in the previous minute.
+       This is to allow space reclamation. If necessary, the bin will be
+       balanced during the next iteration of the disk balancer.
+     * Percentage of data that is being transferred out of an SP is
+       greater than or equal to 2% of the SP’s storage capacity.
+     * Certain number of containers are currently being moved out of the
+       SP.
+       Note: The number of simultaneous moves out of an SP is capped at 2.
+
+Sample Disk Balancer Settings for Organization of Bins
+
+   The following example illustrates disk balancer settings and the
+   corresponding organization of bins to represent storage pool
+   utilization:
+   [DSBalancerSampleBins.png]
+
+   In the above example, the:
+    1. Average cluster space utilization is 65%.
+    2. Average bin size is 10%. Hence, the average bin spans 5% on each
+       side of the average space utilization.
+    3. Overused threshold is 90%.
+    4. Below average bin size is 20%.
+       Below average bin utilization is partitioned into required number
+       of bins (3). During division, the bin that is immediately to the
+       left of the average bin might not span the default value. In other
+       words, if the average bin spans from 50% to 60%, the below average
+       bins will be cast as 0-20%, 20-40%, 40-50%.
+    5. Above average bin size is 10%.
+       Since the overused threshold is 90%, the above average bins span
+       the utilization from the right boundary of the average bin up to
+       the overused threshold. As with below average bins, as many
+       possible bins are cast with the size of the above average bin,
+       leaving the remaining utilization to be covered by the last
+       (right-most) above average bin.

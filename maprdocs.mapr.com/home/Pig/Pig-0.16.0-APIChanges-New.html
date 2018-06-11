@@ -1,0 +1,102 @@
+New API in Pig 0.16.0
+
+   Pig 0.16.0 includes the following new classes and interfaces.
+
+New Classes
+
+   Class Description
+   [1]org.apache.pig.piggybank.evaluation.string.REPLACE_MULTI
+   REPLACE_MULTI implements eval function to replace all occurrences of
+   search keys with replacement values. Replacement values are specified
+   in Map. For example:
+input_data = LOAD 'input_data' as (name);
+-- name = 'Hello World!' replaced_name = FOREACH input_data GENERATE REPLACE_MUL
+TI ( name, [ ''#'_', '!'#'', 'e'#'a', 'o'#'oo' ] );
+-- replaced_name = Halloo_Woorld
+
+   The first argument is the source string on which REPLACE_MULTI
+   operation is performed. The second argument is a map having search key
+   with replacement value pairs.
+   [2]org.apache.pig.piggybank.storage.apachelog.LogFormatLoader This is a
+   pig loader that can load Apache HTTPD access logs written in (almost)
+   any Apache HTTPD LogFormat.
+
+   Basic usage: Feed the loader your (custom) logformat specification and
+   it will show the fields that can be extracted from this logformat.
+   [3]org.apache.pig.CounterBasedErrorHandler Handles errors thrown by the
+   StoreFuncInterface.putNext().
+   [4]org.apache.pig.backend.hadoop.HKerberos Support for logging in using
+   a Kerberos keytab file.
+
+   Kerberos is an authentication system that uses tickets with limited
+   validity time. Running a Pig script on a Kerberos secured Hadoop
+   cluster limits the running time to at most the remaining validity time
+   of the Kerberos tickets. When doing really complex analytics, this may
+   become a problem as the job may need to run for a longer time than
+   these ticket times allow. A Kerberos keytab file is a Kerberos specific
+   form of the password of a user. It is possible to enable a Hadoop job
+   to request new tickets when they expire by creating a keytab file and
+   making it part of the job that is running in the cluster. This will
+   extend the maximum job duration beyond the maximum renew time of the
+   Kerberos tickets.
+   [5]org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.PigWrit
+   ableComparators Byte only raw comparators for faster comparison for
+   non-orderby jobs. This does not reuse
+   JobControlCompiler.Pig<DataType>WritableComparator, which extends
+   PigWritableComparator. The PigNullablePartitionWritable.compare is not
+   that efficient in cases where tuple is iterated for null checking
+   instead of taking advantage of
+   TupleRawComparator.hasComparedTupleNull(). This also skips multi-query
+   index checking.
+   [6]org.apache.pig.backend.hadoop.executionengine.physicalLayer.relation
+   alOperators.StoreFuncDecorator This class is used to decorate the
+   StoreFunc#putNext(Tuple). It handles errors by calling
+   OutputErrorHandler#handle(String, long, Throwable) if the StoreFunc
+   implements ErrorHandling.
+   [7]org.apache.pig.backend.hadoop.executionengine.tez.runtime.PigInputFo
+   rmatTez Extends org.apache.hadoop.mapreduce.InputFormat and implements
+   Pig and Tez specific functions.
+   [8]org.apache.pig.backend.hadoop.executionengine.tez.util.TezUDFContext
+   Separator Extends a visitor for the TezOperPlan class and serializes
+   all (LoadFunc, StoreFunc, UserFunc).
+   [9]org.apache.pig.impl.io.compress.BZip2CodecWithExtensionBZ For
+   historical reasons, Pig supports .bz and .bz2 for bzip2 extension. This
+   class returns the additional bzip2 file extension, .bz, as a string.
+   [10]org.apache.pig.impl.util.UDFContextSeparator TezUDFContextSeparator
+   extends PhyPlanVisitor, which is the visitor class for the Physical
+   Plan. To use this, create the visitor with the plan to be visited. Call
+   the visit() method to traverse the plan in a depth first fashion.
+
+   This class also visits the nested plans inside the operators. Extend
+   this class to modify the nature of each visit and to maintain any
+   relevant state information between the visits to two different
+   operators.
+   [11]org.apache.pig.parser.RegisterResolver Resolves a JAR with a
+   scripting language or namespace.
+   [12]org.apache.pig.tools.DownloadResolver Makes a list of URIs of the
+   downloaded JARs.
+
+New Interfaces
+
+   Interface Description
+   [13]org.apache.pig.ErrorHandler The interface that handles errors
+   thrown by StoreFuncInterface.putNext(Tuple).
+   [14]org.apache.pig.ErrorHandling The interface to enable handling of
+   errors during StoreFunc#putNext(Tuple).
+
+References
+
+   1. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/piggybank/evaluation/string/REPLACE_MULTI.html
+   2. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/piggybank/storage/apachelog/LogFormatLoader.html
+   3. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/CounterBasedErrorHandler.html
+   4. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/backend/hadoop/HKerberos.html
+   5. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/backend/hadoop/executionengine/mapReduceLayer/PigWritableComparators.html
+   6. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/backend/hadoop/executionengine/physicalLayer/relationalOperators/StoreFuncDecorator.html
+   7. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/backend/hadoop/executionengine/tez/runtime/PigInputFormatTez.html
+   8. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/backend/hadoop/executionengine/tez/util/TezUDFContextSeparator.html
+   9. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/impl/io/compress/BZip2CodecWithExtensionBZ.html
+  10. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/impl/util/UDFContextSeparator.html
+  11. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/parser/RegisterResolver.html
+  12. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/tools/DownloadResolver.html
+  13. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/ErrorHandler.html
+  14. https://pig.apache.org/docs/r0.16.0/api/org/apache/pig/ErrorHandling.html

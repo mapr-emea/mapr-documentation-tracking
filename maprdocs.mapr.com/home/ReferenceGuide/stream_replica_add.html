@@ -1,0 +1,94 @@
+stream replica add
+
+   Registers an existing stream as a replica of the specified stream.
+
+Permissions Required at the Source Cluster
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * adminperm and copyperm permissions on the source stream
+
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Permissions Required at the Target Cluster
+
+   To run this command, your user ID must have the following permissions:
+     * [4]readAce and [5]writeAce on the volume
+     * [6]lookupdir on directories in the path
+
+Syntax
+
+   CLI
+maprcli stream replica add
+         -path <stream path>
+         -replica <remote stream path>
+        [ -paused <start replication in paused state> default: false ]
+        [ -throttle <throttle replication operations under load> default: false
+]
+        [ -networkencryption <enable on-wire encryption> default: false ]
+        [ -synchronous <replicate to remote stream before acknowledging producer
+s> default: false ]
+        [ -networkcompression <on-wire compression type: off|lz4|lzf|zlib> defau
+lt: compression setting on stream ]
+
+   REST
+   http[s]://<host>:<port>/rest/stream/replica/add?path=<path>&replica=<na
+   me>
+
+Parameters
+
+   Parameter Description
+   path The path and name of the stream that you want to create a replica
+   for.
+   replica The path and name of the stream that you want to create as a
+   replica of the stream that you specified with the -path parameter.
+   paused A boolean value that specifies whether to pause the replication
+   so that it does not start immediately. The replication can be resumed
+   using the replica resume command at a later time. The values are true
+   or false. The default is false.
+
+   Set -paused to true if you want to run mapr copystream to load the
+   replica stream before starting replication. If it is not paused,
+   replication starts immediately after you run the commands maprcli
+   stream replica add and maprcli stream upstream add, in which case the
+   replica stream starts empty and accumulates messages over time. If you
+   are interested only in the messages that are published to the source
+   stream after replication starts, then you do not need to pause
+   replication initially. However, if you want the full set of messages
+   from the source stream that have not yet been purged or marked for
+   deletion, then pause replication initially.
+   throttle A boolean value that specifies whether to throttle replication
+   operations. Throttle the replication stream to minimize the impact of
+   the replication process on incoming operations during periods of heavy
+   load. The values are true or false. The default is false.
+   Throttling has two effects, both of which allow MapR-ES to use more
+   system resources to process new messages:
+     * Throttling slows down the rate at which changes to a stream are
+       replicated.
+     * Throttling slows down the rate at which messages to be replicated
+       are read from disk.
+
+   networkencryption A boolean value that specifies whether or not to
+   enable on-wire encryption. The values are true or false. The default is
+   false. If you set the value to true, the local cluster and any other
+   cluster that is part of the replication process must be enabled for
+   security.
+   synchronous A boolean value that specifies whether replication is
+   synchronous or asynchronous. The values are true or false. The default
+   is false and specifies asynchronous replication.
+   networkcompression Specifies the type of compression to use when
+   replicating messages. For more information, see [7]Managing
+   Compression.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Compression.html#Compression

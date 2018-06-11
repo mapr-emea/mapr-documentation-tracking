@@ -1,0 +1,172 @@
+fsck
+
+   Filesystem check (fsck) is used to find and fix inconsistencies in the
+   filesystem.
+
+   Every storage pool has its own log to journal updates to the storage
+   pool. All operations to a storage pool are done transactionally by
+   journaling all operations to the log before they are applied to storage
+   pool metadata. If MFS is not shutdown cleanly, some metadata blocks may
+   not persist. However, on the next load of the storage pool, log
+   recovery takes care of these metadata blocks by replaying the records
+   in the log. The fsck utility also replays the log before it checks the
+   metadata consistency in a storage pool. The fsck utility walks the
+   storage pool in question to verify all MapR-FS metadata (and data
+   correctness if specified on the command line), and reports all
+   potentially lost or corrupt containers, directories, tables, files,
+   filelets, and blocks in the storage pool. The fsck utility:
+     * Checks whether all files and directories are reachable and all
+       directory entries are valid.
+     * Checks BTrees are consistent for various inode types (such as files
+       and directories).
+     * Walks the container file and visits every inode in the container to
+       check that no block is owned by two inodes and verifies the
+       consistency of bitmaps of inodes and blocks.
+     * Checks consistency of snapshots.
+     * Visits every allocated block in the storage pool and recovers any
+       blocks that are part of a corrupted inodes.
+     * Checks consistency of MapR-DB metadata.
+     * Checks consistency of tabletmap, tablets, buckets, and spill files.
+
+   The fsck utility can be used on an offline storage pool after a node
+   failure, after a disk failure, or after a MapR-FS process crash, or
+   simply to verify the consistency of data for suspected software bugs.
+
+Typical process flow:
+
+     * Take the affected storage pools offline with the [1]mrconfig sp
+       offline command.
+
+     * Execute the fsck command on the storage pools (or disks) as
+       discussed below.
+
+     * Bring the storage pools back online with the [2]mrconfig sp online
+       command.
+
+     * Execute the [3]gfsck command on the cluster, volumes, or snapshots
+       that were affected.
+
+   The local fsck command can be run in two modes:
+     * Verification mode - fsck only reports errors; it does not attempt
+       to fix or modify any data on disk. fsck can be run in verification
+       mode on an offline storage pool at any time, and it will report
+       errors if there is inconsistency. If it does not report any errors,
+       the storage pool can be brought online without any risk of data
+       loss. To run the fsck utility in verification mode, use any
+       parameter except the -r parameter.
+
+     * Repair mode - fsck attempts to restore a bad storage pool. If the
+       local fsck is run in repair mode on a storage pool, some volumes
+       might need a global fsck (gfsck) after bringing the storage pool
+       online. There is potential for loss of data in this case. To run
+       the fsck utility in repair mode, use the -r parameter.
+
+   Using the /opt/mapr/server/fsck utility with the -r option produces
+   different results depending on the scenario. The fsck utility does not
+   interpret the scenario nor does it have a safe mode.
+     * If a disk is offline because of an imbalanced b-tree, using fsck -r
+       may result in data loss from bad containers and data loss if
+       additional replicas are unavailable.
+     * If a disk is offline because of an I/O error, using fsck -r
+       produces indeterminate results. A disk that is throwing I/O errors
+       is questionable in terms of data content and reliability. For
+       example, an operation that completed on the disk but was never
+       returned may have partial data remaining on the disk. Using fsck -r
+       retains any partial data.
+     * If a disk is offline because of a slow I/O, using fsck -r does not
+       produce data loss.
+
+   The most conservative usage of fsck is to first run fsck without the -r
+   option (verification mode) and check the output. If the output returns
+   errors, then run fsck with the -r option.
+
+Syntax
+
+/opt/mapr/server/fsck
+    [ -b ]
+    [ -C <cid> ]
+    [ -d ]
+    [ <device-paths> | -n <sp name> ]
+    [ -h ]
+    [ -I <inum> ]
+    [ -j ]
+    [ -l <log filename> ]
+    [ -m <memory in MB> ]
+    [ -N ]
+    [ -p <MapR-FS port> ]
+    [ -P ]
+    [ -r ]
+
+Parameters
+
+   Parameter
+
+   Description
+   -b Checks database consistency.
+   -C Optional with the -d option. Specifies the read-write container ID
+   on which CRC (cyclic redundancy check) must be performed. If this
+   option is not specified with the -d option, the CRC is performed on all
+   the containers on the storage pool.
+
+   -d
+
+   Performs a CRC on data blocks. By default, fsck will not validate the
+   CRC of user data pages. Enabling this check can take quite a long time
+   to finish.
+
+   <device-paths>
+
+   Paths to the disks that make up the storage pool.
+   Note: Before running fsck, remove all the disks from MFS using mrconfig
+   disk remove command. For example:
+/opt/mapr/server/mrconfig disk remove /dev/sdb
+/opt/mapr/server/fsck /dev/sdb
+
+   -h
+
+   Help
+
+   -I
+
+   Optional with the -C option. Specifies the inode number on which CRC
+   (cyclic redundancy check) must be performed in the container specified
+   by -C option. If this option is not specified with the -C option, the
+   CRC is performed on all the inodes.
+
+   -j
+
+   Skips log replay. Should be set only when log recovery fails. Log
+   recovery can fail if the damaged blocks of a disk belong to the log, or
+   if log recovery finds some CRC errors in the metadata blocks. *Using
+   this parameter will typically lead to larger data loss. *
+
+   -l
+
+   The log filename. Default: /tmp/fsck.<pid>.out
+
+   -m
+
+   Sets the cache size for blocks (MB).
+
+   -n
+
+   Storage pool name. This option works only if all the disks are in
+   disktab. Otherwise the user will have to individually specify all the
+   disks that make up the storage pool, using the <device-paths>
+   parameter.
+   -N Disables the status bar.
+
+   -p
+
+   The MapR-FS port. Default: 5660
+   -P Purges deleted containers in repair.
+
+   -r
+
+   Runs in repair mode. USE WITH CAUTION AS THIS CAN LEAD TO LOSS OF DATA.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mrconfig-sp-offline.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mrconfig-sp-online.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/gfsck.html

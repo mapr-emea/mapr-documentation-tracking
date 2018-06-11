@@ -1,0 +1,53 @@
+Configuring Profiling for Operations
+
+   To check the amount of time it took to complete each operation (from
+   the time of submission), enable profiling for client RPC and MFS
+   operations. To enable profiling for:
+     * Client RPC, run the following command:
+fcdebug -s <shmid> -m ClntProfileRpc -1 DEBUG
+       Tip: For more information, see [1]fcdebug.
+       Enabling profiling for the client RPC will allow you to determine,
+       for each RPC, the amount of time it took to receive a response
+       after submitting the request.
+     * MFS operations, run the following command:
+maprcli trace setlevel -module FSProfile -level debug
+       Tip: For more information, see [2]maprcli.
+       Enabling profiling for MFS operations will allow you to determine
+       the amount of time it took MFS to process each operation.
+
+   By default, profiling is disabled for both client RPC and MFS
+   operations. Once enabled, the log for:
+     * Client RPC should look similar to the following:
+2016-06-16 10:58:04,6404 DEBUG ClntProfileRpc
+fs/client/fileclient/cc/client.cc:3483 Thread: 32188 Profile: CltRpcDone:
+server 10.10.100.196:5692 took 1 msec error 0 FID 2125.34.262486  Getattr
+
+2016-06-16 11:13:55,7480 DEBUG ClntProfileRpc
+fs/client/fileclient/cc/client.cc:3202 Thread: 32161 Profile: CltRpcDone:
+server 10.10.100.196:5692 took 1 msec error 0 FID 2125.16.2  PathWalkPlus path
+abc
+     * MFS should look similar to the following:
+2016-06-19 15:51:05,0231 DEBUG FSProfile unlink.cc:2456 OP unlink: localTm 34
+elapsedTm 34 client 10.10.100.196 err 0 PFID: 1.32.131398 name
+unreachableFSIdTable itype Regular
+
+2016-06-19 15:51:11,0249 DEBUG FSProfile writev3.cc:1296 OP Write: localTm 13
+elapsedTm 13 client 10.10.100.196 err 0 FID: 2121.532.2364014 off 29234 count
+1424
+
+2016-06-19 15:51:08,1184 DEBUG FSProfile readdir.cc:505 OP ReadDir: elapsedTm
+28 client 10.10.100.196 err 0 FID: 2121.16.2 Isplus true
+
+   For example, to check the time it took for a read RPC, run the
+   following command:
+# cat /opt/mapr/logs/ffs.log* | grep -nrui "CltRpcDone" | grep -nrui "read" | le
+ss
+1009:1014:2016-06-16 11:21:51,8203 DEBUG ClntProfileRpc
+fs/client/fileclient/cc/client.cc:4900 Thread: 32151 Profile: CltRpcDone:
+server10.10.100.196:5660 took 0 msec for Proc Read error 0 FID 2182.32.131232
+off 7143424 len 131072 name 2125.34.262486
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/fcdebug.html#reference_czr_hrn_4v
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/trace-setlevel.html#tracesetlevel

@@ -1,0 +1,51 @@
+hdfsWrite()
+
+   Supported by libMapRClient for hadoop-2.x
+
+   Writes to the specified open file.
+
+   If the file is opened in write-only mode, writes start at offset 0
+   because write-only mode causes the content of the file to be truncated
+   when the file is opened.
+
+   If the file is opened in append mode, data is appended to the end of
+   the file.
+
+   If there are concurrent writes that start at the same offset, only the
+   last write to finish persists.
+
+   If a call to hdfsSeek() moves the offset past the end of the file
+   before a call to hdfsWrite(), the result is a hole in the file between
+   the previous end of the file and the offset at which the write begins.
+
+   You can obtain the size of a file in bytes by calling
+   hdfsGetPathInfo().
+
+   Flushes to the server happen automatically at intervals during a write
+   operation. After a write operation is finished, either call hdfsFlush()
+   explicitly or call hdfsFlush() implicitly by calling hdfsCloseFile() to
+   be sure that any data remaining in the write buffer is flushed.
+
+   On error, pending write buffers are flushed to the server.
+
+Signature
+
+tsize hdfsWrite(hdfsFS fs, hdfsFile file, const void* buffer, tSize length)
+
+Parameters
+
+   Parameter Description
+   fs The handle of the filesystem where the file is located. Obtain this
+   handle with one of the hdfsConnect() APIs.
+   file The handle of the file. Obtain this handle with one of the
+   hdfsOpenFile() APIs.
+   buffer The buffer containing the data to be written.
+   length The number of bytes to write. This value cannot be zero. The
+   maximum length of the buffer is the maximum size of the tSize data
+   type.
+
+Return Value
+
+   Returns the number of bytes written, -1 on error.
+
+   Check errno for error codes and meanings.

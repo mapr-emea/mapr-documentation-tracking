@@ -1,0 +1,114 @@
+mapr perfconsumer
+
+   This utility runs a consumer reading messages from topics in a MapR
+   stream. Use this utility to run consumers when you want to estimate the
+   performance of consumers for your MapR-ES applications, given your
+   network configuration.
+
+   This utility works in conjuction with the mapr perfproducer utility.
+   When starting this utility, you can specify how many topics to read
+   from, how many partitions to read from in each topic, and how many
+   messages to read.
+
+   The mapr perfconsumer utility uses the default values for all of the
+   configuration parameters that apply to consumers. For a list of these
+   parameters, see [1]MapR-ES Configuration Parameters.
+
+   The utility uses the default values for all of the configuration
+   parameters that apply to consumers.
+
+   Each consumer runs as a single thread. You can run multiple instances
+   of the utility at the same time. However, because consumers can be
+   CPU-intensive, it is recommended to run at most 4 or 5 on a single
+   cluster node.
+
+   When you run multiple instances of this utility, you can use the -group
+   parameter to create consumer groups.
+
+   Monitor the performance of the running instances of the mapr
+   perfconsumer utility by following the instructions that are given in
+   [2]Monitoring Consumers.
+
+Prerequisites for running this utility
+
+     * Ensure that there is a MapR stream that one or more instances of
+       mapr perfproducer have already published messages to or are
+       actively publishing messages to.
+     * Ensure that the user ID that runs the mapr perfconsumer utility has
+       the consumeperm permission on the stream.
+     * Ensure that the user ID that runs the mapr perfconsumer utility has
+       the readAce and writeAce permissions on the volume where the stream
+       is located.
+
+   For information about how to set permissions on volumes, see [3]Setting
+   Whole Volume ACEs.
+
+   For information about how to set permissions on streams, see
+   [4]Enabling Table and Stream Authorizations with ACEs.
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+mapr perfconsumer
+-path <stream-full-name>
+[ -ntopics <num topics> (default: 2) ]
+[ -npart <numpartitions per topic> (default: 4)
+[ -nmsgs <num messages per topicfeed> (default: 100000) ]
+[ -group <consumer group id> (default: null)
+[ -topicsubscription <true/false> (default: false) ]
+
+Parameters
+
+   Parameter Description
+   path The path to the stream.
+   ntopics The number of topics for the consumer to subscribe to.
+
+   The default is 2.
+
+   If the number that you specify is greater than the number of topics
+   that are in the stream, the utility hangs.
+   npart The number of partitions to read from in each topic that is
+   subscribed.
+
+   The default is 4.
+
+   If the number that you specify is greater than the number of partitions
+   that are in each topic, the utility hangs.
+
+   If you specify a group ID with the -group parameter, the consumer's
+   committed cursors are saved.
+
+   If you do not specify a group ID, then the consumer's committed cursors
+   are not saved.
+   If you use the -group parameter to specify a group ID and you set the
+   -topicsubscription parameter to true:
+     * If the consumer fails, it's partitions can be redistributed among
+       other consumer in the same group. If the consumer is the only
+       consumer within a group, restarting the consumer with the same
+       group ID causes the consumer to begin reading from the offsets of
+       the saved committed cursors.
+     * If the consumer fails and is then restarted, it starts at the
+       oldest message in each partition.
+
+   nmsgs The number of messages to read from each partition.
+
+   The default is 100,000.
+   group The identifier of a consumer group. When two or more consumers
+   belong to a consumer group, they must read from the same number of
+   topics. MapR-ES distributes the partitions for those topics among the
+   consumers in the group.
+
+   The default is null.
+   topicsubscription A vaue of true subscribes the consumer to topics. A
+   value of false subscribes the consumer to topic partitions.
+
+   The default is false.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/configuration-parameters.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/monitoring_consumers.html#monitoring_consumers
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetEditVolumeDataACE.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/EnablingTableAuthorizations.html

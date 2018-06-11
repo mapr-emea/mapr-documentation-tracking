@@ -1,0 +1,37 @@
+Azure Deployment Troubleshooting
+
+   If Azure reports a problem during deployment, follow these steps to
+   determine where the problem occurred. Typically, the problem is either
+   an Azure resource issue or a MapR installation issue.
+    1. Use these steps to learn more about the issue that needs
+       troubleshooting:
+         a. Log in to the [1]Azure portal.
+         b. In the left navigation pane, select Resource groups.
+         c. Find the resource group to which the MapR installation was
+            deployed.
+         d. Click Deployments.
+         e. Find the deployment that had a failure. Typically, an error on
+            the Microsoft.Template will not be relevant, and there should
+            be at least two deployments with a failure.
+         f. If the error does not report an issue with mapr-installer, the
+            issue is not MapR-related, and the error reported should
+            indicate the Azure issue that caused the problem.
+    2. If the issue appears to be MapR-related:
+         a. Use ssh to connect to the MapR installer node.
+            Note: The MapR Installer is always created on the virtual
+            machine that ends in the number 0. For example,
+            certtest1-cluster-com-mapr-vm0 would have the running
+            installer, while certtest1-cluster-com-mapr-vm3 (or any other
+            number) would not.
+         b. As root, go to /var/lib/waagent/custom-script/download/0/.
+         c. Inspect the stdout and stderr files. These files contain the
+            messages output from running the scripts that install the MapR
+            software using Stanzas.
+         d. If the problem cannot be identified, check the MapR Installer
+            logs at /opt/mapr/installer/logs. For more information, see
+            [2]Logs for the MapR Installer.
+
+References
+
+   1. https://portal.azure.com/
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/InstallerLogs.html#concept_lws_zq4_zx

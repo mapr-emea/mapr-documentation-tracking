@@ -1,0 +1,40 @@
+Migrating a Volume off a Node Using the CLI
+
+   When you need to migrate a data volume off a particular node, move that
+   node from the /data path to the /decommissioned path to avoid data
+   under-replication.
+     * Establish a /data topology path to serve as the default topology
+       path for the volumes in that cluster.
+     * Establish a /decommissioned topology path that is not assigned to
+       any volumes.
+
+   Tip: It is recommended that CLDB and ZooKeeper nodes are not in the
+   same topology as the data nodes to ensure fast failover of the failed
+   data node in the event of a data node failure.
+
+   Since no data volumes are assigned to that topology path, standard data
+   replication will migrate the data off that node to other nodes that are
+   still in the /data topology path.
+
+   You can run the following command to check if a given volume is present
+   on a specified node:
+maprcli dump volumenodes -volumename <volume> -json | grep <ip:port>
+
+   Run this command for each non-local volume in your cluster. Once all
+   the data has migrated off the node, you can decommission the node or
+   place it in maintenance mode.
+
+   If you need to segregate CLDB data, create a /cldb topology node and
+   move the CLDB nodes under /cldb. Point the topology for the CLDB volume
+   (mapr.cldb.internal) to /cldb. See [1]Isolating CLDB Nodes for details.
+   Note: To move an existing volume to another topology, you must have the
+   [2]Converged Enterprise Edition. Without the Converged Enterprise
+   Edition, when you run the [3]maprcli volume move command to move a
+   volume to another topology, the following error message is returned:
+ERROR (10010) - Volume Move: No license for requested operation
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/c_isolate_CLDB_nodes.html#Isolating-CLDB-Nodes-Inalargecluster100n-d3e72
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/License-upgrade.html#license-upgrade
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-move.html#volumemove

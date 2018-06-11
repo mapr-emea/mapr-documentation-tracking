@@ -1,0 +1,70 @@
+Enabling High Availability for HiveServer2
+
+   Perform the following steps to enable High Availability for
+   HiveServer2.
+
+Configuring Hive
+
+    1. Modify the warden.hs2.conf file as shown below on all the nodes
+       where Hive is installed.
+services=hs2:all
+    2. Add the following properties to the hive-site.xml file on all the
+       nodes where HiveServer2 is installed.
+
+   Property Value Description
+   hive.server2.support.dynamic.service.discovery true (default is false)
+   Set to true to enable HiveServer2 dynamic service discovery for its
+   clients.
+   hive.server2.zookeeper.namespace hiveserver2 (default value) The parent
+   node in ZooKeeper, which is used by HiveServer2 when supporting dynamic
+   service discovery.
+   hive.zookeeper.quorum <hostname>:5181,<hostname>:5181,<hostname>:5181
+   List of ZooKeeper servers to talk to. Used in connection string by
+   JDBC/ODBC clients instead of URI of specific HiveServer2 instance.
+   hive.zookeeper.client.port 5181 (default value) The port of the
+   ZooKeeper servers to talk to. If the list of Zookeeper servers
+   specified in hive.zookeeper.quorum does not contain port numbers and
+   so, this value is used.
+   hive.zookeeper.session.timeout 600000 (default value) Zookeeper
+   client's session timeout value. The client is disconnected, and as a
+   result, all locks are released if a heartbeat is not sent within the
+   timeout period.
+    3. Restart all the nodes where Hive service is installed after
+       updating the configuration.
+
+Connecting with JDBC/ODBC Clients
+
+   Connect to HiveServer2 with JDBC/ODBC clients using the following
+   connection string:
+jdbc:hive2://<zookeeper_ensemble>/;serviceDiscoveryMode=zooKeeper;
+zooKeeperNamespace=<hiveserver2_zookeeper_namespace>
+
+   Here:
+   <zookeeper_ensemble> Specifies a comma-separated list of ZooKeeper
+   servers that form the ensemble. For example:
+   <zk_host1>:<zk_port1>,<zk_host2>:<zk_port2>,<zk_host3>:<zk_port3>.
+   <hiveserver2_zookeeper_namespace> Specifies the namespace on Zookeeper
+   under which HiveServer2 znodes are added. The namespace value is
+   configured in hive.server2.zookeeper.name space.
+
+Deregistering HiveServer2 Instances from Zookeeper
+
+   Remove a HiveServer2 instance from Zookeeper by running the following
+   commands (in the ZooKeeper command line interface) to deregister the
+   server.
+    1. Launch the ZooKeeper command line interface and get the HiveServer2
+       znode by running the following commands:
+/opt/mapr/zookeeper/zookeeper-<version>/bin/zkCli.sh -server <ip:port of zookeep
+er instance>
+ls /<hive.server2.zookeeper.namespace>
+    2. Run the command to deregister HiveServer2. To deregister:
+          + A particular HiveServer2, run the following command:
+delete  serverUri=<hostname:port>;version=<hive version>;sequence=<sequence numb
+er>
+            After you deregister the HiverServer2 from Zookeeper, it will
+            not return the deregistered HiveServer2 for new client
+            connections. However, active client sessions are not affected
+            by deregistering the HiveServer2 from Zookeeper.
+          + All HiveServer2 instances of a particular version, run the
+            following command:
+hive --service hiveserver2 --deregister <version_number>

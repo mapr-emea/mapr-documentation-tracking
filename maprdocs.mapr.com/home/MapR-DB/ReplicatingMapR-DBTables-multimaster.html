@@ -1,0 +1,166 @@
+Multi-Master replication
+
+   In this replication topology, there are two master-slave relationships,
+   with each table playing both the role of a master and a slave. Client
+   applications update both tables and each table replicates updates to
+   the other.
+
+   All updates from a source table arrive at a replica after having been
+   authenticated at a gateway. Therefore, access control expressions on
+   the replica that control permissions for updates to column families and
+   columns are irrelevant; gateways have the implicit authority to update
+   replicas.
+
+   In this diagram, the customer table on the cluster sanfrancisco
+   replicates updates to the customers table in the cluster newyork. The
+   latter table in turn replicates updates to the former table. MapR-DB
+   tags each table operation with the universally unique ID (UUID) that it
+   has assigned the table at which the operation originated. Therefore,
+   operations are replicated only once and are not replicated back to the
+   originating table.
+
+   [29229948.jpg]
+
+   In this diagram, both tables are in a single cluster. Operations on
+   table customersA are replicated to table customersB and vice versa.
+
+   [29229947.jpg]
+
+Offline Tables
+
+   If one of the tables goes offline, direct client applications to the
+   other table. When the offline table comes back online, replication
+   between the two tables continues automatically. When both tables are
+   again back in synch, you can redirect client applications back to the
+   original table.
+
+   For example, suppose that client applications are using the customers
+   table that is in the cluster sanfrancisco.
+
+   [29229951.jpg]
+
+   The customers table in the sanfrancisco cluster becomes unavailable, so
+   you redirect those client applications to the customers table in the
+   newyork cluster.
+
+   [29229950.jpg]
+
+   After the customers table in the sanfrancisco cluster comes back
+   online, replication back to it starts immediately. Because client
+   applications are not yet using this table, there are no updates to
+   replicate to the table in the newyork cluster.
+
+   [29229949.jpg]
+
+   When the customers table in the sanfrancisco cluster is in synch with
+   the other table, you can redirect your client applications back to it.
+
+   [29229951.jpg]
+
+Conflict Resolution
+
+   The method that MapR-DB uses to resolve conflicts depends on the type
+   of table involved in a multi-master replication scenario.
+
+   Conflict resolution for binary tables
+          In the case of conflicting changes, MapR-DB compares the cell
+          timestamps of the two changes. In the rare event that the cell
+          timestamps are identical, MapR-DB compares the timestamps for
+          when the changes arrived at their respective source tables. In
+          the even rarer event that these latter timestamps are identical,
+          MapR-DB uses the C library function memcmp to compare the data
+          that is being modified by the conflicting changes, favoring the
+          greater value.
+
+   Conflict resolution for JSON tables
+          If two values conflict, MapR-DB compares their types. The value
+          of the type with the higher precedence is retained. Here is a
+          list of the supported types in descending order of precedence:
+
+          + Array
+          + Document
+          + Binary
+          + Interval
+          + Timestamp
+          + Time
+          + Date
+          + Decimal
+          + Double
+          + Float
+          + 64-bit integer
+          + 32-bit integer
+          + 16-bit integer
+          + 8-bit integer
+          + UTF-8
+          + Boolean
+          + NULL
+
+          If both conflicting values are of the same type, MapR-DB
+          compares the values themselves. All values are comparable except
+          for values that are arrays or NULL.
+
+               Type                How Values Are Compared
+          Binary         The greater value is retained.
+          Interval       The later interval is retained.
+          Timestamp      The later timestamp is retained.
+          Time           The later time is retained.
+          Date           The later date is retained.
+          Decimal        The greater value is retained.
+          Double         The greater value is retained.
+          Float          The greater value is retained.
+          64-bit integer The greater value is retained.
+          32-bit integer The greater value is retained.
+          16-bit integer The greater value is retained.
+          8-bit integer  The greater value is retained.
+          UTF-8          The greater lexicographic value is retained.
+          Boolean        TRUE is retained.
+
+Time-to-Live for Deletes
+
+   Normally, delete operations are purged after the affected table cells
+   are updated. Whereas the result of an update is saved in a table until
+   another change overwrites or deletes it, the result of a delete is not
+   saved. In multi-master replication, this difference can lead to tables
+   being unsynchronized.
+
+Example Scenario to Illustrate Time-to-Live for Deletes
+
+    1. On /mapr/sanfrancisco/customers, put row A at 10:00:00 AM.
+    2. On /mapr/newyork/customers, delete row A at 10:00:01 AM.
+
+   On /mapr/sanfrancisco/customers, the order of operations is:
+     * Put row A with a timestamp of 10:00:00 AM
+     * Delete row A with a timestamp of 10:00:01 AM (This operation is
+       replicated from /mapr/newyork/customers.)
+
+   On /mapr/newyork/customers, the order of operations is:
+     * Delete row A with a timestamp of 10:00:01 AM
+     * Put row A with a timestamp of 10:00:00 AM (This operation is
+       replicated from /mapr/sanfrancisco/customers.)
+
+   Now, though the put happened on /mapr/sanfrancisco/customers at
+   10:00:00 AM, the put reaches /mapr/newyork/customers several seconds
+   after that. Suppose that the actual time that the put arrives at
+   /mapr/newyork/customers is 10:00:03 AM.
+
+   To ensure that both tables stay synchronized, /mapr/newyork/customers
+   should preserve the delete until after the put is replicated. Then, the
+   delete can be applied after the put. Therefore, the time-to-live for
+   the delete should be at least long enough for the put to arrive at
+   /mapr/newyork/customers. In this case, the time-to-live should be at
+   least 3 seconds.
+
+   In general, the time-to-live for deletes should be greater than the
+   amount of time that it takes replicated operations to reach replicas.
+   By default, the value is 24 hours. Configure the value with the
+   -deletettl parameter in the maprcli table edit command.
+
+   For example, suppose (to extend the scenario above) that you pause
+   replication during weekdays and resume it on weekends. The put takes
+   place on Monday morning /mapr/sanfrancisco/customers at 10:00:00 AM and
+   the delete takes place at /mapr/newyork/customers at 10:00:01 AM.
+   Replication does not resume until 12:00:00 AM Saturday morning. Given
+   the volume of operations to be replicated and the potential for network
+   problems, it’s possible that these operations will not be replicated
+   until Sunday. In this scenario, a value of 7 days for -deletettl (7
+   multiplied by 24 hours) should provide sufficient margin.

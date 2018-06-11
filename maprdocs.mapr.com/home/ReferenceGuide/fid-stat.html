@@ -1,0 +1,87 @@
+fid stat
+
+   Displays statistics for MapR-DB or file system components that are
+   identified by an FID.
+
+   Only the root user and the MAPR_USER user (user name under which MapR
+   services runs) have permissions to run this command.
+   Note: This command is similar to the UNIX stat command.
+
+Syntax
+
+   CLI
+
+maprcli fid stat
+   [ -cluster <cluster name> ]
+   -fid <file identifier for the element>
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter Description
+   cluster The cluster on which to run the command. If this parameter is
+   omitted, the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+   fid The file identifier for the element (region, kvstore, etc.) for
+   which you want detailed information. The output of [1]maprcli table
+   region list lists the FIDs for the table's regions.
+
+Output Fields
+
+   Columns Description
+   uid The user ID of the owner.
+   atime The last access time for this FID.
+   nblocks The number of disk blocks.
+   deleteFlags An internal delete flags set on the FID for transactions
+   involving multiple nodes.
+   mtime The time of the last modification.
+   parent The parent FID.
+   type The type of the FID. It can be for example, regular file, dir,
+   filelet, kvstore, fidmap etc.
+   version The current version of the FID.
+   size The size of the FID. Depending on the type of FID, it can be the
+   actual size or the number of entries.
+   mode The UNIX style permission mode bits for the FID.
+   networkencryption The network encryption setting. If the network
+   encryption is enabled for this FID or not.
+   subtype
+
+   The subtype of the FID.
+   gid The group ID.
+   compression The compression setting.
+
+Example
+
+   Displays statistics for a specified FID:
+[user@hostname ~]$ maprcli fid stat -fid 2062.32.131252  -json
+{
+        "timestamp":1425521633948,
+        "timeofday":"2015-03-04 06:13:53.948 GMT-0800",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "type":"FTKvstore",
+                        "subtype":"FSTKvTablet",
+                        "parent":"2049.43.131208",
+                        "size":3,
+                        "nblocks":1,
+                        "compression":"off",
+                        "deleteFlags":"DeleteTypeNone",
+                        "atime":1424296259,
+                        "mtime":1424296259,
+                        "mode":"666",
+                        "uid":0,
+                        "gid":0,
+                        "version":1048579,
+                        "networkencryption":false
+                }
+        ]
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-region-list.html#tableregionlist

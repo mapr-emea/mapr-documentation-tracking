@@ -1,0 +1,115 @@
+Hive 1.0-1504 Release Notes
+
+   The notes below relate specifically to the MapR Distribution for Apache
+   Hadoop. You may also be interested in the [1]Apache Hive 1.0 changelog
+   or the [2]Apache Hive homepage.
+   Hive Version               1.0-1504
+   Release Date               May 20, 2015
+   Source on GitHub           [3]https://github.com/mapr/hive
+   GitHub Release Tag         1.0.0-mapr-1504
+   MapR Version Compatibility See [4]Ecosystem Support Matrix.
+   Maven Artifacts            [5]http://repository.mapr.com/maven/
+
+New in this Release
+
+   This is the initial release of Hive 1.0 for the MapR distribution for
+   Hadoop. In addition to Hive 1.0 features, this release includes the
+   following features:
+     * MapR-SASL Support
+       On secure MapR clusters, MapR-SASL is supported and configured by
+       default for HiveServer2 and HiveMetastore. Previously, Simple SASL
+       was the default and authentication had to be configured manually.
+     * Hive Scratch Directory Changes
+       By default, the Hive scratch directory is created in the same
+       volume as the target table (hive.optimize.insert.dest.volume=true).
+       Previously, hive.optimize.insert.dest.volume was set to false.
+     * WebHCat Changes
+          + The default WebHCat log directory is now
+            /opt/mapr/hive/<hive-version>/logs/<username>/webhcat.
+            Previously, it was /tmp/<username>/webhcat.
+          + WebHCat is now managed by Warden. The warden.hcat.conf file is
+            installed with the mapr-hive package.
+     * JDBC SASL QOP Parameter Changes
+       When you need to connect via JDBC to hiveserver2 using the SASL QOP
+       parameter, use salsQop instead of sals.qop.
+
+   Important: The Hive 1.0 cost-based optimization is a beta feature and
+   is not fully supported.
+
+Patches
+
+   This release by MapR includes the following patches on the base Apache
+   release. For complete details, refer to the commit log for this project
+   in GitHub.
+   Commit Date (YYYY-MM-DD) Comment
+   3cbeb8c 2015-05-01 MAPR-14214: WebHCat Server is now managed by Warden.
+   b6899d3 2015-05-01 MAPR-17726 (HIVE-5672): An insert overwrite to HDFS
+   no longer fails.
+   263ab62 2015-04-28 MAPR-17791: MapR now sets
+   hive.exec.submit.local.task.via.child=false to enable Beeline to
+   execute mapjoin tasks when HiveServer2 uses MapR-SASL authentication.
+   4060cfd 2015-04-23 MAPR-18202: Transaction compaction error no longer
+   appears in Hive logs.
+   2578314 2015-04-22 MAPR-18255: Web browsers are now able to connect to
+   WebHCat.
+   db10116 2015-04-16 MAPR-18234: Hive no longer tries to clean up
+   MapReduce temp directories that do not exist.
+   672e375 2015-04-16 MAPR-18058: MapReduce queries no longer fail with a
+   java.io.IOException.
+   dc00c63 2015-04-13 MAPR-18166: Errors no longer occur when doing select
+   * on transaction enabled ORC table.
+   08a82e9 2015-04-01 MAPR-17912 (HIVE-10083): SMBJoin no longer fails in
+   the case where one table is uninitialized.
+   ddaa3f0 2015-03-31 MAPR-17982: MapReduce queries on external tables no
+   longer fail with a java.io.IOException.
+   76839e2 2015-03-30 MAPR-17907: Error no longer appears in Hive logs
+   when transactions are enabled.
+   09c3cf9 2015-03-26 MAPR-17854: Hue can now access the Hive Metastore.
+   44edb1c 2015-03-19 MAPR-17790: HiveServer2 is now able to start when it
+   is configured to use Kerberos authentication.
+   a048ceb 2015-03-18 MAPR-17742: MapReduce jobs started by WebHCat no
+   longer fail when Zero-config Resource Manager HA is configured.
+   f7b9409 2015-03-10 MAPR-17600: Hive no longer fails with a
+   NullPointerException when trying to access Amazon S3 storage.
+   70cab74 2015-03-04 MAPR-17526: Warden is now able to start Hiveserver2
+   and Metastore when they use MapR-SASL authentication.
+   9d8d495 2015-02-26 MAPR-17458: TABLESAMPLE query no longer fails.
+   b5037b0 2015-02-17 MAPR-17276: Hive Metastore no longer fails to start
+   on Ubuntu
+   dc37fb2 2015-02-13 MAPR-17272: By default, hive.metastore.sasl.enabled
+   is set to true for WebHCat when the cluster is secure.
+   43cd431 2015-02-12 MAPR-17135: HiveServer2 and Hive Metastore are
+   automatically configured to use MapR-SASL when the cluster is secure.
+   2edf083 2015-02-06 MAPR-17127: The following warning messages no longer
+   appear in the hive shell:
+   Warning: org.apache.hadoop.metrics.jvm.EventCounter is deprecated.
+   Please use org.apache.hadoop.log.metrics.EventCounter in all the
+   log4j.properties files.
+   6949cc7 2015-02-06 MAPR-16960: The hive shell no longer displays
+   warning messages related to duplicate slf*.jar files.
+   37536f3 2015-02-06 MAPR-17120: WebHCat log files are now written to the
+   following folder: /opt/mapr/hive/hive-<version>/logs/<user>/webhcat
+   2a0367c 2015-02-03 MAPR-16962: The status of HiveServer2 and Hive
+   Metastore now displays correctly in the MCS when the cluster runs on
+   Ubuntu nodes.
+   68461ff 2015-01-27 MAPR-16786: By default, MapR sets
+   hive.optimize.insert.dest.volume=true
+   be34b2b 2015-01-28 MAPR-16952: By default, MapR sets
+   hive.server2.thrift.sasl.qop=auth-conf
+   3bf4741 2015-01-26 MAPR-16899: HiveServer2 now has support for
+   MapR-SASL authentication when the cluster is secure.
+   d21a425 2015-01-26 MAPR-15559: Hive Metastore now has support for
+   MapR-SASL authentication when the cluster is secure.
+   9dab4a5 2015-01-19 MAPR-16762: WebHCat no longer fails to start on a
+   cluster that runs YARN services.
+   ca51e98 2015-01-12 MAPR-15587 (HIVE-9119): A single zookeeper instance
+   can now be reused and shared by ZooKeeperHiveLockManagers to reduce the
+   number of ZooKeeper clients created for every instance of HiveServer2.
+
+References
+
+   1. https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12329278&styleName=Html&projectId=12310843
+   2. http://hive.apache.org/
+   3. https://github.com/mapr/hive
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/r_eco_matrix.html#reference_kyp_kfv_s5
+   5. http://repository.mapr.com/maven/

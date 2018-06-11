@@ -1,0 +1,156 @@
+Deploying a Cluster in AWS Using a Marketplace Offering
+
+Prerequisites for Using a Marketplace Offering
+
+   MapR marketplace offerings leverage predefined provisioning templates
+   that simplify the process of provisioning the instance and installing
+   the cluster. To run the predefined provisioning templates, you need to
+   have the following permissions to create roles and policies in AWS:
+     * iam:GetRole
+     * iam:PassRole
+     * iam:PutRolePolicy
+     * iam:CreateRole
+     * iam:AddRoleToInstanceProfile
+     * iam:CreateInstanceProfile
+
+   If you do not have these permissions, consider using the MapR reference
+   templates to deploy your cluster. See [1]About the MapR Reference
+   Templates for AWS.
+
+Steps for Deploying Using a Marketplace Offering
+
+   Use these steps to deploy a cluster using one of the MapR Marketplace
+   offerings for AWS:
+    1. Navigate to the MapR page in the AWS Marketplace. For more
+       information, see [2]MapR Offerings in the AWS Marketplace.
+    2. Click the title of the MapR offering that you want to use. AWS
+       displays product description and pricing information for you to
+       review.
+    3. Set the region and delivery method.
+    4. Click Continue.
+    5. Click the Manual Launch tab, and review the pricing information.
+    6. Click Launch with CloudFormation Console. The Create Stack page is
+       displayed. Note that the Specify an Amazon S3 Template URL option
+       is selected, and the URL for the MapR template is prefilled in the
+       URL field.
+    7. Click Next. The MapR CloudFormation template is displayed.
+    8. Fill in the template as follows.
+
+Filling in the Template Values
+
+   Note: The Community Edition and bring-your-own-license (BYOL) offerings
+   contain some template parameters that are not present in the Converged
+   and Analytics offerings. These parameters are marked accordingly in the
+   following steps.
+    1. In the Specify Details section, enter a stack name in the stack
+       name field. The stack name cannot contain spaces.
+    2. In the Parameters section, enter a cluster name for the clusterName
+       field.
+    3. Enter a password for the clusterAdminPassword field. This is the
+       password you will use to log into MCS or the MapR Installer.
+       Note: For cloud deployments, the installer uses the Cluster Admin
+       Password as the MySQL root password when it creates a MySQL
+       database for certain services that require a database.
+    4. Enter the MapR Expansion Pack version for the MEP field.
+    5. In the provisioningTemplate list, select from the list of
+       auto-provisioning templates. For more information about the
+       templates, see [3]Auto-Provisioning Templates. This parameter is
+       provided only for the BYOL / Community and Converged offerings.
+    6. In the nodeCount field, specify the number of nodes in the cluster.
+    7. In the installerOnitsOwn field, select true to configure the MapR
+       Installer on a node that is not part of the cluster. If true is
+       selected, the installer is started on a t2.small instance. Select
+       false to configure the installer on a node in the cluster. If you
+       select true, the cluster will consist of the nodeCount plus another
+       node for the installer. This parameter is provided only for the
+       BYOL / Community offerings.
+    8. In the Node Configuration section, select an instance type from the
+       InstanceType list. The MapR-supported instance types in AWS are:
+          + m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge
+          + m3.xlarge, m3.2xlarge
+          + c4.2xlarge, c4.4xlarge, c4.8xlarge
+          + c3.2xlarge, c3.4xlarge, c3.8xlarge
+          + r4.large, r4.xlarge, r4.2xlarge, r4.4xlarge, r4.8xlarge
+          + r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge
+          + p2.xlarge
+          + g2.8xlarge
+          + Local Storage Instances (Use only local disks, not EBS)
+          + i3.large, i3.xlarge, i3.2xlarge, i3.4xlarge, i3.8xlarge
+          + d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge
+       For more information about instance types, see [4]Amazon EC2
+       Instance Types.
+    9. In the useinstanceStore field, set the value to true if the machine
+       type supports instance stores (ephemeral disks) and you want to use
+       only those disks. No EBS volumes will be attached. This parameter
+       is provided only for the BYOL / Community offerings.
+       Note: This field is enabled for d2.* and i3.* instance types. i3.*
+       uses NVMe disks, which are added by default in AWS. If you use i3.*
+       images, the option is implicitly true.
+   10. In the diskCount field, specify the number of disks per node.
+   11. In the diskType field, specify the disk type. For more information,
+       see [5]Amazon EBS Volume Types.
+   12. In the diskSize field, specify the disk size.
+   13. In the AWS Infrastructure Configuration section, enter a key pair
+       in the keyName field. Use the keypair that you configured in
+       "Creating a Key Pair."
+   14. In the useExistingSubnet field, leave this field empty if you would
+       like a new VPC and subnets created. Specify a subnet ID if you want
+       to use existing subnets.
+       If you choose to use your own subnet:
+          + The subnet must have access to the Internet.
+          + The subnet must be able to communicate to all hosts within the
+            subnet on all ports.
+          + You must have a mechanism to connect with the hosts on the
+            subnet.
+   15. In the securityGroups field, specify the security group IDs for an
+       existing subnet if you specified a subnt ID for useSubnet. Leave
+       this field empty to create a new VPC and subnets.
+   16. In the assignPublicIP field, set the value to true if you want to
+       assign a public IP address to each node. Otherwise, set the value
+       to false.
+       Note: It is recommended that you enable assignPublicIP if you are
+       not using your own subnet, and you are letting the template create
+       the VPC and subnet.
+   17. In the publicAccessCIDR field, specify an IP address range if you
+       want to restrict the IP address from which the stack can be
+       accessed. This field applies only when the template creates the VPC
+       and subnets.
+   18. Click Next. The Options section is displayed. MapR templates don't
+       require any specific values in this section. However, in the
+       Advanced subsection, for debugging purposes it can be useful to set
+       Rollback on failure to No so that resources are not deleted in the
+       event of failure.
+   19. Click Next. The Review page allows you to review your selections.
+       Click Previous if you need to change a selection.
+   20. Otherwise, select I acknowledge that AWS CloudFormation might
+       create IAM resources with custom names.
+   21. Click Create to start the process of stack creation. The new stack
+       is listed at the top of the CloudFormation console with a status of
+       CREATE_IN_PROGRESS. To view the status of stack creation, select
+       the stack, and click the Events tab.
+       Note: Stack creation for a three-node cluster can take 15-20
+       minutes. Depending on the size of the cluster, stack creation can
+       take longer in some cases.
+   22. When the stack creation status shows CREATE_COMPLETE, the stack is
+       created, and the cluster is installed. Click the Outputs tab to
+       view the outputs. For example:
+       [outputs_tab_aws_offering.png]
+   23. If stack creation generates an error, click the Events tab to get
+       more information. You can expand the event message to see more
+       information about the event.
+   24. If you are using an existing subnet, set up a secure connection to
+       the subnet by using VPN or other means.
+   25. Once you are connected, you can click the MaprInstallerUrl link on
+       the Outputs tab to start the web-based installer. The installer
+       status page shows links to resources you can use to get more
+       information about the cluster. To log on to the MapR Control System
+       (MCS), click the Administration Server Link.
+       [mapr_installer_status_page.png]
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/about_mapr_ref_templates_aws.html#concept_bbk_dx4_x1b
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/marketplace_offerings_aws.html#concept_hyd_zr4_x1b
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/auto-provisioning-templates.html#concept_iwk_rbp_zcb
+   4. https://aws.amazon.com/ec2/instance-types/
+   5. http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html

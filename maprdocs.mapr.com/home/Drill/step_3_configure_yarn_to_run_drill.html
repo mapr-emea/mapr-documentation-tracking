@@ -1,0 +1,54 @@
+Step 3: Configure YARN to Run Drill
+
+   YARN default settings are optimized for MapReduce applications.
+   MapReduce applications use a limited amount of memory, however Drill is
+   long-running and consumes a significant amount of resources. Adjust the
+   YARN memory configuration to allow YARN to allocate containers large
+   enough to run Drill. Exclude the YARN container directory from tmpwatch
+   to prevent tmpwatch from removing Drill’s container files while Drill
+   runs.
+
+Increase Maximum Container Size
+
+   YARN provides a number of parameters to control the amount of resources
+   available to applications. The MapR distribution of YARN sets most of
+   these parameters automatically, except for the maximum container size,
+   which is left at the Apache YARN default of 8 GB. Typical Drill
+   configurations use significantly more memory. Therefore, you must
+   increase the YARN maximum container size on each node to suit the needs
+   of Drill. You can use the YARN Resource Manager web UI to determine the
+   amount of memory available on each node.
+   Note: YARN resource requirements match the Drill resource requirements.
+   To increase the maximum container size, determine the required
+   container size from the Drill setting in drill-on-yarn.conf, which you
+   previously set in step 2:
+drillbit: {
+   memory-mb: 14336
+ }
+
+   Use this number to set the yarn.scheduler.maximum-allocation-mb
+   parameter in /opt/mapr/hadoop/hadoop-<version>/etc/hadoop.<version>,
+   substituting the number of the version you have installed.
+   Edit yarn-site.xml to add the following:
+<property>
+   <name>yarn.scheduler.maximum-allocation-mb</name>
+   <value>12288</value>
+   <description>Set to allow Drill containers 12GB.</description>
+ </property>
+
+   Note: You must update this configuration on every YARN node.
+
+   Restart the YARN Resource Manager to pick up change, and use the YARN
+   Resource Manager UI to verify that the maximum container size shows the
+   new value.
+
+Exclude the YARN Container Directory from tmpwatch
+
+   MapR puts the YARN Node Manager container files in the /tmp directory.
+   Most system administrators configure tmpwatch to periodically remove
+   files in /tmp. Since Drill-on-YARN is a long-running YARN application,
+   tmpwatch can remove Drill’s container files while Drill runs. If this
+   occurs, you must manually shut down the Drill cluster because tmpwatch
+   will have removed the pid file that YARN needs to manage Drill.
+   Configure tmpwatch to exclude the YARN Node Manager directory:
+tmpwatch --exclude=/tmp/hadoop-mapr/nm-local-dir

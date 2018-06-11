@@ -1,0 +1,26 @@
+Loading the MapR Native Library
+
+   By default, the root class loader will load the MapR native library to
+   allow all children to see and access the MapR native library. If the
+   MapR native library is loaded by a child class, other classes will not
+   be able to access the library. To allow applications and associated
+   child classes to access the symbols and variables in the MapR native
+   library, we recommend loading the MapR native library via the root
+   loader.
+
+   The loading of the MapR native library via the root class loader is
+   accomplished by injecting code into the root loader. If MapR runs on
+   top of applications (such as Tomcat) where it does not have access to
+   the root class loader, the MapR native library will not be loaded.
+   Child classes that try to access the symbols under the assumption that
+   the root class loader successfully loaded the MapR native library will
+   fail.
+
+   The parameter -Dmapr.library.flatclass, when specified with Java,
+   disables the injection of code via the root class loader, thus
+   disabling the loading of the MapR native library using the root class
+   loader. Instead, the application trying to access the symbols can load
+   the MapR native library themselves. However, since the MapR native
+   library can be loaded only once and can only be seen by the application
+   loading it, ensure that only one application within the JVM attempts to
+   load and access the MapR native library.

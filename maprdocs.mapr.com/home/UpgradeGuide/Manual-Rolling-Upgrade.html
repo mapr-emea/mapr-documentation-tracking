@@ -1,0 +1,81 @@
+Manual Rolling Upgrade
+
+   In a manual rolling upgrade, you upgrade the MapR software one node at
+   a time so that the cluster as a whole remains operational throughout
+   the process.
+   Note: Rolling upgrades to MapR 6.0 or later are supported only for
+   clusters running MapR 5.2.x with MEP 3.0.1 or later. If you are
+   upgrading from an earlier version, upgrade MapR core manually and
+   offline. See [1]Offline and Manual Upgrade.
+
+Before you Upgrade
+
+   Perform the following steps before you begin a manual rolling upgrade:
+     * Determine the upgrade groups. To see a list of services on each
+       node, you can run the following command:
+maprcli node list -columns hostname,csvc
+     * If the cluster is secure, the MapR Admin user must have a security
+       ticket created before running the upgrade. Otherwise, some upgrade
+       commands will not run.
+
+Group Upgrade Order
+
+   Upgrade cluster nodes in groups based on the services running on each
+   node. Upgrade groups of nodes in the following order:
+   Group Nodes in this Group
+   1 Each node only has Zookeeper. This establishes a stable ZooKeeper
+   quorum on the new version, which will remain active through the rest of
+   the upgrade process.
+   2
+
+   Each node only has Fileserver or it has Fileserver and Zookeeper.
+   3 Each node only has NodeManager or it has NodeManager, FileServer, and
+   Zookeeper
+   4 Each node only has ResourceManager or it has ResourceManager,
+   NodeManager, FileServer, and Zookeeper. When you upgrade nodes in this
+   group, upgrade nodes with the standyby ResourceManagers before you
+   upgrade the node with the active ResourceManager.
+   5
+
+   Each node has ResourceManager, NodeManager, FileServer, and Zookeeper.
+   6
+
+   Each node only has CLDB server or it has CLDB server, ResourceManager,
+   NodeManager, FileServer, and Zookeeper. When you upgrade nodes in this
+   group, upgrade nodes with the slave CLDB before you upgrade the node
+   with the master CLDB.
+
+Package Upgrade Order
+
+   When you upgrade each node, upgrade existing packages in the following
+   order:
+     * On all operating systems except SUSE, upgrade the mapr-core package
+       first. Subsequent packages can be done in any order.
+     * On SUSE, upgrade the mapr-compat-suse package first and the
+       mapr-core package second. Subsequent packages can be done in any
+       order.
+
+   The following is a list of the primary packages:
+     * mapr-cldb
+     * mapr-compat-suse (if upgrading on SUSE)
+     * mapr-core-internal
+     * mapr-core
+     * mapr-fileserver
+     * mapr-hadoop-core
+     * mapr-historyserver
+     * mapr-mapreduce2
+     * mapr-nfs
+     * mapr-nodemanager
+     * mapr-resourcemanager
+     * mapr-webserver
+     * mapr-zk-internal
+     * mapr-zookeeper
+
+What's Next
+
+   See [2]Manual Rolling Upgrade Procedure
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/Manual-Offline-Upgrade.html#UpgradingMapRCoreManual
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/ManualRollingUpgradeProcedure.html#ManualRollingUpgrade

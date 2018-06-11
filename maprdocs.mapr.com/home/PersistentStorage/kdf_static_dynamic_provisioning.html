@@ -1,0 +1,62 @@
+Static vs. Dynamic Provisioning
+
+   Kubernetes makes a distinction between static and dynamic provisioning
+   of storage.
+
+   In static provisioning, a MapR administrator first creates MapR volumes
+   (mount points) and then ensures that they are mounted, and a Kubernetes
+   administrator exposes those MapR mount points in Kubernetes through
+   Kubernetes PersistentVolumes. In a typical static-provisioning
+   scenario, a Pod author requests that a Kubernetes admin create a
+   PersistentVolume that references an existing MapR mount point with a
+   dataset that the Pod author is interested in. This PersistentVolume
+   references the MapR FlexVolume plug-in. The FlexVolume plug-in mounts
+   and unmounts MapR mount points for the requesting Pod.
+
+   In dynamic provisioning, a Kubernetes administrator creates a set of
+   StorageClasses for Pods to invoke. Each StorageClass has a predefined
+   set of storage characteristics. Examples of these characteristics
+   include the MapR volume advisory quota size and snapshot rules. The Pod
+   creator searches the predefined Storage Classes for the one that best
+   matches the creator's requirements. When the Pod references this
+   StorageClass through a PersistentVolumeClaim, the StorageClass calls
+   the MapR Dynamic Provisioner to allocate storage for the requesting Pod
+   dynamically.
+   To leverage MapR-FS with a Kubernetes cluster, you can create a
+   PersistentVolume in Kubernetes. This diagram shows the two ways in
+   which the PersistentVolume can be provisioned:
+   [static_dynamic_provisioning.png]
+
+Static Provisioning Implementation
+
+   To accomplish static provisioning, the MapR KDF FlexVolume plug-in is
+   deployed to all nodes in the Kubernetes cluster via a Kubernetes
+   [1]DaemonSet. The volume plug-in uses the [2]Basic or Platinum POSIX
+   client to mount the MapR filesystem (MapR-FS). The information that the
+   POSIX client uses to connect to MapR is contained in a Kubernetes
+   Volume or PersistentVolume. A MapR ticket inside a Secret, referenced
+   by the Kubernetes Volume or PersistentVolume spec, is used to pass
+   secure data to the filesystem.
+
+Dynamic Provisioning Implementation
+
+   To accomplish dynamic provisioning, the MapR KDF provisioner is
+   deployed as a [3]Kubernetes Deployment to a single node in the
+   Kubernetes cluster. The provisioner requests the creation of MapR
+   volumes when a container is launched. You can scale your provisioner
+   deployment to multiple nodes for high availability. If a provisioner
+   Pod is deleted, a new provisioner is started on another worker node in
+   the cluster.
+
+   A Kubernetes Administrator must configure at least one storage class
+   with MapR parameters (for example, mirroring, snapshots, quotas, and
+   other parameters) for use during creation of the MapR volume. The
+   storage class passes MapR administrative credentials to the provisioner
+   through a Kubernetes Secret. Security for the provisioner is handled
+   through role-based access control (RBAC) in Kubernetes.
+
+References
+
+   1. https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/MapRPOSIXfuseClient-prerequirements.html#concept_ssm_5bm_s5
+   3. https://kubernetes.io/docs/concepts/workloads/controllers/deployment/

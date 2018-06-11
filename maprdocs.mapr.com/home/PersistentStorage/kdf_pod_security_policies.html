@@ -1,0 +1,63 @@
+Pod Security Policies and the MapR Data Fabric for Kubernetes
+
+   If your Kubernetes administrator has turned on [1]Pod Security
+   Policies, you must create a PSP for the MapR Data Fabric for
+   Kubernetes. You should use your organization's best practices for
+   writing a PSP, but you must enable several parameters in the PSP for
+   your maprkdf service account:
+volumes:
+    - 'hostPath'
+    - 'flexVolume'
+allowedHostPaths:
+    - pathPrefix: "/opt"
+    - pathPrefix: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+    - pathPrefix: "/etc/kubernetes"
+    - pathPrefix: "/etc/localtime"
+ allowedFlexVolumes:
+    - driver: mapr.com/maprfs
+
+   Here is an example of a PSP that would work:
+# Copyright (c) 2009 & onwards. MapR Tech, Inc., All rights reserved
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: mapr-kdf-psp
+spec:
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+    - 'hostPath'
+    - 'flexVolume'
+  allowedHostPaths:
+    - pathPrefix: "/opt"
+    - pathPrefix: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+    - pathPrefix: "/etc/kubernetes"
+    - pathPrefix: "/etc/localtime"
+  allowedFlexVolumes:
+    - driver: mapr.com/maprfs
+  runAsUser:
+    rule: 'RunAsAny'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+
+   You enable a PSP for a ServiceAccount as part of a ClusterRole that is
+   bound to the ServiceAccount. See [2]Using RBAC Authorization. For
+   example, add the mapr-kdf-psp to a ClusterRole like this:
+- apiGroups: ['extensions']
+    resources: ['podsecuritypolicies']
+    verbs:     ['use']
+    resourceNames:
+    - mapr-kdf-psp
+
+References
+
+   1. https://kubernetes.io/docs/concepts/policy/pod-security-policy/
+   2. https://kubernetes.io/docs/admin/authorization/rbac/

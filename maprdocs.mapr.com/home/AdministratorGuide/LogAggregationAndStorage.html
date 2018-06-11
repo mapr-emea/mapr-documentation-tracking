@@ -1,0 +1,40 @@
+Log Aggregation and Storage
+
+   Fluentd uses a round-robin approach when writing logs to Elasticsearch
+   nodes. In the event that an Elasticsearch node in unavailable, Fluentd
+   can fail over log storage to another Elasticsearch node.
+
+   Each Fluentd service connects to each Elasticsearch node that you
+   configure to aggregate and store logs. The Elasticsearch nodes are set
+   when you configure MapR Monitoring with the MapR installer or when you
+   run [1]configure.sh with the -ES parameter.
+
+   The Elasticsearch index directory is shared among all the Elasticsearch
+   nodes in the cluster. When you use the MapR Installer to install
+   Elasticsearch, each Elasticsearch node writes index data to
+   /opt/mapr/es_db, unless you specified a different location during the
+   installation. When you manually install Elasticsearch, each
+   Elasticsearch node writes index data to
+   /opt/mapr/elasticsearch/elasticsearch-<version>/var/lib/MaprMonitoring/
+   , unless you specified a different location using the configure.sh
+   -ESDB option. For a cluster with one Elasticsearch node, the index
+   directory is allocated 5 shards. For clusters with 2 or more
+   Elasticsearch nodes, the index directory is allocated a number of
+   shards equal to 3 times the number of Elasticsearch nodes in the
+   cluster.
+
+   Fluentd does not require additional configuration to enable automatic
+   failover to an available Elasticsearch node. However, it is important
+   that at least three Elasticsearch nodes are configured to aggregate and
+   store logs so that failure of one node does not prevent logs from being
+   used for monitoring purposes. Based on your environment, more
+   Elasticsearch nodes may be required. [2]Service Layout Guidelines for
+   Large Clusters.
+
+   For more information about Elasticsearch, see the [3]Elastic website.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/InstallLogging.html#task_azg_llj_yv
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/PlanningtheCluster-services-layout-large.html#PlanningtheCluster-Servic_26982442-d3e1322
+   3. https://www.elastic.co/products/elasticsearch

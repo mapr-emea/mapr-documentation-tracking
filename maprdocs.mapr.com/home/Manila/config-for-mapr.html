@@ -1,0 +1,82 @@
+Configuring Manila for MapR
+
+   To configure the MapR manila driver:
+    1. 1. Log in to the host where manila is installed.
+    2. Open /etc/manila/manila.conf file and append the following to the
+       manila.conf file:
+[maprfs]
+share_driver=manila.share.drivers.maprfs.maprfs_native.MapRFSNativeShareDriver
+share_backend_name=maprfs
+maprfs_clinode_ip=<maprclinode>
+maprfs_ssh_port=22
+maprfs_ssh_name=root
+maprfs_ssh_pw=mapr
+maprfs_share_proto=MAPRFS
+default_share_type = default_share_type
+driver_handles_share_servers=False
+maprfs_base_volume_dir=<base-vol-dir>
+maprfs_rename_managed_volume=False
+       Note: Create the directory specified for maprfs_base_volume_dir
+       parameter under maprfs before starting the manila driver. The value
+       for <maprclinode> must be one or more (comma-separated list of) IP
+       addresses of the nodes from where the maprcli commands can be run.
+       The value for driver-handles-share-servers must be False as the
+       driver does not manage the lifecycle of share-servers.
+    3. Ensure that the list of protocols for share creation includes
+       MAPRFS by verifying the value for the property
+       enabled_share_protocols.
+       For example, your manila.conf file entry for this property should
+       look something similar to the following:
+# Specify list of protocols to be allowed for share creation.
+# Available values are '('NFS', 'CIFS', 'GLUSTERFS', 'HDFS',
+# 'CEPHFS')' (list value)
+#enabled_share_protocols = NFS,CIFS
+enabled_share_protocols = NFS,CIFS,MAPRFS
+    4. Set the enabled_share_backends property in the manila.conf file to
+       marpfs.
+       For example, your manila.conf file entry for this property should
+       look something similar to the following:
+#enabled_share_backends = <None>
+enabled_share_backends = maprfs
+    5. Save and close the file.
+    6. Add MAPRFS to the
+       /usr/lib/python2.7/site-packages/manila/common/constants.py file
+       SUPPORTED_SHARE_PROTOCOLS parameter.
+       For example:
+SUPPORTED_SHARE_PROTOCOLS = ('NFS', 'CIFS', 'GLUSTERFS', 'HDFS', 'CEPHFS', 'MAPR
+FS')
+    7. Append the following to
+       /usr/lib/python2.7/site-packages/manila/exception.py file:
+class MapRFSException(ManilaException):
+  message = _("MapRFS exception occurred!")
+    8. Create a directory for the MapR manila driver in
+       /usr/lib/python2.7/site-packages/manila/share/drivers directory.
+       For example:
+mkdir /usr/lib/python2.7/site-packages/manila/share/drivers/maprfs
+    9. Copy the MaprManilaDriver.tar.gz from
+       http://mapr-multitenancy.s3-us-west-2.amazonaws.com/list.html to
+       your local host and unzip it.
+   10. Copy the MapR manila driver, maprfs_native.py and driver_util.py,
+       from the location where MaprManilaDriver.tar.gz was unzipped to the
+       directory for the MapR manila driver.
+       For example:
+cp maprfs_native.py /usr/lib/python2.7/site-packages/manila/share/drivers/maprfs
+/
+cp driver_util.py /usr/lib/python2.7/site-packages/manila/share/drivers/maprfs/
+   11. Run the following command:
+touch /usr/lib/python2.7/site-packages/manila/share/drivers/maprfs/__init__.py
+   12. Restart the openstack-manila-share service.
+
+   After modifying the /etc/manila/manila.conf file for the MapR driver,
+   the openstack-manila-share service may fail with the following error in
+   the log file if you do not have the latest oslo.config python
+   libraries:
+"2016-10-17 06:14:19.611 24338 ERROR manila   File "/usr/lib/python2.7/site-pack
+ages/manila/share/drivers/maprfs/maprfs_native.py", line 31, in <module>
+2016-10-17 06:14:19.611 24338 ERROR manila     cfg.PortOpt('maprfs_ssh_port',
+2016-10-17 06:14:19.611 24338 ERROR manila AttributeError: 'module' object has n
+o attribute 'PortOpt'"
+
+   Install the latest osla.config python libraries using the following
+   command:
+pip install oslo.config --upgrade

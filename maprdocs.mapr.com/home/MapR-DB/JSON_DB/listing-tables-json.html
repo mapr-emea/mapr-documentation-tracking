@@ -1,0 +1,47 @@
+Listing JSON Tables
+
+   This topic describes how to list the JSON tables by using either the
+   MapR-DB JSON Client API or MapR-DB Shell.
+
+Permission Required
+
+   The readAce permission on the volumes where the JSON tables are
+   located. [1]Setting Whole Volume ACEs
+     * [2]Java
+     * [3]dbshell
+
+   The table is listed by calling MapR-DB JSON Client API Admin object's
+   listTables() method and passing, as an argument, the path of the
+   folder.
+
+   Use a conditional loop to iterate through the returned list and
+   retrieve the names of the tables.
+public void listTables(String parentFolder) throws DBException {
+    try (Admin admin = MapRDB.newAdmin()) {
+        for(Path tablePath : admin.listTables(parentFolder)) {
+            System.out.println(tablePath);
+        }
+    }
+}
+
+   Note: The parameter parentFolder provides a path to a folder that is in
+   the MapR file system. See "Table Paths" in [4]MapR-DB JSON Tables for
+   examples.
+# mapr dbshell
+maprdb root:> list /demo
+/demo/user
+/demo/checkin
+/demo/review
+/demo/business
+/demo/tip
+5 table(s) found.
+
+   See [5]dbshell list for further details.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetEditVolumeDataACE.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/listing-tables-json.html#div1sect1
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/listing-tables-json.html#div1sect2
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/json_tables.html#json__section_wlf_2gg_cw
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-list.html#dbshell-list

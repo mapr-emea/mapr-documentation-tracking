@@ -1,0 +1,77 @@
+Configuring Secure Clusters for Cross-Cluster NFS Access
+
+   MapR-NFS offers many usability and interoperability advantages to the
+   customer, and makes big data radically easier and less expensive to
+   use. In a secure environment, however, NFS must be carefully configured
+   because the NFS protocol is inherently insecure. Running the NFS server
+   on any cluster node might expose the filesystem to be world readable
+   and writeable to any machine that knows the IP address of the cluster
+   node running the NFS server and has access to the network, regardless
+   of the permissions, passwords and other security mechanisms. At the
+   minimum, iptables firewall rules should be configured for all the
+   cluster nodes where the NFS server is running, to restrict incoming NFS
+   traffic to authorized client IP addresses.
+
+   Configuring cross-cluster NFS access might expose the entire filesystem
+   of the other cluster to be world readable and writeable as well.
+   Therefore, automated configuration for cross-cluster NFS access is not
+   available with the configure-crosscluster.sh utility. You should
+   manually configure cross-cluster NFS access only if you are fully aware
+   of the security risks, and taken appropriate steps to mitigate the
+   risks by securing both your NFS gateway as well as incoming client
+   traffic.
+   This section describes the manual configuration process on a secure
+   cluster for accessing another secure cluster using NFS. There are two
+   methods by which an NFS client can access filesystems from multiple
+   clusters:
+    1. Run the NFS server on one cluster.
+       For this method, configure cross-cluster NFS security for the NFS
+       gateway on one cluster, so that the NFS client can mount the mapr
+       filesystem once from the NFS gateway, and then access the file
+       systems for both clusters.
+    2. Run the NFS server on both clusters.
+       For this method, no cross-cluster NFS configuration is needed. The
+       NFS client can mount the mapr filesystem individually for each
+       cluster. This method requires the NFS gateway to be run on each
+       cluster and the client performs one NFS mount for each NFS
+       filesystem to be accessed.
+
+   The following procedure describes how to setup NFS for the first
+   method:
+    1. Log in to any node on the secure cluster where the NFS server is
+       running.
+       In the rest of this procedure, this cluster is referred to as
+       clusterA.cluster.com and the remote cluster is referred to as
+       clusterB.cluster.com.
+    2. Set up the /opt/mapr/conf/maprserverticket file on
+       clusterA.cluster.com to include the server ticket from
+       clusterB.cluster.com. To set up:
+         a. Copy the /opt/mapr/conf/maprserverticket file from any node on
+            clusterB.cluster.com to any directory on the node you are
+            logged into on clusterA.cluster.com.
+         b. Append maprserverticket entry in the maprserverticket file
+            from clusterB.cluster.com to the
+            /opt/mapr/conf/maprserverticket file on the node you are
+            logged into on clusterA.cluster.com.
+            Note: If you configured cross-cluster security either
+            automatically using the configure-crosscluster.sh utility or
+            manually before, there can be multiple entries in the
+            maprserverticket file; so, only copy the first entry with the
+            alias matching the remote cluster name.
+            For example, to add clusterB.cluster.com's maprserverticket
+            into clusterA.cluster.com’s /opt/mapr/conf/maprserverticket
+            file, run the following command:
+cat /tmp/remoteclusterticketfile | grep B.cluster.com | head --lines=+1 >> /opt/
+mapr/conf/maprserverticket
+         c. Copy the /opt/mapr/conf/maprserverticket file (on the node you
+            are logged into in clusterA.cluster.com) to all the other
+            nodes running NFS server on clusterA.cluster.com.
+    3. Verify data access on both clusters via NFS.
+       Users with access to the NFS servers must be able to access data in
+       both clusters by providing the correct path. For example, users
+       with NFS server access can verify access by running commands
+       similar to the following:
+# ls /mapr
+clusterA.cluster.com  clusterB.cluster.com
+# ls /mapr/clusterB.cluster.com/
+apps  file  CLUSTERB hbase  opt  tmp  user  var

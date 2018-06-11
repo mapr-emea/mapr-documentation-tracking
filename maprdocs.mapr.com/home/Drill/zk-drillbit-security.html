@@ -1,0 +1,43 @@
+Security Between ZooKeeper and Drillbits
+
+   When Drill 1.11 and later is installed on MapR 6.x clusters with the
+   default security enabled, authentication is enabled between the
+   Drillbits and ZooKeeper.
+   The ZooKeeper znode information is secured automatically through
+   authentication and [1]znode ACLs. The communication between Zookeeper
+   and the Drillbits is not encrypted.
+   Note: If you installed Drill on a MapR cluster that does not have the
+   default security configuration, and you are configuring custom
+   security, you must enable authentication and [2]set ACLs on the znodes
+   manually. However, setting ACLs manually for Drill znodes is not
+   recommended. If you set ACLs manually, you must set them the same as a
+   Drillbit would have set them in a secure MapR cluster, as described
+   previously.
+
+   Drill uses ZooKeeper to discover and coordinate Drillbits. Drillbits
+   use Zookeeper znodes to store coordination-related information, as well
+   as execution-related information. If the information stored in the
+   znodes is not properly secured, it can compromise the security and/or
+   privacy of the cluster.
+
+   The znode ACLs are set such that only the Drillbit user (the user that
+   started the Drillbits in the cluster) can access (create, delete, read,
+   write, administer) all of the Drillbit ZooKeeper nodes, with the
+   exception of the Drill ZooKeeper nodes that hold information about the
+   Drillbits in the cluster. Drill clients use these Drill ZooKeeper nodes
+   to discover and connect to the Drillbits in a cluster.
+   For additional information and instruction, refer to the following
+   pages:
+     * [3]https://zookeeper.apache.org/doc/trunk/zookeeperOver.html
+     * [4]https://zookeeper.apache.org/doc/r3.1.2/zookeeperProgrammers.htm
+       l#sc_ZooKeeperAccessControl
+     * [5]https://cwiki.apache.org/confluence/display/ZOOKEEPER/Zookeeper+
+       and+SASL
+
+References
+
+   1. https://zookeeper.apache.org/doc/r3.1.2/zookeeperProgrammers.html#sc_ZooKeeperAccessControl
+   2. https://zookeeper.apache.org/doc/r3.1.2/zookeeperProgrammers.html#sc_ZooKeeperAccessControl
+   3. https://zookeeper.apache.org/doc/trunk/zookeeperOver.html
+   4. https://zookeeper.apache.org/doc/r3.1.2/zookeeperProgrammers.html#sc_ZooKeeperAccessControl
+   5. https://cwiki.apache.org/confluence/display/ZOOKEEPER/Zookeeper+and+SASL

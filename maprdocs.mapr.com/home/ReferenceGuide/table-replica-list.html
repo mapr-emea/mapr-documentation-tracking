@@ -1,0 +1,142 @@
+table replica list
+
+   Lists replicas and the associated replica statistics for a specified
+   MapR-DB binary or JSON table. By default, replica statistics are
+   updated every five minutes.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * readAce on the volume
+     * lookupdir on directories in the path
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table replica list
+  -path <table path>
+  [ -refreshnow true|false ]
+
+   REST
+
+curl -k -X GET
+  'http[s]://<host>:<port>/rest/table/replica/list?path=<path>&refreshnow=false'
+  -u <username>:<password>
+
+Parameters
+
+   Parameter Description
+   path
+
+   The path to the table that you want to list replicas for.
+     * For a table on the local cluster, start the path at the volume
+       mount point. For example, for a table named test under a volume
+       with a mount point at /volume1, specify the following path:
+       /volume1/test
+     * For a table on another cluster, you must also specify the cluster
+       name in the path. For example, for a table named customer under
+       volume1 in the sanfranciscocluster, specify the following path:
+       /mapr/sanfrancisco/volume1/customer
+
+   refreshnow A Boolean value that specifies if you want to trigger an
+   immediate update of the replica statistics. The values are true or
+   false. By default, the value is false; the command lists the current
+   version of the replica statistics, which could be a maximum of five
+   minutes old.
+
+Output
+
+   Lists information about each replica for the specified table.
+   Output Data Fields
+
+   The following fields display for each replica.
+   Field Description
+   cluster The cluster on which the replica resides.
+   table The table name for the replica.
+   type The table type.
+   paused A Boolean values that specifies if replication is paused.
+   replicaPath The table replica path.
+   replicaState The replication state. For information about the
+   replication states, see [1]Table Replication States.
+   throttle A Boolean value that specifies if replication is throttled.
+   idx The internal index value.
+   networkencryption A Boolean value that specifies if replication is
+   encrypted.
+   synchronous A Boolean value that specifies whether replication is
+   synchronous or asynchronous.
+   networkcompression The type of on-wire compression.
+   isUptodate A Boolean value that specifies if the replica is up-to-date.
+   minPendingTS The epoch time in milliseconds of the oldest operation
+   that has yet to be replicated to the replica.
+   maxPendingTS The epoch time in milliseconds of the newest operation
+   that has yet to be replicated to the replica.
+   bytesPending The number of bytes that have yet to be replicated to the
+   replica.
+   putsPending The number of puts that have yet to be replicated to the
+   replica.
+   bucketsPending The number of buckets that have yet to be replicated to
+   the replica.
+   uuid The table UUID.
+   copyTableCompletionPercentage When replica autosetup with directcopy is
+   in progress, this value is the percentage of data from the source that
+   has been copied to the replica. After replication is setup, the value
+   remains at 100.
+   Note: When replicating MapR-DB data, the copyTablePercentageCompletion
+   data may re-adjust to a lower rate. This depends on table region (also
+   referred to as tablets) splits and merges as well as the rate of
+   incoming data to replicating data.
+   errors If applicable, an error is displayed.
+
+   Sample Output
+{
+  "timestamp":1485555420019,
+  "timeofday":"2017-01-27 10:17:00.019 GMT+0000",
+  "status":"OK",
+  "total":1,
+  "data":[
+    {
+      "cluster":"cluster",
+      "table":"/dst",
+      "type":"MapRDB",
+      "replicaPath":"/dst",
+      "replicaState":"REPLICA_STATE_REPLICATING",
+      "paused":false,
+      "throttle":false,
+      "idx":1,
+      "networkencryption":false,
+      "synchronous":false,
+      "networkcompression":"lz4",
+      "isUptodate":true,
+      "minPendingTS":0,
+      "maxPendingTS":0,
+      "bytesPending":0,
+      "putsPending":0,
+      "bucketsPending":0,
+      "uuid":"4164f38a-b4ed-0302-f929-0d8bc68b5800",
+      "copyTableCompletionPercentage":100
+    }
+    ]
+}
+
+Example
+
+   Lists replicas for the custA table:
+
+   CLI
+
+maprcli table replica list -path /volume1/custA
+
+   REST
+
+curl -k -X GET \
+  'https://r1n1.sj.us:8443/rest/table/replica/list?path=%2Fvolume1%2FcustA' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/replication-states.html#reference_dmn_rn2_d1b

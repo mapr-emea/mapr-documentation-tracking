@@ -1,0 +1,854 @@
+volume create
+
+   Creates a volume. Permissions required: cv or fc on the volume.
+
+Syntax
+
+   CLI
+
+maprcli volume create
+-name <volume name>
+[ -advisoryquota <advisory quota> ]
+[ -ae <accounting entity> ]
+[ -aetype <accounting entity type> ]
+[ -allowgrant true|false ]
+[ -allowinherit true|false ]
+[ -auditenabled true|false ]
+[ -cluster <cluster> ]
+[ -coalesce <interval in mins> ]
+[ -containerallocationfactor <positive integer> ]
+[ -createparent 0|1 ]
+[ -criticalrereplicationtimeoutsec ]
+[ -dataauditops <+|- operations> ]
+[ -dbindexlagsecalarmthresh ]
+[ -dbrepllagsecalarmthresh ]
+[ -enforceminreplicationforio true|false ]
+[ -forceauditenable true|false ]
+[ -group <list of group:allowMask> ]
+[ -inherit <volume name> ]
+[ -localvolumehost <localvolumehost> ]
+[ -localvolumeport <localvolumeport> ]
+[ -maxinodesalarmthreshold <maxinodesalarmthreshold> ]
+[ -maxnssizembalarmthreshold <maxnssizembalarmthreshold> ]
+[ -metricsenabled true|false ]
+[ -minreplication <minimum replication factor> ]
+[ -mirrorschedule <mirror schedule ID> ] (4.0.2 only)
+[ -mirrorthrottle 0|1 ]
+[ -mount 0|1 ]
+[ -namecontainerdatathreshold <size> ] (available from version v6.0.1)
+[ -nsminreplication <minimum replication factor> ]
+[ -nsreplication <replication factor> ]
+[ -path <mount path> ]
+[ -quota <quota> ]
+[ -readAce <access control expression> ]
+[ -readonly <read-only status> ]
+[ -replication <replication factor> ]
+[ -replicationtype <type> ]
+[ -rereplicationtimeoutsec <seconds> ]
+[ -rootdirgroup <root directory group> ]
+[ -rootdirperms <root directory permissions> ]
+[ -rootdiruser <root directory user> ]
+[ -schedule <ID> ]
+[ -skipinherit schedule ]
+[ -source <source> ]
+[ -tenantuser <tenant name> ]
+[ -topology <topology> ]
+[ -type rw|mirror] (4.0.2) or [-type 0|1] (4.0.1)
+[ -user <list of user:allowMask> ]
+[ -wiresecurityenabled true|false ]
+[ -writeAce <access control expression> ]
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host>:<port>/rest/volume/create?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   advisoryquota The advisory quota for the volume as integer plus unit.
+   Example: quota=500G; Units: B, K, M, G, T, P
+   ae The accounting entity that owns the volume.
+   aetype The type of accounting entity:
+     * 0=user
+     * 1=group
+
+   allowgrant Specifies whether a parent volume grants permission for a
+   child volume to inherit its properties. True or false.
+
+   Default: false.
+   allowinherit Specifies whether a new volume inherit sproperties from
+   the parent mount point volume. True or false. Default: true.
+   auditenabled Specifies whether to turn auditing on for the volume. If
+   auditing is also enabled at the cluster level with the maprcli audit
+   data command, setting this value to true causes auditing to start for
+   any directories, files, tables, or streams that are already enabled for
+   auditing. If none are yet so enabled, subsequently enabling auditing on
+   any of them causes auditing of them to start.
+   Note: This must be set to true to enable auditing on directories,
+   files, tables, and streams in the volume.
+   You must have the fc permission on the cluster to use this parameter.
+   See acl for details about this permission.
+   cluster The cluster on which to create the volume.
+   coalesce The interval of time during which READ, WRITE, or GETATTR
+   operations on one file from one client IP address are logged only once,
+   if auditing is enabled.
+
+   For example, suppose that a client application reads a single file
+   three times in 6 minutes, so that there is one read at 0 minutes,
+   another at 3 minutes, and a final read at 6 minutes. If the coalesce
+   interval is at least 6 minutes, then only the first read operation is
+   logged. However, if the interval is between 4 minutes, then only the
+   first and third read operations are logged. If the interval is 2
+   minutes, all three read operations are logged.
+
+   The default value is 60 minutes. Setting this field to a larger number
+   helps prevent audit logs from growing quickly.
+   containerallocationfactor Specifies the number of containers to create
+   when the first write from a remote client is sent to the volume. The
+   pre-created containers are distributed equally across topologies,
+   servers, MFS instances, SPs, and CLDB also takes into consideration the
+   load (IO/Space) when selecting target SPs for containers. Value must be
+   a positive integer. The default value is 0. Value can be up to twice
+   the number of SPs in the volume’s topology.
+
+   If this is not set, when a volume is created, 5 containers are created
+   for that volume when IOs are sent to the volume.
+   createparent Specifies whether or not to create a parent directory to
+   hold the volume link:
+     * 0 = Do not create a parent directory.
+     * 1 = Create a parent directory.
+
+   criticalrereplicationtimeoutsec Timeout (in seconds) before
+   re-replicating critically under-replicated containers only. If both
+   rereplicationtimeoutsec and criticalrereplicationtimeoutsec are set and
+   if the value of:
+     * rereplicationtimeoutsec is less than
+       criticalrereplicationtimeoutsec, rereplicationtimeoutsec will
+       override criticalrereplicationtimeoutsec setting for both
+       under-replicated and critically under-replicated containers.
+     * rereplicationtimeoutsec is greater than
+       criticalrereplicationtimeoutsec, criticalrereplicationtimeoutsec
+       will override rereplicationtimeoutsec setting for critically
+       under-replicated containers only; rereplicationtimeoutsec setting
+       is still applicable for under-replicated containers.
+
+   Default value for this parameter is 0 (which indicates no timeout).
+   Value can be 0, or >= 300 seconds and <= 3600 seconds.
+   dataauditops The comma separated list of filesystem operations to
+   include (specified with a preceding plus sign (+)) or exclude
+   (specified with a preceding minus sign (-)) from auditing.
+   Note: If the first operation in the list (of operations) is to be
+   excluded from auditing, it must be preceded by two minus (--) signs.
+   Subsequent operations to exclude must be preceded by only a single
+   minus (-) sign, whether or not the first operation was included (using
+   a plus (+) sign) or excluded (using two minus (--) signs). If neither
+   sign is specified, the given operation is included for auditing.
+   The operations that can be included (+) or excluded (-) from auditing
+   are listed in [1]Auditing Data Access Operations. You can,
+   alternatively, group all the operations using the keyword all, which:
+     * If included (+), cannot be specified with a list of other included
+       operations.
+     * If excluded (-), cannot be specified with a list of other excluded
+       operations.
+
+   Note: All specified operations must either be included or excluded from
+   auditing. You cannot specify a mixed list of included and excluded
+   operations.
+   Other than the specified operations, by default, all other operations
+   will be:
+     * Included for auditing if the specified list is a list of excluded
+       operations.
+     * Excluded from auditing if the specified list is a list of included
+       operations.
+
+   Tip: For more information, see [2]Selective Auditing of Filesystem and
+   Table Operations.
+   dbindexlagsecalarmthresh Specifies the threshold (in seconds) to raise
+   an alarm for index update lag. Default: 0
+   dbrepllagsecalarmthresh Specifies the threshold (in seconds) to raise
+   an alarm for DB replication lag. Default: 0
+   enforceminreplicationforio Specifies whether (true) or not (false) to
+   enforce minimum number of replicas for the (read-write) volume during
+   IO. This ensures that further updates (writes) to volume are successful
+   only when minimum number of copies of the container is available.
+   Setting this to true ensures that if writes succeed, then it has been
+   applied to at least the minimum number of copies and if writes fail, it
+   may have been applied to zero or more copies.
+   Note: If this is enabled, volume dump and volume snapshot create
+   operations may stall if the minimum number of copies of the container
+   are not available.
+   The default value is false.
+   Note: This flag, if set on Mirror Volumes, is ignored.
+   forceauditenable Specifies whether (1) or not (0) to force audit of
+   operations on all files, tables, and streams in the volume if auditing
+   is enabled at the cluster level and at the volume level, irrespective
+   of the audit setting on the individual directory, file, table, and
+   stream. Value can be:
+     * true — force audit of all content
+     * false — do not force audit
+
+   By default, this is disabled (false). To force audit of all
+   directories, files, tables, and streams in the volume irrespective of
+   the audit setting on the individual directory, file, table, and stream,
+   the auditenabled parameter value must also be set to true.
+   group Space-separated list of group:permission pairs. Use comma to
+   separate permissions. For example: group:permission,permission,...
+   inherit Specifies the name of the volume from which the new volume will
+   inherit properties. When inherit is explicitly specified, allowgrant is
+   not required. See the following section on Inheritance for more
+   information.
+   localvolumehost The local volume host.
+   localvolumeport The local volume port. Default: 5660
+   maxinodesalarmthreshold The number of inodes, which when exceeded
+   raises the [3]INODES_EXCEEDED alarm.
+   maxnssizembalarmthreshold The namespace container size, which when
+   exceeded raises the [4]INODES_EXCEEDED alarm.
+   metricsenabled Specifies whether (true) or not (false) to enable
+   metrics collection for a volume.
+   minreplication The minimum replication level. Default: 2 When the
+   replication factor falls below this minimum, re-replication occurs as
+   aggressively as possible to restore the replication level. If any
+   containers in the CLDB volume fall below the minimum replication
+   factor, writes are disabled until aggressive re-replication restores
+   the minimum level of replication.
+   Tip: For more information, see [5]Understanding Replication.
+   mirrorschedule The ID of a mirror schedule. If a mirror schedule ID is
+   provided, then the mirror volume will automatically sync with its
+   source volume on the specified schedule.
+   mirrorthrottle Specifies whether throttling should be enabled at create
+   time.
+   mount Specifies whether the volume is mounted at creation time.
+   name The name for the volume. A volume name can contain alphanumeric
+   characters and the following characters: . (dot), _ (underscore), and -
+   (dash).
+   namecontainerdatathreshold (Available from v6.0.1) Limits the size of
+   data stored in the name container. By default, name container contains
+   the first 64KB of each file and metadata (attributes, block
+   information) about each file. The name container can grow very large
+   with many files. For example, suppose there are 10 million files; 64KB
+   of each file would result in a name container of 640GB. If the name
+   container size control feature is enabled, by setting this property,
+   the size of the name container is reduced because once the name
+   container reaches the specified size, the first 64KB of each file is no
+   longer placed in the name container; instead, once the limit is
+   reached, all data is placed in data containers and only the metadata is
+   stored in the name container. Value must be in MB. The default name
+   container threshold is 512GB.
+   Note: If chunk size is 0, by default all data is stored in the name
+   container. However, if this property is set, once the threshold is
+   reached, all data is stored in a second container and only the metadata
+   is stored in the name container. The size of the second container is
+   not limited by this setting and ensure that it does not grow too large
+   by limiting the amount of data in the volume.
+   nsminreplication The minimum replication level for the namespace
+   container. Default: 2 When the replication factor falls below this
+   minimum, re-replication occurs as aggressively as possible to restore
+   the replication level. If any containers in the CLDB volume fall below
+   the minimum replication factor, writes are disabled until aggressive
+   re-replication restores the minimum level of replication. When enabled,
+   the CLDB manages the namespace container replication separate from the
+   data container replication. This capability is used when you have low
+   volume replication but want to have higher namespace replication.
+   Note: This parameter must be the same or larger than the equivalent
+   data replication parameter, minreplication.
+   For more information, see [6]Understanding Replication.
+   nsreplication The desired namespace container replication level.
+   Default: 3. When the number of copies falls below the desired
+   replication factor, but remains equal to or above the minimum
+   replication factor, re-replication occurs after the timeout specified
+   in the cldb.fs.mark.rereplicate.sec parameter. This timeout is the time
+   given for a down node to come back online. After this timeout period,
+   the CLDB takes action to restore the replication factor. When enabled,
+   the CLDB manages the namespace container replication separate from the
+   data container replication. This capability is used when you have low
+   volume replication but want to have higher namespace replication.
+   Note: This parameter must be the same or larger than the equivalent
+   data replication parameter, replication.
+   For more information, see [7]Understanding Replication.
+   path The path at which to mount the volume. The path must be relative
+   to / and cannot be in the form of a global namespace path (for example,
+   /mapr/<cluster-name>/).
+   quota The quota for the volume as integer plus unit. Example:
+   quota=500G; Units: B, K, M, G, T, P
+
+   Do not use two-letter abbreviations for quota units, such as GB and MB.
+   readAce Specifies [8]Access Control Expressions (ACEs) that grants
+   permissions at the volume level to read files and tables in the volume.
+   The default value is p, which grants access to all users.
+   Note: An ACE (up to 2KB in length) is a combination of users, groups,
+   and/or roles for whom access (to volume data) is defined using boolean
+   expressions and subexpressions within single quotes. There will be no
+   change to access types that are not passed in with the command.
+   readonly Specifies whether or not the volume is read-only:
+     * 0 = Volume is read/write.
+     * 1 = Volume is read-only.
+
+   replication The desired replication level. Default: 3. When the number
+   of copies falls below the desired replication factor, but remains equal
+   to or above the minimum replication factor, re-replication occurs after
+   the timeout specified in the cldb.fs.mark.rereplicate.sec parameter.
+   Note that this timeout is the time given for a down node to come back
+   online. After this timeout period, the CLDB takes action to restore the
+   replication factor.
+   Tip: For more information, see [9]Understanding Replication.
+   replicationtype The desired replication type. You can specify
+   low_latency (star replication) or high_throughput (chain replication).
+   The default setting is high_throughput.
+   rereplicationtimeoutsec Timeout (in seconds) before attempting
+   re-replication of replica containers. This volume property defines the
+   timeout period until CLDB starts re-replicating the containers on the
+   node of the volume when CLDB stops receiving a heartbeat from the node.
+
+   When a node is down, CLDB gives the node an hour to come back online
+   before it takes any action for the containers on this node. This
+   parameter can be set on volumes to reduce the default 1 hour to a
+   shorter time period. This option is provided mainly for local volumes,
+   repl=1 so that when an mfs is down, CLDB can give up quickly and decide
+   that the container has no master. This forces the TT to give up on
+   local containers and take appropriate recovery action of deleting the
+   mapred volume and creating another one.
+   rootdirgroup Owning group of the root directory.
+   rootdirperms Permissions on the volume root directory.
+   rootdiruser Owner of the root directory.
+   schedule The ID of a schedule. Use the [10]schedule list command to
+   find the ID of the named schedule you want to apply to the volume.
+
+   In 4.0.1, if a schedule ID is provided, it applies to a mirror volume.
+   The mirror volume will automatically sync with its source volume on the
+   specified schedule. Use the schedule list command to find the ID of the
+   named schedule you wish to apply to the volume.
+
+   In 4.0.2 and later releases, if a schedule ID is provided, it applies
+   to either a mirror volume or a standard volume. A standard volume will
+   automatically create snapshots on the specified schedule. A mirror
+   volume will sync with its source volume on the specified schedule. If a
+   mirror volume is made into a standard volume, the -schedule option is
+   used as the snapshot schedule for the standard volume.
+   skipinherit Specifies not to inherit schedule(s) associated with the:
+     * parent volume (for sub-volumes)
+     * source volume (for mirror volumes)
+
+   Value must be the keyword schedule.
+   source For mirror volumes, the source volume to mirror, in the format
+   <source volume>@<cluster> (Required when creating a mirror volume).
+   tenantuser The username of the tenant for whom the volume is being
+   created.
+   topology The rack path to the volume.
+   Note: To create a volume in a specific topology, you must have the
+   [11]Converged Enterprise Edition installed on your system. Without the
+   Converged Enterprise Edition, when you run the maprcli volume create
+   command with the -topology option, the following error message is
+   returned:
+ERROR (10010) -  Volume Creation Failed: Setting topology on
+a volume requires data placement feature. License not found for data placement.
+
+   type The type of volume to create.
+
+   For 4.0.2 and later releases, these values are accepted:
+     * mirror - standard mirror (read-only) volume (promotable to standard
+       read-write volume)
+     * rw - standard (read-write) volume (convertible to standard mirror
+       volume)
+     * 0 - standard (read-write) volume (for backward compatibility)
+     * 1 - non-convertible mirror (read-only) volume (for backward
+       compatibility)
+
+   For 4.0.1 and earlier releases, these values are accepted:
+     * 0 - standard (read-write) volume (this volume is non-convertible)
+     * 1 - standard mirror (read-only) volume (this volume is
+       non-convertible)
+
+   user Space-separated list of user:permission pairs. Use comma to
+   separate permissions. For example: user:permission,permission,...
+   wiresecurityenabled Enables (true) or disables (false) on-wire
+   encryption for all files, tables, and streams in the volume . If true,
+   this setting overrides all file, table, and stream level encryption
+   settings (set using hadoop mfs command) and enables on-wire encryption
+   for all files, tables, and streams. If this is disabled (false) at the
+   volume level and is enabled at the file, table, and/or stream level,
+   the file, table, and/or stream level encryption setting overrides this
+   setting on those files, tables, and streams where it is enabled; for
+   all other files, tables, and streams where encryption is not enabled at
+   the file, table, and/or stream level, on-wire encryption is disabled.
+   writeaAce Specifies [12]Access Control Expressions (ACEs) that grants
+   permission at the volume level to write to files and tables in the
+   volume. The default value is p, which grants access to all users.
+   Note: An ACE (up to 2KB in length) is a combination of users, groups,
+   and/or roles for whom access (to volume data) is defined using boolean
+   expressions and subexpressions within single quotes.
+
+Inheritance
+
+   The following table shows the list of inheritable parameters that are
+   (Yes) and are not (No) inherited by a:
+     * Mirror volume from the source volume on the same cluster
+     * Mirror volume from the source volume on a different cluster
+
+   Note: All (non-mirror) volumes inherit all the inheritable properties
+   from the parent volume. For more information on the properties, refer
+   to volume create [13]parameters.
+   Inheritable Properties (which are inherited by non-mirror volumes by
+   default) Inherited by Mirror Volume on the same cluster as the source
+   volume? Inherited by Mirror Volume on a different cluster from the
+   source volume?
+   advisoryquota Yes Yes
+   ae Yes No
+   aetype Yes No
+   allowgrant Yes Yes
+   allowinherit Yes Yes
+   auditenabled Yes Yes
+   coalesce Yes Yes
+   dataauditops Yes Yes
+   dbindexlagsecalarmthresh Yes Yes
+   dbrepllagsecalarmthresh Yes Yes
+   group Yes Yes
+   inherit Yes Yes
+   localvolumehost No No
+   localvolumeport No No
+   maxinodesalarmthreshold Yes Yes
+   minreplication Yes Yes
+   mirrorschedule Yes No
+   mirrorthrottle Yes Yes
+   nsminreplication Yes Yes
+   nsreplication Yes Yes
+   quota Yes Yes
+   readonly Yes Yes
+   replication Yes Yes
+   replicationtype Yes Yes
+   rereplicationtimeoutsec Yes Yes
+   rootdirperms Yes Yes
+   schedule Yes^* No
+   source Yes Yes
+   topology Yes No
+   type Yes Yes
+   user Yes Yes
+     * ^* If skipinherit parameter is specified at the time of volume
+       creation, schedule(s) are not inherited while inheriting volume
+       properties from the source volume.
+
+Examples
+
+   Create the volume "test-volume" mounted at "/test/test-volume"
+     * [14]CLI
+     * [15]REST
+
+# maprcli volume create -name test-volume -path /test/test-volume -type rw -json
+{
+        "timestamp":1526522204072,
+        "timeofday":"2018-05-16 06:56:44.072 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'test-volume'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=test-volume&pa
+th=/test/test-volume&type=rw' --user mapr:mapr
+{"timestamp":1526522305703,"timeofday":"2018-05-16 06:58:25.703 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'test-v
+olume'"]}
+
+   Create Volume with a Quota and an Advisory Quota
+
+   This example creates a volume with the following parameters:
+     * advisoryquota: 100M
+     * name: volumename
+     * path: /volumepath
+     * quota: 500M
+     * replication: 3
+     * schedule: 2
+     * topology: /East Coast
+     * type: rw
+
+     * [16]CLI
+     * [17]REST
+
+maprcli volume create -name volumename -path /volumepath -advisoryquota 100M -qu
+ota 500M -replication 3 -schedule 2 -topology "/East Coast" -type rw -json
+{
+        "timestamp":1526522474660,
+        "timeofday":"2018-05-16 07:01:14.660 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'volumename'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=volumename&pat
+h=/volumepath&advisoryquota=100M&quota=500M&replication=3&schedule=2&type=rw' --
+user mapr:mapr
+{"timestamp":1526522622494,"timeofday":"2018-05-16 07:03:42.494 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'volume
+name'"]}
+
+   Create the mirror volume "test-volume.mirror" from source volume
+   "test-volume" and mount at "/test/test-volume-mirror"
+     * [18]CLI
+     * [19]REST
+
+maprcli volume create -name test-volume.mirror -source test-volume@ksTest -path
+/test/test-volume-mirror -type mirror -json
+{
+        "timestamp":1526524458615,
+        "timeofday":"2018-05-16 07:34:18.615 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'test-volume.mirror'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=test-volume.mi
+rror&path=/test/test-volume-mirror&type=mirror&source=test-volume@ksTest' --user
+ mapr:mapr
+{"timestamp":1526524637534,"timeofday":"2018-05-16 07:37:17.534 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'test-v
+olume.mirror'"]}
+
+   Create volumes that inherit from a parent volume
+
+   When creating and mounting a volume, the location of the mount path is
+   specified by the path parameter. Volumes can be mounted via the web
+   console, the maprcli commands, or the REST commands. The maprcli
+   commands include volume create -path command and the mapcli volume
+   mount -path command if the volume was previously created. Sub-volumes
+   (children) can inherit properties from their parent volume.
+
+   In the following example, a parent volume and two (2) child volumes are
+   create where the child volume inherit properties from the parent. When
+   the inherit flag is explicitly used, the allowgrant parameter for the
+   parent volume is not required.
+     * For child volumes, c1 and c2, inheritance is explicit because the
+       inherit option is specified. Thus, p1.c1 and p1.c2 volumes will
+       inherit all properties from volume p1 (note that p1 is not a parent
+       of p1.c1) regardless of whether the allowgrant option is set on p1
+       or not. In this case, there is an explicit inheritance ant the
+       allowgrant flag is ignored and volume properties are inherited.
+     * For the child volume, c3, inheritance is implicit. Meaning, the
+       child volume, p1.c3, inherits all properties from the parent
+       volume, p1, only if the allowgrant option is set on p1.
+
+     * [20]CLI
+     * [21]REST
+
+maprcli volume create -name p1 -path /p1
+maprcli volume create -name p1.c1 -inherit p1
+maprcli volume create -name p1.c2 -path /p1/c2 -inherit p1
+maprcli volume create -name p1.c3 -path /p1/c3
+
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=p1&path=%2Fp1' -
+-user mapr:mapr
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=p1.c1&inherit=p1
+' --user mapr:mapr
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=p1.c2&path=%2Fp1
+%2Fc2&inherit=p1' --user mapr:mapr
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=p1.c3&path=%2Fp1
+%2Fc3' --user mapr:mapr
+
+   In the following example, the p1.child volume normally inherits from
+   the p1 parent volume properties because p1.child is mounted under p1
+   and allowgrant option is set to true on the parent volume. However, if
+   the child volume doesn't want to inherit properties, then set the
+   allowinherit option to false (default: true).
+     * [22]CLI
+     * [23]REST
+
+maprcli volume create -name p1 -path /p1 -allowgrant true
+maprcli volume create -name p1.child -path /p1/p1.child -allowinherit false
+
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=p1&path=%2Fp1&al
+lowgrant=true' --user mapr:mapr
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=p1.child&path=%2
+Fp1%2Fp1.child&allowinherit=false' --user mapr:mapr
+
+   Create a volume with namespace container replicas
+     * [24]CLI
+     * [25]REST
+
+# maprcli volume create -name testVol -nsminreplication 2 -nsreplication 3 -json
+{
+        "timestamp":1526525132522,
+        "timeofday":"2018-05-16 07:45:32.522 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'testVol'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=testVol&path=/
+testVol&nsminreplication=2&nsreplication=3' --user mapr:mapr
+{"timestamp":1526525257461,"timeofday":"2018-05-16 07:47:37.461 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'testVo
+l'"]}
+
+   Create a volume and set ACEs
+     * [26]CLI
+     * [27]REST
+
+# maprcli volume create -name testVol -readAce p -writeAce 'g:group1&!u:user1' -
+json
+{
+        "timestamp":1526525429326,
+        "timeofday":"2018-05-16 07:50:29.326 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'testVol'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=testVol&readAc
+e=p&writeAce=g%3Agroup1%26%21u%3Auser1' --user mapr:mapr
+{"timestamp":1526525572035,"timeofday":"2018-05-16 07:52:52.035 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'testVo
+l'"]}
+
+   Create a volume with auditing disabled for specific operations
+     * [28]CLI
+     * [29]REST
+
+# maprcli volume create -name test-volume -auditenabled true -dataauditops --loo
+kup,-read,-write -json
+{
+        "timestamp":1526525720308,
+        "timeofday":"2018-05-16 07:55:20.308 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'test-volume'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=test-volume&pa
+th=/test/test-volume&auditenabled=true&dataauditops=%2D%2Dlookup%2C%2Dread%2C%2D
+write' --user mapr:mapr
+{"timestamp":1526525795017,"timeofday":"2018-05-16 07:56:35.017 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'test-v
+olume'"]}
+
+   Create a volume and grant user permissions on the volume:
+     * [30]CLI Example 1
+     * [31]REST
+
+# /opt/mapr/bin/maprcli volume create -name testVol1 -path /testVol1 -user user1
+:dump user2:fc -json
+{
+    "timestamp":1521162402826,
+    "timeofday":"2018-03-15 06:06:42.826 GMT-0700 PM",
+    "status":"OK",
+    "total":0,
+    "data":[
+    ],
+    "messages":[
+        "Successfully created volume: 'testVol1'"
+    ]
+}
+
+# curl -k -X POST 'https://10.10.82.24:8443/rest/volume/create?name=testVol&path
+=/testVol&user=user1%3Adump%20user2%3Afc' --user mapr:mapr
+{"timestamp":1526526072608,"timeofday":"2018-05-16 08:01:12.608 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'testVo
+l'"]}
+
+     * [32]CLI Example 2
+     * [33]REST
+
+# /opt/mapr/bin/maprcli volume create -name testVol -path /testVol2 -user user1:
+dump,restore user2:a,fc -json
+{
+    "timestamp":1521162467485,
+    "timeofday":"2018-03-15 06:07:47.485 GMT-0700 PM",
+    "status":"OK",
+    "total":0,
+    "data":[
+    ],
+    "messages":[
+        "Successfully created volume: 'testVol2'"
+    ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=testVol2&path=
+/testVol2&user=user1%3Adump%2Crestore%20user2%3Aa%2Cfc' --user mapr:mapr
+{"timestamp":1526526256845,"timeofday":"2018-05-16 08:04:16.845 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'testVo
+l2'"]}
+
+   Create a volume for a tenant
+   This example creates a volume for a tenant with the following
+   parameters:
+     * name: volumename
+     * path: /volumepath
+     * advisoryquota: 500MB
+     * quota: 1GB
+     * replication: 3
+
+     * [34]CLI
+     * [35]REST
+
+# maprcli volume create -name tenantVol -cluster ksTest -path /egTenant -tenantu
+ser egTenant -advisoryquota 500M -quota 1G -replication 3 -json
+{
+        "timestamp":1526526462865,
+        "timeofday":"2018-05-16 08:07:42.865 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'tenantVol'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=tenantVol&clus
+ter=ksTest&path=/egTenant&advisoryquota=500M&quota=1G&replication=3' --user mapr
+:mapr
+{"timestamp":1526526615167,"timeofday":"2018-05-16 08:10:15.167 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'tenant
+Vol'"]}
+
+   Create a volume with on-wire encryption enabled for all files and
+   tables in the volume:
+     * [36]CLI
+     * [37]REST
+
+# maprcli volume create -name test-Volume -path /testvolume -type rw -wiresecuri
+tyenabled true -json
+{
+        "timestamp":1526526686905,
+        "timeofday":"2018-05-16 08:11:26.905 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'test-Volume'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=test-volume&pa
+th=/testVolume&type=rw&wiresecurityenabled=true' --user mapr:mapr
+{"timestamp":1526526748723,"timeofday":"2018-05-16 08:12:28.723 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'test-v
+olume'"]}
+
+   Create a sub-volume and do not inherit schedules from the parent
+   volume:
+     * [38]CLI
+     * [39]REST
+
+# maprcli volume create -name p1.c2 -path /p1/p1.c2 -skipinherit schedule -json
+{
+        "timestamp":1505196021575,
+        "timeofday":"2017-09-11 11:00:21.575 GMT-0700",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'p1.c2'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=p1.c2&path=/p1
+/p1.c2&skipinherit=schedule' --user mapr:mapr
+{"timestamp":1526526980643,"timeofday":"2018-05-16 08:16:20.643 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'p1.c2'
+"]}
+
+   Create a mirror volume and do not inherit the schedule(s) from the
+   source volume:
+     * [40]CLI
+     * [41]REST
+
+# maprcli volume create -name p1.m2 -path /p1/p1.m2 -type mirror -source p1@ksTe
+st -skipinherit schedule -json
+{
+        "timestamp":1505196450141,
+        "timeofday":"2017-09-11 11:07:30.141 GMT-0700",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created volume: 'p1.m2'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=p1.m2&path=/p1
+/p1.m2&type=mirror&source=p1@ksTest&skipinherit=schedule' --user mapr:mapr
+{"timestamp":1526527151925,"timeofday":"2018-05-16 08:19:11.925 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created volume: 'p1.m2'
+"]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Auditing-FilesystemTableOperations.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SelectiveAuditingOfOperations.html#concept_nzd_j5g_h5
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/VolumeAlarms.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/VolumeAlarms.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DetermineVolReplicationFactor.html
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/schedule-list.html#schedulelist
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/License-upgrade.html#license-upgrade
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#volumecreate__params
+  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div1entry1
+  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div1entry2
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div2entry1
+  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div2entry2
+  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div3entry1
+  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div3entry2
+  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div4entry1
+  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div4entry2
+  22. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div5entry1
+  23. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div5entry2
+  24. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div6entry1
+  25. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div6entry2
+  26. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div7entry1
+  27. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div7entry2
+  28. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div8entry1
+  29. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div8entry2
+  30. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div9entry1
+  31. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div9entry2
+  32. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div10entry1
+  33. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div10entry2
+  34. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div11entry1
+  35. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div11entry2
+  36. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div12entry1
+  37. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div12entry2
+  38. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div13entry1
+  39. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div13entry2
+  40. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div14entry1
+  41. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#div14entry2

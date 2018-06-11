@@ -1,0 +1,40 @@
+Scan the entire table
+
+APIs used
+
+   These APIs and more are defined in the header file scanner.h:
+     * hb_scanner_create(): Creates a client side row scanner. The
+       returned scanner is not thread safe. No RPC will be invoked until
+       the call to fetch the next set of rows is made. You can set the
+       various attributes of this scanner until that point. @returns 0 on
+       success, non-zero error code in case of failure.
+     * hb_scanner_next(): Request the next set of results from the server.
+       You can set the maximum number of rows returned by this call using
+       hb_scanner_set_num_max_rows().
+     * hb_scanner_num_max_rows(): Sets the maximum number of rows to scan
+       per call to hb_scanner_next().
+     * hb_scanner_num_versions(): Sets the maximum versions of a column to
+       fetch.
+     * hb_scanner_set_table(): Sets the name of the table to scan.
+
+Sequence of steps
+
+    1. Create the scanner object.
+    2. Set the name of the table to scan.
+    3. Set the number of rows to scan at a time.
+    4. Set the number of versions to scan.
+    5. Request the next set of results from the server.
+    6. wait_for_scan(): wait for the rpc call to complete.
+
+Code
+
+  // now, scan the entire table
+  {
+    hb_scanner_t scanner = NULL;
+    hb_scanner_create(client, &scanner);
+    hb_scanner_set_table(scanner, table_name, table_name_len);
+    hb_scanner_set_num_max_rows(scanner, 3);  // maximum 3 rows at a time
+    hb_scanner_set_num_versions(scanner, 10); // up to 10 versions of the cell
+    hb_scanner_next(scanner, scan_callback, NULL); // dispatch the call
+    wait_for_scan();
+  }

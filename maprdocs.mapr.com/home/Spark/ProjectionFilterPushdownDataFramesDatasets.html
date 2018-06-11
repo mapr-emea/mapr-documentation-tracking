@@ -1,0 +1,213 @@
+Projection and Filter Pushdown with Apache Spark DataFrames and Datasets
+
+   Projection and filter pushdown improve query performance. When you
+   apply the select and filter methods on DataFrames and Datasets, the
+   MapR-DB OJAI Connector for Apache Spark pushes these elements to
+   MapR-DB where possible.
+
+Projection Pushdown
+
+   Projection pushdown minimizes data transfer between MapR-DB and the
+   Apache Spark engine by omitting unnecessary fields from table scans. It
+   is especially beneficial when a table contains many columns.
+
+   When you invoke the following select method on a DataFrame, the
+   connector pushes the projection:
+     * [1]Scala
+     * [2]Java
+     * [3]Python
+
+import org.apache.spark.sql.SparkSession
+import com.mapr.db.spark.sql._
+
+val df = sparkSession.loadFromMapRDB("/tmp/user_profiles")
+df.select("_id", "first_name", "last_name")
+
+import com.mapr.db.spark.sql.api.java.MapRDBJavaSession;
+
+MapRDBJavaSession maprSession = new MapRDBJavaSession(sparkSession);
+Dataset<Row> df = maprSession.loadFromMapRDB("/tmp/user_profiles");
+df.select("_id", "first_name", "last_name");
+
+from pyspark.sql import SparkSession
+
+df = spark_session.loadFromMapRDB("/tmp/user_profiles")
+df.select("_id", "first_name", "last_name")
+
+   The equivalent example using Datasets is as follows:
+     * [4]Scala
+     * [5]Java
+
+import org.apache.spark.sql.SparkSession
+import com.mapr.db.spark.sql._
+
+val ds = sparkSession.loadFromMapRDB[Person]("/tmp/user_profiles").as[Person]
+ds.select("_id", "first_name", "last_name")
+
+import com.mapr.db.spark.sql.api.java.MapRDBJavaSession;
+
+MapRDBJavaSession maprSession = new MapRDBJavaSession(sparkSession);
+Dataset<Row> ds = maprSession.loadFromMapRDB("/tmp/user_profiles", Person.class)
+;
+ds.select("_id", "first_name", "last_name");
+
+Filter Pushdown
+
+   Filter pushdown improves performance by reducing the amount of data
+   passed between MapR-DB and the Apache Spark engine when filtering data.
+
+   Consider the following example:
+     * [6]Scala
+     * [7]Java
+     * [8]Python
+
+import org.apache.spark.sql.SparkSession
+import com.mapr.db.spark.sql._
+
+val df = sparkSession.loadFromMapRDB("/tmp/user_profiles")
+df.filter("first_name = 'Bill'")
+
+import com.mapr.db.spark.sql.api.java.MapRDBJavaSession;
+
+MapRDBJavaSession maprSession = new MapRDBJavaSession(spark);
+Dataset<Row> df = maprSession.loadFromMapRDB("/tmp/user_profiles");
+df.filter("first_name = 'Bill'")
+
+from pyspark.sql import SparkSession
+
+df = spark_session.loadFromMapRDB("/tmp/user_profiles")
+df.filter("first_name = 'Bill'")
+
+   The MapR-DB OJAI Connector for Apache Spark pushes the filter firstName
+   = 'Bill' down to MapR-DB.
+
+   The equivalent example using Datasets is as follows:
+     * [9]Scala
+     * [10]Java
+
+import org.apache.spark.sql.SparkSession
+import com.mapr.db.spark.sql._
+
+val ds = sparkSession.loadFromMapRDB[Person]("/tmp/user_profiles").as[Person]
+ds.filter($"first_name" === "Bill")
+
+import com.mapr.db.spark.sql.api.java.MapRDBJavaSession;
+
+Dataset ds =  maprSession.loadFromMapRDB("/tmp/user_profiles").as(Encoders.bean(
+Person.getClass()));
+ds.filter(col("first_name").equalTo("Bill"));
+
+   The following DataFrame filters those rows in which first_name is
+   either "David" or "Peter":
+     * [11]Scala
+     * [12]Java
+     * [13]Python
+
+df.filter($"first_name" === "David" || $"first_name" === "Peter")
+
+df.filter(col("first_name").equalTo("David").or(col("first_name").equalTo("Peter
+")))
+
+df.filter((col("first_name") == "David") | (col("first_name") == "Peter"))
+
+   The following DataFrame retrieves only the rows in which the first_name
+   is "David" and the last_name is "Jones":
+     * [14]Scala
+     * [15]Java
+     * [16]Python
+
+df.filter($"first_name" === "David" && $"last_name" === "Jones")
+
+df.filter(col("first_name").equalTo("David").and(col("last_name").equalTo("Jones
+")))
+
+df.filter((col("first_name") == "David") & (col("last_name") == "Jones"))
+
+   The following uses a not condition to return rows where the first_name
+   is not "David" and the last_name is not "Peter":
+     * [17]Scala
+     * [18]Java
+     * [19]Python
+
+df.filter(not($"first_name" === "David || $"last_name" === "Peter"))
+
+df.filter(not(col("first_name").equalTo("David").or(col("last_name").equalTo("Pe
+ter"))))
+
+df.filter(~((col("first_name") == "David") | (col("last_name") == "Peter")))
+
+   The MapR-DB OJAI Connector pushes down all of the filters shown in the
+   earlier examples. It can push down the following types of filters,
+   provided that the field is not an Array or Map:
+     * Equal To (=)
+     * Not Equal To (!=)
+     * Less Than (<)
+     * Less Than or Equal To (<=)
+     * Greater Than (>)
+     * Greater Than or Equal To (>=)
+     * In Predicate (IN)
+     * Like predicate (LIKE)
+     * AND, OR
+     * NOT
+
+Restrictions
+
+   Pushdowns with DataFrames and Datasets are not supported in the
+   following scenarios:
+     * Filters on complex types, including arrays, maps, and structs
+       For example, a filter on a field in a map, as shown in the
+       following example, is not pushed down:
+          + [20]Scala
+          + [21]Java
+          + [22]Python
+df.filter($"address.city" === "Milpitas")
+df.filter(col("address.city").equalTo("Milpitas"));
+df.filter(col("address.city") == "Milpitas")
+     * Filters with functions sizeof, typeof, and matches
+       Spark SQL does not support these functions.
+     * Projections on complex types, including arrays, maps, and structs
+       For example, if you select an element of an array, as shown in the
+       following example, it is not pushed down:
+          + [23]Scala
+          + [24]Java
+          + [25]Python
+ds.select($"hobbies" (0))
+df.select(col("hobbies").getItem(0));
+df.select(col("hobbies").getItem(0))
+
+   These limitations do not apply to pushdowns on RDDs. An alternative is
+   to apply the [26]pushdown using an RDD, and then [27]convert the RDD to
+   a DataFrame.
+   Note: MapR-DB 6.0 introduces support for [28]Secondary Indexes, but the
+   MapR-DB OJAI Connector for Spark does not currently leverage them.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div1entry1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div1entry2
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div1entry3
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div2entry1
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div2entry2
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div3entry1
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div3entry2
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div3entry3
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div4entry1
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div4entry2
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div5entry1
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div5entry2
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div5entry3
+  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div6entry1
+  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div6entry2
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div6entry3
+  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div7entry1
+  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div7entry2
+  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div7entry3
+  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div8entry1
+  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div8entry2
+  22. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div8entry3
+  23. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div9entry1
+  24. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div9entry2
+  25. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#div9entry3
+  26. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/LoadDataFromMapRDBasRDD.html#concept_l52_23y_hz__section_kxb_chd_3z
+  27. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ConvertRDDtoDataFrame.html#concept_i3r_hyn_2bb
+  28. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/Indexes.html#indexes

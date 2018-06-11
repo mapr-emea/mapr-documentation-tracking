@@ -1,0 +1,96 @@
+Drill-on-YARN Overview
+
+   Running Drill as a YARN application (Drill-on-YARN) enables Drill to
+   work alongside other applications, such as Hadoop and Spark, in a
+   YARN-managed cluster. If you are currently running Drill under Warden,
+   you can upgrade Drill and continue to run Drill under Warden, or you
+   can migrate Drill to run under YARN. See [1]Migrate Drill to Run Under
+   YARN for instructions.
+
+   YARN assigns resources, such as memory and CPU, to applications in the
+   cluster and eliminates the manual steps associated with installation
+   and resource allocation for stand-alone applications in a multi-tenant
+   environment. YARN automatically deploys (localizes) the Drill software
+   onto each Drill node and manages the Drill cluster. Drill becomes a
+   long-running application with YARN. You can monitor the Drill-on-YARN
+   cluster using the Application Master web UI.
+
+Resource Usage
+
+   By design, Drill aggressively uses all of the resources available to
+   run queries at optimal speed. When Drill runs under YARN, you must
+   inform YARN of the resources that Drill needs. The resource settings
+   are descriptive, not proscriptive. Drill does not limit itself to the
+   YARN settings, instead the YARN settings inform YARN of the resources
+   that Drill will consume so that YARN does not over-allocate those
+   resources to other tasks.
+
+   The MapR version of YARN manages CPU, memory, and disks. YARN calls
+   settings for memory and CPU “vcores." You configure Drill’s memory and
+   then inform YARN of the Drill configuration. Drill uses all available
+   disk I/O and CPU.
+
+Components
+
+   Several software components work together to run Drill as a YARN
+   application. Drill, YARN, and the Drill-on-YARN application
+   collectively provide the components required to run Drill under YARN.
+
+   The following table lists the software components with their
+   descriptions:
+   Software Component Description
+   YARN Resource Manager The Resource Manager manages the set of
+   applications running on the cluster. Each cluster must have one
+   Resource Manager.
+     Node Manager The Node Manager manages the application tasks running
+   on a particular node. Each node in a cluster must have one Node
+   Manager.
+   Drill Drillbit A drillbit is the Drill daemon software that YARN runs
+   on each node in the cluster. See[2]Drill Query Execution. The drillbit
+   process on the node acts as the application task.
+     Client A client, such as JDBC, ODBC, or SQLLine sends queries to a
+   drillbit. The client uses ZooKeeper to discover a drillbit that the
+   client treats as the Foreman. See[3]Drill Clients.
+     Drill distribution archive The Drill distribution archive is a Drill
+   distribution .tar.gz file included with the Drill installation.
+   Drill-on-YARN uploads this archive to the distributed file system
+   (DFS). YARN downloads (localizes) the file to each worker node.
+   ZooKeeper ZooKeeper ZooKeeper is the service that tracks the available
+   set of drillbit processes. The Foreman for a query uses ZooKeeper to
+   identify the set of available drill nodes that can run the query.
+   See[4]Drill Query Execution.
+   Drill-on-YARN Application Application Master (AM) The Application
+   Manager requests containers from the Resource Manager and launches
+   drillbits using those containers. The AM monitors Drillbits, detects
+   failures, and restarts failed Drillbits. The AM also provides a web UI
+   to manage the Drill cluster.
+     Drill-on-YARN client The Drill-on-YARN client is a command-line
+   program that starts, stops, and monitors the Drill cluster. The client
+   provides the information that YARN needs to start the Application
+   Master. The client can run on any machine that has both the Drill and
+   YARN client software. The client does not have to be part of the YARN
+   cluster.
+     drill-on-yarn.conf The drill-on-yarn.conf configuration file provides
+   the information that Drill-on-YARN needs to manage the Drill cluster.
+   This file is separate from the configuration files for Drill itself.
+
+Component Workflow
+
+   Running Drill as a YARN application is mostly an automated process
+   carried out by the Drill and YARN components. After an administrator
+   installs, configures, and launches Drill from the Drill-on-YARN client,
+   YARN deploys (localizes) Drill on to designated nodes and starts the
+   Drill process on each node.
+
+   The following diagram shows the workflow between the components in a
+   cluster with the steps that Drill and YARN complete to deploy and run
+   Drill as a YARN application:
+
+   [DrillOnYARN_Workflow.PNG]
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/migrate_drill_to_yarn.html#run_drill_as_a_yarn_application
+   2. http://drill.apache.org/docs/drill-query-execution/
+   3. http://drill.apache.org/docs/architecture-introduction/#drill-clients
+   4. http://drill.apache.org/docs/drill-query-execution/

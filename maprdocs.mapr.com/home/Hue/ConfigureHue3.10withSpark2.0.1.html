@@ -1,0 +1,77 @@
+Integrate Hue 3.10+ With Spark 2
+
+   Important: Hue integration with Spark is an experimental feature. This
+   topic describes how to integrate Hue 3.10 or later (expressed as
+   "3.10+") with Spark 2 or later.
+    1. In the [spark] section of the hue.ini file, set the
+       livy_server_host and livy_server_port parameters to the host and
+       port where the Livy server is running:
+[spark]
+  # Host address of the Livy Server.
+  livy_server_host=ubuntu500
+  # Port of the Livy Server.
+  livy_server_port=8998
+
+    2. To configure Hue to use Spark modes, modify livy.conf
+       (/opt/mapr/hue-livy/hue-livy-<version>/conf/livy.conf):
+         a. If Spark jobs run on local mode, set the livy.spark.master
+            property:
+…
+# What spark master Livy sessions should use.
+livy.spark.master = local[*]
+….
+
+         b. If Spark jobs run on YARN mode, set the livy.spark.master and
+            livy.spark.deployMode properties (client or cluster). For
+            example:
+….
+# What spark master Livy sessions should use.
+livy.spark.master = yarn
+# What spark deploy mode Livy sessions should use.
+livy.spark.deployMode = cluster
+….
+
+         c. If Spark jobs run on Standalone mode, set the
+            livy.spark.master property. For example:
+# What spark master Livy sessions should use.
+livy.spark.master = spark://ubuntu500:7077
+         d. If Spark jobs run on Mesos mode, set the livy.spark.master
+            property. For example:
+# What spark master Livy sessions should use.
+livy.spark.master = mesos://<mesos-master-node-ip>:5050
+            Note: Integration of Spark on Mesos with Hue is not supported
+            in cluster deployment mode.
+    3. If you want to be able to access Hive through Spark in Hue, you
+       should configure Spark with Hive, and set
+       livy.repl.enableHiveContext to true in livy.conf. For example:
+...
+# Whether to enable HiveContext in livy interpreter, if it is true hive-site.xml
+ will be detected
+# on user request and then livy server classpath automatically.
+livy.repl.enableHiveContext = true
+...
+    4. If you are planning to use PySpark, you will need to set the
+       PYTHONPATH environment variable in livy-env.sh
+       (/opt/mapr/hue-livy;/hue-livy-<version>/conf/livy-env.sh):
+...
+export PYTHONPATH=$SPARK_HOME/python/lib/py4j-<version>-
+src.zip:$SPARK_HOME/python/:$PYTHONPATH
+       For example:
+...
+export PYTHONPATH=$SPARK_HOME/python/lib/py4j-0.10.3-
+src.zip:$SPARK_HOME/python/:$PYTHONPATH
+    5. Make sure that R is installed on the node if you are planning to
+       run SparkR. To install R to run SparkR jobs:
+
+        On Ubuntu
+
+sudo apt-get install r-base
+
+        On Red Hat / CentOS
+
+sudo yum install R
+
+    6. Restart the Spark REST Job Server (Livy).
+maprcli node services -name livy -action restart -nodes <livy node>
+    7. Restart Hue:
+maprcli node services -name hue -action restart -nodes <hue node>

@@ -1,0 +1,52 @@
+Post-Upgrade Steps for Spark
+
+   Complete the following steps after you upgrade Spark with or without
+   the MapR Installer.
+
+Post-Upgrade Steps for Spark Standalone Mode
+
+    1. (Optional) Migrate Custom Configurations.
+       Migrate any custom configuration settings into the new default
+       files in the conf directory (/opt/mapr/spark/spark-<version>/conf).
+    2. If Spark SQL is configured to work with Hive, copy hive-site.xml
+       file into the conf directory
+       (/opt/mapr/spark/spark-<version>/conf).
+    3. Run the following commands to configure the slaves:
+         a. Copy the /opt/mapr/spark/spark-<version>/conf/slaves.template
+            into /opt/mapr/spark/spark-<version>/conf/slaves.
+         b. Add the hostnames of the Spark worker nodes. Put one worker
+            node hostname on each line.
+            For example:
+localhost
+worker-node-1
+worker-node-2
+    4. [1]Run configure.sh -R.
+    5. Restart all the spark slaves as the mapr user:
+/opt/mapr/spark/spark-<version>/sbin/start-slaves.sh spark://<comma-separated li
+st of spark master hostname: port>
+    6. Delete the old Spark directory from /opt/mapr/spark. For example,
+       if you upgraded from Spark 1.6.1 to 2.0.1, you need to delete
+       /opt/mapr/spark/spark-1.6.1.
+
+Post-Upgrade Steps for Spark on YARN
+
+    1. (Optional) Migrate Custom Configurations.
+       Migrate any custom configuration settings into the new default
+       files in the conf directory (/opt/mapr/spark/spark-<version>/conf).
+       Also, if you previously configured Spark to use the Spark JAR file
+       from a location on the MapR-FS, you need to copy the latest JAR
+       file to the MapR-FS and reconfigure the path to the JAR file in the
+       spark-defaults.conf file. See [2]Configure Spark JAR Location.
+    2. If Spark SQL is configured to work with Hive, copy hive-site.xml
+       file into the conf directory
+       (/opt/mapr/spark/spark-<version>/conf).
+    3. [3]Run configure.sh -R.
+    4. Delete the old Spark directory from /opt/mapr/spark. For example,
+       if you upgraded from Spark 1.6.1 to 2.0.1, you need to delete
+       /opt/mapr/spark/spark-1.6.1.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SparkConfigureShR.html#concept_x2q_5dl_3bb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/ConfigureSparkJARLocation.html#ConfigureSparkJARLocation
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SparkConfigureShR.html#concept_x2q_5dl_3bb

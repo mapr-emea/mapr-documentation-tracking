@@ -1,0 +1,44 @@
+Installing the MapR Client on SUSE
+
+   This section describes how to install the MapR Client on SUSE.
+    1. Remove any previous MapR software. You can use rpm -qa | grep mapr
+       to get a list of installed MapR packages, then type the packages
+       separated by spaces after the zypper rm command.
+       Example:
+rpm -qa | grep mapr zypper rm mapr-fileserver mapr-core
+    2. Run the following command to install the MapR client:
+zypper install mapr-client
+    3. Run configure.sh to configure the client. For details about the
+       syntax, parameters, and behavior of configure.sh, see
+       [1]configure.sh.
+
+        Non-secure cluster example
+                In the following examples, the -N parameter specifies the
+                cluster name, the -c (lowercase) parameter specifies a
+                client configuration, the -C (uppercase) parameter
+                specifies the CLDB nodes, and -HS parameter specifies the
+                HistoryServer node:
+
+/opt/mapr/server/configure.sh -N my.cluster.com -c -C mynode01:7222 -HS mynode02
+
+        Secure cluster example
+                In the following example, the -N parameter specifies the
+                cluster name, the -c (lowercase) parameter specifies a
+                client configuration, the -secure parameter indicates that
+                the cluster is secure, the -C (uppercase) parameter
+                specifies the CLDB node, and the -HS parameter specifies
+                the HistoryServer node:
+
+/opt/mapr/server/configure.sh -N my.cluster.com -c -secure -C mynode01:7222 -HS
+mynode02
+
+    4. To use this client with a secure cluster or clusters, copy the
+       ssl_truststore file from the /opt/mapr/conf directory on the
+       cluster to the /opt/mapr/conf directory on the client.
+       If this client will connect to multiple clusters, merge the
+       ssl_truststore files with the /opt/mapr/server/manageSSLKeys.sh
+       tool.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh

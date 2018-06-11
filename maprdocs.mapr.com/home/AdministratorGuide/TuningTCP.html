@@ -1,0 +1,39 @@
+Tuning the TCP for Fast Failure Detection
+
+   An unplanned failure chiefly takes the form of a node failure or a
+   network failure. In both instances, the network layer retries to
+   connect to the failed node. The number of retry attempts is dictated by
+   the TCP parameter /proc/sys/net/ipv4/tcp_syn_retries. The default of
+   that parameter is 5 (in Linux), resulting in a latency of more than a
+   minute to detect the node failure. The problem is compounded when the
+   same failed node is contacted repeatedly in the context of a long
+   operation, such as when a client accesses multiple data objects present
+   on that node.
+
+   MapR stack solves the problem by remembering (caching) the information
+   about a node’s failure, and by not contacting that node for subsequent
+   operations on data objects present on that node. Since all form of data
+   is replicated, MapR services find alternative locations for a data
+   object. This feature is in-built into the current software and does not
+   have to be enabled explicitly. Hence, the communication between a
+   client and a recently failed node incurs a one-time long-duration
+   latency. As mentioned before, that latency is governed by the number of
+   retries at the TCP level. Hence, to further improve the one-time longer
+   latency of an operation between a pair of nodes, it is recommended that
+   the number of TCP retries be decreased from 5 to 4, resulting in a
+   latency of about 30 seconds.
+
+Setting the Timeout for TCP Connections
+
+   To set the TCP retry count, set the value of tcp_syn_retries to 4 in
+   the /proc/sys/net/ipv4/ directory. For example:
+echo 4 > /proc/sys/net/ipv4/tcp_syn_retries
+
+   This TCP setting of 4 ensures that the TCP stack takes about 30 seconds
+   to detect failure of a remote node. To ensure that this setting is
+   persistent across system reboots, set this value in the
+   /etc/sysctl.conf file also.
+   Warning: This setting impacts all TCP connections to and from a node.
+   Hence, caution must be exercised when lowering this further. Also, in
+   some instances, reducing this further may result in a node being
+   incorrectly flagged as unavailable.

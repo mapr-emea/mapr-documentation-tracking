@@ -1,0 +1,153 @@
+Create a table
+
+   The sample application creates a table by calling a function named
+   ensureTable.
+
+APIs used
+
+   The definition of this function uses these APIs:
+   APIs defined in the header file admin.h.
+     * hb_admin_table_create(): Creates a table. Returns 0 on success or
+       an error code.
+     * hb_admin_table_delete(): Deletes a table. Returns 0 on success or
+       an error code.
+     * hb_admin_destroy(): Disconnects the hb_admin object, releasing any
+       internal objects or connections that were created in the
+       background.
+     * hb_admin_table_disable(): Disables an HBase table. Returns 0 on
+       success or an error code. Only sets a flag in memory to say that
+       the table is disabled.
+       Note: Tables never need to be disabled or enabled in MapR-DB, which
+       has no notion of disabling or enabling tables. However,
+       applications ported from HBase to MapR-DB will attempt to disable
+       and enable tables. By placing a flag in memory, MapR-DB allows
+       those applications to proceed without error when performing admin
+       functions on tables.
+     * hb_admin_table_enable(): Enables an HBase table. Returns 0 on
+       success or an error code. As with hb_admin_table_enable, this
+       function sets a flag in memory and performs no other operation.
+     * hb_admin_table_enabled(): Checks whether an HBase table is enabled.
+       Returns 0 if the table is enabled. If the table is disabled,
+       returns either the error message HBASE_TABLE_DISABLED or an error
+       code, if an error occurs. In MapR-DB, this API only checks for the
+       existence of an in-memory flag that indicates whether to consider a
+       table as disabled or enabled.
+     * hb_admin_table_exists(): Checks whether a table exists. Returns 0
+       on success or an error code.
+
+   APIs defined in the header file coldesc.h.
+     * hb_coldesc_create(): Creates a column-family descriptor. Returns a
+       handle to an hb_columndesc object or NULL, if unsuccessful.
+     * hb_coldesc_set_maxversions(): Sets the maximum number of cell
+       versions to be retained for the column family. The default is 3.
+     * hb_coldesc_set_minversions(): Sets the minimum number of cell
+       versions to be retained for the column family. The default is 0.
+     * hb_coldesc_set_ttl(): Sets the time-to-live value in seconds for
+       data in column cells. The default is forever.
+     * hb_coldesc_set_inmemory(): Boolean. Determines whether preference
+       is given to values of this column family for storage with row keys.
+       Because row keys are cached in memory in preference to row data,
+       column-family data that is stored inline with the row keys is also
+       cached in memory.
+       For all column families in a table together, up to 200 bytes of row
+       data will be stored inline with each row key. Storing data inline
+       with a row key might speed retrieval of the data from a column
+       family because disk access can often be avoided. For each column
+       family, up to 32 bytes can be stored inline with each row key even
+       if its inmemory parameter is set to false, but preference will be
+       given to column families where this parameter is set to true. A
+       column family can have more than 32 bytes stored inline if its
+       inmemory parameter is set to true.
+       If the total number of bytes for all column families together
+       exceeds 200 for a row, then preference for inclusion within the
+       inline storage for that row is given to column families that have
+       the inmemory parameter set to true. All of the data for a column
+       family will be stored in-line with the row key, or none will be. If
+       the contents in a column family for a particular row are larger
+       than the maximum number of bytes that are allowed to be stored for
+       that column family, no data at all will be stored in-line for that
+       column family.
+       The default value for the inmemory parameter is false.
+     * hb_coldesc_destroy(): Releases resources that are held by a
+       column-family descriptor.
+
+Sequence of steps in the ensureTable function
+
+    1. Create an admin handle from the connection.
+    2. Using the admin handle, check whether the specified table exists.
+    3. If the table exists, delete it.
+    4. Specify columns and column families for the table.
+    5. Create the table.
+    6. Check whether the table is enabled. If it isn’t enabled, enable it.
+    7. Disable the table and then enable it again.
+    8. Destroy the column descriptors.
+    9. Destroy the hb_admin structure.
+
+Code for the ensureTable function at line 325
+
+static int
+ensureTable(hb_connection_t connection, const char *table_name) {
+  int32_t retCode = 0;
+  hb_admin_t admin = NULL;
+
+  if ((retCode = hb_admin_create(connection, &admin)) != 0) {
+    HBASE_LOG_ERROR("Could not create HBase admin : errorCode = %d.", retCode);
+    goto cleanup;
+  }
+
+  if ((retCode = hb_admin_table_exists(admin, NULL, table_name)) == 0) {
+    HBASE_LOG_INFO("Table '%s' exists, deleting...", table_name);
+    if ((retCode = hb_admin_table_delete(admin, NULL, table_name)) != 0) {
+      HBASE_LOG_ERROR("Could not delete table %s[%d].", table_name, retCode);
+      goto cleanup;
+    }
+  } else if (retCode != ENOENT) {
+    HBASE_LOG_ERROR("Error while checking if the table exists: errorCode = %d.",
+ retCode);
+    goto cleanup;
+  }
+
+  hb_coldesc_create(FAMILIES[0], 1, &HCD[0]);
+  hb_coldesc_set_maxversions(HCD[0], 2);
+  hb_coldesc_set_minversions(HCD[0], 1);
+  hb_coldesc_set_ttl(HCD[0], 2147480000);
+  hb_coldesc_set_inmemory(HCD[0], 1);
+
+  hb_coldesc_create(FAMILIES[1], 1, &HCD[1]);
+
+  HBASE_LOG_INFO("Creating table '%s'...", table_name);
+  if ((retCode = hb_admin_table_create(admin, NULL, table_name, HCD, 2)) == 0) {
+    HBASE_LOG_INFO("Table '%s' created, verifying if enabled.", table_name);
+    retCode = hb_admin_table_enabled(admin, NULL, table_name);
+    CHECK_API_ERROR(retCode,
+        "Table '%s' is %senabled, result %d.", table_name, retCode?"not ":"");
+    retCode = hb_admin_table_disable(admin, NULL, table_name);
+    CHECK_API_ERROR(retCode,
+        "Attempted to disable table '%s', result %d.", table_name);
+    retCode = hb_admin_table_disable(admin, NULL, table_name);
+    CHECK_API_ERROR(retCode,
+        "Attempted to disable table '%s' again, result %d.", table_name);
+    retCode = hb_admin_table_enable(admin, NULL, table_name);
+    CHECK_API_ERROR(retCode,
+        "Attempted to enable table '%s', result %d.", table_name);
+    retCode = hb_admin_table_enable(admin, NULL, table_name);
+    CHECK_API_ERROR(retCode,
+        "Attempted to enable table '%s' again, result %d.", table_name);
+  }
+  hb_coldesc_destroy(HCD[0]);
+  hb_coldesc_destroy(HCD[1]);
+
+cleanup:
+  if (admin) {
+    hb_admin_destroy(admin, NULL, NULL);
+  }
+  return retCode;
+}
+
+Code to call the ensureTable function
+
+if ((retCode = ensureTable(connection, table_name)) != 0) {
+  HBASE_LOG_ERROR("Failed to ensure table %s : errorCode = %d", table_name, retC
+ode);
+  goto cleanup;
+}

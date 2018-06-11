@@ -1,0 +1,319 @@
+Known Issues at Release (MapR 6.0.0)
+
+   You may encounter the following known issues after upgrading to Version
+   6.0. This list is current as of the release date. For a dynamic list of
+   all known issues for all MapR product releases, refer to [1]MapR
+   Support List of all known issues
+
+   Where available, the workaround for an issue is also documented here.
+   MapR releases maintenance releasese and patches to fix issues. We
+   recommend checking the the release notes for any subsequent maintenance
+   releases to see if one or more of these issues are fixed.
+
+Installation and Configuration Issues
+
+   You can see generic installation issues here: [2]MapR Installer Known
+   Issues.
+
+Upgrade Issues
+
+   29752
+          Issue: The Oozie process fails following a manual upgrade from
+          MapR 5.2.x (MEP 3.0.1) to MapR 6.0 if Oozie is not upgraded to
+          the MEP 4.0.0 version.
+          Workaround: Upgrading all ecosystem components to MEP 4.0.0 is
+          required before you can enable MapR 6.0 features. If you cannot
+          upgrade to MEP 4.0.0 immediately, use these steps to restart
+          Oozie:
+
+         1. Stop Oozie:
+maprcli node services -name oozie -action stop -nodes <nodes>
+         2. Recreate the Oozie war file by using one of the following
+            commands:
+               o If SSL was enabled for Oozie, use this command:
+/opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh -hadoop <version> /opt/mapr/h
+adoop/hadoop-<version> -secure
+               o If SSL was not enabled for Oozie, use this command:
+/opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh -hadoop <version> /opt/mapr/h
+adoop/hadoop-<version>
+         3. Start Oozie:
+maprcli node services -name oozie -action start -nodes <nodes>
+
+Indexing and Mapr Drill
+
+   28041
+          Running multiple queries in sequence can cause drillbits to run
+          out of direct memory. Limiting records in large batches to 5KB
+          may prevent this issue from occurring. Should Drill return an
+          out of memory exception, issue the following command to restart
+          the drillbits:
+
+$ maprcli node services -name drill-bits -action restart -nodes <node host names
+ separated by a space>
+
+   28096
+          If you use the Google Guava library in your application and
+          encounter the following error:
+
+Caused by: java.lang.NoSuchMethodError: com.google.common.base.Stopwatch.createS
+tarted()Lcom/google/common/base/Stopwatch;
+
+          You must use version 18.0 of the library. If you use Maven, you
+          can use the following dependency:
+
+            <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
+            </dependency>
+
+Mapr-DB
+
+   27057
+          When you issue a maprcli table changelog add command, during the
+          initial sync when the existing data is copied to the change log,
+          the end-to-end latency during the initial 5 minutes can be high.
+          After the initial sync, any latency will be small, specifically
+          2-4 seconds.
+
+MapR Client
+
+   23624
+          The same MapR client can access both secure and nonsecure
+          clusters; however, a MapR client that is configured to access a
+          secure cluster can access a nonsecure cluster only if these
+          conditions are met:
+
+          + The secure cluster must be listed first in mapr-clusters.conf.
+          + A user must obtain a ticket for the secure cluster even if the
+            user wants to access only the nonsecure cluster.
+
+MapR Control System
+
+   MON-2422 and MON-2423
+          Issue: When you select one or more volumes from the list of
+          volumes in the Volumes pane, navigate to another page in the
+          Volumes pane, and then select Snapshot Volume from the Actions
+          dropdown menu, the Snapshot Volume confirmation window does not
+          display and the Actions dropdown menu label is Snapshot Volume.
+          Workaround: The volumes that you selected must be visible in the
+          page in order to view the Snapshot Volume confirmation window.
+          If necessary, increase the row count to display the Snapshot
+          Volume confirmation window or refresh the browser to reset the
+          page.
+
+   MON-2414
+          Issue: If you enter an invalid username in the Admin > User
+          Settings > Permissions page, you might not be able to add or
+          modify permissions for any user.
+          Workaround: Refresh the browser to add, modify, or delete
+          permissions for users.
+
+   MON-2413
+          Issue: The All Alarms pane only displays up to one hundred
+          alarms.
+          Workaround: If you have over one hundred alarms, all of which
+          are not displayed in the All alarms view in the Alarms Summary
+          page, filter the list of alarms by the alarm type (from the
+          dropdown list).
+
+   MON-2409
+          Issue: When you try to navigate to another cluster by clicking
+          on the cluster name from the dropdown list at the top of the
+          page, the Overview page for the current cluster displays and it
+          takes a few minutes to display the MCS login page for the other
+          cluster.
+
+   MON-2374
+          Issue: If a node has multiple IP addresses, the log viewer link
+          for the services in the nodes information page is broken because
+          the Kibana URL contains multiple IP addresses.
+          Workaround: Remove all irrelevant IP addresses in the URL and
+          use the modified URL to view logs for the service.
+
+   MON-2321
+          Issue: If Elasticsearch fails, the Services page does not show
+          the nodes on which Elasticsearch has failed.
+
+   MON-2219
+          Issue: If you add Streams license separately, you may not be
+          able to view the Streams page.
+          Workaround: Contact MapR Support.
+
+   MON-2218
+          Issue: When you preserve snapshots, there is no notification
+          (success message) or indication (Expires On column still does
+          not show No Expiration) even though the operation succeeded.
+          Workaround: Refresh the page after preserving a snapshot to see
+          the No Expiration setting in the Expires On column.
+
+   MON-2102
+          Issue: Partial search works only when the start character in the
+          search field matches the entity name.
+          Workaround: Specify the full name of the entity or use asterisk
+          (*) in the search field when searching for entities.
+
+   MON-2076
+          Issue: When you select topics to remove, deselect all the topics
+          in the Remove Topic confirmation window and click Cancel, then
+          select a topic in the page by clicking on the checkbox, the
+          Remove Topic window opens again even if you did not click on the
+          Remove Topic button.
+          Workaround: Refresh the page.
+
+   MON-2018
+          Issue: In the Add Change Log page, after entering field to add
+          in the Publish Selected Field Path text field, the Add Field
+          button is disabled.
+          Workaround: Click outside the text field to enable the Add Field
+          button.
+
+   MON-2011
+          Issue: When adding or editing the compression setting on a
+          replica, selecting Inherited does not have any effect. The
+          default value is lz4.
+          Workaround: Do not select Inherited as the compression setting
+          on a replica.
+
+   MON-2009
+          Issue: When modifying replica of a binary table with three or
+          more column families, if you select different set of columns to
+          replicate for different column families, the operation might
+          result in an error.
+
+   MON-1994
+          Issue: If you adjust the system time, the time stamp associated
+          with the alarm in the Active Alarms pane might show negative
+          value.
+
+   MON-1968
+          Issue: In the User Disk Usage page, you cannot remove the email
+          address after setting an email address for an entity by editing
+          the properties.
+
+   MON-1929
+          Issue: The Save Changes button in the Access Control Expression
+          builder page is disabled after entering user, group, or role
+          name in text field.
+          Workaround: Click outside the field to enable the Save Changes
+          button.
+
+   MON-1810
+          Issue: When editing multiple volumes, you cannot undo changes to
+          Auditing and Accountable Entity fields by clicking
+          [revertChange.png] .
+
+   MON-1755
+          Issue: When creating a mirror volume, after entering the name of
+          the source volume on the remote cluster and selecting the remote
+          cluster on which the volume resides, you may see an error that
+          the source volume does not exist.
+          Workaround: Re-enter the name of the source volume on the remote
+          cluster.
+
+   MON-1400
+          Issue: The [searchIcon.png] icon cannot be used to search for
+          stream topics.
+          Workaround: Press return/enter on the keyboard to search for
+          stream topics.
+
+   MON-1221
+          Issue: In the Alarm Settings window, if you click the cursor in
+          the Additional email recipients text field and then press the
+          return/enter key in the keyboard without entering an email
+          address, the Cluster Settings page displays once again.
+
+MapR Monitoring
+
+   ES-27
+          Issue: On a new installation of a secure cluster using the MapR
+          Installer, Elasticsearch fails to start, and logs indicate that
+          Elasticsearch key generation failed.
+          Workaround: Use the Incremental Install feature of the MapR
+          Installer to retry installation of the MapR Monitoring logging
+          components.
+
+   SPYG-916
+          Issue: On a non-secure cluster, the MapR Monitoring index fails
+          to load because Kibana tried to load the template before
+          Elasticsearch started.
+          Workaround: In MCS, click the Services tab, locate Kibana, and
+          click the restart button to restart Kibana.
+
+   OPTSDB-25
+          Issue: Purge scripts are disabled by default because
+          occasionally a purge process will not exit properly.
+          Workaround: Edit the crontab file in the /etc/crontab file in
+          the OpenTSDB installation directory, as follows:
+
+crontab -e mapr
+
+          In the file, remove the hashtag (#) at the beginning of the line
+          that refers to opentsdb. You should manage and monitor the
+          cronjob. Typically, the cronjob takes 30 - 45 minutes to run on
+          an idle system, but on a busy system could take much longer. In
+          most cases, it will not overlap with the next cronjob. Also,
+          monitor the jobs to ensure that OpenTSDB is not started or
+          stopped mid-job, which would cause a problem.
+
+   SPYG-994
+          Issue: The time-to-live for MapR-ES metrics is fixed at 30 days
+          and cannot be reduced to lower disk space usage.
+
+   SPYG-934
+          Issue: On secure Ubuntu 14.04 or 16.04 clusters, Elasticsearch
+          fails to generate a keystore password if the uuid-runtime
+          package is not installed. uuid-runtime is one of the [3]MapR
+          Installer prerequisites.
+          Workaround: Install the uuid-runtime package from the default
+          Ubuntu repository:
+
+apt-get install uuid-runtime
+
+   KIB-12
+          Issue: Kibana versions prior to 5.6.1 have a cross-site
+          scripting (XSS) vulnerability in Timelion (CVE‌-2017-11479).
+          This is NOT a MapR vulnerability as MapR does not support (or
+          recommend) Timelion.
+
+MapR PACC
+
+   See [4]MapR PACC Known Issues.
+
+Oozie
+
+   29634
+          Issue: On a secure cluster, Oozie jobs can fail when the
+          timeline server for the Hive-on-Tez user interface is configured
+          with MapR-SASL.
+          Workaround: Restart the resource manager and timeline server.
+          For more information, see [5]Configuring the Timeline Server to
+          Use the Hive-on-Tez User Interface.
+
+PJDTest Suite Compliance
+
+   28912
+          Issue: When trying to open a FIFO on a FUSE mounted filesystem,
+          permissions to perform the operation are not checked.
+
+   29234
+          Issue: The FUSE-based POSIX can only trace at millisecond level
+          and the test suite utimensat in pjdtestsuite fails because the
+          test suite sets time in nanoseconds.
+
+   29237
+          Issue: Any user can set time using touch -t for any file on a
+          FUSE mounted filesystem.
+
+Timeline Server
+
+   See [6]Hive-on-Tez User Interface Known Issues.
+
+References
+
+   1. https://mapr.com/support/s/knownissues
+   2. http://maprdocs.mapr.com/home/MapRInstallerReleaseNotes/mapr_installer_known_issues.html
+   3. https://maprdocs.mapr.com/home/AdvancedInstallation/c_install_prerequisites.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/MapR_PACC_Known_Issues.html#concept_n3p_pfc_tbb
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Tez/ConfiguringHiveonTezUI.html#task_q4n_z23_nbb
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Tez/Timeline_server_known_issues.html#concept_oq4_3rx_vbb

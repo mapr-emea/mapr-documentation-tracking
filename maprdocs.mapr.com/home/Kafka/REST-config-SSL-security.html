@@ -1,0 +1,54 @@
+SSL Security Configuration
+
+   Describes how to configure Kafka REST security on a MapR cluster.
+
+Secure by Default
+
+   As of MapR 6.0, the MapR Installer performs the Kafka REST
+   configuration for new installations. This means that:
+     * If MapR core is installed as secure, then Kafka REST is also
+       installed as secure.
+     * If MapR core is installed as unsecure, then Kafka REST is also
+       installed as unsecure.
+
+   Important: In addition, every time the MapR configuration script is run
+   with the -R option (configure.sh -R), the default settings for MapR
+   core are re-established.
+
+   This means that if you manually configure Kafka REST for unsecure on a
+   secure MapR core, Kafka REST will revert back to secure when
+   configure.sh -R is run.
+
+Manually Securing Kafka REST
+
+   If you have an unsecure MapR cluster, and you want to secure Kafka
+   REST, do the following:
+    1. Export the server and client certificates.
+cd /opt/mapr/conf/
+            keytool -v -exportcert -alias cyber.mapr.cluster -keystore /opt/mapr
+/conf/ssl_truststore -rfc -file server.cert
+    2. Add any necessary property configurations to the
+       kafka-rest.properties configuration file. For example:
+listeners=http://0.0.0.0:8082,https://0.0.0.0:8085
+            ssl.keystore.location=/opt/mapr/conf/ssl_keystore
+            ssl.keystore.password=mapr123
+            ssl.key.password=mapr123
+    3. Restart Kafka REST.
+maprcli node services -name kafka-rest -action restart -nodes <space delimited l
+ist of nodes>
+    4. Run a curl command to ensure that HTTPS is enabled.
+curl -X GET https://node1:8085/streams/%2Ftesting/topics --cacert ./server.cert
+
+Manually Unsecuring Kafka REST
+
+   Warning: This scenario is NOT recommended or supported.
+
+   If you have an secure MapR cluster, and you want to unsecure Kafka
+   REST, do the following:
+    1. In the kafka-rest.properties configuration file, change https:// to
+       http:// for the listeners and remove the ssl.* properties. For
+       example:
+listeners=http://0.0.0.0:8082,http://0.0.0.0:8085
+    2. Restart Kafka REST.
+maprcli node services -name kafka-rest -action restart -nodes <space delimited l
+ist of nodes>

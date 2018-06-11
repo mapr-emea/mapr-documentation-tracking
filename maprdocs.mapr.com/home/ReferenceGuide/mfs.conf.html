@@ -1,0 +1,106 @@
+mfs.conf
+
+   The configuration file /opt/mapr/conf/mfs.conf specifies the following
+   parameters about the MapR-FS server on each node.
+   Warning: You must restart the FileServer after making changes to this
+   file.
+
+Parameters
+
+   Parameter
+
+   Default Value
+
+   Description
+   mfs.server.ip   IP address of the FileServer. For example,
+   192.168.10.10.
+   mfs.server.port 5660 Port used for communication with the server
+   mfs.cache.lru.sizes
+
+   Version 4.0.1:inode:6:log:6:meta:10:dir:40:small:15
+
+   Version 4.0.2 and later versions: inode:3:meta:6:small:27:dir:
+   15:db:20:valc:3
+   LRU cache configuration. See the section, Notes on LRU Cache
+   Configuration, following this table.
+   mfs.on.virtual.machine 0 Specifies whether MapR-FS is running on a
+   virtual machine
+   mfs.io.disk.timeout 60 Timeout, in seconds, after which a disk is
+   considered failed and taken offline. This parameter can be increased to
+   tolerate slow disks.
+   mfs.max.disks 48 Maximum number of disks supported on a single node.
+   mfs.max.logfile.size.in.mb 1000MB The maximum amount of disk space that
+   the MFS logs can consume before the oldest log file is deleted; based
+   on the following calculation:
+
+   maxSizePerLogFile = maxLogSize / MAX_NUM_OF_LOG_FILES
+
+   where
+     * maxLogSize = total amount of space that MFS log files can consume
+     * MAX_NUM_OF_LOG_FILES = total number of MFS log files
+
+   mfs.subnets.whitelist   A list of subnets (up to 256 characters) that
+   are allowed to make requests to the FileServer service and access data
+   on the cluster.
+   mfs.disk.iothrottle.count 100 The maximum number of outstanding
+   requests on disk.
+   Note: You can disable throttling by setting a high value. This is
+   disabled if the value for mfs.disk.is.ssd is 1.
+
+   mfs.disk.resynciothrottle.factor
+   20
+
+   The amount of time to wait before request is submitted to disk or sent
+   over the network. Increasing the value will reduce the wait time and
+   decreasing the value will increase the wait time. For example, setting
+   the value to 40 will halve the wait time and setting the value to 10
+   will double the wait time.
+   mfs.network.resynciothrottle.factor 20 Controls the amount of time to
+   wait before sending a resync operation over the network. Increasing the
+   value will reduce the wait time and decreasing the value will increase
+   the wait time. For example, setting the value to 40 will halve the wait
+   time and setting the value to 10 will double the wait time.
+   mfs.ssd.trim.enabled 0 Set this parameter to 1 to enable TRIM
+   operations for SSD devices.
+   Note: Enable TRIM only if it is recommended by the SSD vendor.
+   mfs.disk.is.ssd 0 Specifies whether (1) or not (0) the drives are SSD.
+   If 0, the drives are assumed to be rotations. The default value is 0.
+   If the value is 1, the noop scheduler on the SSD is automatically
+   enabled and IO throttling is disabled.
+   mfs.mem.debug.enabled 0 Specifies whether fileserver should (1) or
+   should not (0) track all memory allocations. The default value is 0. If
+   value is 1, you can determine the root cause for high memory allocation
+   or determine the component consuming most memory.
+
+Example
+
+mfs.server.ip=192.168.10.10
+mfs.server.port=5660
+mfs.cache.lru.sizes=inode:3:meta:6:small:27:dir:15:db:20:val:3
+mfs.on.virtual.machine=0
+mfs.io.disk.timeout=60
+mfs.max.disks=48
+
+   Notes on LRU Cache Configuration
+
+   The cache values are expressed as percentages, which vary based on the
+   expected size of the data the node is required to cache. The goal is to
+   achieve a state in which most of the required data comes directly from
+   the cache. You may need to tune the cache percentages based on your
+   cluster configuration and the workload on specific nodes. Non-default
+   allocations tend to work better for nodes that run only CLDB and nodes
+   that do not have CLDB but do have a heavy MapR-DB workload. Note the
+   following recommendations.
+     * For CLDB-only nodes, increase the size of the cache for Dir LRU to
+       40%: change dir:15 to dir:40A CLDB-only node is a fileserver node
+       that hosts only the CLDB volume mapr.cldb.internal (no user volume
+       data is hosted on the node). Dir LRU is used to host B-tree pages.
+
+     * For non-CLDB nodes with no MapR-DB workload, optimize the cache to
+       host as many file pages as possible. Change the value of the
+       parameter to: inode:3:meta:6:small:27:dir:6
+
+   The remainder of the cache will be used to cache file data pages.
+
+   Note: You need to restart MFS in order for the change in mfs.conf to
+   take effect.

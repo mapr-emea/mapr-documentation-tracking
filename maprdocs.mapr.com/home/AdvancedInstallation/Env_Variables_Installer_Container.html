@@ -1,0 +1,72 @@
+Environmental Variables for the MapR Installer Container
+
+   This section describes environmental variables that you can modify to
+   customize the sample-run script for the MapR Installer container.
+
+About mapr-docker-installer.sh
+
+   mapr-docker-installer.sh is the sample-run script for the MapR
+   Installer container. The script contains the docker run command that
+   runs the container and environmental variables that can be passed into
+   the container at run time. Modifying the variables is optional; the
+   script can run without any changes to the environmental variables.
+
+   The following environmental variables can be changed in
+   mapr-docker-installer.sh:
+
+Environmental Variables in mapr-docker-installer.sh
+
+   Key Variable Description
+   MAPR_CONTAINER_USER <user-name>
+
+   The user that the user application inside the Docker container will run
+   as. This configuration is functionally equivalent to the Docker native
+   -u or --user. Do not use Docker -u or --user, as the container needs to
+   start as the root user to bring up FUSE before switching to the
+   MAPR_CONTAINER_USER.
+
+   The user specified here is the user that all storage operations on the
+   MapR cluster will be performed as. Therefore, MapR recommends not using
+   root or mapr.
+
+   This user also owns the /opt/mapr directory tree.
+   MAPR_CONTAINER_UID <uid> The UID that the application inside the Docker
+   container will run as. This is a companion to the MAPR_CONTAINER_USER
+   option. If a UID is not provided, the default is UID 1000. Providing a
+   UID is strongly recommended.
+   MAPR_CONTAINER_GROUP <group-name> The group that the application inside
+   the Docker container will run as. This is a companion to the
+   MAPR_CONTAINER_USER option. If a group name is not provided, the
+   default is users. Providing a group name is strongly recommended.
+   MAPR_CONTAINER_GID <gid> The GID that the application inside the Docker
+   container will run as. This is a companion to the MAPR_CONTAINER_USER
+   option. If a GID is not provided, the default is GID 1000. Providing a
+   GID is strongly recommended.
+   MAPR_PKG_URL <mapr-pkg-url> The URL of the repository that hosts the
+   MapR packages (typically package.mapr.com). If you change MAPR_PKG_URL,
+   use the full URL to your MapR repository (for example,
+   <hostname>/releases).
+   MAPR_CONTAINER_PASSWORD <mapr-password> The password for the mapr user.
+   This password must be set if the container will remaining running. The
+   password defaults to mapr.
+   MAPR_STANZA_FILE <stanza-file> The path to a MapR Installer Stanza file
+   that needs to be mounted from the host. You must specify this field if
+   you issue the Stanza install command as an argument to the script. For
+   example:
+mapr-docker-installer.sh install -nv
+
+   MAPR_MEMORY <mapr-memory> Specify the maximum amount of memory (in
+   kilobytes, megabytes, or gigabytes) that Docker allows the container to
+   access. For example:
+     * 2g
+     * 4096m
+     * 0
+
+   Accepting the default (0), means there is no restriction on memory, and
+   the container can use as much memory as the platform makes available.
+   MAPR_TZ <time-zone> The time zone inside the container. For a list of
+   time-zone settings, see [1]this website. The default is UTC.
+
+References
+
+   1. https://en.wikipedia.org/wiki/List_of_tz_database_time_zones

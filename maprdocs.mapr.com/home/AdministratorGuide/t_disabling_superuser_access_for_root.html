@@ -1,0 +1,21 @@
+Disabling Superuser Access for the Root User from the Command-Line
+
+   Note: Enabling the cldb.squash.root or cldb.reject.root configuration
+   values can cause instability with ecosystem open source components if
+   they are running as root. [On MapR clusters, services are running as
+   the admin cluster user, which is mapr (by default).] Ensure that root
+   is not running any services before performing this procedure.
+    1. To disable root user (UID 0) access to the MapR filesystem on a
+       cluster that is running as a non-root user, use either of the
+       following commands:
+          + The squash root configuration value treats all requests from
+            UID 0 as coming from UID -2 (nobody):
+# maprcli config save -values {"cldb.squash.root":"1"}
+          + The reject root configuration value automatically fails all
+            filesystem requests from UID 0:
+# maprcli config save -values {"cldb.reject.root":"1"}
+    2. You can verify that these commands worked, as shown in the example
+       below.
+# maprcli config load -keys cldb.squash.root,cldb.reject.root
+cldb.reject.root cldb.squash.root
+1 1

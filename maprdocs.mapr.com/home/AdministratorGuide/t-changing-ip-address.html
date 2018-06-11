@@ -1,0 +1,89 @@
+Changing the IP Address of a Node
+
+   You can change the IP address of any node in the cluster.
+
+Changing the IP Address of a Data Node
+
+   Complete the following steps to change an IP address of a data node:
+    1. Shut down Warden and ZooKeeper on the node to be changed.
+% service mapr-zookeeper stop
+% service mapr-warden stop
+    2. Change the IP address of the node.
+    3. Edit the /etc/hosts file on all nodes to reflect the IP address
+       change, or ensure that the IP addresses are resolvable through a
+       DNS search.
+    4. On the node where you changed the IP address, restart the network
+       interface. The interface shuts down, so you lose the connection.
+    5. Log into the node using the new IP address.
+    6. Check the IP address.
+       For example, run ifconfig.
+    7. If MAPR_SUBNETS environment variable is set, edit the value for the
+       MAPR_SUBNETS environment variable in the /opt/mapr/conf/env.sh file
+       and make sure that the new IP address is part of it.
+       See [1]Setting the MAPR_SUBNETS Environment Variable for more
+       information.
+    8. Restart Warden on the node(s) where the IP address has changed.
+    9. Check that all nodes appear in the output of the node list command.
+% maprcli node list -columns ip
+       You might have to wait a few minutes until all nodes are registered
+       before you get output from this command.
+
+Changing the IP Address of CLDB Node
+
+   Complete the following steps to change an IP address of a CLDB node:
+    1. Shut down Warden and ZooKeeper on the node to be changed.
+% service mapr-zookeeper stop
+% service mapr-warden stop
+    2. Change the IP address of the node.
+    3. Edit the /etc/hosts file on all nodes to reflect the IP address
+       change, or ensure that the IP addresses are resolvable through a
+       DNS search.
+    4. On the node where you changed the IP address, restart the network
+       interface. The interface shuts down, so you lose the connection.
+    5. Log into the node using the new IP address.
+    6. Check the IP address. For example, run ifconfig.
+    7. Run configure.sh on the node where you changed the IP address.
+       Use the -C option to provide a list of CLDB nodes.
+    8. Perform a rolling restart of Warden on all the nodes.
+    9. Check that all nodes appear in the output of the node list command.
+       You might have to wait a few minutes until all nodes are registered
+       before you get output from this command.
+% maprcli node list -columns ip
+
+Changing the IP Address of ZooKeeper Node
+
+   Complete the following steps to change an IP address of a ZooKeeper
+   node:
+    1. Shut down Warden and ZooKeeper on the node to be changed.
+% service mapr-zookeeper stop
+% service mapr-warden stop
+    2. Change the IP address of the node.
+    3. Edit the /etc/hosts file on all nodes to reflect the IP address
+       change, or ensure that the IP addresses are resolvable through a
+       DNS search.
+    4. On the node where you changed the IP address, restart the network
+       interface. The interface shuts down, so you lose the connection.
+    5. Log into the node using the new IP address.
+    6. Check the IP address.
+       For example, run ifconfig.
+    7. Run configure.sh on the node where you changed the IP address.
+       Use the -Z option to provide the list of ZooKeeper nodes.
+    8. If you run the Drillbit service on any nodes in the cluster:
+         a. Change the ZooKeeper address in the conf/drill-override.conf
+            file on the Drill nodes.
+         b. Start ZooKeeper on the ZooKeeper node, and then perform a
+            rolling restart of ZooKeeper on all other ZooKeeper nodes.
+            A rolling restart of ZooKeeper means restart ZooKeeper on each
+            node, one at a time, pausing until the last restart finishes
+            before beginning the next. Restart the ZooKeeper leader last.
+    9. Verify that the new node joined the ZooKeeper quorum.
+% service mapr-zookeeper qstatus
+   10. Perform a rolling restart of Warden on all the nodes.
+   11. Check that all nodes appear in the output of the node list command.
+       You might have to wait a few minutes until all nodes are registered
+       before you get output from this command.
+% maprcli node list -columns ip
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/SettingEnvVariables.html#MAPR_SUBNETS

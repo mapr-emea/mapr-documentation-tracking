@@ -1,0 +1,100 @@
+Index Planning and Execution Configuration Options
+
+   The 1.11 release of Drill for MapR introduces options that affect how
+   Drill uses indexes when planning and executing queries. You can set the
+   query planning and execution options, at the system or session level,
+   using the ALTER SYSTEM|SESSION SET commands, as shown:
+ALTER SYSTEM SET `planner.enable_index_planning` = true
+ALTER SESSION SET `planner.enable_index_planning` = false
+
+   Options set at the session level only apply to queries that you run
+   during the current Drill connection. Options set at the system level
+   affect the entire system and persist between restarts. Session level
+   settings override system level settings. Typically, you set the options
+   at the session level unless you want the setting to persist across all
+   sessions.
+   The following table lists the index planning and execution options that
+   you can enable, disable, or modify:
+   Note: The planning option names are prefaced by planner, for example
+   planner.enable_index_planning. The execution options are prefaced by
+   exec, for example exec.query.rowkeyjoin_batchsize.
+   Option Description Default Value Possible Values
+   planner.enable_index_planning Enables or disables index planning true
+   true|false
+   planner.index.force_sort_noncovering Forces Drill to sort for
+   non-covering indexes. If the query has an ORDER-BY on index columns and
+   a non-covering index is chosen, by default Drill leverages the
+   sortedness of the index columns and does not sort. Fast changing
+   primary table data may produce a partial sort. This option forces a
+   sort within Drill.
+   Note: (Drill 1.11 only) You must enable this option for Drill to return
+   the results of a non-covering query in sorted order.
+   false true|false
+   planner.enable_rowkeyjoin_conversion Introduced in Drill 1.13. Drill
+   can push down the rowkey filter to MapR-DB during runtime. For a query
+   to qualify for runtime filter pushdown, the join condition must filter
+   on a rowkey. A rowkey is the value of the _id field in a JSON document,
+   for example:
+SELECT t.mscIdentities FROM dfs.root.`/user/mapr/MixTable` t WHERE t.row_key IN
+(SELECT max(convert_fromutf8(i.KeyA.ENTRY_KEY)) FROM dfs.root.`/user/mapr/TableI
+MSI` i WHERE i.row_key='460021050005636')
+
+   Drill evaluates the results of the subquery at runtime. The subquery
+   yields a list of rowkeys from the TableIMSI table. Drill pushes down
+   the list of rowkeys to MapR-DB. MapR-DB uses the rowkeys to locate the
+   corresponding documents in the MixTable table and sends the results to
+   Drill.
+   Note: Currently, Drill does not support runtime filters for queries
+   with equality conditions. The query planner in Drill converts an
+   equality condition to a left join. As a workaround, use the IN operator
+   instead of the equality (=) operator for queries in which you want
+   Drill to push down the rowkey filter to MapR-DB.
+   Drill does not perform runtime filter pushdown for queries that filter
+   on rowkeys in small fact tables when the rowcount is generated from the
+   right side of the join. true true|false
+   planner.rowkeyjoin_conversion_selectivity_threshold Introduced in Drill
+   1.13. Sets the selectivity (as a percentage) under which Drill uses a
+   rowkey join for eligible queries. 0.01 Range: 0.0-1.0
+   planner.rowkeyjoin_conversion_using_hashjoin Introduced in Drill 1.13.
+   When enabled, Drill uses the hash join operator instead of a rowkey
+   join. false true|false
+   planner.index.covering_selectivity_threshold For covering indexes, this
+   option specifies the filter selectivity that corresponds to the leading
+   prefix of the index below which the index is considered for planning.
+   For example, for the filter ‘a > 10 AND b < 20’ if an index has indexed
+   fields (a, b, c) and the combined selectivity of the above condition is
+   less than the threshold, the index is considered for the query plan.
+   0.75 0 - 1.0
+   planner.index.noncovering_selectivity_threshold For non-covering
+   indexes, this option specifies the filter selectivity that corresponds
+   to the leading prefix of the index below which the index is considered
+   for planning. 0.025 0 - 1.0
+   planner.index.max_chosen_indexes_per_table The maximum number of
+   “chosen” indexes for a table after index costing and ranking. 5 0 - 100
+   planner.index.rowkeyjoin_cost_factor The cost factor that provides some
+   control over the I/O cost for non-covering indexes when the rowkey join
+   back to the primary table causes random I/O from the primary table. 0.1
+   0 - max_double
+   planner.enable_statistics Enable or disable statistics for the filter
+   conditions on indexed columns. true true|false
+   exec.query.rowkeyjoin_batchsize For batch GET operations, this option
+   specifies the batch size in terms of the number of rowkeys. Used for
+   non-covering index plans when doing joins back to primary table. 128 0
+   - Long.MAX_VALUE
+   exec.query.progress.update Enable or disable updating transient query
+   state in ZooKeeper. Disable this option for short running operational
+   queries. When disabled, you do not see the query state , such as
+   STARTING and RUNNING in the Drill Web Console. true true|false
+   exec.udf.use_dynamic Enable or disable using dynamic UDFs for the
+   queries. Disable this option for operational queries. When disabled,
+   you cannot use dynamic UDFs for queries. true true|false
+   exec.query_profile.save Enable or disable saving query profiles for the
+   queries. Disable this option for operational queries. When disabled,
+   Drill does not save query profiles and they are not available for
+   analysis or debugging. true true|false
+   planner.use_simple_optimizer Enable or disable using simple optimizer
+   for queries. Simple optimizer applies fewer rules to reduce planning
+   time and is meant to be used only for simple operational queries that
+   use limit, sort, and filter. This optimizer applies rules for
+   leveraging secondary indexes when index planning is enabled. Enable
+   this option for operational queries. false true|false

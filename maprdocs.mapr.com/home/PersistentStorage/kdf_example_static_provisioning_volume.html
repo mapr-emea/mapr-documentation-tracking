@@ -1,0 +1,140 @@
+Example: Statically Provisioning a MapR Volume Using the FlexVolume Plug-in
+
+   You can designate a MapR volume for use with Kubernetes by specifying
+   the MapR FlexVolume parameters directly inside the Pod spec. In the Pod
+   spec, you define a Kubernetes volume and add the MapR FlexVolume
+   information to it. You can supply path information by using the
+   volumePath parameter. The Kubernetes volume is only as persistent as
+   the Pod. By defining the volume this way, when the Pod is removed, the
+   Kubernetes volume is also immediately unmounted and removed. This
+   approach to static provisioning is most appropriate when you want to
+   get up and running quickly or when you want the Pod and Kubernetes
+   volume lifecycle to be the same.
+   For example, a developer wants to get her application container up and
+   running quickly with MapR. She already has a MapR path that she wants
+   to use for the application. She only needs the data accessible to read.
+   To make this work, she must:
+    1. Generate a MapR service ticket, and set the securityType parameter
+       in the Pod spec to secure. See [1]Generating a Service Ticket.
+    2. Configure a Ticket Secret, and include the base64-encoded contents
+       of the ticket file in the Ticket Secret. See [2]Ticket Secrets.
+    3. Set the runAsUser and the fsGroup parameters to the UID and GID of
+       the user that created the ticket.
+    4. Point the volumePath in the flexVolume setting to the desired path,
+       and fill in the cldbHosts and cluster information.
+
+   Note: The following example works for on-premise deployments. For GKE
+   and AWS deployments, you must set a default StorageClass to the maprfs
+   StorageClass. If a default StorageClass is not provided for GKE and AWS
+   deployments, the volume is created using your default StorageClass,
+   which might not be a good fit. For information about changing the
+   default StorageClass, see [3]Change the default StorageClass.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-secure
+  namespace: mapr-examples
+spec:
+  securityContext:
+    runAsUser: 1000
+    fsGroup: 2000
+  containers:
+  - name: mycontainer
+    image: myrepo/myorg/mycontainer
+    args:
+    - sleep
+    - "1000000"
+    imagePullPolicy: Always
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "500m"
+    volumeMounts:
+    - mountPath: /mapr
+      name: maprvolume
+  volumes:
+    - name: maprvolume
+      flexVolume:
+        driver: "mapr.com/maprfs"
+        readOnly: true
+        options:
+          volumePath: "/path/to/data/in/mapr"
+          cluster: "mycluster"
+          cldbHosts: "cldb1 cldb2 cldb3"
+          securityType: "secure"
+          ticketSecretName: "mapr-ticket-secret"
+          ticketSecretNamespace: "mapr-examples"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mapr-ticket-secret
+  namespace: mapr-examples
+type: Opaque
+data:
+  CONTAINER_TICKET: <BASE64 ENCODED VERSION OF CONTENTS OF TICKET FILE>
+
+   The following tables describe the parameters in the example:
+
+   Pod
+   Parameter Notes
+   apiVersion The Kubernetes API version for the Pod spec.
+   kind The kind of object being created. For clarity, the example uses a
+   naked Pod. Generally, it is better to use a Deployment, DaemonSet, or
+   StatefulSet for high availability (HA) and ease of upgrade.
+   metadata: name The Pod name.
+   metadata: namespace The namespace in which the Pod runs.
+   securityContext: runAsUser The user ID to run the container under. This
+   user ID must be the same as the user ID for which the ticket was
+   generated.
+   securityContext: fsGroup The group ID to run the container under. This
+   group ID must be the same as the group ID of the user for which the
+   ticket was generated.
+   volumeMounts: mountPath A directory inside the container that is
+   designated as the mount path.
+   volumeMounts: name A name that you assign to the Kubernetes
+   volumeMounts resource. Matches with Volumes: name.
+   Volumes: name A string to identify the name of the Kubernetes volumes
+   resource. Matches with volumeMounts: name.
+   flexVolume: driver The MapR FlexVolume driver being used. Call it using
+   this driver: mapr.com/maprfs.
+   flexVolume: readOnly Specifies that the FlexVolume driver should tell
+   the MapR POSIX Client to mount the volume with the read-only flag.
+   volumePath The mount point within the MapR filesystem. This parameter
+   specifies an existing MapR path. For example, you can specify the root
+   volume as "/", providing access to the entire filesystem.
+   cluster The MapR cluster name.
+   cldbHosts The DNS names or IP addresses of the CLDB hosts for the MapR
+   cluster. You must provide at least one CLDB host. For fault-tolerance,
+   providing multiple CLDB hosts is recommended. To specify multiple
+   hosts, separate each name or IP address by a space.
+   securityType A parameter that indicates whether MapR tickets are used
+   or not used. If MapR tickets are used, specify secure. Otherwise,
+   specify unsecure.
+   ticketSecretName The name of the Secret that contains the ticket to use
+   when mounting to the MapR cluster. See [4]Configuring a Secret.
+   ticketSecretNamespace The namespace that contains the Secret. See
+   [5]Configuring a Secret
+
+   Secret
+   Parameter Notes
+   apiVersion The Kubernetes API version.
+   kind The type of object being created.
+   name A string to identify the Secret.
+   namespace The namespace in which the Secret runs.
+   type The type of Secret being created. For type Opaque, clients must
+   treat these values as opaque and pass them unmodified back to the
+   server.
+   CONTAINER_TICKET The contents of the MapR ticket encoded in base64. If
+   you specified secure for the securityType, you must provide the ticket.
+   To encode the ticket, see [6]Converting a String to Base64. You may
+   remove the ticket if the MapR cluster is not secure.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/GeneratingServiceTicket.html#TicketsandCertificates-Ge_26281159-d3e299
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb__section_uxq_bfd_vcb
+   3. https://kubernetes.io/docs/tasks/administer-cluster/change-default-storage-class/
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_converting_a_string.html#concept_ogr_sxc_qcb

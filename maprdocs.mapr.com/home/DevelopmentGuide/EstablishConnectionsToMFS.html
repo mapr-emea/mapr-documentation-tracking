@@ -1,0 +1,91 @@
+Establishing Connections to MapR-FS
+
+   The APIs for establishing connections to MapR-FS and returning
+   filesystem handles are:
+     * hadoop-2.x: hdfsConnect()
+     * hadoop-2.x: hdfsConnectAsUser()
+       Note: This API ignores the impersonation request and therefore is
+       equivalent to hdfsConnect().
+     * hadoop-2.x: hdfsConnectNewInstance()
+
+   The API hdfsConnectAsNewUserInstance() is not supported for connections
+   to MapR-FS fileservers.
+
+   These APIs behave in the same way:
+     * If “default” is specified for the host parameter, the APIs connect
+       to the first cluster listed in the file
+       MAPR_HOME/conf/mapr-clusters.conf. (MAPR_HOME defaults to
+       /opt/mapr.)
+     * If a hostname or IP address is specified for the host parameter:
+         1. Look in MAPR_HOME/conf/mapr-clusters.conf on the client node
+            to match the specified hostname or IP address to a CLDB host
+            and port.
+         2. If they find a match, they try to connect to the cluster and
+            all standard features for connections to MapR clusters are
+            available. These features include high availability across
+            CLDBs and secure connections.
+         3. If they do not find a match or if they cannot locate a
+            mapr-clusters.conf file, they try to connect to the CLDB host
+            specified in the call to create the connection. However, the
+            standard features for connections to MapR clusters are not
+            available. For example, if the cluster is secured, the
+            connection will fail.
+
+   It is possible to have more than one open connection at a time. For
+   each connection, simply return the filesystem handle to a different
+   instance of hdfsFS, as in this example:
+    //Connect to Cluster 1 (picked up from /opt/mapr/conf/mapr-clusters.conf)
+        hdfsFS fs1 = hdfsConnectNewInstance("default", 7222);
+    //Connect to Cluster 2
+        hdfsFS fs2 = hdfsConnectNewInstance("n1c", 7222);
+    //Connect to Cluster 3
+        hdfsFS fs3 = hdfsConnectNewInstance("n1d", 7222);
+
+   You can then obtain file handles for files in each connected cluster,
+   as in this example. For each cluster, this example code calls
+   hdfsOpenFile(), passing in the handle to the filesystem, the absolute
+   path to a file (and the file is created before being opened, if it
+   doesn’t already exist) and a file-access flag that specifies to open
+   the file in write-only mode. This mode truncates existing files to
+   offset 0, deleting their content.
+
+   Ignore the last three parameters for this example. hdfsOpenFile()
+   returns a handle to the file or an error message, if the open operation
+   fails.
+     //Create files for write operations on all clusters
+        const char* writePath = "/tmp/write-file1.txt";
+        hdfsFile writeFile1 = hdfsOpenFile(fs1, writePath, O_WRONLY, 0, 0, 0);
+        if (!writeFile1) {
+        fprintf(stderr, "Failed to open %s for writing on Cluster 1!\n", writePa
+th);
+            exit(-2);
+     }
+        hdfsFile writeFile2 = hdfsOpenFile(fs2, writePath, O_WRONLY, 0, 0, 0);
+        if (!writeFile2) {
+        fprintf(stderr, "Failed to open %s for writing on Cluster 2!\n", writePa
+th);
+            exit(-2);
+     }
+         hdfsFile writeFile3 = hdfsOpenFile(fs3, writePath, O_WRONLY, 0, 0, 0);
+     if (!writeFile3) {
+        fprintf(stderr, "Failed to open %s for writing on Cluster 3!\n", writePa
+th);
+            exit(-2);
+     }
+         fprintf(stderr, "Opened %s for writing successfully on all 3 clusters..
+.\n", writePath);
+
+   After working with the files, close them and disconnect from the
+   filesystems, as in this example:
+// Close all files
+if (writeFile1)
+        hdfsCloseFile(fs1, writeFile1);
+if (writeFile2)
+        hdfsCloseFile(fs2, writeFile2);
+if (writeFile3)
+        hdfsCloseFile(fs3, writeFile3);
+
+// Disconnect from all clusters
+hdfsDisconnect(fs1);
+hdfsDisconnect(fs3);
+hdfsDisconnect(fs3);

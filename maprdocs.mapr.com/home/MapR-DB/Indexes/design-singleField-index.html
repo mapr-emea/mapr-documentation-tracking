@@ -1,0 +1,77 @@
+Simple Indexes
+
+   A simple index is a secondary index that has only one indexed field and
+   zero or more included fields. If all fields referenced in a query are
+   either indexed or included fields in a simple index, then the index is
+   a covering index for that query.
+
+Sort Order
+
+   MapR-DB sorts simple indexes on the single key field. MapR-DB sorts the
+   key values in ascending order by default, unless you have specified a
+   descending order when creating the index. Sorting indexes benefits
+   queries with ORDER BY clauses by eliminating the need for a SORT
+   operator in the query plan.
+
+Simple Index Examples
+
+   The following examples demonstrate the [1]cli commands to create
+   various types of simple indexes. For these examples, assume you have a
+   MapR-DB JSON table with the following sample data:
+{
+   "_id": "10000",
+   "FullName": {
+      "LastName": "Smith",
+      "FirstName": "John"
+   },
+   "Address": {
+      "Street": "123 SE 22nd St.",
+      "City": "Oakland",
+      "State": "CA",
+      "Zipcode": "94601-1001"
+   },
+   "Gender": "M",
+   "AccountBalance": 999.99,
+   "Email": "john.smith@company.com",
+   "Phones": [
+       {"Type": "Home", "Number": "555-555-1234"},
+       {"Type": "Mobile", "Number": "555-555-5678"},
+       {"Type": "Work", "Number": "555-555-9012"}
+   ],
+   "Hobbies": ["Baseball", "Cooking", "Reading"],
+   "DateOfBirth": "10/1/1985"
+}
+
+                             CLI Command                             Description
+maprcli table index add -path /people \
+   -index emailIdx \
+   -indexedfields Email
+
+     * Creates a simple index on the Email field with no included fields
+     * Allows you to filter on the Email field
+
+maprcli table index add -path /people \
+   -index dobIdx \
+   -indexedfields DateOfBirth \
+   -includedfields FullName
+
+     * Creates a simple index with an included field,
+     * Allows you to filter on DateOfBirth and project on FullName
+       Note: You cannot use FullName as an indexed field because it
+       contains nested documents. Doing so results in encoding errors when
+       inserting documents into the index. See [2]Secondary Index Encoding
+       Error for more information.
+
+maprcli table index add -path /people \
+   -index LastNameIdx \
+   -indexedfields FullName.LastName:-1
+
+     * Creates a simple index on the FullName.LastName subfield, as a
+       descending sort key
+     * Allows you to filter on FullName.LastName and sort on the subfield
+       in descending order
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-index-add.html#table-index-create
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/Index-Alarms.html#reference_lt2_zj4_gbb__section_afr_1m4_gbb

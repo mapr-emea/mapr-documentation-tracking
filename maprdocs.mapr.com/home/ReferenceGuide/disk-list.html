@@ -1,0 +1,100 @@
+disk list
+
+   Lists the disks on a node.
+
+Syntax
+
+   CLI
+
+maprcli disk list
+    -host <host>
+    [ -output terse|verbose ]
+    [ -sortby <attribute> ]
+    [ -sortorder asc|desc ]
+    [ -system 1|0 ]
+
+   REST
+
+http[s]://<host>:<port>/rest/disk/list?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   host The node on which to list the disks.
+   output Whether the output should be terse or verbose. Default is
+   verbose.
+   sortby Specifies one of the following attributes to sort the list of
+   disks by: hostname, diskname, mount, vendor, modelnum, serialnum,
+   firmwareversion, totalspace, usedspace, availablespace, fstype,
+   powerstatus, status, errormsg, storagepoolid, failuretime
+   sortorder The order to sort the results by. Value can be:
+     * asc - for ascending order
+     * desc - for descending order
+
+   system Show only operating system disks:
+     * 0 - shows only MapR-FS disks
+     * 1 - shows only operating system disks
+     * Not specified - shows both MapR-FS and operating system disks
+
+Output
+
+   Information about the specified disks. See the [1]Disk Fields table.
+   Sample Output
+# maprcli disk list -host 10.10.82.23 -output terse
+mn            pst      sp  fw   mt  fs       dsu  n          st  dsa     dst
+ hn           vn
+Virtual_disk  running      1.0  1   ext4     77   /dev/sda1  0   423     500
+ 10.10.82.23  VMware
+Virtual_disk  running      1.0  0                 /dev/sda2  0           15883
+ 10.10.82.23  VMware
+Virtual_disk  running  1   1.0  0   MapR-FS  608  /dev/sdb   0   101792  102400
+ 10.10.82.23  VMware
+                                0                 /dev/dm-0  0           7864
+ 10.10.82.23
+                                0   swap          /dev/dm-1  0           8016
+ 10.10.82.23
+
+Examples
+
+   List disks on a host:
+
+   CLI
+
+maprcli disk list -host 10.10.100.22
+
+   REST
+
+https://r1n1.sj.us:8443/rest/disk/list?host=10.10.100.22
+
+   Lists disks in ascending order sorted by fstype:
+
+   CLI
+
+# maprcli disk list -host atsqa4-161.qa.lab -sortby fstype -sortorder asc
+modelnum      mount  totalspace  diskname   hostname           firmwareversion
+vendor  availablespace  storagepoolid  powerstatus  usedspace  fstype   status
+ST91000640NS  1      1024        /dev/sda1  atsqa4-161.qa.lab  SN03
+ATA     895                            running      129        ext3     0
+ST91000640NS  0      953869      /dev/sdb   atsqa4-161.qa.lab  SN03
+ATA     953530          1              running      339        MapR-FS  0
+ST91000640NS  0      953869      /dev/sdc   atsqa4-161.qa.lab  SN03
+ATA     953530          1              running      339        MapR-FS  0
+ST91000640NS  0      953869      /dev/sde   atsqa4-161.qa.lab  SN03
+ATA     953371          2              running      498        MapR-FS  0
+ST91000640NS  0      953869      /dev/sdf   atsqa4-161.qa.lab  SN03
+ATA     953371          2              running      498        MapR-FS  0
+ST91000640NS  0      953869      /dev/sdd   atsqa4-161.qa.lab  SN03
+ATA     953530          1              running      339        MapR-FS  0
+              0      13024       /dev/dm-0  atsqa4-161.qa.lab
+                                                               swap     0
+ST91000640NS  0      952844      /dev/sda2  atsqa4-161.qa.lab  SN03
+ATA                                    running                          0
+              0      51200       /dev/dm-1  atsqa4-161.qa.lab
+                                                                        0
+              0      358400      /dev/dm-2  atsqa4-161.qa.lab
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/disk.html

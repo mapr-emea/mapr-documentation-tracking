@@ -1,0 +1,87 @@
+Identifying and Resolving Secondary Index Encoding Errors
+
+   This section describes how to locate secondary index encoding errors in
+   log files, and then resolve them.
+   Unresolved secondary index encoding errors can result in queries
+   returning incomplete results. See [1]Secondary Index Encoding Error for
+   details.
+
+   To troubleshoot secondary index encoding errors, follow these steps:
+    1. Determine the table that the error was raised on.
+       Perform a grep on the mfs.log-5 file on the name container of the
+       corresponding volume. This allows you to find all the JSON tables
+       for which the alarm was raised.
+       The following are sample traces from mfs.log when debug logging is
+       enabled for the DBRepl module.
+# grep -i NotifyBucketReplicaEncodingError /opt/mapr/logs/mfs.log-* | grep "21 1
+8"
+/opt/mapr/logs/mfs.log-6:2017-07-21 18:07:27,3101 DEBUG DBRepl db/repl/mgr.cc:92
+0 NotifyBucketReplicaEncodingError 2230.32.131320
+/opt/mapr/logs/mfs.log-7:2017-07-21 18:07:57,9350 DEBUG DBRepl db/repl/mgr.cc:92
+0 NotifyBucketReplicaEncodingError 2230.32.131320
+/opt/mapr/logs/mfs.log-8:2017-07-21 18:08:25,3275 DEBUG DBRepl db/repl/mgr.cc:92
+0 NotifyBucketReplicaEncodingError 2230.32.131320
+       The following is sample trace from mfs.log-5 that contains an
+       encoding error:
+/opt/mapr/logs/mfs.log-5:2017-07-21 01:48:49,0962 ERROR DBRepl db/repl/autosetup
+mgr.cc:617
+AutoSetupCopyTable hit encoding error for table 2205.32.131370, secondary index
+1.
+    2. Find the index on the table from step 1 that is causing the error.
+       Run [2]dbshell indexscan with --mode set to err on each index to
+       see the index's error output. You need to run the command multiple
+       times if a table has multiple indexes with errors.
+       For example, if table1 has three secondary indexes and all three
+       secondary indexes have errors, you need to run indexscan three
+       times.
+indexscan /table1 --indexname index1 --mode err
+indexscan /table1 --indexname index2 --mode err
+indexscan /table1 --indexname index3 --mode err
+       The following is an example of error output from running the
+       dbshell indexscan command:
+maprdb root:> indexscan /IndexEncodingErrorAlarmsTest1/tab1 --indexname idx1 --m
+ode err
+{"_id":"1","$ERROR":"Index field 3: MAPS_ARE_NOT_SUPPORTED"}
+{"_id":"10","$ERROR":"Index field 2: ARRAYS_ARE_NOT_SUPPORTED"}
+{"_id":"100","$ERROR":"Index field 1: INVALID_CAST"}
+{"_id":"1000","$ERROR":"Index field 4: MAPS_ARE_NOT_SUPPORTED"}
+    3. Address the errors identified in step 2.
+       The following are the types of encoding errors that can occur and
+       possible solutions to address them:
+
+   Error Suggested Resolutions
+   KEY_TOO_LONG: The collective size of the index key is limited to less
+   than 32k
+          + Re-insert the row in the JSON table so the collective size of
+            the value of all the indexed fields is less than 32k.
+          + Re-design the secondary index so fields with large values are
+            included fields instead of indexed fields.
+          + Reduce the number of indexed fields in the secondary index.
+
+   ARRAYS_ARE_NOT_SUPPORTED: Arrays are not allowed in an indexed field
+          + Re-insert the row in the JSON table so the values of indexed
+            fields are scalar values.
+          + Re-design the secondary index so the fields that have
+            non-scalar values are included fields instead of indexed
+            fields.
+
+   MAPS_ARE_NOT_SUPPORTED: Maps are not allowed for indexed fields
+          + Re-insert the row in the JSON table so the values of indexed
+            fields are scalar values.
+          + Re-design the secondary index so the fields that have
+            non-scalar values are included fields instead of indexed
+            fields.
+
+   INVALID_CAST: An error was encountered applying the CAST function on an
+   indexed field
+          + Verify that you have specified the correct types when using
+            the CAST function with indexed fields.
+          + If the types are correct, re-insert the row in the JSON table
+            so the values of indexed fields can be cast to the specified
+            type. See [3]Using Casts in Secondary Indexes.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/Index-Alarms.html#reference_lt2_zj4_gbb__section_afr_1m4_gbb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-indexscan.html#dbshell-indexscan
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-functional-index.html

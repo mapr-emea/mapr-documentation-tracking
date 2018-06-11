@@ -1,0 +1,103 @@
+MapR-DB JSON DiffTablesWithCrc
+
+   This utility uses a cyclic redundancy check to detect differences
+   between sets of rows in the specified MapR-DB JSON tables. Then, for
+   each set of non-identical rows, it performs a detailed comparison.
+   Finally, it generates one or more directories of sequence files. You
+   can use these files either to merge the rows from two MapR-DB JSON
+   tables.
+
+   Sequence files are binary flat files. You can learn more about them
+   [1]here. To convert a sequence file into a format that you can read,
+   use the [2]MapR-DB JSON FormatResult utility.
+
+   This utility requires less network bandwidth than the mapr diffTables
+   utility because it performs a detailed table comparison only on the
+   sets of rows where the CRC algorithm detected a difference. Therefore,
+   consider using this utility when the tables you compare are very
+   similar and you are concerned about the data transfer rate.
+
+   This utility considers both the source table and the destination table
+   to be a master table. Therefore, it generates two directories with
+   sequence files. These sequence files contain the puts required to
+   update each table so that each table can contain a superset of the rows
+   in both tables at the time at which the utility was run.
+
+   This utility generates the following output directories:
+     * opsForDst. A directory containing sequence files that correspond to
+       each put and delete required to make the destination table
+       identical to the source table.
+     * opsForSrc. A directory containing sequence files that correspond to
+       each put and delete required to make the source table identical to
+       the destination table.
+
+   Run the mapr importtable command to implement the puts and deletes
+   specified in the sequence files.
+
+   A user with write permissions on a table can run the mapr importtable
+   utility to implement the changes that are specified in the sequence
+   files.
+
+Requirements
+
+     * When the cluster runs YARN, it must use zero configuration failover
+       for the ResourceManager.
+     * The user that runs the mapr difftableswithcrc utility must have the
+       following permissions:
+          + The permission readAce on the volumes where the tables are
+            located.
+          + The permission for column reads (readperm) on each table.
+       For information about how to set permissions on volumes, see
+       [3]Setting Whole Volume ACEs.
+       For information about how to set permissions on tables, see
+       [4]Enabling Table and Stream Authorizations with ACEs.
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+mapr difftableswithcrc
+-src <source table path>
+-dst <destination table path>
+-outdir <output directory>
+[-first_exit] Exit when first difference is found.
+[-columns <comma separated list of field paths> ]
+[-exclude_embedded_families <true|false>] (default: false)
+  Don't include the  other column families with path embedded in specified colum
+ns
+[-cmpmeta <true|false> (default: true)]
+
+Parameters
+
+   Parameter Description
+   src The path of the first table to include in the comparison.
+   dst The path of the second table to include in the comparison.
+   outdir The path to a directory in which to place the generated sequence
+   files. The utility creates the specified directory. If the specified
+   directory already exists, the command fails.
+   first_exit
+
+   By default, the utility compares all the table cells in the specified
+   tables. Use this parameter if you want to exit after the first
+   difference is identified between the tables. The parameter takes no
+   value.
+   columns By default, the utility compares all fields in JSON tables. If
+   you do not want to compare all fields, you can specify specific fields
+   to include in the comparison. For example, suppose that want to compare
+   a source table in table replication with a replica of that table. When
+   you set up replication, you chose to replicate the default column
+   family and two additional column families: cf1 and cf2. For the
+   -columns parameter, you would specify the value ",cf1,cf2", where the
+   default column family is represented by the empty string.
+   cmpmeta A Boolean value that specifies whether or not to compare table
+   metadata such as column families and ACEs. The default is to compare
+   metadata (true).
+
+References
+
+   1. http://wiki.apache.org/hadoop/SequenceFile
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr_formatresult.html#mapr_formatresult
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetEditVolumeDataACE.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/EnablingTableAuthorizations.html

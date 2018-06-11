@@ -1,0 +1,295 @@
+FileAceTest.java
+
+     * [1]Sample Application
+     * [2]Example FileAceTest.java File
+
+   This application demonstrates how to set, get, modify, and delete ACES
+   on files using the Java APIs.
+
+   Before running this application, ensure that you have access to a
+   cluster running MapR-FS. To build and run this application:
+    1. Set the classpath as shown below:
+export CLASSPATH=`hadoop classpath`
+    2. Compile the java file as shown below:
+javac FileAceTest.java
+    3. Run the final FileAceTest.class file.
+
+   This application imports the following libraries:
+     * java.io.*
+     * java.net.*
+     * java.util.*
+
+   The application performs the actions described in the following
+   sections.
+
+   Connects to a filesystem
+          The application tries to connect to the first MapR-FS cluster
+          that is specified in the mapr-clusters.conf file in the
+          $MAPR_HOME/conf directory on the client. After connecting to the
+          filesystem, the application returns a handle to the filesystem.
+
+Configuration conf = new Configuration();
+FileSystem fs = FileSystem.get(conf);
+//MapRFileSystem fs = getMapRFileSystem();
+
+   Creates a new directory and a new file in the directory
+          The application creates a new directory and a file in the
+          directory.
+
+Path testDir = new Path(rootDir + "FileAceTest");
+mkDir(fs, testDir);
+
+Path testFile = new Path(testDir + "/testFile");
+createFile(fs, testFile);
+
+   Sets ACEs on the new directory and the file
+          The application then sets ACEs to grant m7user1 user or the root
+          user permissions to list the contents of the directory, which is
+          required for the user to write and/or execute files in the
+          directory. In addition, the application sets ACEs on the file in
+          the directory to grant the m7user1 user read access on the file.
+
+MapRFileAce ace = new MapRFileAce(MapRFileAce.AccessType.READFILE);
+ace.setBooleanExpression("u:m7user1");
+aces.add(ace);
+ace = new MapRFileAce(MapRFileAce.AccessType.READDIR);
+ace.setBooleanExpression("u:m7user1|u:root");
+aces.add(ace);
+((MapRFileSystem)fs).setAces(testDir, aces);
+((MapRFileSystem)fs).setAces(testFile, aces);
+
+   Verifies the ACEs set on the directory and file
+          The application then prints the ACEs set on the directory and
+          file.
+
+List<MapRFileAce> newDirAces = ((MapRFileSystem)fs).getAces(testDir);
+System.out.println("Path: " + testDir);
+for (int i = 0; i < newDirAces.size(); ++i) {
+      System.out.println(newDirAces.get(i).getAccessType() + ": " +
+                         newDirAces.get(i).getBooleanExpression());
+}
+
+List<MapRFileAce> newFileAces = ((MapRFileSystem)fs).getAces(testFile);
+System.out.println("Path: " + testFile);
+for (int i = 0; i < newFileAces.size(); ++i) {
+      System.out.println(newFileAces.get(i).getAccessType() + ": " +
+                         newFileAces.get(i).getBooleanExpression());
+}
+
+   Modifies the ACEs on the directory and file
+          The application modifies the ACEs on the directory to grant
+          m7user2 user also permissions to list the contents of the
+          directory, which is required for the users to write and/or
+          execute files in the directory. It also modifies the ACEs on the
+          file to grant write access on the file to m7user2 user. Please
+          note that when modifying ACEs on the file to grant write access
+          to m7user2 user, the application does not change read access,
+          which was granted to m7user1 user.
+
+aces = new ArrayList<MapRFileAce>();
+ace = new MapRFileAce(MapRFileAce.AccessType.READDIR);
+ace.setBooleanExpression("u:m7user1|u:root|u:m7user2");
+aces.add(ace);
+ace = new MapRFileAce(MapRFileAce.AccessType.WRITEFILE);
+ace.setBooleanExpression("u:m7user2");
+aces.add(ace);
+((MapRFileSystem)fs).modifyAces(testDir, aces);
+((MapRFileSystem)fs).modifyAces(testFile, aces);
+
+   Verifies the changes to ACEs on the directory and file
+          The application prints the changes in ACEs on the directory and
+          the file.
+
+newDirAces = ((MapRFileSystem)fs).getAces(testDir);
+System.out.println("Path: " + testDir);
+for (int i = 0; i < newDirAces.size(); ++i) {
+      System.out.println(newDirAces.get(i).getAccessType() + ": " +
+                         newDirAces.get(i).getBooleanExpression());
+}
+
+newFileAces = ((MapRFileSystem)fs).getAces(testFile);
+System.out.println("Path: " + testFile);
+for (int i = 0; i < newFileAces.size(); ++i) {
+      System.out.println(newFileAces.get(i).getAccessType() + ": " +
+                         newFileAces.get(i).getBooleanExpression());
+}
+
+   Deletes ACEs on directory and file
+          The application deletes all ACEs on the directory and the file.
+
+((MapRFileSystem)fs).deleteAces(testDir);
+((MapRFileSystem)fs).deleteAces(testFile);
+
+   Verifies the ACEs on the directory and the file
+          The application prints the ACEs on the directory and the file
+          after they are deleted.
+
+newDirAces = ((MapRFileSystem)fs).getAces(testDir);
+System.out.println("Path: " + testDir);
+if (newDirAces == null || newDirAces.size() == 0)
+  System.out.println("AceCount: 0");
+else
+  System.out.println("AceCount: " + newDirAces.size());
+System.out.println("");
+newFileAces = ((MapRFileSystem)fs).getAces(testFile);
+System.out.println("Path: " + testFile);
+if (newFileAces == null || newFileAces.size() == 0)
+  System.out.println("AceCount: 0");
+else
+  System.out.println("AceCount: " + newFileAces.size());
+
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.conf.*;
+
+import com.mapr.fs.MapRFileAce;
+import com.mapr.fs.MapRFileSystem;
+
+public class FileAceTest {
+  public FileSystem fs = null;
+
+  public static void mkDir(FileSystem fs, Path path) throws IOException {
+    boolean res = fs.mkdirs(path);
+    if (!res) {
+      throw new IOException("mkdir failed, path: " + path);
+    }
+  }
+
+  public static void createFile(FileSystem fs, Path path) throws Exception {
+    byte buf[] = new byte[1024];
+
+    FSDataOutputStream ostr = fs.create(path,
+                                        true, // overwrite
+                                        512, // buffersize
+                                        (short) 1, // replication
+                                        (long)(64*1024*1024) // chunksize
+                                       );
+    ostr.write(buf);
+    ostr.close();
+  }
+
+  public static void rmR(FileSystem fs, Path path) throws IOException {
+    boolean res = fs.delete(path, true /*recursive*/);
+    if (!res) {
+      throw new IOException("rmR failed, path: " + path);
+    }
+  }
+
+  public static void main(String args[]) throws Exception {
+    String rootDir = "maprfs:///";
+
+    Configuration conf = new Configuration();
+    FileSystem fs = FileSystem.get(conf);
+
+    Path testDir = new Path(rootDir + "FileAceTest");
+    mkDir(fs, testDir);
+
+    Path testFile = new Path(testDir + "/testFile");
+    createFile(fs, testFile);
+
+    ArrayList<MapRFileAce> aces = new ArrayList<MapRFileAce>();
+
+    // Set
+    System.out.println("SETTING ACES");
+    MapRFileAce ace = new MapRFileAce(MapRFileAce.AccessType.READFILE);
+    ace.setBooleanExpression("u:m7user1");
+    aces.add(ace);
+    ace = new MapRFileAce(MapRFileAce.AccessType.READDIR);
+    ace.setBooleanExpression("u:m7user1|u:root");
+    aces.add(ace);
+    ((MapRFileSystem)fs).setAces(testDir, aces);
+    ((MapRFileSystem)fs).setAces(testFile, aces);
+
+    // Get
+    System.out.println("GETTING ACES");
+    List<MapRFileAce> newDirAces = ((MapRFileSystem)fs).getAces(testDir);
+    System.out.println("Path: " + testDir);
+    for (int i = 0; i < newDirAces.size(); ++i) {
+      System.out.println(newDirAces.get(i).getAccessType() + ": " +
+                         newDirAces.get(i).getBooleanExpression());
+    }
+    System.out.println("");
+    List<MapRFileAce> newFileAces = ((MapRFileSystem)fs).getAces(testFile);
+    System.out.println("Path: " + testFile);
+    for (int i = 0; i < newFileAces.size(); ++i) {
+      System.out.println(newFileAces.get(i).getAccessType() + ": " +
+                         newFileAces.get(i).getBooleanExpression());
+    }
+
+    // Modify
+    System.out.println("MODIFYING ACES");
+    aces = new ArrayList<MapRFileAce>();
+    ace = new MapRFileAce(MapRFileAce.AccessType.READDIR);
+    ace.setBooleanExpression("u:m7user1|u:root|u:m7user2");
+    aces.add(ace);
+    ace = new MapRFileAce(MapRFileAce.AccessType.WRITEFILE);
+    ace.setBooleanExpression("u:m7user2");
+    aces.add(ace);
+    ((MapRFileSystem)fs).modifyAces(testDir, aces);
+    ((MapRFileSystem)fs).modifyAces(testFile, aces);
+
+    // Get
+    System.out.println("GETTING ACES");
+    newDirAces = ((MapRFileSystem)fs).getAces(testDir);
+    System.out.println("Path: " + testDir);
+    for (int i = 0; i < newDirAces.size(); ++i) {
+      System.out.println(newDirAces.get(i).getAccessType() + ": " +
+                         newDirAces.get(i).getBooleanExpression());
+    }
+    System.out.println("");
+    newFileAces = ((MapRFileSystem)fs).getAces(testFile);
+    System.out.println("Path: " + testFile);
+    for (int i = 0; i < newFileAces.size(); ++i) {
+      System.out.println(newFileAces.get(i).getAccessType() + ": " +
+                         newFileAces.get(i).getBooleanExpression());
+    }
+
+    // Delete
+    System.out.println("DELETING ACES");
+    ((MapRFileSystem)fs).deleteAces(testDir);
+    ((MapRFileSystem)fs).deleteAces(testFile);
+
+    // Get
+    System.out.println("GETTING ACES");
+    newDirAces = ((MapRFileSystem)fs).getAces(testDir);
+    System.out.println("Path: " + testDir);
+    if (newDirAces == null || newDirAces.size() == 0)
+      System.out.println("AceCount: 0");
+    else
+      System.out.println("AceCount: " + newDirAces.size());
+    System.out.println("");
+    newFileAces = ((MapRFileSystem)fs).getAces(testFile);
+    System.out.println("Path: " + testFile);
+    if (newFileAces == null || newFileAces.size() == 0)
+      System.out.println("AceCount: 0");
+    else
+      System.out.println("AceCount: " + newFileAces.size());
+
+    // Get
+    System.out.println("GETTING ACES");
+    newDirAces = ((MapRFileSystem)fs).getAces(testDir);
+    System.out.println("Path: " + testDir);
+    for (int i = 0; i < newDirAces.size(); ++i) {
+      System.out.println(newDirAces.get(i).getAccessType() + ": " +
+                         newDirAces.get(i).getBooleanExpression());
+    }
+    System.out.println("");
+    newFileAces = ((MapRFileSystem)fs).getAces(testFile);
+    System.out.println("Path: " + testFile);
+    for (int i = 0; i < newFileAces.size(); ++i) {
+      System.out.println(newFileAces.get(i).getAccessType() + ": " +
+                         newFileAces.get(i).getBooleanExpression());
+    }
+
+    // Remove path
+    rmR(fs, testDir);
+  }
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/DevelopmentGuide/example_file_ace.java.html#div1sect1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/DevelopmentGuide/example_file_ace.java.html#div1sect2

@@ -1,0 +1,30 @@
+Restoring From a Snapshot Using the CLI
+
+   Restoring data from a snapshot involves a simple copy operation from
+   the .snapshot directory to the destination, as in the following
+   example. User input is marked in bold:
+[user@host]$ maprcli volume snapshot create -snapshotname uservolsnap -volume us
+ers
+[user@host]$ maprcli volume snapshot list
+cumulativeReclaimSizeMB creationtime ownername snapshotid snapshotname volumeid
+volumename ownertype volumepath
+0 Fri May 09 16:31:55 UTC 2014 mapr 256000049 uservolsnap 152963782 users 1 /use
+r
+
+[user@host]$ hadoop fs -ls /user
+Found 3 items
+drwxr-xr-x - root root 1 2014-05-06 10:09 /user/hive
+drwxr-xr-x - mapr mapr 4 2014-05-09 16:20 /user/mapr
+drwxr-xr-x - root root 2 2014-05-07 16:05 /user/root
+
+[user@host]$ hadoop fs -ls /user/.snapshot
+Found 1 items
+drwxr-xr-x - mapr mapr 3 2014-05-06 16:00 /user/.snapshot/uservolsnap
+
+[user@host]$ hadoop fs -ls /user/.snapshot/uservolsnap
+Found 3 items
+drwxr-xr-x - root root 1 2014-05-06 10:09 /user/.snapshot/uservolsnap/hive
+drwxr-xr-x - mapr mapr 4 2014-05-09 16:20 /user/.snapshot/uservolsnap/mapr
+drwxr-xr-x - root root 2 2014-05-07 16:05 /user/.snapshot/uservolsnap/root
+
+[user@host]$ hadoop fs -cp /user/.snapshot/uservolsnap/mapr/* ~/mapr

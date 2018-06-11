@@ -1,0 +1,47 @@
+Copying Data Using NFS
+
+   If NFS is installed on the MapR cluster, you can mount the MapR cluster
+   to the HDFS cluster and then copy files from one cluster to the other
+   using hadoop distcp. If you do not have NFS installed and a mount point
+   configured, see [1]Accessing Data with NFS and [2]Setting Up MapR NFS.
+   To perform a copy using distcp via NFS, you need the following
+   information:
+     * <MapR NFS Server> - the IP address or hostname of the NFS server in
+       the MapR cluster
+     * <maprfs_nfs_mount> - the NFS export mount point configured on the
+       MapR cluster; default is /mapr
+     * <hdfs_nfs_mount> - the NFS mount point configured on the HDFS
+       cluster
+     * <NameNode> - the IP address or hostname of the NameNode in the HDFS
+       cluster
+     * <NameNode Port> - the port on the NameNode in the HDFS cluster
+     * <HDFS path> - the path to the HDFS directory from which you plan to
+       copy data
+     * <MapR-FS path> - the path in the MapR cluster to which you plan to
+       copy HDFS data
+
+   To copy data from HDFS to MapR-FS using the NFS, complete the following
+   steps:
+    1. Mount HDFS.
+       Issue the following command to mount the MapR cluster to the HDFS
+       NFS mount point:
+mount <MapR NFS Server>:/<maprfs_nfs_mount> /<hdfs_nfs_mount>
+       Example
+mount 10.10.100.175:/mapr /hdfsmount
+    2. Copy data.
+         a. Issue the following command to copy data from the HDFS cluster
+            to the MapR cluster:
+hadoop distcp hdfs://<NameNode>:<NameNode Port>/<HDFS path> file:///<hdfs_nfs_mo
+unt>/<MapR-FS path>
+            Example
+hadoop distcp hdfs://nn1:8020/user/sara/file.txt file:///hdfsmount/user/sara
+         b. Issue the following command from the MapR cluster to verify
+            that the file was copied to the MapR cluster:
+hadoop fs -ls /<MapR-FS path>
+            Example
+hadoop fs -ls /user/sara
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/AccessDataWithNFS.html#AccessingDatawithNFS
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/c_set_up_mapr_nfs.html#Setting-Up-MapR-NFS-TheMapRNFSservicelet-d3e72

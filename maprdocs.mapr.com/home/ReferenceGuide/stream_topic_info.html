@@ -1,0 +1,98 @@
+stream topic info
+
+   Lists information about a stream's topic, grouped by partition ID.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce on the volume
+     * [2]lookupdir on directories in the path
+     * adminperm, consumeperm, produceperm, or topicperm permission on the
+       stream
+
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+maprcli stream topic info
+         -path <Stream Path>
+         -topic <Topic Name>
+
+   REST
+   http[s]://<host>:<port>/rest/stream/topic/info?path=<path>&topic=<name>
+
+Parameters
+
+   Parameter Description
+   path The path and name of the stream for which you want to display
+   information about topics.
+   topic The name of the topic for which you want to display information.
+
+Sample Output
+
+maprcli stream topic info -path /streamVol/stream1 -topic topic1 -json
+{
+        "timestamp":1521232252550,
+        "timeofday":"2018-03-16 01:30:52.550 GMT-0700 PM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "partitionid":0,
+                        "physicalsize":0,
+                        "logicalsize":0,
+                        "maxoffset":-1,
+                        "minoffsetacrossconsumers":0,
+                        "mintimestamp":"1969-12-31T04:00:00.000-0800 PM",
+                        "maxtimestamp":"1969-12-31T04:00:00.000-0800 PM",
+                        "mintimestampacrossconsumers":"1969-12-31T04:00:00.000-0
+800 PM",
+                        "fid":"2113.32.131400",
+                        "master":"doc24.lab:5660",
+                        "servers":"doc24.lab:5660",
+                        "timestamptype":"createtime"
+                }
+        ]
+}
+
+Field Descriptions
+
+   maxoffset
+          The maximum offset for this partition.
+
+   minoffsetacrossconsumers
+          All known consumers for this partition have consumed messages at
+          least up to this offset.
+
+   mintimestamp
+          The timestamp of oldest message in the partition.
+
+   maxtimestamp
+          The timestamp of newest message in the partition.
+
+   mintimestampacrossconsumers
+          All known consumers for this partition have consumed messages
+          older than this timestamp.
+
+   fid
+          The inode hosting the head of the partition.
+
+   master
+          For use by MapR support: The master server that is hosting the
+          head of the partition.
+
+   servers
+          For use by MapR support: Lists all of the servers that are
+          hosting the head of the partition.
+
+   timestamptype
+          The type of timestamp stored in the topic's message. Possible
+          values: createtime (default) and logappendtime.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

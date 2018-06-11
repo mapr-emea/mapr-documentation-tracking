@@ -1,0 +1,67 @@
+Hue 3.7.0-1506 Release Notes
+
+   The notes below relate specifically to the MapR Distribution for Apache
+   Hadoop. You may also be interested in the [1]Hue github page and the
+   [2]release notes for Version 3.7.
+   Version                    3.7.0
+   Release Date               July 10, 2015
+   Source on GitHub           [3]https://github.com/mapr/hue.git
+   GitHub Release Tag         3.7.0-mapr-1506
+   MapR Version Compatibility See [4]Hue Support Matrix.
+   Maven Artifacts            [5]http://repository.mapr.com/maven/
+   Note: This version of Hue does not support Sentry.
+
+Patches
+
+   Commit Date (YYYY-MM-DD) Comment
+   65b2bb6 2015-05-25 MAPR-18823: Hue is now able to communicate with Hive
+   when the hue.ini security settings are automatically configured to use
+   MapR-SASL.
+   625bf6c 2015-06-12 MAPR-19099: On a secure MapR cluster, Impala is now
+   able to work with Hue.
+
+Known Issues
+
+   MapR-17229:
+          The HBase examples provided in Hue 3.7 will not load in HBase
+          0.94.x because HBase 0.94.x uses a different thrift version than
+          Hue 3.7.
+
+   MapR-17314:
+          When you run Hue 3.7 with a Hadoop version that is less than
+          2.5.1, the Job Browser hangs if you attempt to kill running YARN
+          applications from the Job Browser window. This issue occurs with
+          MapR version 4.0.1 as it uses Hadoop 2.4.1.
+
+   MapR-18668:
+          Hue does not work on RedHat/CentOS 7 when it is configured to
+          use a MySQL database.
+
+          When this issue occurs, the MapR Control System (MCS) displays
+          the "Hue Down Alarm."
+
+          Workaround:
+
+         1. Run the following commands to install MariaDB and the Redhat 6
+            compatibility library:
+yum install mariadb
+rpm -ivh --nodeps http://yum.mariadb.org/$(rpm -qa mariadb|cut -d- -f2)/rhel7-am
+d64/rpms/MariaDB-5.5.41-centos7_0-x86_64-compat.rpm
+         2. Run the following command to create a symlink for the Cyrus
+            SASL library:
+ln -s /lib/64/libsasl2.so.3.0.0 /lib64/libsasl2.so.2
+         3. Run the following command to reconfigure Hue:
+bash -c "./opt/mapr/hue/hue-3.7.0/build/env/bin/activate; /opt/mapr/hue/hue-3.7.
+0/build/env/bin/hue syncdb --noinput; /opt/mapr/hue/hue-3.7.0/build/env/bin/hue
+migrate"
+         4. Run the following command to restart Hue:
+maprcli node services -name hue -action restart -nodes <space separated list of
+hostnames>
+
+References
+
+   1. https://github.com/cloudera/hue
+   2. http://cloudera.github.io/hue/docs-3.7.0/release-notes/release-notes-3.7.0.html
+   3. https://github.com/mapr/hue
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/r_hue_matrix.html#reference_jvd_tsb_t5
+   5. http://repository.mapr.com/maven/

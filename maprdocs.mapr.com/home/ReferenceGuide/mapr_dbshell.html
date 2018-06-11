@@ -1,0 +1,115 @@
+MapR-DB Shell (JSON Tables)
+
+   The mapr dbshell is a tool that enables you to create and perform basic
+   manipulation of JSON tables and documents. You run dbshell by typing
+   mapr dbshell on the command line after logging into a node in a MapR
+   cluster.
+   Note: MapR-DB Shell does not support MapR-ES streams operations.
+
+Permissions
+
+   Before running dbshell, your user ID must have both the readAce and
+   writeAce permissions on the volume. For information about these
+   permissions, see [1]Managing Whole Volume ACEs.
+
+SUSE Linux Error Messages
+
+   When you run dbshell on SUSE Linux, you might see the following
+   messages:
+[INFO] Unable to bind key for unsupported operation: backward-delete-word
+[INFO] Unable to bind key for unsupported operation: up-history
+[INFO] Unable to bind key for unsupported operation: down-history
+
+   To suppress these messages, edit the /etc/inputrc file and rename the
+   keywords as follows:
+      Original name          New name
+   backward-delete-word backward-kill-word
+   down-history         next-history
+   up-history           previous-history
+
+Command Descriptions
+
+   To get a list of supported dbshell commands, run help at the shell
+   prompt:
+maprdb root:> help
+* ! - Allows execution of operating system (OS) commands
+* // - Inline comment markers (start of line only)
+* ; - Inline comment markers (start of line only)
+* cat - Print the content of the specified file on the standard output
+* cd - Change the current directory to the specified path.
+* clear - Clears the console
+* cls - Clears the console
+* create - Create a json table at the given path.
+* date - Displays the local date and time
+* debug - Sets/shows the debug mode.
+* delete - Delete a document from the table.
+* desc - Describes the properties of a table.
+* drop - Deletes a MapR-DB json table.
+* exists - Returns true if the table exists.
+* exit - Exits the shell
+* find - Retrieves one or more documents from the table.
+* findbyid - Retrieves a single document from the table.
+* help - List all commands usage
+* indexscan - Scan the index and return the document in their natural order.
+* insert - Inserts or replaces a document into the table.
+* jsonoptions - Sets/shows the Json output options.
+* list - Lists all tables in a folder or matching the specified pattern.
+* ls - Lists files and folders.
+* mkdir - Create a directory at the specified path.
+* pwd - Print the absolute path of the current working directory.
+* quit - Exits the shell
+* replace - Replace a document based on condition.
+* script - Parses the specified resource file and executes its commands
+* system properties - Shows the shell's properties
+* tableoptions - Sets/shows the MapR-DB Table access options.
+* update - Update field in a single document.
+* version - Displays shell version
+* whoami - Prints the current MapR-DB Shell user.
+
+Parameters
+
+   Various components of these commands will be either be in JSON (in case
+   a list of key-value is required) or a single value following a switch
+   identifying the component.
+   To get a list of parameters for a specific command, run help <command>
+   at the prompt. For example: help find returns the following:
+maprdb root:> help find
+Command:                   find
+Description:               Retrieves one or more documents from the table.
+Options:
+  *, --t, --table          Table path. [required]
+  --id                     Document Id.
+  --fromid                 Document Id to start from (inclusive)
+  --toid                   Document Id to stop at (exclusive)
+  --limit                  Maximum number of documents to return.
+  --withtags, --withTags   Enables/disables printing with extended Type Tags.
+  --pretty                 Enables/disables pretty printing of the document.
+  --offset                 Skip first n number of rows in the result.
+  --orderby                Sort result by the given fields.
+  --c, --where             Condition in JSON format
+  --f, --fields            Projections in JSON documents
+  --q, --query             Query in JSON documents
+Examples:
+  find /tables/users
+  find /tables/users --fromid user001 --toid user00a --limit 32
+
+Value Types
+
+   Extended type values are shown using type tags. The scalar types are
+   represented as follows:
+     * {"$binary":"AAAASw=="} for binary values
+     * {"$numberLong":21491} for whole numbers like long, short, byte,
+       short
+     * {"$numeric":47.92} for numeric types like float and double
+     * {"$time":"14:35:28.981"} for time type values
+     * {"$date":"2017-04-24T22:35:28.981Z"} for timestamp values
+     * {"$date":"2017-04-24T22:35:28.981Z"} for timestamp values
+     * {"$dateDay":"2017-04-23"} for date type values
+
+Bulk Operations
+
+   Currently, bulk conditional operations are not supported.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/VolumeDataACE.html

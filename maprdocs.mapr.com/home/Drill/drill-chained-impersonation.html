@@ -1,0 +1,40 @@
+Chained Impersonation
+
+   You can configure Drill to allow chained impersonation on views when
+   you enable impersonation in the drill-override.conf file. Chained
+   impersonation controls the number of identity transitions that Drill
+   can make when a user queries a view. Each identity transition is equal
+   to one hop.
+
+   An administrator can set the maximum number of hops for impersonation
+   to limit the number of times that Drill can impersonate a different
+   user when other users query a view. The default maximum number of hops
+   is set at 3. When the maximum number of hops is set to 0, Drill does
+   not allow impersonation chaining, and a user can only read data for
+   which they have direct permission to access. An administrator may set
+   the chain length to 0 to protect highly sensitive data.
+   The following diagram depicts a scenario where the maximum hop number
+   is set to 3, and Drill must impersonate three users to access data when
+   Chad queries a view that Jane created:
+   [chained-impersonation-1.PNG]
+   In the previous example, Joe created V2 from the view that user Frank
+   created. In the following example, Joe created V3 by joining a view
+   that Frank created with a view that Bob created.
+   [chained-impersonation-2.PNG]
+
+   Although V3 was created by joining two different views, the number of
+   hops remains at 3 because Drill does not read the views at the same
+   time. Drill reads V2 first and then reads V1.
+   In the next example, Bob queries V4 which was created by Frank. Frank's
+   view was created from several underlying views. Charlie created V2 by
+   joining Jane's V1 with Kris's V1.2. Kris's V1.2 was created from Amy's
+   V1.1, increasing the complexity of the chaining. Assuming that the hop
+   limit is set at 4, this scenario exceeds the limit.
+   [user_hops_four.PNG]
+
+   When Bob queries Franks’s view, Drill returns an error stating that the
+   query cannot complete because the number of hops required to access the
+   data exceeds the maximum hop setting of 4.
+
+   If users encounter this error, the administrator can increase the
+   maximum hop setting to accommodate users running queries on views.

@@ -1,0 +1,83 @@
+Migrating Kafka C#/.NET Applications to MapR-ES
+
+   With some modification, you can use existing confluent-kafka C#/.NET
+   applications to consume and produce topics in MapR-ES. The MapR-ES
+   C#/.NET Client is a binding for Apache librdkafka that works with
+   MapR-ES.
+
+Migrating a .NET 4.5 or 4.6 Application
+
+   Note: This migration information is applicable for Windows (Win7-x64)
+   platform only.
+
+   To migrate an existing .NET 4.5 or 4.6 application:
+    1. Install and configure the MapR-ES C Client. See [1]Configuring the
+       MapR-ES C Client.
+    2. Replace the librdkafka.dll with the MapR librdkafka 0.11.3 from
+       /bin/.../runtimes/<win7-x64>/<native folder>.
+    3. Add a symlink from the MapRClient.dll to the librdkafka.dll.
+    4. Restart the application.
+
+Migrating a .NET Core Application1
+
+   Note: This migration information is applicable for Windows (Win7-x64)
+   and Linux platforms.
+
+   To migrate an existing .NET Core application:
+    1. Install and configure the MapR-ES C Client. See [2]Configuring the
+       MapR-ES C Client.
+    2. Replace the librdkafka.dll with the MapR librdkafka 0.11.3 from
+       USER_HOME/.NUGET/PACKAGES/LIBRDKAFKA.REDIST/0.11.3/runtimes/<platfo
+       rm>/<native folder>.
+    3. Add a symlink from the MapRClient.dll to the librdkafka.dll.
+    4. Restart the application.
+
+Migrating a .NET Core Application2
+
+   Note: This migration information is applicable for Linux platforms
+   only.
+
+   To migrate an existing .NET Core application:
+    1. Remove all .so files from the
+       ~/.NUGET/PACKAGES/LIBRDKAFKA.REDIST/0.11.3/runtimes/<platform>/<nat
+       ive folder> directory.
+    2. Install and configure the MapR-ES C Client. See [3]Configuring the
+       MapR-ES C Client.
+    3. Replace the librdkafka.dll with the MapR librdkafka 0.11.3 from
+       USER_HOME/.NUGET/PACKAGES/LIBRDKAFKA.REDIST/0.11.3/runtimes/
+       directory.
+    4. If the MapR Client doesn not install into the ID search path, add a
+       symlink from the MapRClient.dll to the l/usr/local/lib.
+    5. Restart the application.
+
+General Migration Information
+
+     * When you refer to a topic in the application code, include the path
+       and name of the stream in which the topic is located:
+/<path and name of stream>:<name of topic>
+       For example, you might have a stream in a MapR cluster that is
+       named stream_A, and the stream might be in a volume named IoT and
+       in a directory named automobile_sensors. You want to redirect a
+       producer application to a topic in that stream. The syntax of the
+       path to the topic might look like this:
+       /mapr/IoT/automobile_sensors/stream_A:<name of topic>.
+       Note: Optionally, use the streams.consumer.default.stream and
+       streams.producer.default.stream configuration parameters. When you
+       configure these parameters, applications can specify just the topic
+       name to write or read from the default stream.
+     * Review the APIs that are supported and make changes to your
+       application, as needed. See [4]API for MapR-ES C#/.NET.
+     * See [5]Configuration Properties for MapR-ES C#/.NET Client for the
+       list of supported configuration parameters and make changes to your
+       application, as needed.
+       Note: SSL-related configuration parameters are ignored. When you
+       set these parameters, the MapR-ES Client issues a warning
+       indicating that the parameters are not supported.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/MapRStreamCAPISetup.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/MapRStreamCAPISetup.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/MapRStreamCAPISetup.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/MapRStreamsCsharpNET-API.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/StreamsConfigurationCsharpNET.html

@@ -1,0 +1,37 @@
+Upgrading Impala
+
+   This section describes how to upgrade Immpala without the MapR
+   Installer.
+    1. Upgrade the mapr-impala package on all Impala nodes in the cluster:
+$ sudo yum update mapr-impala
+    2. In /opt/mapr/impala/impala-<version>/conf/env.sh, complete the
+       following steps:
+         a. Verify that the Statestore address is set to the address where
+            you plan to run the statestore service.
+IMPALA_STATE_STORE_HOST=<IP address hosting statestore>
+         b. Change the Catalog service address to the address where you
+            plan to run the catalog service.
+CATALOG_SERVICE_HOST=<IP address hosting catalog service>
+            Refer to [1]Additional Impala Configuration Options for a list
+            of other options that you can modify in env.sh.
+    3. Verify that hive-site.xml has the following property configured on
+       all nodes:
+<property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://<metastore_server_host>:9083</value>
+</property>
+
+    4. To upgrade the statestore service, issue the following command:
+$ sudo yum update mapr-impala-statestore
+    5. To upgrade the catalog service, issue the following command:
+$ sudo yum update mapr-impala-catalog
+       Note: It is recommended (not required) that you install the catalog
+       service on the same node as the statestore service.
+    6. To upgrade the impala server, issue the following command:
+$ sudo yum update mapr-impala-server
+    7. Run configure.sh to refresh the node configuration.
+/opt/mapr/server/configure.sh -R
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Impala/AdditionalImpalaConfigurOptions.html

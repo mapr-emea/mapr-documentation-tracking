@@ -1,0 +1,33 @@
+Moving CLDB Data
+
+   Describes how to move CLDB data to another node.
+
+   In a Community Edition-licensed cluster, CLDB data must be recovered
+   from a failed CLDB node and installed on another node. The cluster can
+   continue normally as soon as the CLDB is started on another node.
+
+   For more information, see [1]CLDB Failover.
+
+   Use the maprcli dump zkinfo command to identify the latest epoch of the
+   CLDB, identify the nodes where replicates of the CLDB are stored, and
+   select one of those nodes to serve the new CLDB node. Perform the
+   following steps on any cluster node:
+    1. Log in as root or use sudo for the following commands.
+    2. Issue the maprcli dump zkinfo command using the -json flag.
+       # maprcli dump zkinfo -json
+       The output displays the ZooKeeper znodes.
+    3. In the /datacenter/controlnodes/cldb/epoch/1 directory, locate the
+       CLDB with the latest epoch.
+{ "/datacenter/controlnodes/cldb/epoch/1/KvStoreContainerInfo":" Container ID:1
+VolumeId:1 Master:10.250.1.15:5660-172.16.122.1:5660-192.168.115.1:5660--13-VALI
+D Servers: 10.250.1.15:5660-172.16.122.1:5660-192.168.115.1:5660--13-VALID Inact
+ive Servers: Unused Servers: Latest epoch:13" }
+       The Latest Epoch field identifies the current epoch of the CLDB
+       data. In this example, the latest epoch is 13.
+    4. Select a CLDB from among the copies at the latest epoch. For
+       example, 10.250.2.41:5660--13-VALID indicates that the node has a
+       copy at epoch 13 (the latest epoch).
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/CLDB-Failover.html#CLDB-Failover-TheCLDBserviceautoma-d3e78

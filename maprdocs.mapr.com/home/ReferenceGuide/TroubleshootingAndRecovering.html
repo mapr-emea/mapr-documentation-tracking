@@ -1,0 +1,389 @@
+Troubleshooting and Recovery
+
+   Typically, the utility succeeds and if the utility fails partially or
+   completely, try the troubleshooting and recovery steps described here.
+     * [1]Completely Failed Runs
+     * [2]Partially Failed Runs
+
+   A completely failed run indicates that the utility did not set up
+   cross-cluster communication between any of the local or remote nodes.
+   Typical reasons for complete failure include:
+     * The prerequisites for running thes utility were not met.
+       Refer to [3]Prerequisites for running this utility.
+     * The utility was not run as mapr or administrative user.
+       The user running the utility must be able to run commands like
+       maprlogin password, maprlogin generateticket, and maprcli node
+       list.
+     * The -localuser option was not specified when there was a
+       non-default username (like admin) for the mapr user on the local
+       node.
+     * The -remoteuser option was not specified when there was a
+       non-default username (like admin) for the mapr user on the remote
+       node.
+     * The username specified in the -localcrosscluster option does not
+       exist in the local cluster.
+       This utility requires that the username specified in the
+       -localcrossclusteruser option to exist before running the utility.
+     * The username specified in the -remotecrosscluster option does not
+       exist in the remote cluster.
+       This utility requires that the username specified in the
+       -remotecrossclusteruser option to exist before running the utility.
+     * The wrong password was specified for the local mapr user for the
+       local cluster.
+       This utility uses commands like ssh and scp to access other nodes
+       in the local cluster. So, if the public key authentication between
+       the local node and the other nodes in the local cluster is not
+       setup, you must have set a password for the mapr administrative
+       user specified in the -localuser argument.
+     * The wrong password was specified for the remote mapr user for the
+       remote cluster.
+       This utility uses commands like ssh and scp to access other nodes
+       in the local cluster. So, if the public key authentication between
+       the local node and the node specified in the -remoteip option is
+       not setup, there must be a password for the mapr administrative
+       user specified in the -remoteuser option.
+
+   For completely failed runs, examine the log file in
+   /opt/mapr/logs/crosscluster.log and the output of the latest run in
+   /tmp/mapr-xcs directory. The crosscluster.log looks something like the
+   following:
+Script started at Fri Sep 29 15:56:33 PDT 2017
+Entering recovery mode. Using cross-cluster directory /tmp/mapr-xcs/13194
+Verifying that pssh is present ... ok
+Verifying that expect is present ... ok
+Verifying that trust store is present ... ok
+Verifying that cluster file is present and cluster name is set ... clustername i
+s set to node95.cluster.com
+ok
+Verifying that security is configured ...
+Verifying that keytool exists ... ok
+Verifying that local user exists ... ok
+Verifying that local cross-cluster user exists ... ok
+Verifying that remote cross-cluster user exists ... ok
+Verifying connectivity to 10.10.1.103 and presence of mapr-clusters.conf
+Running command: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+ -o GlobalKnownHostsFile=/dev/null -o LogLevel=quiet -p 22 mapr@10.10.1.103 ls /
+opt/mapr/conf/mapr-clusters.conf
+Logging in to local cluster
+...
+
+   The utility may also report partial success. The utility does not fail
+   due to inability to copy the updated files to the nodes in the local or
+   remote clusters, so the most likely cause of partial failure is
+   improperly configured or failed cluster nodes.
+
+   For partially failed runs, examine the contents of the latest run in
+   /tmp/mapr-xcs directory in addition to the contents of the
+   /opt/mapr/logs/crosscluster.log file.
+
+   In the following example, the latest run of the utility is in
+   /tmp/mapr-xcs/13194, since this directory has the most recent
+   modification date:
+[admin@node95 ~]# ls -lt /tmp/mapr-xcs
+total 8
+drwx------ 14 mapr mapr 4096 Sep 29 15:49 13194
+drwx------ 30 mapr mapr 4096 Sep 29 14:44 23802
+
+   The following is the sample content in /tmp/mapr-xcs/13194:
+[admin@node95 mapr-xcs]# ls -l 13194
+total 52
+-rw-r--r-- 1 mapr mapr  59 Sep 29 15:49 local_clusterentry
+-rw-r--r-- 1 mapr mapr  90 Sep 29 15:49 localclusterhosts_full.txt
+-rw-r--r-- 1 mapr mapr  12 Sep 29 15:56 localclusterhosts.txt
+-rw------- 1 mapr mapr 315 Sep 29 15:49 local_crosscluster_ticket
+-rw-r--r-- 1 mapr mapr 299 Sep 29 15:49 local_maprserverticket_entries
+drwxr-xr-x 2 mapr mapr  58 Sep 29 15:49 lpscp_clusterhosts_edir
+drwxr-xr-x 2 mapr mapr  44 Sep 29 15:49 lpscp_clusterhosts_odir
+drwxr-xr-x 2 mapr mapr  58 Sep 29 15:49 lpscp_server_edir
+drwxr-xr-x 2 mapr mapr  44 Sep 29 15:49 lpscp_server_odir
+drwxr-xr-x 2 mapr mapr  58 Sep 29 15:49 lpssh_server_edir
+drwxr-xr-x 2 mapr mapr  44 Sep 29 15:49 lpssh_server_odir
+-rw-r--r-- 1 mapr mapr 115 Sep 29 15:49 remote_clusterconf
+-rw-r--r-- 1 mapr mapr  56 Sep 29 15:49 remote_clusterentry
+-rw-r--r-- 1 mapr mapr 138 Sep 29 15:49 remoteclusterhosts_full.txt
+-rw-r--r-- 1 mapr mapr  12 Sep 29 15:56 remoteclusterhosts.txt
+-rw------- 1 mapr mapr 320 Sep 29 15:49 remote_crosscluster_ticket
+-rw------- 1 mapr mapr 914 Sep 29 15:49 remote_maprserverticket
+-rw-r--r-- 1 mapr mapr 300 Sep 29 15:49 remote_maprserverticket_entries
+drwxr-xr-x 2 mapr mapr  58 Sep 29 15:49 rpscp_clusterhosts_edir
+drwxr-xr-x 2 mapr mapr  44 Sep 29 15:49 rpscp_clusterhosts_odir
+drwxr-xr-x 2 mapr mapr  58 Sep 29 15:49 rpscp_server_edir
+drwxr-xr-x 2 mapr mapr  44 Sep 29 15:49 rpscp_server_odir
+drwxr-xr-x 2 mapr mapr  58 Sep 29 15:49 rpssh_server_edir
+drwxr-xr-x 2 mapr mapr  44 Sep 29 15:49 rpssh_server_odir
+-rw-r--r-- 1 mapr mapr   2 Sep 29 15:56 STATUS
+
+Troubleshooting
+
+    1. Look at /tmp/mapr-xcs/<latest>/STATUS. A non-zero value indicates
+       an overall error.
+    2. If you encounter a non-zero overall status, look at the STATUS
+       files in each of the subdirectories.
+    3. For the subdirectories reporting a non-zero status, look at the
+       contents of the files in that subdirectory.
+    4. If there is an error in updating the local cluster hosts, and you
+       did not use the -localhosts option when running the script, also
+       look at /tmp/mapr-xcs/<latest>/localclusterhosts.txt file.
+       The /tmp/mapr-xcs/<latest>/localclusterhosts.txt file contains the
+       list of IP addresses of the local cluster hosts, which is the first
+       IP address of each node if there are multiple IP addresses,
+       obtained from the following command:
+maprcli node list -cluster <local-cluster-name> -columns hostname
+       Verify the contents of the file to ensure that the list of local
+       cluster hosts is correct. The original output of the above command
+       is in /tmp/mapr-xcs/<latest>/localclusterhosts_full.txt, and you
+       should also check the output to ensure that the list is correct.
+       Otherwise, fix the errors and re-run the script with the
+       -localhosts option.
+    5. If there is an error in updating the remote cluster hosts, and you
+       did not use the -remotehosts option when running the script, you
+       should also look at /tmp/mapr-xcs/<latest>/remoteclusterhosts.txt
+       file.
+       The /tmp/mapr-xcs/<latest>/remoteclusterhosts.txt file contains the
+       list of IP addresses of remote cluster hosts, which is the first IP
+       address of each node if there are multiple IP addresses, obtained
+       from the following command:
+ssh <remoteuser>@<remote-ip> maprcli node list -cluster <remote-cluster-name> -c
+olumns hostname
+       Verify the contents of the file to ensure that the list of remote
+       cluster hosts is correct. The original output of the above command
+       is in /tmp/mapr-xcs/<latest>/remoteclusterhosts_full.txt, and you
+       should also check the output to ensure that the list is correct.
+       Otherwise, fix the errors and re-run the script with the
+       -remotehosts option.
+    6. If you have an error copying to some or all of the local or remote
+       cluster hosts, try doing an ssh to the local or remote cluster host
+       (respectively) to ensure that it is accessible using the supplied
+       username and password. If this fails, the copy operation in the
+       script will also fail, since it relies on either public key
+       authentication or username/password authentication to access the
+       nodes. Specify the correct username and/or password and then re-run
+       the script.
+
+Sample Failure, Troubleshooting, and Recovery Session
+
+   Suppose the utility is run where one of the nodes in the local cluster
+   (10.10.30.96) has a password that is different from other local cluster
+   nodes, causing the ssh and scp commands to this node to fail.
+    1. Run the utility on the local node (10.10.30.95).
+       The highlighted text below are the warning messages. The utility
+       continues to run, despite the warnings, to update the cross-cluster
+       configuration on as many nodes as possible:
+[admin@node95 cross-cluster]$ /opt/mapr/server/configure-crosscluster.sh create
+server -remoteip 10.10.1.103 -localuser admin -remoteuser mapr
+Remote IP is 10.10.1.103
+WARNING: Strict host key checking will be disabled for this script.
+Enter password for mapr user (admin) for local cluster:
+Enter password for mapr user (mapr) for remote cluster:
+Local cross-cluster user unset, defaulting to local user admin
+Remote cross-cluster user unset, defaulting to remote user mapr
+Verifying connectivity to 10.10.1.103 and presence of mapr-clusters.conf
+MapR credentials of user 'admin' for cluster 'node95.cluster.com' are written to
+ '/tmp/maprticket_0'
+node95.cluster.com secure=true node95.perf.lab:7222
+WARNING: Copying local /opt/mapr/conf/mapr-clusters.conf to all hosts in local c
+luster complete, but the operation failed for at least one node in the cluster.
+For details, look at the output directory /tmp/mapr-xcs/14043/lpscp_clusterhosts
+_odir or error directory /tmp/mapr-xcs/14043/lpscp_clusterhosts_edir.
+Configuring cross-cluster communication for server-side operations
+Generating cross-cluster ticket for user mapr on remote node
+WARNING: Changing permissions of local maprserverticket complete, but the operat
+ion failed for at least one node in the cluster.
+For details, look at the output directory /tmp/mapr-xcs/14043/lpssh_server_odir
+or error directory /tmp/mapr-xcs/14043/lpssh_server_edir
+WARNING: Cannot change permissions for local MapR server ticket for at least 1 n
+ode
+WARNING: Copy local maprserverticket to all hosts in local cluster complete, but
+ the operation failed for at least one node in the cluster.
+For details, look at the output directory /tmp/mapr-xcs/14043/lpscp_server_odir
+or error directory /tmp/mapr-xcs/14043/lpscp_server_edir.
+WARNING: Cannot copy local MapR server ticket for at least 1 node
+Generating cross-cluster ticket for mirroring for user admin
+MapR credentials of user 'admin' for cluster 'node95.cluster.com' are written to
+ '/tmp/mapr-xcs/14043/local_crosscluster_ticket'
+An error has been encountered in configuring cross-cluster communication.
+For more information, refer to the log file at /opt/mapr/logs/crosscluster.log.
+If the error is caused by non-functioning local and remote cluster nodes, more i
+nformation on the precise errors can be found in /tmp/mapr-xcs/14043. The list o
+f local cluster hosts is in /tmp/mapr-xcs/14043/localclusterhosts.txt, and the l
+ist of remote cluster hosts is in /tmp/mapr-xcs/14043/remoteclusterhosts.txt.
+In such cases, you can normally fix the error by editing the list of local and/o
+r remote cluster hosts file and then re-run the script using the -r option, spec
+ifying the local or remote hosts file in the -localhosts or -remotehosts option
+respectively.
+This script has logged in to both the local and remote clusters. Please log out
+of the clusters if needed.
+    2. Look at the specified directory, /tmp/mapr-xcs/14043, because the
+       utility resulted in an error.
+       The overall status is 1 (indicating an error) as shown in bold
+       below:
+$ cat /tmp/mapr-xcs/14043/STATUS
+1
+    3. Look at the STATUS files in each of the subdirectories to determine
+       the content reporting error.
+       Content has non-zero status as shown in bold below:
+[admin@node95 14043]$ find /tmp/mapr-xcs/14043 -print | grep STATUS | xargs more
+::::::::::::::
+./rpscp_clusterhosts_edir/STATUS
+::::::::::::::
+0
+::::::::::::::
+./lpscp_clusterhosts_edir/STATUS
+::::::::::::::
+1               ← FAIL
+::::::::::::::
+./lpssh_server_edir/STATUS
+::::::::::::::
+1               ← FAIL
+::::::::::::::
+./lpscp_server_edir/STATUS
+::::::::::::::
+1               ← FAIL
+::::::::::::::
+./rpssh_server_edir/STATUS
+::::::::::::::
+0
+::::::::::::::
+./rpscp_server_edir/STATUS
+::::::::::::::
+0
+::::::::::::::
+./STATUS
+::::::::::::::
+1               ← Overall status is FAIL
+    4. Look at each of the files in the subdirectories reporting a
+       non-zero status, for example, lpscp_clusterhosts_edir.
+       The error “lost connection” for 10.10.30.96 indicates that the
+       local node 10.10.30.95 could not run the scp command to that node:
+[admin@node95 14043]$ more lpscp_clusterhosts_edir/*
+::::::::::::::
+lpscp_clusterhosts_edir/10.10.30.95
+::::::::::::::
+::::::::::::::
+lpscp_clusterhosts_edir/10.10.30.96
+::::::::::::::
+lost connection
+::::::::::::::
+lpscp_clusterhosts_edir/STATUS
+::::::::::::::
+1
+    5. Try to ssh to that node (10.10.30.96), using the same local
+       password used for running the utility.
+       The ssh (and therefore also scp) command fails:
+[admin@node95 14043]$ ssh admin@10.10.30.96 ls
+Password:
+Password:
+Password:
+admin@10.10.30.96's password:
+Permission denied, please try again.
+admin@10.10.30.96's password:
+Received disconnect from 10.10.30.96: 2: Too many authentication failures for ad
+min
+    6. Run the utility again.
+       The utility detects that the previous run did not complete
+       successfully and prompts you to run the utility with the recovery
+       option. It also detects the directories that contain the detailed
+       error information as shown below:
+[admin@node95 cross-cluster]$ /opt/mapr/server/configure-crosscluster.sh create
+server -remoteip 10.10.1.103 -localuser admin -remoteuser mapr
+Remote IP is 10.10.1.103
+WARNING: Strict host key checking will be disabled for this script.
+The previous run of this script with ID 14043 did not complete
+successfully. Examine the error directories in /tmp/mapr-xcs/14043
+for details of the error:
+/tmp/mapr-xcs/14043/lpscp_clusterhosts_edir
+/tmp/mapr-xcs/14043/lpscp_server_edir
+/tmp/mapr-xcs/14043/lpssh_server_edir
+If the failure is down to partially failed nodes, you should exit now, and re-ru
+n this script in recovery mode using the -recover option to copy the configured
+tickets and files to the remaining nodes, instead of continuing and generating n
+ew tickets.
+Exit now? Enter y to exit, or n to continue: y
+
+Exiting. Re-run this script with the -recover option.
+    7. Fix the error (in this example, by setting/changing the password
+       for 10.10.30.96), and run the utility again with the -recover
+       option to update the configuration for the previously failed
+       operation for the local cluster node.
+       To copy the configuration again to all the nodes in the local and
+       remote clusters, run the utility without the -localhosts and
+       -remotehosts option. To rerun the utility to update the
+       configuration for the failed nodes only, specify the IP addresses
+       of the failed nodes only.
+       Note: Specify at least one node in the -localhosts and -remotehosts
+       option. You can use hostnames instead of IP addresses, as long as
+       you ensure that DNS is working properly between the local node you
+       are running the utility on, and the nodes you specify in the
+       -localhosts and -remotehosts options.
+       The output of the recovery session is shown below. Note that the
+       utility returned a SUCCESS result:
+[admin@node95 cross-cluster]$ cat local
+10.10.30.96
+[admin@node95 cross-cluster]$ cat remote
+10.10.1.101
+[admin@node95 cross-cluster]$ /opt/mapr/server/configure-crosscluster.sh create
+server -remoteip 10.10.1.103 -localuser admin -remoteuser mapr -recover latest -
+localhosts local -remotehosts remote
+Remote IP is 10.10.1.103
+WARNING: Strict host key checking will be disabled for this script.
+Looking for most recent log file
+Entering recovery mode. Using cross-cluster directory /tmp/mapr-xcs/14043
+Enter password for mapr user (admin) for local cluster:
+Enter password for mapr user (mapr) for remote cluster:
+Local cross-cluster user unset, defaulting to local user admin
+Remote cross-cluster user unset, defaulting to remote user mapr
+Verifying connectivity to 10.10.1.103 and presence of mapr-clusters.conf
+MapR credentials of user 'admin' for cluster 'chyelin95.cluster.com' are written
+ to '/tmp/maprticket_0'
+Recovery option, using configured remote mapr-clusters.conf in /tmp/mapr-xcs/140
+43/remote_clusterconf
+Recovery option, using configured local mapr-clusters.conf in /opt/mapr/conf/map
+r-clusters.conf
+Configuring cross-cluster communication for server-side operations
+Recovery option, using configured local maprserverticket in /opt/mapr/conf/maprs
+erverticket
+Recovery option, using configured remote maprserverticket in /tmp/mapr-xcs/14043
+/remote_maprserverticket
+SUCCESS
+This script has logged in to both the local and remote clusters. Please log out
+of the clusters if needed.
+
+Multiple Runs of the Utility
+
+   When running the utility with the all or user argument, you may see the
+   following error if you run the utility multiple times:
+keytool error: java.lang.Exception: Certificate not imported, alias <remote.clus
+ter.com> already exists
+ERROR: Unable to import remote cluster certificate from /tmp/mapr-xcs/17056/remo
+te_mapcert into local SSL trust store
+Please delete the certificate with the same alias remote.cluster.com from the tr
+uststore first
+
+   Certificates with the same alias should be imported to the trust store
+   only once. If you are able to run commands like maprcli volume mount on
+   the remote cluster from the local cluster, you can ignore this error.
+   If you really want to re-import the remote cluster certificate into the
+   trust store, contact MapR support.
+
+   Also, note that when you run the utility multiple times, there are at
+   least 2 entries with the same alias in /opt/mapr/conf/maprserverticket
+   file. The utility generates a new cross-cluster ticket (useful for
+   volume mirroring and table and streams replication) every time it is
+   run, and does not delete any tickets in /opt/mapr/conf/maprserverticket
+   file. Service tickets have a long lifetime, so this can be ignored if
+   you are able to successfully perform volume mirroring, and table and
+   streams replication operations. However, if you want to clean up the
+   tickets, you can do the following:
+    1. Delete all the tickets with the remote cluster alias in the
+       /opt/mapr/conf/maprserverticket file on the local node.
+    2. Delete all the tickets with the local cluster alias in the
+       /opt/mapr/conf/maprserverticket file on the remote node referenced
+       in the -remoteip parameter.
+    3. Re-run the utility with the server argument to set up the service
+       tickets again.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/TroubleshootingAndRecovering.html#div1entry1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/TroubleshootingAndRecovering.html#div1entry2
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure-crosscluster.sh.html#configure-crosscluster__prereq

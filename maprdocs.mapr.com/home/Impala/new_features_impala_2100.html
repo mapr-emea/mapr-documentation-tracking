@@ -1,0 +1,118 @@
+New Features in Impala 2.10 for MapR
+
+   Impala 2.10.0 for MapR introduces some new features that enhance the
+   behavior and performance of Impala.
+
+Functions
+
+   The following sections provide information about new and improved
+   Impala functions:
+
+String function, replace()
+
+   Faster than regexp_replace() for simple string substitutions.
+
+   Description: replace(string initial, string target, string replacement)
+
+   Purpose: Returns the initial argument with all occurrences of the
+   target string replaced by the replacement string.
+
+   Return type: string
+
+   Usage notes: Because this function does not use any regular expression
+   patterns, it is typically faster than regexp_replace() for simple
+   string substitutions. If any argument is NULL, the return value is
+   NULL. The matching is case-sensitive. If the replacement string
+   contains another instance of the target string, the expansion is only
+   performed once, instead of applying it again to the newly constructed
+   string.
+   Example:
+[localhost:21000] > select replace('hello world','world','earth');
+Query: select replace('hello world','world','earth')
+Query submitted at: 2018-02-08 05:10:11 (Coordinator: http://localhost.lab:25000
+)
+Query progress can be monitored at: http://localhost:25000/query_plan?query_id=5
+e4686bd9b870724:f281e86f00000000
++------------------------------------------+
+| replace('hello world', 'world', 'earth') |
++------------------------------------------+
+| hello earth |
++------------------------------------------+
+Fetched 1 row(s) in 0.02s
+
+Date/time function, last_day()
+
+   For finding the date corresponding to the last day of a particular
+   month.
+
+   Description:last_day(timestamp t)
+
+   Purpose: timestamp
+
+   Usage notes: If the input argument does not represent a valid Impala
+   TIMESTAMP including both date and time portions, the function returns
+   NULL. For example, if the input argument is a string that cannot be
+   implicitly cast to TIMESTAMP, does not include a date portion, or is
+   out of the allowed range for Impala TIMESTAMP values, the function
+   returns NULL.
+   Example:
+[localhost:21000] > select
+> now() as right_now
+> , dayofmonth(now()) as day
+> , extract(day from now()) as also_day
+> , dayofmonth(last_day(now())) as last_day
+> , extract(day from last_day(now())) as also_last_day;
+Query: select now() as right_now
+, dayofmonth(now()) as day
+, extract(day from now()) as also_day
+, dayofmonth(last_day(now())) as last_day
+, extract(day from last_day(now())) as also_last_day
+Query submitted at: 2018-02-08 05:07:59 (Coordinator: http://localhost:25000)
+Query progress can be monitored at: http://localhost:25000/query_plan?query_id=5
+147af5bc88d7632:1e42f5c100000000
++-------------------------------+-----+----------+----------+---------------+
+| right_now | day | also_day | last_day | also_last_day |
++-------------------------------+-----+----------+----------+---------------+
+| 2018-02-08 05:07:59.999909000 | 8 | 8 | 28 | 28 |
++-------------------------------+-----+----------+----------+---------------+
+
+Date/time function, last_day()
+
+   Provides a simple way to get a stable, interoperable representation of
+   a TIMESTAMP value without using a chain of functions to convert between
+   representations and apply a specific timezone.
+
+Other Features
+
+   Impala Query History
+   You can re-execute previously queries via @query_number(from start) or
+   @-query_number(from end):
+[localhost:21000] >@1;
+Rerunning invalidate metadata;
+Query: invalidate metadata
+[localhost:21000] > @-1;
+Rerunning show tables in default;
+Query: show tables in default
+
+   Drop partitions via special symbols (<, >, <>, !=, <=, >=)
+   ALTER TABLE query for DROP partition can use special symbols for drop
+   range of the partitions:
+ALTER TABLE db.table DROP PARTITION (partition<=partition_value);
+
+   CREATE TABLE with SORT BY
+   Introduced SORT BY clause in the CREATE TABLE statement:
+CREATE TABLE sorted_tbl (id int, name char(22), age int) SORT BY (age);
+
+   TRUNK() can now apply to numeric types (FLOAT, DOUBLE, and DECIMAL) in
+   addition to TIMESTAMP
+
+   Although this functionality was already available through the
+   truncate() function, the new signatures for trunc() make it easier to
+   port code from other popular database systems to Impala.
+
+   Support ENUM type for parquet tables
+
+   The CREATE TABLE LIKE PARQUET statement can now handle Parquet files
+   produced outside of Impala and containing ENUM types. The ENUM columns
+   become STRING columns in the target table, and the ENUM values are
+   turned into corresponding STRING values.

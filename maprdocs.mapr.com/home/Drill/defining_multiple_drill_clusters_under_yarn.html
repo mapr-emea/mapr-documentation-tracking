@@ -1,0 +1,61 @@
+Defining Multiple Drill Clusters within YARN
+
+   Complete the following steps to define multiple Drill clusters under
+   YARN:
+    1. Create a new "site" directory under $DRILL_HOME, and create an
+       environment variable for the directory.
+mkdir $DRILL_HOME/<site_name>
+export $<SITE_NAME>_SITE=$DRILL_HOME/<site_name>
+    2. Copy the following configuration files from the existing “site”
+       directory into the new “site” directory:
+          + drill-override.conf
+          + drill-env.sh
+          + drill-on-yarn.conf
+          + distrib-env.sh
+    3. Modify the settings in the drill.exec section of
+       $DRILL_SITE/drill-override.conf to configure the new Drill cluster
+       to act independently of the other Drill cluster(s), or share
+       settings, such as storage plugin configurations. For the new Drill
+       cluster to act independently, give zk.root a distinct name from the
+       existing clusters. In the more advanced scenario where the clusters
+       share configurations, give zk.root the same name as the existing
+       Drill clusters. When the clusters share the same root, they must
+       have distinct cluster-id values. The user, bit, and http ports must
+       have values distinct from all the other Drill clusters.
+       The following example shows a number 1 added to the first digit of
+       the default port numbers, however you can choose any available
+       ports.
+drill.exec: {
+ cluster-id: "drillbits",
+ zk: {
+   root: "<site_name>"
+   connect: "zk-host:5181"
+ }
+
+ rpc {
+   user.server.port: 41010
+   bit.server.port: 41011
+ }
+ http.port: 9047
+}
+
+    4. Modify the drill-on-yarn.conf configuration file for the new
+       cluster. The new cluster must have a distinct name, a distinct
+       upload directory in the file system, and a distinct port number.
+       The following settings in the drill.yarn section must have distinct
+       values for the new cluster:
+drill.yarn: {
+ app-name: "Distinct Cluster Name"
+
+ dfs: {
+   app-dir: "/upload/directory"
+ }
+
+ http : {
+   port: <distinct port number>
+ }
+}
+
+    5. Start the new cluster from the "site" directory that correlates
+       with the new cluster.
+$DRILL_HOME/bin/drill-on-yarn.sh --site $NEW_SITE start

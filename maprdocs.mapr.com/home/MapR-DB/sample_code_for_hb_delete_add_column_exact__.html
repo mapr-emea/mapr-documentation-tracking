@@ -1,0 +1,48 @@
+Delete Specific Cells Example
+
+   This example deletes specific cells that correspond to a specific
+   timestamp.
+nt32_t deleteRowExactTS(std::string table_name, std::string row_key,
+        std::vector<std::string> data, int64_t ts) {
+
+        int32_t retCode = 0;
+        // initialize delete object
+        hb_delete_t del = NULL;
+
+        row_data_t *row_data = (row_data_t *) calloc(1, sizeof(row_data_t));
+        row_data->key = bytebuffer_printf("%s", row_key.c_str());
+        row_data->tablename = bytebuffer_printf("%s",table_name.c_str());
+
+        // create delete object
+        hb_delete_create(row_data->key->buffer, row_data->key->length, &del);
+
+        cell_data_t *prevCell=NULL;
+        // add cells that needs to be deleted
+        for(int t=0; t < (int)data.size(); t++) {
+             vector<string> data_qualifier = split(data.at(t),':');
+             cell_data_t *cell_data= new_cell_data();
+             if(t==0)
+                row_data->first_cell = cell_data;
+             else
+                prevCell->next_cell = cell_data;
+
+             cell_data->columnFamily = bytebuffer_printf("%s",data_qualifier[0].
+c_str());
+             cell_data->columnName = bytebuffer_printf("%s",data_qualifier[1].c_
+str());
+
+             //add column, fam/column/ts to delete the exact version
+             retCode=hb_delete_add_column_exact(del, cell_data->columnFamily->bu
+ffer, cell_data->columnFamily->length,
+             cell_data->columnName->buffer,cell_data->columnName->length,ts);
+             prevCell = cell_data;
+        }
+
+        // set the table name in delete mutation object
+        hb_mutation_set_table(del, (const char *)row_data->tablename->buffer,row
+_data->tablename->length);
+
+        //send the delete request
+        retCode = hb_mutation_send(client, del, delete_callback, row_data);
+        return retCode;
+}

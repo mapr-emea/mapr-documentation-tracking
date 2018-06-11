@@ -1,0 +1,52 @@
+MapR Security (Tickets)
+
+   Drill supports authentication and encryption through the MapR Security
+   (tickets) security mechanism. Authentication is the process of
+   establishing confidence of authenticity. Encryption is the process of
+   converting information or data from plain text into ciphertext to
+   prevent unauthorized access. An administrator can manually configure
+   Drill to use MapR Security. When MapR Security is enabled, all Drill
+   clients, such as JDBC and ODBC, must connect to Drillbits through MapR
+   Security.
+   The MapR Security mechanism secures the communication path between the
+   Drill client, such as JDBC/ODBC and Drillbit, Drillbit and ZooKeeper,
+   and also between Drillbits.
+   Note: The Drill web communication path (web client to web server) does
+   not support MapR Security-based authentication and encryption.
+   Note: The Apache JDBC driver packaged with Drill does not support MapR
+   Security.
+
+   Configuration parameters in the Drill startup configuration file,
+   /opt/mapr/drill/drill-<version>/conf/drill-override.conf, enable or
+   disable authentication and encryption.
+   Prerequisites
+     * Ensure that your MapR cluster is secure. To manually configure
+       secure clusters with MapR security, see [1]Enable Wire-Level
+       Security.
+     * When you configure Drill to use encryption, authentication must
+       also be configured and enabled with the encryption-specific
+       configurations.
+     * For encryption and authentication to work together, the Drill
+       client and Drillbits must all run Drill 1.11 or later. Drill
+       clients running earlier versions of Drill cannot connect to
+       Drillbits when encryption is enabled.
+     * The client-side should have created a user mapr ticket for the
+       authenticating user. See [2]maprlogin for more information.
+
+   Post-requisite
+   You must restart the Drillbit process on each node after you enable
+   security and/or modify the configuration options, as shown:
+$ maprcli node services -name drill-bits -action restart -nodes <node host names
+ separated by a space>
+
+   Download and configure the MapR-specific JDBC or ODBC Drill drivers.
+   See [3]Drill Drivers for more information.
+
+   The following topics provide configuration information to enable
+   authentication and encryption in Drill:
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Enable-wire-level-security.html#enable-wire-level-security
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill_connectors.html#drill_connectors

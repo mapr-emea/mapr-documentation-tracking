@@ -1,0 +1,127 @@
+volume audit
+
+   Enables or disables auditing on the specified volume.
+
+   You must have the fc permission on the cluster to use this command. See
+   [1]acl for details about this permission.
+
+   To learn how to determine whether auditing is enabled for a volume, see
+   [2]Checking Whether Auditing is Enabled for a Directory, File, or
+   MapR-DB Table.
+
+Syntax
+
+   CLI
+
+maprcli volume audit
+   [ -cluster <cluster name> ]
+   -name <volume name>
+   [-dataauditops <+|-operations>]
+   [ -enabled <true|false> ]
+   [ -forceenable true|false ]
+   [ -coalesce <interval in minutes> ]
+
+   REST
+
+          Request Type POST
+          Request URL  http[s]://<host>:<port>/rest/volume/audit?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster The cluster on which the volume is located. This parameter is
+   required if the volume is on a remote cluster. The remote cluster must
+   be listed in the mapr-clusters.conf file for the cluster where you run
+   the command.
+   coalesce The interval of time during which READ, WRITE, or GETATTR
+   operations on one file from one client IP address are logged only once,
+   if auditing is enabled.
+
+   For example, suppose that a client application reads a single file
+   three times in 6 minutes, so that there is one read at 0 minutes,
+   another at 3 minutes, and a final read at 6 minutes. If the coalesce
+   interval is at least 6 minutes, then only the first read operation is
+   logged. However, if the interval is between 4 minutes, then only the
+   first and third read operations are logged. If the interval is 2
+   minutes, all three read operations are logged.
+
+   The default value is 60 minutes. Setting this field to a larger number
+   helps prevent audit logs from growing quickly.
+   dataauditops The comma separated list of filesystem operations to
+   include (specified with a preceding plus sign (+)) and/or exclude
+   (specified with a preceding minus sign (-)) from auditing.
+   Note: If the first operation in the list is to be excluded from
+   auditing, it must be preceded by two minus (--) signs. Subsequent
+   operations to exclude must be preceded by only a single minus (-) sign,
+   whether or not the first operation was included (using a plus (+) sign)
+   or excluded (using two minus (--) signs). If neither sign is specified,
+   the given operation is included for auditing.
+
+   The operations that can be included (+) and/or excluded (-) from
+   auditing are listed [3]here. You can, alternatively, group all the
+   filesystem and table operations using the keyword all, which:
+     * If included (+), cannot be specified with a list of other included
+       operations.
+     * If excluded (-), cannot be specified with a list of other excluded
+       operations.
+
+   Note: You can specify a mixed list of included and excluded operations.
+   There are no changes to operations that are not specified with the
+   command.
+   enabled Enables or disables the auditing of operations within the
+   volume. You must use either this parameter, the -coalesce parameter, or
+   both.
+
+   See [4]Enabling Auditing for the steps to enable auditing on
+   directories, files, and tables in a volume.
+
+   When you set the value to false, auditing of operations within the
+   volume ceases. None of the auditing settings are changed on the
+   directories, files, and MapR-DB tables within the volume. If you later
+   run the maprcli volume audit command with -enabled set to true,
+   auditing begins again on the objects that were already enabled for
+   auditing.
+   forceenable Enables or disables auditing of all directories, files,
+   tables, and streams in the volume whether or not auditing is enabled at
+   the individual file, table, and/or stream level.
+   name The name of the volume.
+
+Examples
+
+   Enable Auditing for a volume
+
+   The following example shows how to enable auditing for the volume
+   “auditVolume”:
+     * [5]CLI
+     * [6]REST
+
+maprcli volume audit -name auditVolume
+
+https://centos26.lab:8443/rest/volume/audit?name=auditVolume
+
+   Modify the list of operations to audit
+
+   The following example shows how to specify the operations to audit.
+   Here, create operation is included for auditing and lookup operation is
+   excluded from auditing. There are no changes to operations that are not
+   specified.
+     * [7]CLI
+     * [8]REST
+
+maprcli volume audit -name sampleAuditVolume -dataauditops +create,-lookup
+
+https://centos26.lab:8443/rest/volume/audit?name=sampleAuditVolume&dataauditops=
+%2Bcreate%2C%2Dlookup
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/acl.html#acl
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/CheckingWhetherAuditingisEnabled.html#CheckingWhetherAuditingisEnabledforaDirectoryFileorMapR-DBTable
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Auditing-FilesystemTableOperations.html#AuditingofFilesystemOperationsandTableOperations
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Auditing-Prerequisites.html#EnablingAuditing
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-audit.html#div1entry1
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-audit.html#div1entry2
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-audit.html#div2entry1
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-audit.html#div2entry2

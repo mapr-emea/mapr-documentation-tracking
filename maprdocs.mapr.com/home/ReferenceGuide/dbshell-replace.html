@@ -1,0 +1,43 @@
+dbshell replace
+
+Description
+
+   The replace command is used to replace a document in a JSON table. The
+   replace command can be used with conditions.
+     * If condition evaluates to true, the document in the table is
+       replaced with the one provided in the command.
+     * If the ID does not exist or replace fails, an error message
+       displays at the terminal.
+
+Parameters
+
+   CAPTION: Table 1.
+
+   replace Options Description
+   *, --t, --table (Required) Table path
+   --id Document ID. For rowID-only conditions, the rowID can be provided
+   either within a condition payload or by using the --id switch. For
+   example, --id id1 is equivalent to --c {"$eq":{"_id":"id1"}}
+   Note: Repeating _ids with a switch and within a condition payload is
+   not allowed.
+   -v, --value (Required) JSON document to insert or replace.
+   -c, --where Condition in JSON format.
+
+Syntax
+
+replace  /tbl  --c {"$and":[
+                             {"_id":{"$eq" : "id1"}},
+                             {"$and":[{"$eq":{"a.b[0].boolean":false}},
+                                      {"$or":[{"$ne":{"a.c.d":5}},
+                                              {"$gt":{"a.b[1].decimal":1},"$lt":
+{"a.b[1].decimal":10}}
+                                             ]}
+                                     ]}
+                           ]
+                   }
+              --value {<document to replace>}
+
+Example
+
+replace /tables/users --id user002 --value '{"first_name":"Jane", "last_name":"D
+oe"}'

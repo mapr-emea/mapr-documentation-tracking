@@ -1,0 +1,130 @@
+Example of Designing Secondary Indexes
+
+   This example illustrates the concepts behind designing your secondary
+   indexes. The example only considers query patterns and does not account
+   for sizing, storage, and updates. Always weigh the benefits of indexes
+   against these other requirements.
+
+   Assume you have a MapR-DB JSON table with the following sample data
+   that contains customer information:
+{
+   "_id": "10000",
+   "FullName": {
+      "LastName": "Smith",
+      "FirstName": "John"
+   },
+   "Address": {
+      "Street": "123 SE 22nd St.",
+      "City": "Oakland",
+      "State": "CA",
+      "Zipcode": "94601-1001"
+   },
+   "Gender": "M",
+   "AccountBalance": 999.99,
+   "Email": "john.smith@company.com",
+   "Phones": [
+      {"Type": "Home", "Number": "555-555-1234"},
+      {"Type": "Mobile", "Number": "555-555-5678"},
+      {"Type": "Work", "Number": "555-555-9012"}
+   ],
+   "Hobbies": ["Baseball", "Cooking", "Reading"],
+   "DateOfBirth": "10/1/1985"
+}
+
+   The following table contains a sample set of queries where the third
+   column in the table denotes the fields in the table that are candidates
+   for indexing:
+   Query # Query Candidate Fields for Indexing
+
+   1
+   Find all customers who were born in the 1970’s.
+     * DateOfBirth
+
+   2
+   Find all customers who have an account balance greater than $10K. Order
+   the information in descending order of balance.
+     * AccountBalance
+
+   3
+
+   List customers who live in California, ordering the list by LastName,
+   FirstName.
+
+     * Address.State
+     * FullName.LastName
+     * FullName.FirstName
+
+   4
+   Find the ids and emails of customers who live in a specific zip code
+     * Address.Zip
+
+   5
+   Find customers who live in a specific set of states and have an account
+   balance less than some value
+     * Address.State
+     * AccountBalance
+
+   6
+   Find male customers with the last name starting with the letter "S".
+     * Gender
+     * FullName.LastName
+
+   The following table contains indexes you can create to optimize the
+   queries listed in the previous table and the rationale for doing so:
+                                 Index                                 Rationale
+   Simple index on DateOfBirth
+
+   Optimizes the range condition on DateOfBirth in [1]query 1.
+   Note: When creating this index, there is no need to create a hashed
+   index. It is unlikely that the order of DateOfBirth correlates with the
+   insert order of new data.
+   Simple index on AccountBalance, specified as a descending key
+     * Optimizes the range condition on AccountBalance in [2]query 2
+     * Descending order of key meets the ordering criteria in [3]query 2
+     * Also optimizes the range condition on AccountBalance in [4]query 5
+       in combination with the index on Address.State
+
+   Composite index on:
+     * Address.State
+     * FullName.LastName
+     * FullName.FirstName
+
+     * Optimizes both the equality condition on Address.State and ordering
+       in [5]query 3
+     * Inclusion of the name fields in the index meets [6]query 3 ordering
+     * Also optimizes the IN condition in [7]query 5 when used in
+       combination with the index on AccountBalance
+
+   Simple index with:
+     * Indexed field on Address.Zip
+     * Included fields on:
+          + Id
+          + Email
+
+     * Optimizes equality condition on Address.Zip in [8]query 4
+     * Adding the included fields avoids reading the JSON table in
+       [9]query 4
+
+   Composite index on:
+     * Gender
+     * FullName.LastName
+
+     * Optimizes equality condition on Gender and pattern matching
+       condition on FullName.LastName for [10]query 6
+     * Specifying Gender as the leading key in combination with
+       FullName.LastName results in more selective index lookups for
+       [11]query 6
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query2
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query2
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query5
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query3
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query3
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query5
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query4
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query4
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query6
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query6

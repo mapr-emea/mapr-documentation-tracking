@@ -1,0 +1,102 @@
+Hue 3.12.0-1707 Release Notes
+
+   This section provides reference information, including new features,
+   patches, known issues, and limitations for Hue 3.12.0-1707.
+
+   The notes below relate specifically to the MapR Distribution for Apache
+   Hadoop. You can find additional information on this [1]changelog or the
+   [2]Hue homepage.
+   Version                       3.12.0
+   Release Date                  August 2017
+   MapR Version Interoperability See [3]MEP Components and OS Support
+   Source on GitHub              [4]https://github.com/mapr/hue.git
+   GitHub Release Tag            3.12.0-mapr-1707
+   Package Names
+
+   See [5]Package Names for MapR Expansion Packs (MEPs)
+
+New in This Release
+
+   No new features.
+
+Patches
+
+   This MapR release includes the following patches on the base release:
+   GitHub Commit Number Date (YYYY-MM-DD) MapR Patch Number and
+   Description
+   8b30312 2017-05-11 MAPR-27012 [Hue 3.12] Refactor how Interpreters are
+   disabled in Notebook UI
+   3fa4304 2017-05-24 MAPR-27502 [Hue 3.12] Failed to get result size for
+   Hive snippets
+   c733979 2017-05-26 MAPR-27503 [Hue 3.12] Hue cannot connect to RM API
+   on first run on secure cluster
+   217651f 2017-06-07 MAPR-27488 [HUE-3.10] Unable to access saved
+   notebook after upgrade from HUE-3.9 to HUE-3.10 (fix for 3.12.0)
+   939057f 2017-06-13 MAPR-27758 [Hue 3.12] Cannot install Impala examples
+   when impersonation is enabled
+   b49f950 2017-06-13 MAPR-27616 User with read permissions for Notebook
+   can remove another's permissions (fix for 3.12.0)
+   b7b32ea 2017-06-19 MAPR-27973 [Hue 3.12] Hue error when execute migrate
+   to empty DB
+   d5cbe8 2017-06-19 APR-27972 [Hue 3.12] Test user cannot run jobs via
+   Job Designer
+   eedf9ca 2017-06-22 MAPR-28019 [Hue 3.12] User cannot edit workflows in
+   Job Designer
+   0476f17 2017-06-22 MAPR-28020 [Hue 3.12] Problem with layout in Oozie
+   coordinator submit window
+   3361e28 2017-06-22 MAPR-28022 [Hue 3.12] User with privileges for use
+   only notebooks has empty popup "Query Editor"
+
+   For complete details, refer to the commit log for this project in
+   GitHub.
+
+Known Issues and Limitations
+
+     * Livy is supported only for use with Hue. The Livy home directory is
+       /opt/mapr/hue-livy/hue-livy-3.12.0/.
+     * MapR-28087: Hue Livy cannot use Hive Interpreter. To work around
+       this issue, use cluster mode. Set livy.spark.deployMode=cluster in
+       {LIVY_CONF}/livy.conf.
+     * MapR does not support the integration between Hue 3.12.0 and the
+       following components:
+          + Solr Search
+          + ZooKeeper
+     * Integration between Hue 3.12.0 and Sentry 1.7 is supported on
+       secure clusters that use Kerberos authentication, but it is not
+       supported on secure clusters that use MapR-SASL authentication.
+     * MapR-18668: Hue does not work on RedHat 7 / CentOS 7 / SuSE 12 when
+       it is configured to use a MySQL database. When this issue occurs,
+       the MapR Control System (MCS) displays the "Hue Down Alarm." Use
+       this workaround:
+         1. Run the following commands to install MariaDB and the RedHat 6
+            compatibility library:
+yum install mariadb
+rpm -ivh --nodeps http://yum.mariadb.org/$(rpm -qa mariadb|cut -d-
+-f2)/rhel7-amd64/rpms/MariaDB-$(rpm -qa mariadb|cut -d-
+-f2)-centos7-x86_64-compat.rpm
+         2. Run the following commands to reconfigure Hue:
+cd /opt/mapr/hue/hue-3.12.0/
+source ./build/env/bin/activate
+hue syncdb --noinput
+hue migrate
+deactivate
+         3. Run the following command to restart Hue:
+maprcli node services -name hue -action restart -nodes <node_with_hue>
+     * MapR-2561: DB Query in Hue cannot execute more than one query.
+     * Hue-6074: [notebook] Execute snippets as Oozie batch.
+
+   Note: Hue uses [6]python parquet lib to read the parquet files. This
+   library does not support all possible parquet formats.
+
+Resolved Issues
+
+   None.
+
+References
+
+   1. http://cloudera.github.io/hue/docs-3.9.0/release-notes/release-notes-3.9.0.html
+   2. http://gethue.com/
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/r_MEP_components.html#reference_pk5_5xb_tw
+   4. https://github.com/mapr/hue.git
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/EcosystemRN/MEPPkgNames.html#concept_zkc_jlh_hy
+   6. https://pypi.python.org/pypi/parquet/1.1

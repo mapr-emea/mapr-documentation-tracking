@@ -1,0 +1,27 @@
+Example: Hive Impersonation
+
+   This example creates a table and loads data from the Beeline client,
+   then lists the table to verify that it is owned by the impersonated
+   user.
+beeline> !connect jdbc:hive2://hostname:10000/default
+scan complete in 2ms
+Connecting to jdbc:hive2://hostname:10000/default
+Enter username for jdbc:hive2://hostname:10000/default: userfoo
+Enter password for jdbc:hive2://hostname:10000/default: ****
+Connected to: Hive (version 0.11-mapr)
+Driver: Hive (version 0.11-mapr)
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+0: jdbc:hive2://hostname:10000/default> create table voter_table1(voternum INT,n
+ame string,age tinyint,registration string,contributions float,voterzone smallin
+t);
+No rows affected (0.22 seconds)
+0: jdbc:hive2://hostname:10000/default> load data local inpath '/root/userfoo/hi
+ve/voter' into table voter_table1;
+No rows affected (0.463 seconds)
+
+   To verify the ownership of the example table, run the following
+   command:
+[user@host ~]# hadoop fs -ls /user/hive/warehouse/voter_table1
+Found 1 items
+-rwxr-xr-x   3 userfoo users       8576 2013-10-18 14:48 /user/hive/warehouse/vo
+ter_table1/voter

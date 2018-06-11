@@ -1,0 +1,132 @@
+Mirroring Topics from an Apache Kafka Cluster to a MapR Cluster
+
+   You can use MirrorMaker to mirror data continuously from Apache Kafka
+   clusters to MapR streams in MapR clusters.
+     * Because this procedure requires that MirrorMaker be run from the
+       MapR cluster, ensure that the mapr-kafka package is installed on
+       the node that you choose to run MirrorMaker from.
+     * Configure the node as a MapR client.
+     * Ensure that the ID of the user that runs MirrorMaker has the
+       produceperm and topicperm permissions on the destination MapR
+       stream.
+
+   Alternatively, you can stop mirroring after you migrate the consumers
+   and producers for your applications from your Apache Kafka cluster to
+   your MapR cluster where the stream is located. See in [1]Migrating
+   Apache Kafka 0.9.0 Applications to MapR-ES for details. After you start
+   MirrorMaker, it launches a configurable number of consumer threads to
+   read topics that are in a Kafka cluster and a number of producers to
+   write the messages from those topics into topics in a MapR stream in a
+   MapR cluster.
+
+   Figure: Mirroring from Apache Kafka to MapR-ES
+   [kafka_to_streams_1.png]
+
+   Before running MirrorMaker, you create a file that contains the
+   required configuration parameters for the consumers that read from the
+   Apache Kafka cluster. You also create a file that contains the required
+   configuration parameters for the producers that publish to the stream
+   in the MapR cluster. You point to these files in the MirrorMaker
+   command.
+
+   You can either specify the topics to mirror or the topics not to
+   mirror. In the former case, you use the whitelist parameter to provide
+   a Java-style regular expression that matches the names of the topics
+   that you want to mirror. In the latter case, you use the blacklist
+   parameter to provide a Java-style regular expression that matches the
+   names of the topics that you do not want to mirror.
+    1. Create a file that contains the required properties and values for
+       consumers to use. When you run MirrorMaker, you point to this file
+       by using the consumer.config parameter.
+       The descriptions of these properties, except for the last, are
+       taken from the documentation for Apache Kafka. The last property is
+       not documented.
+
+   Property Description
+   zookeeper.connect The IP address and port number of the ZooKeeper
+   instance for the Apache Kafka cluster.
+   zookeeper.connection.timeout.ms The max time that the MirrorMaker waits
+   to establish a connection to Zookeeper.
+   group.id A unique string that identifies the consumer group the
+   consumers started by MirrorMaker belong to.
+   bootstrap.servers A list of host/port pairs to use for establishing the
+   initial connection to the Kafka cluster. The client will make use of
+   all servers irrespective of which servers are specified here for
+   bootstrapping—this list only impacts the initial hosts used to discover
+   the full set of servers. This list should be in the form
+   host1:port1,host2:port2,.... Since these servers are just used for the
+   initial connection to discover the full cluster membership (which may
+   change dynamically), this list need not contain the full set of servers
+   (you may want more than one, though, in case a server is down).
+    2. Create a file that contains the required properties and values for
+       producers to use. When you run MirrorMaker, you point to this file
+       by using the producer.config parameter.
+
+   Property Description
+   streams.producer.default.stream Specifies the path and name of the
+   stream in the MapR cluster that the topics will be mirrored to.
+   auto.create.topics.enable Set the value to true. The producers will
+   therefore be able to create topics in the destination stream
+   automatically.
+    3. Run MirrorMaker with this command to start mirroring topics from
+       Apache Kafka to MapR-ES:
+       Syntax
+/opt/mapr/kafka/kafka-0.9.0/bin/kafka-run-class.sh kafka.tools.MirrorMaker
+--consumer.config <File that lists consumer properties and values>
+--num.streams <Number of consumer threads>
+--producer.config <File that lists producer properties and values>
+[--whitelist=<Java-style regular expression for specifying the topics to mirror>
+]
+[--blacklist=<Java-style regular expression for specifying the topics not to mir
+ror>]
+
+   Parameter Description
+   consumer.config The path and name of the file that lists the consumer
+   properties and their values.
+   num.streams Use this option to specify the number of mirror consumer
+   threads to create. Note that if you start multiple mirror maker
+   processes then you may want to look at the distribution of partitions
+   on the source cluster. If the number of consumption streams is too high
+   per mirror maker process, then some of the mirroring threads will be
+   idle by virtue of the consumer rebalancing algorithm (if they do not
+   end up owning any partitions for consumption).
+   producer.config The path and name of the file that lists the producer
+   properties and their values.
+   whitelist A Java-style regular expression for specifying the topics to
+   copy. Commas (',') are interpreted as the regex-choice symbol ('|').
+
+   If you use this parameter, do not use the blacklist parameter.
+   blacklist A Java-style regular expression for specifying the topics not
+   to copy. Commas (',') are interpreted as the regex-choice symbol ('|').
+
+   If you use this parameter, do not use the whitelist parameter.
+
+Example
+
+   In this example, the file that lists the properties and values for the
+   consumers that will read messages from the topics in Apache Kafka is
+   named consumers.props. It contains this list:
+zookeeper.connect=10.10.102.34:2181
+zookeeper.connection.timeout.ms=6000
+group.id=cg.1
+bootstrap.servers=10.10.100.87:9093
+shallow.iterator.enable=false
+
+   The file that lists the properties and values for the producers that
+   will publish messages to topics in MapR-ES is named producers.props. It
+   contains this list:
+streams.producer.default.stream=/newStream
+auto.create.topics.enable=true
+
+   The topics to mirror all have names that begin with na_west. When
+   running the command, we can use "na_west*" as the regular expression to
+   use for the whitelist parameter.
+
+   Here is the command:
+bin/kafka-run-class.sh kafka.tools.MirrorMaker --consumer.config consumers.props
+
+--num.streams 2 --producer.config producers.props --whitelist="na_west*"
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/migrating_kafka_applications_to_mapr_streams.html#migrating_kafka_applications_to_mapr_streams

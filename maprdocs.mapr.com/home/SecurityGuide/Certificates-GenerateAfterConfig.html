@@ -1,0 +1,48 @@
+Re-running configure.sh after Configuration
+
+   If the configure.sh script is initially run without the -genkeys
+   option, the script generates a ssl_keystore file for use by the web
+   server for the MapR Control System (MCS).
+
+   Then if the configure.sh script is re-run with the -genkeys option, the
+   system detects the existing ssl_keystore file and exits with an error
+   to prevent inadvertent deletion or reuse of the ssl_keystore file.
+   Note: For general information on certificates, see [1]SSL Certificates.
+   To re-run configure.sh on clusters without security features enabled:
+    1. Manually delete the ssl_keystore file on each node.
+    2. Run the configure.sh -genkeys command.
+
+   Note: The contents of the ssl_keystore file are unique to each node.
+   To re-run configure.sh on clusters where the contents of the
+   ssl_keystore file are customized:
+    1. Run the configure.sh -genkeys -nocerts command to preserve your
+       customizations.
+
+SSL Keys Error Message
+
+   The error message will look similar to the following example:
+/opt/mapr/server/configure.sh
+        -secure -genkeys -C $CLDB_GRP -Z $ZK_GRP -RM $RM -HS
+        $HISTORYSERVER
+        <hostname1>: Configuring Hadoop-2.x at
+        /opt/mapr/hadoop/hadoop-2.x
+        <hostname1>: Done configuring Hadoop
+        <hostname1>: CLDB node list:
+        <hostname1>:7222,<hostname2>:7222,<hostname3>:7222
+
+        <hostname1>: Zookeeper node
+        list: <hostname1>:5181,<hostname2>:5181,<hostname3>:5181
+
+        <hostname1>: Node setup configuration: cldb fileserver
+        historyserver nfs nodemanager resourcemanager webserver
+        zookeeper
+        <hostname1>: Log can be found at:
+        /opt/mapr/logs/configure.log
+        <hostname1>: /opt/mapr/conf/ssl_keystore already exists
+        <hostname1>: ERROR: could not generate ssl keys. See log file
+        for more details
+        clush: <hostname1>: exited with exit code 1
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Certificates.html

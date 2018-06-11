@@ -1,0 +1,123 @@
+Saving an Apache Spark DataFrame to a MapR-DB JSON Table
+
+   To save a DataFrame in MapR-DB, invoke the saveToMapRDB method on the
+   DataFrame object (Scala). This returns a DataFrameWriter object, from
+   which you can invoke the saveToMapRDB method. For Java and Python,
+   invoke the saveToMapRDB method on the MapRDBJavaSession object or
+   SparkSession object, respectively.
+     * [1]Scala
+     * [2]Java
+     * [3]Python
+
+import com.mapr.db.spark.sql._
+
+df.write.saveToMapRDB("/tmp/userInfo")
+
+   For MEP 4.1.0, you can directly invoke the saveToMapRDB method on the
+   DataFrame object:
+def saveToMapRDB(tableName: String, idFieldPath : String = "_id", createTable: B
+oolean = false, bulkInsert:Boolean = false): Unit
+
+import org.apache.spark.sql.SparkSession
+import com.mapr.db.spark.sql._
+
+val df = spark.loadFromMapRDB("/tmp/user_profiles")
+df.saveToMapRDB(tableName, createTable = true)
+
+   For saving a DataFrame(Dataset<Row> ), apply the following method on a
+   MapRDBJavaSession object:
+def saveToMapRDB[T](df: DataFrame[T], tableName: String, idFieldPath: String, cr
+eateTable: Boolean, bulkInsert: Boolean): Unit
+
+import com.mapr.db.spark.sql.api.java.MapRDBJavaSession;
+
+MapRDBJavaSession maprSession = new MapRDBJavaSession(sparkSession);
+Dataset<Row> ds = maprSession.loadFromMapRDB("/tmp/user_profiles");
+
+maprSession.saveToMapRDB(ds, "/tmp/userInfo");
+
+   For saving a DataFrame, apply the following method on a Dataframe:
+def saveToMapRDB(dataframe, table_name, id_field_path = default_id_field, create
+_table = False, bulk_insert = False)
+
+from pyspark.sql import SparkSession
+
+df = spark.loadFromMapRDB("/tmp/user_profiles")
+
+sparkSession.saveToMapRDB(df, table_name, create_table=True)
+
+   The insertToMapRDB API is also supported in Python to insert a
+   DataFrame to a MapR-DB table. PySpark supports only
+   DataFrame(Dataset<Row>):
+   Note: The insertToMapRDB API is available starting in the MEP 4.1.0
+   release.
+     * [4]Python
+
+sparkSession.insertToMapRDB(df, tableName, idFieldPath, bulkInsert)
+
+   Note: The insertToMapRDB API throws an exception if a row with the same
+   ID already exists.
+
+   Normally, the Apache Spark DataFrameWriter class supports the following
+   write modes:
+     * Append
+     * Overwrite
+     * ErrorIfExists
+     * Ignore
+
+   The MapR-DB OJAI Connector for Apache Spark returns an
+   OperationNotSupported exception if you attempt to use one of these
+   modes. The following example returns the error:
+     * [5]Scala
+
+import org.apache.spark.sql.SaveMode
+import com.mapr.db.spark.sql._
+
+df.write.mode(SaveMode.Append).saveToMapRDB("/tmp/userInfo")
+
+   The MapR-DB OJAI Connector for Apache Spark provides the following
+   alternative modes:
+
+   Insert
+          Inserts the data into the MapR-DB table. Throws a DBException if
+          a row with same _id value already exists in the table.
+
+   Overwrite
+          Overwrites the data in the table with the current DataFrame
+          data. This operation drops the table and creates a new table
+          with the data.
+
+   ErrorIfExists
+          Returns an exception (TableExistsException) if the table already
+          exists. Otherwise, creates the table and inserts the data.
+
+   Ignore
+          Ignores the data in the table if the table already exists.
+          Otherwise, creates the table and inserts the data.
+
+   Update
+          Updates the row with the row in the DataFrame, if a row with the
+          same _id already exists in the table. Otherwise, inserts the new
+          row.
+
+   InsertOrReplace
+          Replaces the row with the row in the DataFrame, if a row with
+          the same _id already exists in the table. Otherwise, inserts the
+          new row.
+
+   You cannot specify these modes using Spark’s SaveMode. Doing so results
+   in the same OperationNotSupported exception noted earlier. To use these
+   modes, you must call the option method on a DataFrameWriter object. The
+   following example sets the Insert mode:
+     * [6]Scala
+
+df.write.option("Operation", "Insert").saveToMapRDB("/tmp/usersInfo")
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDataFrameMapRDB.html#div1entry1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDataFrameMapRDB.html#div1entry2
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDataFrameMapRDB.html#div1entry3
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDataFrameMapRDB.html#div2entry1
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDataFrameMapRDB.html#div3entry1
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDataFrameMapRDB.html#div4entry1

@@ -1,0 +1,84 @@
+Use MySQL for the Hive Metastore
+
+   The metadata for Hive tables and partitions are stored in the Hive
+   Metastore. By default, the Hive Metastore stores all Hive metadata in
+   an embedded Apache Derby database in MapR-FS. Derby only allows one
+   connection at a time; if you want multiple concurrent Hive sessions,
+   you can use MySQL for the Hive Metastore.
+   Review the following prerequisites before you begin:
+     * Make sure MySQL is installed on the machine on which you want to
+       run the Metastore, and make sure you are able to connect to the
+       MySQL Server from the Hive machine. You can run the Hive Metastore
+       on any machine that is accessible from Hive. You can test this with
+       the following command:
+mysql -h <hostname> -u <user>
+     * The database administrator must create a database for the Hive
+       metastore data, and the username specified in
+       javax.jdo.option.ConnectionUserName must have permissions to access
+       it. The database can be specified using the ConnectionURL
+       parameter. The tables and schemas are created automatically when
+       the metastore is first started.
+
+   Complete the following steps to configure Hive to use MySQL for the
+   Hive Metastore:
+    1. Update the hive-site.xml in the Hive configuration directory
+       (/opt/mapr/hive/hive-<version>/conf) with the following contents:
+<configuration>
+
+ <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:mysql://localhost:3306/hive?createDatabaseIfNotExist=true</value
+>
+    <description>JDBC connect string for a JDBC metastore</description>
+</property>
+
+ <property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>com.mysql.jdbc.Driver</value>
+    <description>Driver class name for a JDBC metastore</description>
+ </property>
+
+ <property>
+    <name>javax.jdo.option.ConnectionUserName</name>
+    <value>root</value>
+    <description>username to use against metastore database</description>
+ </property>
+
+ <property>
+    <name>javax.jdo.option.ConnectionPassword</name>
+    <value><fill in with password></value>
+    <description>password to use against metastore database</description>
+ </property>
+
+ <property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://localhost:9083</value>
+ </property>
+
+</configuration>
+    2. Run the schematool command as an initialization step.
+/opt/mapr/hive/hive-<version>/bin/schematool -dbType mysql -initSchema
+    3. To connect to an existing MySQL metastore, make sure the
+       ConnectionURL parameter and the Thrift URIs parameters in
+       hive-site.xml point to the metastore's host and port.
+    4. To set a specific port for Thrift URIs, add the command export
+       METASTORE_PORT=<port> into the file hive-env.sh (if hive-env.sh
+       does not exist, create it in the Hive configuration directory).
+       Example:
+export METASTORE_PORT=9083
+    5. Start the Hive Metastore service using one of the following
+       commands:
+       If you want the Hive Metastore to be managed by Warden, the
+       maprcli, and the MCS:
+maprcli node services -name hivemeta -action start -nodes <space delimited list
+of nodes>
+       If you want the Hive Metastore to be managed with standard hive
+       commands:
+/opt/mapr/hive/hive-<version>/bin/hive --service metastore --start
+       You can use also use nohup hive --service metastore to run
+       metastore in the background.
+       Warning: If you have not configured a MySQL Metastore, do not run
+       the Hive shell from a MapR NFS mount location. If you try to do
+       this, Hive will fail. The same problem will occur if you use the
+       hive-site.xml file to configure the Metastore on a MapR NFS mount
+       location. Avoid both of these configurations.

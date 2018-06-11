@@ -1,0 +1,32 @@
+Configure Metric Retention
+
+   By default, OpenTSDB stores two weeks of metrics. Based on your
+   requirements, you can change metric retention period.
+   The following cron job runs each day to purge metrics based on the
+   retention period.
+$min $hour * * * $OTSDB_HOME/bin/tsdb_cluster_mgmt.sh -purgeData >> $OTSDB_HOME/
+var/log/opentsdb/purgeData.log 2>&1
+
+   Complete the following steps to edit the metric retention period:
+    1. Open the
+       /opt/mapr/opentsdb/opentsdb-<version>/bin/tsdb_cluster_mgmt.sh
+       file.
+    2. In the following line, update the value of '2 weeks ago' to the new
+       retention period.
+$OT_HOME/bin/tsdb scan --delete 2000/01/01 $(date --date='2 weeks ago' +'%Y/%m/%
+d') sum $metric
+       For example, to delete metrics from 1/1/2000 to [current date - 2
+       days]:
+$OT_HOME/bin/tsdb scan --delete 2000/01/01 $(date --date='2 days ago' +'%Y/%m/%d
+') sum $metric
+
+   Warning: MapR monitoring uses 2 MB disk space per minute per node when
+   MapR-ES metrics is enabled. This is approximately 3 GB per day on a
+   single node or 7 GB per node per day with a 3X replication. This stream
+   metrics data is automatically deleted every 30 days.
+   Note: For more information, see the [1]OpenTSDB scan command
+   documentation.
+
+References
+
+   1. http://opentsdb.net/docs/build/html/user_guide/cli/scan.html

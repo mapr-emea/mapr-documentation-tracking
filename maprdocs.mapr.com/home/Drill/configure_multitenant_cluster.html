@@ -1,0 +1,102 @@
+Configuring a Multitenant Cluster
+
+   Drill operations are memory and CPU-intensive. Currently, Drill
+   resources are managed outside of any cluster management service, such
+   as the MapR warden service. In a multitenant or any other type of
+   cluster, YARN-enabled or not, you configure memory and memory usage
+   limits for Drill by modifying drill-env.sh as described in the section,
+   "[1]Configuring Drill Memory" in Apache Drill documentation.
+   Configure a multitenant cluster to account for resources required for
+   Drill. For example, on a MapR cluster, ensure warden accounts for
+   resources required for Drill. Configuring drill-env.sh allocates
+   resources for Drill to use during query execution, while configuring
+   the following properties in warden-drill-bits.conf prevents warden from
+   committing the resources to other processes.
+service.heapsize.min=<some value in MB>
+service.heapsize.max=<some value in MB>
+service.heapsize.percent=<a whole number>
+
+   Set the service.heapsize properties in warden.drill-bits.conf
+   regardless of whether you changed defaults in drill-env.sh or not.
+
+   [2]"Configuring Drill in a YARN-enabled MapR Cluster" shows an example
+   of setting the service.heapsize properties. The
+   service.heapsize.percent is the percentage of memory for the service
+   bounded by minimum and maximum values. Typically, users change
+   service.heapsize.percent because using a percentage setting increases
+   or decreases resources according to different node configurations. For
+   more information about the service.heapsize properties, see the
+   section, "[3]warden.<servicename>.conf."
+   You need to statically partition the cluster to designate which
+   partition handles which workload. To configure resources for Drill in a
+   MapR cluster, modify one or more of the files created by the
+   installation process in /opt/mapr/conf/conf.d:
+warden.drill-bits.conf
+warden.nodemanager.conf
+warden.resourcemanager.conf
+
+   Configure Drill memory by modifying warden.drill-bits.conf in YARN and
+   non-YARN clusters. Configure other resources by modifying
+   warden.nodemanager.conf and warden.resourcemanager.conf in a
+   YARN-enabled cluster.
+
+Configuring Drill in a YARN-enabled MapR Cluster
+
+   To add Drill to a YARN-enabled cluster, change memory resources to suit
+   your application. For example, you have 120G of available memory that
+   you allocate to following workloads in a Yarn-enabled cluster:
+
+   File system = 20G Yarn = 20G OS = 8G
+
+   If Yarn does most of the work, give Drill 20G, for example, and give
+   Yarn 60G. If you expect a heavy query load, give Drill 60G and Yarn
+   20G.
+
+   YARN consists of two main services:
+     * ResourceManager: There is at least one instance in a cluster, more
+       if you configure high availability.
+     * NodeManager: There is one instance per node.
+
+   The warden.resourcemanager.conf and warden.nodemanager.conf files set
+   ResourceManager and NodeManager memory to the following defaults:
+service.heapsize.min=64
+service.heapsize.max=325
+service.heapsize.percent=2
+
+   Change these settings for NodeManager and ResourceManager to
+   reconfigure the total memory required for YARN services to run. If you
+   want to place an upper limit on memory, set the
+   YARN_NODEMANAGER_HEAPSIZE or YARN_RESOURCEMANAGER_HEAPSIZE environment
+   variable in
+ /opt/mapr/hadoop/hadoop-2.5.1/etc/hadoop/yarn-env.sh
+
+   You do not set the -Xmx option, allowing memory to grow as needed.
+
+MapReduce Version 2 and other Resources
+
+   You configure memory for each service by setting three values in
+   warden.conf.
+service.command.<servicename>.heapsize.percent
+service.command.<servicename>.heapsize.max
+service.command.<servicename>.heapsize.min
+
+   [4]Configure memory for other services in the same manner. For more
+   information about managing memory in a MapR cluster, see the following
+   sections:
+     * [5]Memory Allocation for Nodes
+     * [6]Cluster Resource Allocation
+
+How to Manage Drill CPU Resources
+
+   Currently, you do not manage CPU resources within Drill. Use Linux
+   [7]cgroups to manage the CPU resources.
+
+References
+
+   1. http://drill.apache.org/docs/configuring-drill-memory/
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/configure_multitenant_cluster.html#ConfiguringaMultitenantCluster__confDrillinYARNCluster
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/wardenservicename.conf.html#wardenservicename.conf
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/wardenservicename.conf.html#wardenservicename.conf
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/MemoryAllocation-Nodes.html#Memory-Allocation-for-Nod-Whenyourunconfigure-d3e67
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Cluster-Resource-Allocation.html#Cluster-Resource-Allocati-InaMapRHadoopcluster-d3e59
+   7. http://en.wikipedia.org/wiki/Cgroups

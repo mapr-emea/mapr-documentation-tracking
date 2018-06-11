@@ -1,0 +1,39 @@
+Configuring Impersonation and Chaining
+
+   Impersonation allows a service to act on behalf of a client while
+   performing the action requested by the client. Chaining is a
+   system-wide setting that applies to all views. Currently, Drill does
+   not provide an option to allow different chain lengths for different
+   views.
+   Complete the following steps on each Drillbit node to enable user
+   impersonation, and set the maximum number of chained user hops that
+   Drill allows:
+    1. Navigate to <drill_installation_directory>/conf/ and edit
+       drill-override.conf.
+    2. Under drill.exec, add the following:
+drill.exec.impersonation: {
+                  enabled: true,
+                  max_chained_user_hops: 3
+  }
+       Alternatively, you can nest impersonation within the drill.exec
+       block, as shown in the following example:
+drill.exec: {
+           cluster-id: "cluster_name",
+           zk.connect: "<hostname>:<port>,<hostname>:<port>,<hostname>:<port>",
+           sys.store.provider.zk.blobroot: "hdfs://",
+           impersonation: {
+             enabled: true,
+             max_chained_user_hops: 3
+           }
+         }
+    3. Set the maximum number of chained user hops.
+    4. In <drill_installation_directory>/conf/drill-env.sh, add one of the
+       following lines:
+          + If the underlying file system has MapR security enabled, add
+            the following line: export
+            MAPR_TICKETFILE_LOCATION=/opt/mapr/conf/mapruserticket
+          + If the underlying file system is not secure, add the following
+            line: export MAPR_IMPERSONATION_ENABLED=true
+    5. Restart the Drillbit process on each Drill node.
+maprcli node services -name drill-bits -action restart -nodes <node-hostnames-se
+parated-by-a-space> -f

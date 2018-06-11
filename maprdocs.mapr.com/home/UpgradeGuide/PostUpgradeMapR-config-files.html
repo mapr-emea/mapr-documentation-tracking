@@ -1,0 +1,57 @@
+Step 2: Manually Update Configuration Files
+
+   After upgrading MapR Core without the MapR Installer (using a manual
+   offline or rolling upgrade method), update your configuration files.
+   Note: This task is applicable to all manual upgrade methods: offline
+   and rolling upgrades.
+   Important: After upgrading MapR and before enabling new features, all
+   nodes in your cluster must be upgraded, all configuration files must be
+   updated, and, if you are upgrading from 5.0 or earlier, the Base
+   License file must be manually updated. See [1]Step 3: Manually Update
+   your License.
+
+   To manually update the configuration files:
+    1. On all nodes, manually merge new configuration settings from the
+       /opt/mapr/conf.new/warden.conf file into the
+       /opt/mapr/conf/warden.conf file.
+    2. On all nodes, manually merge new configuration settings from the
+       files in the /opt/mapr/conf/conf.d.new/ directory to the files in
+       the /opt/mapr/conf/conf.d/ directory.
+    3. Manually merge the port and authentication configuration
+       information in the /opt/mapr/conf/web.conf directory from the
+       pre-6.0 MapR version to the /opt/mapr/apiserver/conf/properties.cfg
+       file of the upgraded MapR version.
+       For example, the following from the /opt/mapr/conf/web.conf file
+       from the pre-6.0 version must be manually copied over to the
+       /opt/mapr/apiserver/conf/properties.cfg file of the new version:
+# HTTPS Settings
+mapr.webui.https.port=8443
+mapr.rest.auth.methods=kerberos,basic // if kerberos auth
+    4. Manually merge new configuration settings in
+       /opt/mapr/conf/fuse.conf file with custom settings in
+       /opt/mapr/conf/fuse.conf.backup file and restart FUSE for the
+       settings to take effect.
+       After the upgrade, on all supported operating systems other than
+       Ubuntu, the new fuse.conf file and a backup copy of the fuse.conf
+       file from prior version named fuse.conf.backup are available in the
+       /opt/mapr/conf directory. You can find the new parameters with
+       default values in the new fuse.conf file and your custom settings
+       from the prior version in the fuse.conf.backup file. On Ubuntu, you
+       can find the new fuse.conf file in the /opt/mapr/conf directory and
+       by default, there is no backup copy of the fuse.conf file from
+       prior version unless you created one before upgrade.
+
+   Note: When hadoop common is updated along with MapR Core, a new
+   directory is created for the new hadoop common version and the
+   configuration files in the existing /opt/mapr/hadoop/hadoop-2.x.x
+   directory are automatically copied into the active directory associated
+   with the new hadoop 2.x.x directory. For example, when you upgrade from
+   4.1 to 5.x, configuration files that were in the hadoop-2.5.1 directory
+   are copied into the hadoop-2.7.1 directory.
+   Important: If you are upgrading from 4.0.1, update scripts that point
+   to files within the /opt/mapr/hadoop-2.4.1 directory to point to the
+   new hadoop 2.x directory.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/PostUpgradeMapR-license.html

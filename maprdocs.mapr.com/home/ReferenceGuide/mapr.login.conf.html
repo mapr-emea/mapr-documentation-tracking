@@ -1,0 +1,46 @@
+mapr.login.conf
+
+   The MapR Converged Data Platform uses the Java Authentication and
+   Authorization Service (JAAS) to control security features. The
+   /opt/mapr/conf/mapr.login.conf file specifies configuration parameters
+   for JAAS. Contact MapR support before changing any parameters in this
+   file other than the ones listed in this document.
+
+The MAPR_SERVER_KERBEROS Stanza
+
+   The CLDB uses this stanza to verify users that are authenticating with
+   Kerberos. This stanza requires the
+   com.sun.security.auth.module.Krb5LoginModule module.
+   Attribute        Default Value                  Description
+   keyTab    "/opt/mapr/conf/mapr.keytab" File path to the keytab file.
+   principal "mapr/my.cluster.com"        The Kerberos principal to use.
+
+The MAPR_WEBSERVER_KERBEROS Stanza
+
+   Web UIs on the cluster use this stanza to evaluate SPNEGO requests.
+   This stanza requires the com.sun.security.auth.module.Krb5LoginModule
+   module.
+   Attribute Default Value Description
+   keyTab "/opt/mapr/conf/mapr.keytab" File path to the keytab file.
+   principal "HTTP/yourhost" The principal must be HTTP. This principal is
+   used to negotiate authentication for Web services over SPNEGO. You can
+   set the value for yourhost manually, but be aware that you must set the
+   principal in the mapr.keytab file to match this value.
+
+The jPam_login Stanza
+
+   The MapR cluster uses this stanza to verify user ID and password
+   authentication to all the servers on the cluster. You can modify this
+   stanza to alter the PAM configuration used by the cluster. The
+   net.sf.jpam.jaas.JpamLoginModule module is sufficient for this stanza.
+   There are three values for the service_name parameter, and the module
+   statement is repeated for each service.
+   Attribute Default Value Description
+
+   serviceName
+   "sudo", "sshd", and "mapr-admin" The PAM configurations to use for
+   validating passwords.
+
+   The Server, Client, Server_simple, Client_simple, and hadoop_maprsasl
+   stanzas control important aspects of your cluster's stability. Consult
+   with MapR support before modifying these stanzas.

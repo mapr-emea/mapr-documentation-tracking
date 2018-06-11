@@ -1,0 +1,44 @@
+Common Features of Audit Logs for Filesystem, Table, and Stream Operations
+
+   Entries for audit logs are initially held in memory until 128
+   operations have been logged or 10 seconds have elapsed, whichever
+   happens first. At that point, the new log entries are flushed to disk.
+
+   Audit logs are in JSON format, so they can be queried by Drill or
+   processed by other third-party tools or your own scripts.
+
+   Audit logs are readable only by the mapr and root users on the cluster
+   where the logs are located. These users can also copy and delete audit
+   logs.
+
+   The status field in every log entry shows the status of the attempted
+   operation. The status codes are taken from the Linux errno.h file. For
+   a list of these codes, see [1]Status Codes That Can Appear in Audit
+   Logs.
+
+   Audit logs use Coordinated Universal Time (UTC) in the records of
+   audited operations.
+
+   When operations are performed on directories, files, or tables that are
+   being audited, the full names for those objects, as well as the current
+   volume and the name of the user performing the operation, are not
+   immediately available to the auditing feature. What are immediately
+   available are IDs for those objects and users. Converting IDs to names
+   at run-time would be costly for performance. Therefore, audit logs
+   contain file identifiers (FIDs) for directories, files, and tables;
+   volume identifiers for volume; and user identifiers (UIDs) for users.
+
+   You can resolve identifiers into names by using the [2]expandaudit
+   utility. This utility creates a copy of the log files for a specified
+   volume, and in that copy are the names of the filesystem objects,
+   users, and volumes that are in the audit log records. You can then
+   query or process the copy.
+   Note: There will be an entry in the audit log for each IP address on a
+   node. For example, suppose a node with multiple IP addresses. The audit
+   log on this node may show multiple entries of the same operation, each
+   associated with a different IP address.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/AuditLogs-StatusCodes.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/r_expand_audit_logs.html#reference_xzd_cpj_vt

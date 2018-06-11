@@ -1,0 +1,109 @@
+ResourceManager Recovery Properties
+
+   The following table describes the configuration properties for
+   ResourceManager recovery:
+   Property Description
+   yarn.resourcemanager.recovery.enabled
+
+   Enables the Resourcemanager to recovery based on the information in the
+   ResourceManager state store.
+
+   The default, set by configure.sh, is true.
+   yarn.resourcemanager.am.max-attempts
+
+   The maximum number of application attempts. This is a global setting
+   for all ApplicationMaster nodes.
+
+   You can configure an individual maximum number of application attempts
+   for each ApplicationMaster node, but this property sets a global upper
+   bound that overrides the individual node configuration.
+
+   The default, set in yarn-default.xml, is 2.
+
+   mapreduce.am.max-attempts
+   The maximum number of MapReduce application attempts. If this value is
+   larger than the value set by the ResourceManager, the ResourceManager
+   value will override this value. The default number is set to 2, to
+   allow at least one retry for AM. This property is set in
+   mapred-default.xml.
+   yarn.resourcemanager.fs.state-store.uri
+
+   URI pointing to the location of the FileSystem path where the
+   ResourceManager state is stored.
+
+   The default value is configured to the path for the ResourceManager
+   volume (/var/mapr/cluster/yarn/rm/system).
+
+   If the FileSystem name is not provided, the system uses the value
+   specified in the fs.default.name specified in the core-site.xml file.
+   yarn.resourcemanager.fs.state-store.retry-policy-spec
+
+   Specifies the retry policy for the MapR-FS client.
+
+   This policy is specified in pairs of values for the sleep time, in
+   milliseconds, and number of retries.
+
+   Each pair is enclosed in parentheses, such as (1000,20), (2000,30).
+
+   The previous example sleeps for 1000 milliseconds for twenty retries,
+   then thirty more retries 2000 milliseconds apart.
+
+   The default, set in yarn-default.xml, is (2000,500).
+   yarn.resourcemanager.store.class
+
+   The class name of the state-store to be used for saving
+   application/attempt state and the credentials.
+
+   The available state-store implementations are
+   org.apache.hadoop.yarn.server.resourcemanager.recovery.ZKRMStateStore,
+   a ZooKeeper based state-store implementation, and
+   org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStat
+   eStore, a state-store implementation based on MapR-FS.
+
+   The default, yarn-default.xml, is
+   org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStat
+   eStore.
+   yarn.resourcemanager.state-store.max-completed-applications
+
+   The maximum number of completed applications that the state store
+   retains, which is a number less than or equal to
+   ${yarn.resourcemanager.max-completed-applications}.
+
+   The default value is 10000. This setting ensures that the applications
+   kept in the state store are consistent with the applications in
+   ResourceManager memory.
+
+   Any value larger than
+   ${yarn.resourcemanager.max-completed-applications} is reset to the
+   default.
+
+   The value of this property affects ResourceManager recovery
+   performance.Typically, a smaller value optimizes performance for
+   recovery.
+   yarn.resourcemanager.zk-address
+
+   A comma-separated list of Host:Port pairs. Each corresponds to a
+   ZooKeeper server, such as 127.0.0.1:5181,127.0.0.1:5181,127.0.0.1:5181.
+
+   These hosts are used by the ResourceManager to store state.
+   yarn.resourcemanager.zk-state-store.parent-path The full path of the
+   root znode where ResourceManager state is stored. The default value
+   is/rmstore.
+   yarn.resourcemanager.zk-num-retries
+
+   Number of times the ResourceManager tries to connect to the ZooKeeper
+   server when the connection is lost.
+
+   The default value is 500.
+   yarn.resourcemanager.zk-retry-interval-ms The interval between retries,
+   in milliseconds, when connecting to a ZooKeeper server. The default
+   value is 2000.
+   yarn.resourcemanager.zk-timeout-ms
+
+   The ZooKeeper session timeout in milliseconds. The ZooKeeper server
+   uses this configuration to determine session expiration.
+
+   Sessions expire when the server does not receive a heartbeat from the
+   client within the session timeout period. The default value is 10000.
+   yarn.resourcemanager.zk-acl ACLs that set permissions on ZooKeeper
+   znodes. The default value is world:anyone:rwcda

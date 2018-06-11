@@ -1,0 +1,35 @@
+Direct Shuffle on YARN
+
+   During the shuffle phase of a MapReduce application, MapR writes to a
+   MapR-FS volume limited by its topology to the local node instead of
+   writing intermediate data to local disks controlled by the operating
+   system. This improves performance and reduces demand on local disk
+   space while making the output available cluster-wide.
+
+   The LocalVolumeAuxiliaryService runs in the NodeManager process. The
+   LocalVolumeAuxiliaryService manages the local volume on each node and
+   cleans up shuffle data after a MapReduce application has finished
+   executing.
+   [yarn_direct_shuffle.png]
+    1. The MRAppMaster service initializes the application by calling
+       initializeApplication() on the LocalVolumeAuxiliaryService.
+    2. The MRAppMaster service requests task containers from the
+       ResourceManager. The ResourceManager sends the MRAppMaster
+       information that MRAppMaster uses to request containers from the
+       NodeManager.
+    3. The NodeManager on each node launches containers using information
+       about the node’s local volume from the LocalVolumeAuxiliaryService.
+    4. Data from map tasks is saved in MRAppMaster for later use in
+       TaskCompletion events, which are requested by reduce tasks.
+    5. As map tasks complete, map outputs and map-side spills are written
+       to the local volumes on the map task nodes, generating Task
+       Completion events.
+    6. ReduceTasks fetch Task Completion events from the Application
+       Manager. The task Completion events include information on the
+       location of map output data, enabling reduce tasks to copy data
+       from MapOutput locations.
+    7. Reduce tasks read the map output information.
+    8. Spills and interim merges are written to local volumes on the
+       reduce task nodes.
+    9. MRAppMaster calls stopApplication() on the
+       LocalVolumeAuxiliaryService to clean up data on the local volume.

@@ -1,0 +1,37 @@
+Resolving Username with UID and GIDs During Impersonation
+
+   Lists configuration parameters necessary to configure impersonation.
+
+   To resolve username with UID and GIDs on the server (and not the local
+   operating system registry) during impersonation, you can set the
+   following configuration parameters on the client and CLDB.
+   Parameter Description
+   fs.mapr.server.resolve.user Must be set in core-site.xml file on the
+   client machine. Value can be one of the following:
+     * true - enable
+     * false - disable
+
+   By default, this is disabled. If enabled, client will request CLDB to
+   resolve user with UID/GIDs. For example, to enable this property, your
+   entry in core-site.xml file should be as shown below:
+<configuration>
+  <property>
+    <name>fs.mapr.server.resolve.user</name>
+    <value>true</value>
+  </property>
+</configuration>
+
+   cldb.security.resolve.user Must be set using the config command. Value
+   can be one of the following:
+     * 0 - disable
+     * 1 - enable
+
+   By default, this is disabled. If enabled, CLDB will resolve the user
+   with UID/GIDs for all incoming client requests. For example, to enable
+   this property, run the following command:
+maprcli config save -values {cldb.security.resolve.user:1}
+
+   Note: Both the configuration parameters must be set to enable support
+   for UID/GID resolution on the server. If the configuration parameter is
+   set on the client to resolve on the server and if the configuration
+   parameter is not set on CLDB, the operation will fail with an error.

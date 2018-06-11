@@ -1,0 +1,82 @@
+table cf colperm get
+
+   Lists the Access Control Expressions (ACEs) for a specified column.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce on the volume
+     * [2]lookupdir on directories in the path
+     * adminaccessperm on the table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table cf colperm get
+  -path <path>
+  -cfname <column-family name>
+  [ -name <column name> ]
+  [ -json | -long ]
+
+   REST
+
+curl -k -X GET
+  'http[s]://<host>:<port>/rest/table/cf/colperm/get?path=<path>&cfname=<name>&n
+ame=<name>'
+  -u <username>:<password>
+
+Parameters
+
+   Parameter
+
+   Description
+   path
+
+   The path to the table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under volume1 which has
+       a mount point at /volume1, specify the following path:
+       /volume1/test
+
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named test under volume1
+       in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customer
+
+   cfname
+
+   The name of the column family in which the column is located.
+   name The name of the column that you want to list the ACEs for. If you
+   do not specify the column name, the ACEs for all of the columns in the
+   family are listed.
+   json This command returns multiple levels of data. You must specify to
+   display the output either in JSON or the "long" format to see the full
+   set of information.
+   long This command returns multiple levels of data. You must specify to
+   display the output either in JSON or the "long" format to see the full
+   set of information.
+
+Example
+
+   Lists ACEs for column col1 in table mytable and column family cf1:
+
+   CLI
+
+maprcli table cf colperm get -path /mytable -cfname cf1 -name col1 -long
+
+   REST
+
+curl -k -X GET \
+  'https://r1n1.sj.us:8443/rest/table/cf/colperm/get?path=%2Fmytable&cfname=cf1&
+name=col1' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

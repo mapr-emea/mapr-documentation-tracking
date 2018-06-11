@@ -1,0 +1,127 @@
+stream cursor list
+
+   Lists the cursors for the consumers of a stream.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce on the volume
+     * [2]lookupdir on directories in the path
+     * adminperm, consumeperm, produceperm, or topicperm permission on the
+       stream
+
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+maprcli stream cursor list
+         -path <Stream Path>
+        [ -consumergroup <Consumer Group ID> ]
+        [ -topic <Topic Name> ]
+        [ -partition <Partition ID> ]
+
+   REST http[s]://<host>:<port>/rest/stream/cursor/list?path=<path>
+
+Parameters
+
+   Parameter Description
+   path The path and name of the stream in which the cursors are located.
+   consumergroup Specifies the ID of a particular consumer group that you
+   want to list the cursors for.
+   topic The name of a topic to list committed cursors from. If you also
+   specify the -partition parameter, only the committed cursors in the
+   indicated partition are listed.
+   partition The ID of the partition where the particular cursor that you
+   want to list is located. If you specify this ID, you must also use the
+   -topic parameter.
+
+Sample Output
+
+# maprcli stream cursor list -path /s1 -topic topic0 -json
+{
+        "timestamp":1441883091373,
+        "timeofday":"2015-09-10 04:04:51.373 GMT-0700",
+        "status":"OK",
+        "total":4,
+        "data":[
+                {
+                        "consumergroup":"consume.full",
+                        "topic":"topic0",
+                        "partitionid":"0",
+                        "produceroffset":"249890625",
+                        "committedoffset":"249874696",
+                        "producertimestamp":"2015-09-10T03:48:14.080-0700",
+                        "committedtimestamp":"2015-09-10T03:48:14.080-0700",
+                        "consumerlagmillis":"0"
+                },
+                {
+                        "consumergroup":"consume.half",
+                        "topic":"topic0",
+                        "partitionid":"0",
+                        "produceroffset":"249890625",
+                        "committedoffset":"113214511",
+                        "producertimestamp":"2015-09-10T03:48:14.080-0700",
+                        "consumertimestamp":"2015-09-10T03:48:07.768-0700",
+                        "consumerlagmillis":"6312"
+                },
+                {
+                        "consumergroup":"consume.full",
+                        "topic":"topic0",
+                        "partitionid":"1",
+                        "produceroffset":"249890625",
+                        "committedoffset":"239303323",
+                        "producertimestamp":"2015-09-10T03:48:14.082-0700",
+                        "consumertimestamp":"2015-09-10T03:48:13.581-0700",
+                        "consumerlagmillis":"501"
+                },
+                {
+                        "consumergroup":"consume.half",
+                        "topic":"topic0",
+                        "partitionid":"1",
+                        "produceroffset":"249890625",
+                        "committedoffset":"113214511",
+                        "producertimestamp":"2015-09-10T03:48:14.082-0700",
+                        "consumertimestamp":"2015-09-10T03:48:07.769-0700",
+                        "consumerlagmillis":"6313"
+                },
+        ]
+}
+
+Field Descriptions
+
+   consumergroup
+          The ID of the consumer group to which belongs the consumer that
+          owns the committed cursor.
+
+   committedoffset
+          The last offset that was committed by the consumer that is
+          reading from the listed partition and that belongs to the listed
+          consumer group.
+
+   consumerlagmillis
+          The difference in milliseconds between the timestamp of the last
+          published message and the timestamp of the last message consumed
+          by the consumer.
+
+   consumertimestamp
+          The timestamp of the most recent message that the consumer has
+          consumed.
+
+   partitionid
+          The index number of the partition within the topic. The first
+          partition in a topic has an index of 0, the next partition an
+          index of 1, and so on.
+
+   producermaxoffset
+          The maximum offset produced for this partition.
+
+   topic
+          The name of the topic that the cursor corresponds to.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

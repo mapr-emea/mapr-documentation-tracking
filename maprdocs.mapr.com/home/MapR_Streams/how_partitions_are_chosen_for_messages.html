@@ -1,0 +1,25 @@
+How Partitions are Chosen for Messages
+
+   Because the number of partitions in a topic can change over time,
+   producers regularly refresh the information that they have about the
+   topics that they know of. This refresh interval is controlled by the
+   metadata.max.age.ms configuration parameter.
+
+   Partitions of a topic are identified by their index number. For
+   example, if a topic has four partitions, their IDs are 0, 1, 2, and 3.
+   There following are different ways that partitions are chosen for a
+   message:
+     * If the producer specifies a partition ID or if the
+       StreamsPartitioner interface specifies one, the MapR-ES server
+       publishes the message to the partition specified.
+     * If the producer does not specify a partition ID but provides a key,
+       the MapR-ES server hashes the key and sends the message to the
+       partition that corresponds to the hash.
+     * If neither a partition ID nor a key is specified, the MapR-ES
+       server randomly chooses an initial partition and sends messages in
+       a sticky round robin fashion. .
+       For example, suppose that for topic traffic_sensors, the server
+       chooses Partition 1. The server then accumulates enough messages
+       for an RPC of optimal size and sends the batch of messages to
+       Partition 1. The server then does the same with Partition 2, and so
+       on, eventually returning to Partition 1.

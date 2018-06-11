@@ -1,0 +1,164 @@
+Create a Document from a JavaBean
+
+   This topic shows you how to create a new JSON document by passing a
+   JavaBean to the Connection.newDocument(Object bean) method. Through an
+   example, the content shows you a sample JavaBean class, how to create a
+   bean for that class, how to create a JSON document from the bean, and
+   how to convert a JSON document back to a bean.
+
+Sample JavaBean Class
+
+   Suppose that you are using a JavaBean class named ExampleJson:
+package com.example;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Generated;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Generated("org.jsonschema2pojo")
+@JsonPropertyOrder({
+    "a",
+    "b",
+    "array"
+})
+
+public class ExampleJson {
+
+    @JsonProperty("a")
+    private Double a;
+    @JsonProperty("b")
+    private String b;
+    @JsonProperty("array")
+    private List<Object> array = new ArrayList<Double>();
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Objec
+t>();
+
+    /**
+      *
+      * @return
+      * The a
+      */
+    @JsonProperty("a")
+    public Double getA() {
+        return a;
+    }
+
+    /**
+      *
+      * @param a
+      * The a
+      */
+    @JsonProperty("a")
+    public void setA(Double a) {
+        this.a = a;
+    }
+
+    /**
+      *
+      * @return
+      * The b
+      */
+    @JsonProperty("b")
+    public String getB() {
+        return b;
+    }
+
+    /**
+      *
+      * @param b
+      * The b
+      */
+    @JsonProperty("b")
+    public void setB(String b) {
+        this.b = b;
+    }
+
+    /**
+      *
+      * @return
+      * The array
+      */
+    @JsonProperty("array")
+    public List<Object> getArray() {
+        return array;
+    }
+
+    /**
+      *
+      * @param array
+      * The array
+      */
+    @JsonProperty("array")
+    public void setArray(List<Object> array) {
+        this.array = array;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+}
+
+Create a Bean
+
+   You can create a bean for the ExampleJson class with the following
+   code:
+ExampleJson bean = new ExampleJson();
+
+bean.setA(1);
+bean.setB("aString");
+
+List arrList = new ArrayList();
+arrList.add(1);
+arrList.add(2);
+arrList.add("arrStr");
+
+Map arrMap = new HashMap();
+arrMap.put("c","arrMapStr");
+arrList.add(arrMap);
+bean.setArray(arrList);
+
+Create a New Document from a Bean
+
+   After creating the ExampleJson bean, you can create a JSON document
+   using the bean with the following call:
+Document pojoDoc = connection.newDocument(bean);
+
+   The document will have the following structure:
+{
+    "a":1,
+    "b":"aString",
+    "array":[
+        1,
+        2,
+        "arrStr",
+        {
+            "c":"arrMapStr"
+        }
+    ]
+}
+
+Create a JavaBean from a JSON Document
+
+   You can also create a JavaBean from a JSON document. For example,
+   suppose you modify the document that you created earlier:
+pojoDoc.set("d","10");
+
+   The following converts the modified document back into an ExampleJson
+   bean:
+ExampleJson bean = pojoDoc.toJavaBean(ExampleJson.class);

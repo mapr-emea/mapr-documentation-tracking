@@ -1,0 +1,41 @@
+Fetch a row that has two cells
+
+APIs used
+
+     * hb_get_add_column(): Adds a column family and optionally a column
+       qualifier to an hb_get_t object.
+     * hb_get_create(): Creates an hb_get_t object and populates the
+       handle get_ptr.
+     * hb_get_send(): Queues the get request. The callback specified by cb
+       is called on completion. Any buffers attached to the get object can
+       be reclaimed only after the callback is received.
+     * hb_get_set_num_versions(): Sets maximum number of latest values of
+       each column to be fetched. This API is optional.
+     * hb_get_set_table(): Sets the name of the table to get data from.
+
+Sequence of steps
+
+    1. Create a row object named rowKey.
+    2. Create a get object.
+    3. Specify the column families and optional column qualifiers to get
+       values from.
+    4. Specify the name of the table.
+    5. Specify the number of versions of the column values to get.
+    6. Queue the get request.
+    7. Wait for the get to complete.
+
+Code
+
+  // fetch a row with row-key="row_with_two_cells"
+  {
+    bytebuffer rowKey = bytebuffer_strcpy("row_with_two_cells");
+    hb_get_t get = NULL;
+    hb_get_create(rowKey->buffer, rowKey->length, &get);
+    hb_get_add_column(get, FAMILIES[0], 1, NULL, 0);
+    hb_get_add_column(get, FAMILIES[1], 1, NULL, 0);
+    hb_get_set_table(get, table_name, table_name_len);
+    hb_get_set_num_versions(get, 10); // up to ten versions of each column
+    get_done = false;
+    hb_get_send(client, get, get_callback, rowKey);
+    wait_for_get();
+  }

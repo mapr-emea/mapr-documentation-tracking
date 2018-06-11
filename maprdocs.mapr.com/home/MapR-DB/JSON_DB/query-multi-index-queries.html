@@ -1,0 +1,93 @@
+Multi-Index Queries
+
+   Indexes benefit queries with multiple filter conditions. The OJAI
+   Distributed Query Service can optimize these queries by creating query
+   plans that scan multiple indexes and take the intersection of the
+   matching documents.
+
+   Scanning multiple indexes is an alternative to using [1]Composite
+   Indexes. The following example illustrates how the OJAI Distributed
+   Query Service does this.
+   Suppose you have a JSON table with an index on the Address.State field,
+   another index on the Address.City field, and the query has the
+   condition:
+{
+  "$and":[
+    {"$lt":{"Address.State":"D"}},
+    {"$gt":{"Address.City":"Oak"}}
+  ]
+}
+
+   The OJAI Distributed Query Service creates a query plan that uses the
+   indexes as follows:
+     * Performs a scan on the first index using the Address.State < "D"
+       condition.
+     * Performs a scan on the second index using the Address.City > "Oak"
+       condition.
+     * Takes the intersection of the document IDs that match both
+       conditions.
+
+   If you do not apply conditions on both Address.State and Address.City
+   in most of your queries, defining separate indexes instead of a single
+   composite field index may be more desirable. With a composite index on
+   fields Address.State and Address.City, the query service does not
+   choose the index unless there is a condition on field Address.State. If
+   there is a condition on Address.State, the query service can choose the
+   composite index. But in order restrict the search on both fields, there
+   must be an equality condition on Address.State. See [2]Equality Queries
+   for further details.
+
+   You can define separate single key indexes as well as a composite
+   index, but this requires more storage and impacts performane
+   throughput. See the sections on [3]storage and [4]throughput
+   considerations in [5]Designing Secondary Indexes for further guidance.
+   The following table illustrates the differences between using a
+   composite index vs multiple indexes. The second column shows the
+   behavior when you have a composite index defined on (Address.State,
+   Address.City). The third column shows the behavior when you have
+   separate simple indexes defined on each field.
+   Filter Condition Composite Index Two Simple Indexes
+{
+  "$and":[
+    {"$eq":{"Address.State":"CA"}},
+    {"$eq":{"Address.City":"Oakland"}}
+  ]
+}
+
+   Index searched using both conditions Separate index searches using each
+   filter condition. Results intersected.
+{
+  "$and":[
+    {"$eq":{"Address.State":"CA"}},
+    {"$ge":{"Address.City":"Oak"}}
+  ]
+}
+
+   Index searched using both conditions Separate index searches using each
+   filter condition. Results intersected.
+{"$eq":{"Address.State":"CA"}}
+
+   Index searched using single filter condition Same as composite index
+   case. But because the simple index has only a single indexed field, it
+   is smaller and more efficient to read.
+{
+  "$and":[
+    {"$ge":{"Address.State":"CA"}},
+    {"$eq":{"Address.City":"Oakland"}}
+  ]
+}
+
+   Index search initiated using only the Address.State condition.
+   Address.City filter applied while reading the index. Separate index
+   searches using each filter condition. Results intersected.
+{"$eq":{"Address.City":"Oakland"}}
+
+   Cannot use index Index searched using single filter condition
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-equality-queries.html#reference_ug4_jbl_f1b
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz__section_ubr_wwv_s1b
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz__section_ggh_wvv_s1b
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz

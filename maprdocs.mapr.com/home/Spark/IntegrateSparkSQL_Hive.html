@@ -1,0 +1,68 @@
+Integrate Spark-SQL (Spark 2.0.1 and later) with Hive
+
+   You integrate Spark-SQL with Hive when you want to run Spark-SQL
+   queries on Hive tables. This information is for Spark 2.0.1 or later
+   users.
+
+   For information about Spark-SQL and Hive support, see [1]Spark Feature
+   Support.
+   Note: If you installed Spark with the MapR Installer, the following
+   steps are not required.
+    1. Copy the hive-site.xml file into the SPARK_HOME/conf directory so
+       that Spark and Spark-SQL recognize the Hive Metastore
+       configuration. Do not create a symbolic link instead of copying the
+       file. You may need to edit the file with settings that are specific
+       to the Spark Thrift server.
+    2. Add 644 permission for the hive-site.xml manually using the
+       following command:
+sudo chmod 644 /opt/mapr/spark/spark-<sparkVersion>/conf/hive-site.xml
+    3. If Hive is configured on Tez (not on MR), you must remove the Tez
+       property from the Spark conf directory hive-site.xml. Delete this
+       entry:
+<property>
+  <name>hive.execution.engine</name>
+  <value>tez</value>
+</property>
+    4. If Hive is configured on PAM, set "hive.metastore.sasl.enabled =
+       true" in the hive-site.xml located in the Spark conf directory.
+    5. Add the following additional properties to the
+       /opt/mapr/spark/spark-<version>/conf/spark-defaults.conf file:
+
+   Property Configuration Requirements
+   spark.yarn.dist.files For Spark on YARN, specify the location of the
+   hive-site.xml:
+/opt/mapr/spark/spark-<spark-version>/conf/hive-site.xml
+
+   spark.sql.hive.metastore.version Specify the Hive version that you are
+   using.
+
+   Note: Even if you are using Hive Metastore 2.1, set the version to
+   1.2.1. Spark only supports Hive Metastore versions up to 1.2.x.
+    6. Depending on whether you plan to run with impersonation, perform
+       one of the following:
+          + Configure user impersonation. See [2]Hive User Impersonation
+            for the steps to configure impersonation in the Spark Thrift
+            server.
+          + Set hive.server2.enable.doAs to false in the hive-site.xml
+            file.
+    7. To verify the integration, run the following command as the mapr
+       user or as a user that mapr impersonates:
+<spark-home>/bin/run-example --master <master> [--deploy-mode <deploy-mode>] sql
+.hive.SparkHiveExample
+       The master URL for the cluster is either spark://<host>:7077 or
+       yarn. The deploy-mode is either client or cluster.
+
+   Note: The default port for both HiveServer 2 and the Spark Thrift
+   server is 10000. Therefore, before you start the Spark Thrift server on
+   a node where HiveServer 2 is running, verify that there is no port
+   conflict.
+   Note: If you plan to access Hive tables that store data in MapR-DB, you
+   need to copy the Hive HBase handler jar into the Spark jars directory.
+   For example:
+cp /opt/mapr/hive/hive-2.1/lib/hive-hbase-handler-2.1.1-mapr-1707.jar /opt/mapr/
+spark/spark-2.1.0/jars/
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SparkFeatureSupport.html#concept_ig3_1pk_w5
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hive/HiveUserImpersonation.html

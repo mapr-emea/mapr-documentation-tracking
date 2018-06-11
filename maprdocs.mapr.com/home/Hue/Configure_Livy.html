@@ -1,0 +1,81 @@
+Configure Livy
+
+   This topic describes how to configure Livy with different Spark modes.
+   Use these steps to configure Livy:
+    1. Modify the livy.conf file
+       (/opt/mapr/hue-livy/hue-livy-<version>/conf/livy.conf):
+         a. Set the livy.server.host and livy.server.port. For example:
+...
+# What host address to start the server on. By default, Livy will bind to all ne
+twork interfaces.
+livy.server.host = node
+
+# What port to start the server on.
+livy.server.port = 8998
+         b. If Spark jobs run in local mode, set the livy.spark.master
+            property:
+...
+# What spark master Livy sessions should use.
+livy.spark.master = local[*]
+...
+         c. If Spark jobs run in YARN mode, set the livy.spark.master and
+            livy.spark.deployMode properties (client or cluster). For
+            example:
+...
+# What spark master Livy sessions should use.
+livy.spark.master = yarn
+# What spark deploy mode Livy sessions should use.
+livy.spark.deployMode = client
+...
+            or
+...
+# What spark master Livy sessions should use.
+livy.spark.master = yarn
+# What spark deploy mode Livy sessions should use.
+livy.spark.deployMode = cluster
+...
+         d. If Spark jobs run in Standalone mode, set the
+            livy.spark.master and livy.spar.deployMode properties (client
+            or cluster). For example:
+…
+# What spark master Livy sessions should use.
+livy.spark.master = spark://node:7077
+# What spark deploy mode Livy sessions should use.
+livy.spark.deployMode = client
+…
+            or
+…
+# What spark master Livy sessions should use.
+livy.spark.master = spark://node:7077
+# What spark deploy mode Livy sessions should use.
+livy.spark.deployMode = cluster
+…
+         e. If Spark jobs run in Mesos mode, set the livy.spark.master
+            property. For example:
+# What spark master Livy sessions should use.
+livy.spark.master = mesos://<mesos-master-node-ip>:5050
+    2. To you want to use impersonation with Livy, set
+       livy.impersonation.enabled to true in livy.conf. For example:
+# If livy should impersonate the requesting users when creating a new session.
+livy.impersonation.enabled = true
+    3. If you want to be able to access Hive through Spark for Livy, you
+       should configure Spark with Hive, and set
+       livy.repl.enableHiveContext to true in livy.conf. For example:
+…
+# Whether to enable HiveContext in livy interpreter, if it is true hive-site.xml
+ will be detected
+# on user request and then livy server classpath automatically.
+livy.repl.enableHiveContext = true
+...
+    4. If you are planning to use PySpark, you will need to set the
+       PYTHONPATH environment variable in livy-env.sh
+       (/opt/mapr/livy/livy-<version>/conf/livy-env.sh):
+...
+export PYTHONPATH=$SPARK_HOME/python/lib/py4j-<version>-
+src.zip:$SPARK_HOME/python/:$PYTHONPATH
+       For example:
+...
+export PYTHONPATH=$SPARK_HOME/python/lib/py4j-0.10.3-
+src.zip:$SPARK_HOME/python/:$PYTHONPATH
+    5. To apply the needed changes, restart the Livy service:
+maprcli node services -name livy -action restart -nodes <livy node>

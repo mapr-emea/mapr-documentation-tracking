@@ -1,0 +1,99 @@
+Updating JSON Documents
+
+   This section contains sample code that updates a JSON document in a
+   MapR-DB JSON table. It also shows the MapR-DB Shell syntax for
+   inserting documents.
+     * [1]Java
+     * [2]dbshell
+
+   The following code is available at [3]OJAI_012_UpdateDocument.java. It
+   does the following:
+    1. Finds a document using the [4]DocumentStore.find method
+    2. Creates a [5]DocumentMutation and updates a field
+    3. Updates the document by calling the [6]DocumentStore.update method
+
+/**
+ * Copyright (c) 2017 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.mapr.ojai.examples;
+
+import org.ojai.store.Connection;
+import org.ojai.store.DocumentMutation;
+import org.ojai.store.DocumentStore;
+import org.ojai.store.DriverManager;
+
+public class OJAI_012_UpdateDocument {
+
+  public static void main(String[] args) {
+
+    System.out.println("==== Start Application ===");
+
+
+    // Create an OJAI connection to MapR cluster
+    final Connection connection = DriverManager.getConnection("ojai:mapr:");
+
+    // Get an instance of OJAI DocumentStore
+    final DocumentStore store = connection.getStore("/demo_table");
+
+    String docId = "user0002";
+
+    // Print the document before update
+    System.out.println( "\t"+ store.findById(docId).getMap("address").toString()
+ );
+
+
+
+    // Create a DocumentMutation to update the zipCode field
+    DocumentMutation mutation = connection.newMutation()
+        .set("address.zipCode", 95196L);
+
+
+    System.out.println("\tUpdating document "+ docId);
+
+    // Update the Document with '_id' = "user0002"
+    store.update(docId, mutation);
+
+    // Print the document after update
+    System.out.println( "\t"+ store.findById(docId).getMap("address").toString()
+ );
+
+
+    // Close this instance of OJAI DocumentStore
+    store.close();
+
+    // close the OJAI connection and release any resources held by the connectio
+n
+    connection.close();
+
+    System.out.println("==== End Application ===");
+  }
+
+}
+
+   The following dbshell command is equivalent to the code example. See
+   [7]dbshell update for more information and examples.
+# mapr dbshell
+maprdb root:> update /demo_table --id user002 --m {"$set":{"address.zipCode":951
+96}}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/update-document.html#div1sect1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/update-document.html#div1sect2
+   3. https://github.com/mapr-demos/ojai-2-examples/blob/master/src/main/java/com/mapr/ojai/examples/OJAI_012_UpdateDocument.java
+   4. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#findById-java.lang.String-
+   5. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentMutation.html
+   6. https://info-dev.lab/apidocs/ojai/61/java/org/ojai/store/DocumentStore.html#update-java.lang.String-org.ojai.store.DocumentMutation-
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-update.html#dbshell-update

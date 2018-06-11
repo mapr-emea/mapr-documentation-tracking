@@ -1,0 +1,134 @@
+Configuring Encryption
+
+   An administrator can enable encryption with MapR Security (tickets).
+   Note: When the sasl_encrypt (for JDBC) or EnforceSaslEncrypt (for ODBC)
+   connection parameter is set to "true" or 1, the Drill client only
+   accepts encrypted connections. If the client tries connecting to a
+   Drillbit with encryption disabled, the connection fails.
+   Note: For client-side configuration, see [1]Drill Drivers.
+
+   Set the encryption options to "true" in
+   /opt/mapr/drill/drill-<version>/conf/drill-override.conf.
+   The following table lists the encryption configuration options with
+   their descriptions and default values:
+   Option Description Default
+   drill.exec.security.user.encryption.sasl.enabled Determines if
+   encryption on the server is enabled for negotiating privacy with the
+   Drill client. false
+   drill.exec.security.bit.encryption.sasl.enabled Determines if the
+   server is enabled for negotiating privacy with another Drillbit. false
+
+   The following sections provide configuration examples for Drill client
+   to Drillbit encryption and Drillbit to Drillbit encryption.
+
+Example 1: Drill Client to Drillbit Connection with MapR Security
+Authentication and Encryption
+
+   In the following server configuration, the Drill client connection to
+   the Drillbit is encrypted using the MapR Security mechanism when the
+   client is running with encryption support.
+   Note: Drill clients running Drill 1.10 and earlier cannot connect to
+   the Drillbit through MapR Securitywith encryption enabled.
+drill.exec {
+            security: {
+                user.auth.enabled: true,
+                auth.mechanisms : ["MAPRSASL"]
+                user.encryption.sasl.enabled : true
+                    }
+                }
+
+   Note: Drill executes all queries as a service or process user when
+   impersonation is disabled.
+
+Example 2: Drillbit to Drillbit Connection with MapR Security Authentication
+and Encryption
+
+   The following configuration authenticates and encrypts the path between
+   Drillbits using the MapR Security mechanism.
+drill.exec {
+              security: {
+                  bit.auth.enabled : true
+                  bit.auth.mechanisms : "MAPRSASL"
+                  bit.encryption.sasl.enabled : true
+              }
+            }
+
+Example 3: Drill Client to Drillbit and Drillbit to Drillbit Connection with
+MapR Security Authentication and Encryption
+
+   The following configuration authenticates and encrypts the path between
+   the Drill client and Drillbit, and between Drillbits using the MapR
+   Security mechanism.
+drill.exec {
+              security: {
+                 user.auth.enabled: true,
+                 auth.mechanisms : ["MAPRSASL"],
+                 user.encryption.sasl.enabled : true
+
+                 bit.auth.enabled : true
+                 bit.auth.mechanism : "MAPRSASL"
+                 bit.encryption.sasl.enabled : true
+                    }
+                }
+
+   Note: Drill executes all queries as a service or process user when
+   impersonation is disabled.
+
+Example 4: Drill Client to Drillbit and Drillbit to Drillbit Connection with
+MapR Security Authentication and Encryption and Impersonation Enabled
+
+   The following configuration authenticates and encrypts the path between
+   the Drill client and Drillbit, and between Drillbits using the MapR
+   Security mechanism.
+drill.exec {
+              security: {
+                 user.auth.enabled: true,
+                 auth.mechanisms : ["MAPRSASL"],
+                 user.encryption.sasl.enabled : true
+
+                 bit.auth.enabled : true
+                 bit.auth.mechanism : "MAPRSASL"
+                 bit.encryption.sasl.enabled : true
+                    },
+            impersonation: {
+                   enabled: true,
+                   max_chained_user_hops: 3
+              }
+          }
+
+   Note: Drill executes all queries as the authenticated (ticket) user
+   when impersonation is enabled.
+
+Example 5: Drill Client to Drillbit Authentication and Encryption Enabled
+using Multiple Mechanisms and Drillbit to Drillbit Authentication using MapR
+Security
+
+   The following configuration authenticates and encrypts the connection
+   between the Drill client and Drillbit using multiple authentication
+   mechanisms, and also authenticates and encrypts the connection between
+   Drillbits using the MapR security mechanism.
+   Note: Plain authentication not supported in this configuration.
+drill.exec {
+              security: {
+                  user.auth.enabled: true,
+                  auth.mechanisms : ["MAPRSASL", "KERBEROS"],
+                  auth.principal : "mapr/_host@REALM.COM",
+                  auth.keytab : "/opt/mapr/conf/mapr.keytab",
+                  user.encryption.sasl.enabled : true,
+                  bit.auth.enabled : true,
+                  bit.auth.mechanism : "MAPRSASL",
+                  bit.encryption.sasl.enabled : true
+                      }
+              impersonation: {
+                  enabled: true,
+                  max_chained_user_hops: 3
+              }
+           }
+
+
+   Note: Drill executes all queries as a service or process user when
+   impersonation is disabled.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill_connectors.html#drill_connectors

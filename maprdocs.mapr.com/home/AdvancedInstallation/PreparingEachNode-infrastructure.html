@@ -1,0 +1,144 @@
+Infrastructure
+
+   This section identifies certain software and settings that contribute
+   to your node's infrastructure.
+
+Network Time
+
+   To keep all cluster nodes time-synchronized, MapR requires software
+   such as a Network Time Protocol (NTP) server (or chrony for RHEL 7) to
+   be configured and running on every node. If server clocks in the
+   cluster drift out of sync, serious problems will occur with certain
+   MapR services. MapR raises a Time Skew alarm on any out-of-sync nodes.
+   For more information about obtaining and installing NTP, see
+   [1]http://www.ntp.org/.
+
+   Advanced: Installing an internal NTP server keeps your cluster
+   synchronized even when an outside NTP server is inaccessible.
+
+System Locale
+
+   Ensure your system locale is set to en_us. For more information about
+   setting the system locale, see [2]this website.
+
+Syslog
+
+   Syslog should be enabled on each node to preserve logs regarding killed
+   processes or failed jobs. Modern versions such as syslog-ng and rsyslog
+   are possible, making it more difficult to be sure that a syslog daemon
+   is present. One of the following commands should suffice:
+syslogd -v
+service syslog status
+
+rsyslogd -v
+service rsyslog status
+
+Default umask
+
+   To prevent significant installation problems, ensure that the default
+   umask for the root user is set to 0022 on all MapR nodes in the
+   cluster. The umask setting is changed in the /etc/profile file, or in
+   the .cshrc or .login file. The root user must have a 0022 umask because
+   the MapR admin user requires access to all files and directories under
+   the /opt/mapr directory, even those initially created by root services.
+
+ulimit
+
+   ulimit is a command that sets limits on the user's access to
+   system-wide resources. Specifically, it provides control over the
+   resources available to the shell and to processes started by it.
+
+   The mapr-warden script uses the ulimit command to set the maximum
+   number of file descriptors (nofile) and processes (nproc) to 64000.
+   Higher values are unlikely to result in an appreciable performance
+   gain. Lower values, such as the default value of 1024, are likely to
+   result in task failures.
+   Warning: The MapR recommended value is set automatically every time
+   Warden is started.
+
+   Depending on your environment, you might want to set limits manually
+   for service accounts used to run I/O-heavy operations rather than
+   relying on Warden to set them automatically using ulimit.
+
+PAM
+
+   Nodes that will run the MapR Control System can take advantage of
+   [3]Pluggable Authentication Modules (PAM) if found. Configuration files
+   in the /etc/pam.d/ directory are typically provided for each standard
+   Linux command. MapR can use, but does not require, its own profile.
+
+Security - SELinux, AppArmor
+
+   SELinux (or the equivalent on other operating systems) must be disabled
+   during the install procedure. If the extra security provided by SELinux
+   is required, it can be enabled in permissive mode after installation,
+   and rules can be defined by observing regular operations while the
+   cluster is running. Please note that SElinux introduces significant
+   complexity and should be managed by an experienced system
+   administrator, outside of MapR support.
+
+TCP Retries
+
+   On each node, set TCP retries for net.ipv4.tcp_retries2 to 5 so that
+   MapR can detect unreachable nodes with less latency.
+   Note: The installation automatically sets TCP retries for
+   net.ipv4.tcp_syn_retries to 4 on each node.
+    1. Edit the file /etc/sysctl.conf and add the following line:
+       net.ipv4.tcp_retries2=5
+    2. Save the file and run:
+       sysctl -p
+
+NFS
+
+   Disable the stock Linux NFS server on nodes that will run the MapR NFS
+   server.
+
+iptables/firewalld
+
+   Enabling iptables on a node may close ports that are used by MapR. If
+   you enable iptables, make sure that [4]required ports remain open.
+   Check your current IP table rules with the following command:
+$ service iptables status
+
+   In CentOS 7, firewalld replaces iptables. To check your current IP
+   table rules, use this command:
+systemctl status firewalld
+
+   To ensure that required ports are available, disable firewalld by using
+   this command:
+systemctl disable firewalld
+
+   Note: .
+
+Transparent Huge Pages (THP)
+
+   For data-intensive workloads, MapR recommends disabling the Transparent
+   Huge Pages (THP) feature in the Linux kernel.
+
+   RHEL Example
+$ echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+
+   CentOS 7 Example
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+
+   Ubuntu Example
+$ echo never > /sys/kernel/mm/transparent_hugepage/defrag
+
+Automated Configuration
+
+   Some users find tools like Puppet or Chef useful to configure each node
+   in a cluster. Make sure, however, that any configuration tool does not
+   reset changes made when MapR packages are later installed.
+   Specifically, do not let automated configuration tools overwrite
+   changes to the following files:
+     * /etc/sudoers
+     * /etc/sysctl.conf
+     * /etc/security/limits.conf
+     * /etc/udev/rules.d/99-mapr-disk.rules
+
+References
+
+   1. http://www.ntp.org/
+   2. https://www.shellhacks.com/linux-define-locale-language-settings/
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/PAM-Configuration.html#PAM-Configuration-MapRusesPluggableAut-d3e64
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/MapRPorts.html#PortsUsedbyMapR

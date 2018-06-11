@@ -1,0 +1,166 @@
+node heatmap
+
+   Displays a heatmap for the specified nodes.
+
+Syntax
+
+   CLI
+
+maprcli node heatmap
+    [ -cluster <cluster> ]
+    [ -filter <filter> ]
+    [ -view <view> ]
+    -json | -long
+
+   REST
+
+http[s]://<host>:<port>/rest/node/heatmap?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+
+   cluster
+
+   The cluster on which to run the command.
+
+   filter
+
+   A filter specifying snapshots to preserve. See [1]Filters for more
+   information.
+
+   view
+
+   Name of the heatmap view to show:
+     * status = Node status (the default view):
+          + 0 = Healthy
+          + 1 = Needs attention
+          + 2 = Degraded
+          + 3 = Maintenance
+          + 4 = Critical
+     * cpu = CPU utilization, as a percent from 0-100.
+     * memory = Memory utilization, as a percent from 0-100.
+     * diskspace = MapR-FS disk space utilization, as a percent from
+       0-100.
+     * NODE_* = Status of various alarms: 0 if clear, 1 if raised. For
+       example: NODE_ALARM_DISK_FAILURE or NODE_ALARM_SERVICE_CLDB_DOWN.
+       You can return a complete list of supported alarm parameters by
+       running:
+       maprcli node heatmap -view
+       See the lists of parameters below this table.
+
+   -json | -long This command returns multiple levels of data. You must
+   specify either JSON format or "long" format to see the full output.
+
+Alarm Parameters
+
+   You can view the status of a number of different alarms, including the
+   status of alarms for services down and alarms for other conditions on
+   the cluster.
+   Service Down Alarms
+
+   NODE_ALARM_SERVICE_CLDB_DOWN NODE_ALARM_SERVICE_FILESERVER_DOWN
+   NODE_ALARM_SERVICE_JT_DOWN NODE_ALARM_SERVICE_TT_DOWN
+   NODE_ALARM_SERVICE_HBMASTER_DOWN NODE_ALARM_SERVICE_HBREGION_DOWN
+   NODE_ALARM_SERVICE_WEBSERVER_DOWN NODE_ALARM_SERVICE_NFS_DOWN
+   NODE_ALARM_SERVICE_HOSTSTATS_DOWN NODE_ALARM_SERVICE_OOZIE_DOWN
+   NODE_ALARM_SERVICE_HUE_DOWN NODE_ALARM_SERVICE_HTTPFS_DOWN
+   NODE_ALARM_SERVICE_BEESWAX_DOWN NODE_ALARM_SERVICE_HIVEMETA_DOWN
+   NODE_ALARM_SERVICE_HS2_DOWN
+   Other Alarms
+
+   NODE_ALARM_DEBUG_LOGGING NODE_ALARM_DISK_FAILURE
+   NODE_ALARM_VERSION_MISMATCH NODE_ALARM_TIME_SKEW
+   NODE_ALARM_ROOT_PARTITION_FULL NODE_ALARM_OPT_MAPR_FULL
+   NODE_ALARM_CORE_PRESENT NODE_ALARM_HIGH_MFS_MEMORY
+   NODE_ALARM_PAM_MISCONFIGURED NODE_ALARM_TT_LOCALDIR_FULL
+   NODE_ALARM_NO_HEARTBEAT NODE_ALARM_MAPRUSER_MISMATCH
+   NODE_ALARM_DUPLICATE_HOSTID NODE_ALARM_METRICS_WRITE_PROBLEM
+   NODE_ALARM_TOO_MANY_CONTAINERS
+
+Output
+
+   In general, the heatmap output looks like this (in JSON format).
+{
+            status:"OK",
+            data: [{
+            "{{rackTopology}}" : {
+            "{{nodeName}}" : {{heatmapValue}},
+            "{{nodeName}}" : {{heatmapValue}},
+            "{{nodeName}}" : {{heatmapValue}},
+            ...
+            },
+            "{{rackTopology}}" : {
+            "{{nodeName}}" : {{heatmapValue}},
+            "{{nodeName}}" : {{heatmapValue}},
+            "{{nodeName}}" : {{heatmapValue}},
+            ...
+            },
+            ...
+            }]
+            }
+
+   CAPTION: Table 1. Output Fields
+
+   Field
+
+   Description
+
+   rackTopology
+
+   The topology for a particular rack.
+
+   nodeName
+
+   The name of the node in question.
+
+   heatmapValue
+
+   The value of the metric specified in the view parameter for this node,
+   as an integer.
+
+Examples
+
+   Display a heat map with the node status (default view) for the default
+   rack:
+maprcli node heatmap -json
+            {
+            "timestamp":1422567293873,
+            "timeofday":"2015-01-29 01:34:53.873 GMT-0800",
+            "status":"OK",
+            "total":1,
+            "data":[
+            {"/data/default-rack":{
+            "centos24":2}
+            }]
+            }
+
+   The equivalent REST API command would be:
+https://r1n1.sj.us:8443/rest/node/heatmap
+
+   Display memory usage for the default rack:
+maprcli node heatmap -view memory -json
+            {
+            "timestamp":1422585976631,
+            "timeofday":"2015-01-29 06:46:16.631 GMT-0800",
+            "status":"OK",
+            "total":1,
+            "data":[
+            {"/data/default-rack":{
+            "centos24":71}
+            }]
+            }
+
+   The equivalent REST API command would be:
+https://r1n1.sj.us:8443/rest/node/heatmap?view=memory
+
+   Display the value of NODE_ALARM_DISK_FAILURE for the default rack:
+maprcli node heatmap -view NODE_ALARM_DISK_FAILURE -long
+            /data/default-rack
+            {"centos24":0}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/maprcli-REST-API-Syntax.html

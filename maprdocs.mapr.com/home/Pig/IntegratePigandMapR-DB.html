@@ -1,0 +1,23 @@
+Integrate Pig and MapR-DB
+
+   To configure Pig to work with MapR-DB tables, perform the following
+   steps:
+    1. On the client node where Pig is installed, add the following string
+       to /opt/mapr/conf/env.sh:
+export PIG_CLASSPATH=$PIG_CLASSPATH:/location-to-hbase-jar
+    2. If the client node where Pig is installed also has the mapr-hbase
+       package installed, add the location of the hbase-<version>.jar file
+       to the PIG_CLASSPATH variable from the previous step:
+export PIG_CLASSPATH="$PIG_CLASSPATH:/opt/mapr/hbase/hbase-<version>/hbase-<vers
+ion>.jar"
+    3. If the client node where Pig is installed does not have the
+       mapr-hbase package installed, copy the HBase JAR from a node that
+       does have HBase installed to a location on the Pig client node. Add
+       the HBase JAR's location to the definition from previous steps:
+export PIG_CLASSPATH=$PIG_CLASSPATH:/opt/mapr/lib/hbase-<version>.jar
+    4. Add the HBase JAR to the Hadoop classpath:
+export HADOOP_CLASSPATH="/opt/mapr/hbase/hbase-<version>/hbase-<version>-mapr.ja
+r:$HADOOP_CLASSPATH"
+    5. Launch a Pig job and verify that Pig can access HBase tables by
+       using the HBase table name directly. Do not use the hbase://
+       prefix.

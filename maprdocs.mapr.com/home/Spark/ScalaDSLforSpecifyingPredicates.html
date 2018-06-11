@@ -1,0 +1,120 @@
+Scala DSL for Specifying Filter Conditions
+
+   When loading data from MapR-DB as an Apache Spark RDD, you can use
+   Scala DSL to specify filter conditions. This section shows examples of
+   these filter conditions.
+
+   In the following examples, a class named field is introduced to
+   represent a field in a condition. The field condition takes an argument
+   as a String. The following table shows conditions written using Scala
+   DSL:
+   Condition Example
+   equality
+val idOnlyPredicate = field("_id") === "k2"
+
+   greatherThan
+val simplePredicateWithComparisonOperator = field("a.c.d") > 10
+
+   notexists
+val simpleNotExistsPredicate = field("a.c.e") notexists
+
+   IN
+val inPredicate = field("a.c.d") in Seq(ODate.parse("2011-05-21"), ODate.parse("
+2013-02-22"))
+
+   typeof
+val simpleTypeOfPredicate = field("a.c.d") typeof "INT"
+
+   complex condition with and
+val inPredicateWithMapAndArray = (field("a.c.d") in Seq(5,10)) and
+     (field("a.c.e") notin Seq("aaa","bbb"))
+
+   another complex condition
+val compositePredicateWithAndOnly = ((field("a.b") notexists ) and
+                                                  (field("p.q") typeof "DATE"))
+and
+                                                  (field("a.c.d") > 20L)
+
+   between
+val predicateWithBetweenOp = field("a.c.d") between
+                                (ODate.parse("2015-01-15"), ODate.parse("2015-05
+-15"))
+
+   predicate with equality check on Sequence of elements (representing
+   array)
+val eqPredicateWithList = field("a.b") === Seq(12345L, "xyz")
+
+   predicate with equality check on a map
+val eqWithMapPredicate = field("a") === Map("k" -> "kite",
+                                                    "m" -> "map")
+
+   The MapR-DB OJAI Connector for Apache Spark supports these predicates:
+     * >
+     * >=
+     * <
+     * <=
+     * ===
+     * !=
+     * between
+     * exists
+     * notin
+     * in
+     * notexists
+     * typeof
+     * nottypeof
+     * like
+     * notlike
+     * matches
+     * notmatches
+     * sizeOf
+
+   Here are examples for these operators:
+     * field("a") > 10
+     * field("a") >= 10
+     * field("a") < 10
+     * field("a") <= 10
+     * field("a") === 10
+     * field("a") === Seq("aa", 10)
+     * field("a") === Map("aa" -> 10)
+     * field("a") != 10
+     * field("a") != Seq("aa", 10)
+     * field("a") != Map("aa" -> 10)
+     * field("a) between (10,20)
+     * field("a") exists
+     * field("a") notin Seq(10,20)
+     * field("a") in Seq(10, 20)
+     * field("a") notexists
+     * field("a") typeof "INT"
+     * field("a") nottypeof "INT"
+     * field("a") like "%s"
+     * field("a") notlike "%s"
+     * field("a") matches "*s"
+     * field("a") notmatches "*s"
+
+   For typeof, these are the right-hand side values:
+     * "INT"
+     * "INTEGER"
+     * "LONG"
+     * "BOOLEAN"
+     * "STRING"
+     * "SHORT"
+     * "BYTE"
+     * "NULL"
+     * "FLOAT"
+     * "DOUBLE"
+     * "DECIMAL"
+     * "DATE"
+     * "TIME"
+     * "TIMESTAMP"
+     * "INTERVAL"
+     * "BINARY"
+     * "MAP"
+     * "ARRAY"
+
+   The sizeOf operator can have the following operations:
+     * sizeOf(field("a")) === 10
+     * sizeOf(field("a")) < 10
+     * sizeOf(field("a")) > 10
+     * sizeOf(field("a")) >= 10
+     * sizeOf(field("a")) <= 10
+     * sizeOf(field("a")) != 10

@@ -1,0 +1,66 @@
+Enabling Table and Stream Authorizations with ACEs
+
+   Permissions for MapR tables, column families, and columns are defined
+   by Access Control Expressions (ACEs). You can set permissions for
+   tables when you create or edit tables. You can set default permissions
+   for column families when you create or edit tables, and you can
+   override these defaults when you create column families.
+
+   For the syntax to use when creating Access Control Expressions, see
+   [1]ACE Syntax.
+
+   When a user, group, or role requests to read data from, write data to,
+   or append data to a column, MapR-DB checks whether that user, group, or
+   role has read or write permission for the column family AND read or
+   write permission for the column. By default, columns allow read and
+   write access to all users; in such cases, only the read or write
+   permission for the column family matters.
+
+   However, suppose that a table contains columns col1 and col2 in column
+   family cf1, and these columns grant read and write permission only to
+   the table creator. A different user tries to write data to these
+   columns. MapR-DB checks whether this user has write permission on cf1
+   AND col1 AND col2. If the user does not have all three permissions,
+   MapR-DB returns an error that says access for the write is denied.
+
+   If this user were to try to read from the same two columns, MapR-DB
+   would simply not return the data. If the user tried to read from those
+   two columns and additional columns on which he had read permissions,
+   the results would contain the data for those additional columns but
+   exclude the data for col1 and col2.
+   Note: Table Permissions for Older Releases: Because MapR tables are
+   stored at the file-system level, you can also set permissions for
+   MapR-DB tables directly in the file system, if your version of MapR
+   does not support Access Control Expressions (ACEs). Support for ACEs
+   was introduced in version 3.1.
+
+   To set permissions directly in the file system, see [2]Performing
+   Filesystem Operations on MapR-DB Tables.
+
+Setting Table ACEs Using the CLI
+
+   You can set ACEs with the following commands:
+     * [3]table create — Creates a new MapR table.
+     * [4]table edit — Edits a MapR table.
+     * [5]table cf create — Creates a column family for a MapR table.
+     * [6]table cf edit — Edits a column-family definition.
+     * [7]table cf colperm set — Set Access Control Expressions (ACEs) for
+       a specified column.
+
+Setting Stream ACEs Using the CLI
+
+   You can set ACEs with the following commands:
+     * [8]stream create — Creates a new MapR stream.
+     * [9]stream edit — Edits a MapR stream.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SyntaxOfACE.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/FilesystemOperationsonMapRDB-tables.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-create.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-edit.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-cf-create.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-cf-edit.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-cf-colperm-set.html
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/stream_create.html
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/stream_edit.html

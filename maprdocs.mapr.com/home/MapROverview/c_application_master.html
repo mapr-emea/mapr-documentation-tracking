@@ -1,0 +1,69 @@
+ApplicationMaster
+
+   ApplicationMaster The ApplicationMaster is an instance of a
+   framework-specific library that negotiates resources from the
+   ResourceManager and works with the NodeManager to execute and monitor
+   the granted resources (bundled as containers) for a given application.
+   An application can be a process or set of processes, a service, or a
+   description of work.
+
+   The ApplicationMaster is run in a container like any other application.
+   The ApplicationsManager, part of the ResourceManager, negotiates for
+   the container in which an application’s ApplicationMaster runs when the
+   application is scheduled by the YarnScheduler.
+   While an application is running, the ApplicationMaster manages the
+   following:
+     * Application lifecycle
+     * Dynamic adjustments to resource consumption
+     * Execution flow
+     * Faults
+     * Providing status and metrics
+
+   The ApplicationMaster is architected to support a specific framework,
+   and can be written in any language since its communication with the
+   NodeManagers and the ResourceManager is accomplished using extensible
+   communication protocols. The ApplicationMaster can be customized to
+   extend the framework or run any other code. For this reason, the
+   ApplicationMaster is not considered trustworthy, and is not run as a
+   trusted service.
+
+   An ApplicationMaster typically requests resources on multiple nodes to
+   complete a job by sending the ResourceManager requests that include
+   locality preferences and attributes of the containers. When the
+   ResourceManager is able to allocate a resource to the
+   ApplicationMaster, it generates a lease that the ApplicationMaster
+   pulls on a subsequent heartbeat. A security token associated with the
+   lease guarantees its authenticity when the ApplicationManager presents
+   the lease to the NodeManager to gain access to the container.
+
+   The Application Master heartbeats to the ResourceManager to communicate
+   its changing resource needs, and to let the ResourceManager know it is
+   still alive. In response, the ResourceManager can return a lease on
+   additional containers on other nodes, or cancel the lease on some
+   containers. The ApplicationMaster can then adjust its execution
+   strategy to fit the increase or decrease in available resources. When
+   cluster resources become scarce, the ResourceManager can also request
+   that the ApplicationMaster relinquish some resources. The
+   ApplicationMaster can move work to other running containers in order to
+   give up resources gracefully.
+
+Containers
+
+   A YARN container is a result of a successful resource allocation,
+   meaning that the ResourceManager has granted an application a lease to
+   use a specific set of resources in certain amounts on a specific node.
+   The ApplicationMaster presents the lease to the NodeManager on the node
+   where the container has been allocated, thereby gaining access to the
+   resources.
+   To launch the container, the ApplicationMaster must provide a container
+   launch context (CLC) that includes the following information:
+     * Environment variables
+     * Dependencies (local resources such as data files or shared objects
+       needed prior to launch)
+     * Security tokens
+     * The command necessary to create the process the application plans
+       to launch
+
+   The CLC makes it possible for the ApplicationMaster to use containers
+   to run a variety of different kinds of work, from simple shell scripts
+   to applications to virtual machines.

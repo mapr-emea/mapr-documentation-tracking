@@ -1,0 +1,204 @@
+hadoop distcp
+
+   The hadoop distcp command is a tool used for large inter- and
+   intra-cluster copying. It uses MapReduce to effect its distribution,
+   error handling and recovery, and reporting. It expands a list of files
+   and directories into input to map tasks, each of which will copy a
+   partition of the files specified in the source list.
+
+Syntax
+
+hadoop [ Generic Options ] distcp
+    [-p [rbugp] ]
+    [-i ]
+    [-log ]
+    [-m ]
+    [-overwrite ]
+    [-update  ]
+    [-f <URI list> ]
+    [-filelimit <n> ]
+    [-sizelimit <n> ]
+    [-delete ]
+    <source>
+    <destination>
+
+Parameters
+
+   Command Options
+
+   The following command options are supported for the hadoop distcp
+   command:
+
+   Parameter
+
+   Description
+
+   <source>
+
+   Specify the source URL.
+
+   <destination>
+
+   Specify the destination URL.
+
+   -p [rbugp]
+
+   Preserve r: replication number b: block size u: user g: group p:
+   permission -p alone is equivalent to -prbugp. Modification times are
+   not preserved. When you specify -update, status updates are not
+   synchronized unless the file sizes also differ.
+
+   -i
+
+   Ignore failures. As explained in the below, this option will keep more
+   accurate statistics about the copy than the default case. It also
+   preserves logs from failed copies, which can be valuable for debugging.
+   Finally, a failing map will not cause the job to fail before all splits
+   are attempted.
+
+   -log <logdir>
+
+   Write logs to <logdir>. The hadoop distcp command keeps logs of each
+   file it attempts to copy as map output. If a map fails, the log output
+   will not be retained if it is re-executed.
+
+   -m <num_maps>
+
+   Maximum number of simultaneous copies. Specify the number of maps to
+   copy data. Note that more maps may not necessarily improve throughput.
+   See Map Sizing.
+
+   -overwrite
+
+   Overwrite destination. If a map fails and -i is not specified, all the
+   files in the split, not only those that failed, will be recopied. As
+   discussed in the Overwriting Files Between Clusters, it also changes
+   the semantics for generating destination paths, so users should use
+   this carefully.
+
+   -update
+
+   Overwrite if <source> size is different from <destination> size. As
+   noted in the preceding, this is not a "sync" operation. The only
+   criterion examined is the source and destination file sizes; if they
+   differ, the source file replaces the destination file. See Updating
+   Files Between Clusters.
+
+   -f <URI list>
+
+   Use list at <URI list> as source list. This is equivalent to listing
+   each source on the command line. The value of <URI list> must be a
+   fully qualified URI.
+
+   -filelimit <n>
+
+   Limit the total number of files to be <= n. See Symbolic
+   Representations.
+
+   -sizelimit <n>
+
+   Limit the total size to be <= n bytes. See Symbolic Representations.
+
+   -delete
+
+   Delete the files existing in the <destination> but not in <source>. The
+   deletion is done by FS Shell.
+
+   Generic Options
+
+   The hadoop distcp command supports the following generic options: -conf
+   <configuration file>, -D <property=value>, -fs <local|file system URI>,
+   -jt <local|jobtracker:port>, -files <file1,file2,file3,...>, -libjars
+   <libjar1,libjar2,libjar3,...>, and -archives
+   <archive1,archive2,archive3,...>. For more information on generic
+   options, see [1]Generic Options.
+
+Symbolic Representations
+
+   The parameter <n> in -filelimit and -sizelimit can be specified with
+   symbolic representation. For example,
+     * 1230k = 1230 * 1024 = 1259520
+     * 891g = 891 * 1024^3 = 956703965184
+
+Map Sizing
+
+   The hadoop distcp command attempts to size each map comparably so that
+   each copies roughly the same number of bytes. Note that files are the
+   finest level of granularity, so increasing the number of simultaneous
+   copiers (i.e. maps) may not always increase the number of simultaneous
+   copies nor the overall throughput.
+
+   If -m is not specified, distcp will attempt to schedule work for min
+   (total_bytes / bytes.per.map, 20 * num_task_trackers) where
+   bytes.per.map defaults to 256MB.
+
+   Tuning the number of maps to the size of the source and destination
+   clusters, the size of the copy, and the available bandwidth is
+   recommended for long-running and regularly run jobs.
+
+Examples
+
+   For all of the below examples, the cluster name must be specified in
+   the [2]mapr-clusters.conf configuration file.
+
+   Basic inter-cluster copying
+
+   The hadoop distcp commmand is most often used to copy files between
+   clusters:
+hadoop distcp maprfs://cluster1/foo \
+maprfs://cluster2/bar
+
+   The command in the example expands the namespace under /foo/bar on
+   cluster1 into a temporary file, partitions its contents among a set of
+   map tasks, and starts a copy on each NodeManager node from cluster1 to
+   cluster2. Note that the hadoop distcp command expects absolute paths.
+
+   Only those files that do not already exist in the destination are
+   copied over from the source directory.
+
+   Updating files between clusters
+
+   Use the hadoop distcp -update command to synchronize changes between
+   clusters.
+$ hadoop distcp -update maprfs://cluster1/foo maprfs://cluster2/bar/foo
+
+   Files in the /foo subtree are copied from cluster1 to cluster2 only if
+   the size of the source file is different from that of the size of the
+   destination file. Otherwise, the files are skipped over.
+
+   Note that using the -update option changes distributed copy interprets
+   the source and destination paths making it necessary to add the
+   trailing /foo subdirectory in the second cluster.
+
+   Overwriting files between clusters
+
+   By default, distributed copy skips files that already exist in the
+   destination directory, but you can overwrite those files using the
+   -overwrite option. In this example, multiple source directories are
+   specified:
+$ hadoop distcp -overwrite maprfs://cluster1/foo/a \
+maprfs://cluster1/foo/b \
+maprfs://cluster2/bar
+
+   As with using the -update option, using the -overwrite changes the way
+   that the source and destination paths are interpreted by distributed
+   copy: the contents of the source directories are compared to the
+   contents of the destination directory. The distributed copy aborts in
+   case of a conflict.
+
+   Migrating Data from HDFS to MapR-FS
+
+   The hadoop distcp command can be used to migrate data from an HDFS
+   cluster to a MapR-FS where the HDFS cluster uses the same version of
+   the RPC protocol as that used by MapR. For a discussion, see [3]Copying
+   Data from Apache Hadoop.
+$ hadoop distcp namenode1:50070/foo maprfs:///bar
+
+   You must specify the IP address and HTTP port (usually 50070) for the
+   namenode on the HDFS cluster.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/HadoopCommands-GenericOptions.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr-clusters.conf.html#mapr-clusters.conf
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/CopyDataFromApacheHadoop.html#CopyingDatafromApacheHadoop

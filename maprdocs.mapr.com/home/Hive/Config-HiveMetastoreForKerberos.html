@@ -1,0 +1,48 @@
+Configure Hive Metastore to use Kerberos
+
+   Enabling Hive Metastore to use Kerberos authentication requires a
+   kerberos principal, kerberos keytab, and the following configurations.
+
+   Complete the following steps on each node where a Hive Metastore is
+   installed:
+    1. Create a Kerberos server identity and add it to a keytab file. You
+       can use the following commands in a Linux-based Kerberos
+       environment to set up the identity and update the keytab file:
+       Note: MapR clusters do not provide Kerberos infrastructure. The
+       tips in this step assume a Linux-based Kerberos environment, and
+       the specific commands for your environment may vary. Consult with
+       your Kerberos administrator for assistance.
+# kadmin
+    : addprinc -randkey username/<FQDN@REALM>
+    : ktadd -k /opt/mapr/conf/hive.keytab username/<FQDN@REALM>
+       The hive.keytab file must be owned and readable only by the mapr
+       user.
+    2. Configure the following properties in the following file:
+/opt/mapr/hive/hive-<version>/conf/hive-site.xml
+
+   Property Value
+hive.metastore.kerberos.keytab.file
+
+   The Keytab file that contains the HiveMetastore principal.
+hive.metastore.kerberos.principal
+
+   <The HiveMetastore principal. For example, mapr/<FQDN@REALM>.>
+<property>
+  <name>hive.metastore.kerberos.keytab.file</name>
+  <value>/opt/mapr/conf/metastore.keytab</value>
+  <description>The path to the Kerberos Keytab file containing the metastore thr
+ift server's service principal.</description>
+</property>
+<property>
+  <name>hive.metastore.kerberos.principal</name>
+  <value>mapr/<FQDN@REALM></value>
+  <description>The service principal for the metastore thrift server. The specia
+l string _HOST will be replaced automatically with the correct hostname.</descri
+ption>
+</property>
+    3. Configure the following properties in /opt/mapr/conf/env.sh on each
+       node where the Hive Metastore is installed:
+          + Set MAPR_HIVE_LOGIN _OPTS to
+"-Dhadoop.login=hybrid"
+          + Set MAPR_HIVE_SERVER_LOGIN_OPTS to
+"-Dhadoop.login=hybrid"

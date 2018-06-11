@@ -1,0 +1,50 @@
+Configure Kerberos Authentication for Sqoop2
+
+   You can configure Sqoop2 to use Kerberos authentication. When Sqoop2
+   uses Kerberos authentication, the cluster and other components that
+   work with Sqoop2, such as Hue, must also use Kerberos authentication.
+   Note the following items when you complete the configuration steps:
+     * Replace <FQDN> with the FQDN of the server. To determine this
+       value, run hostname -f in the command line.
+     * Replace <REALM> with the realm name in the krb5.conf file, which is
+       generated when you install the KDC server on the cluster.
+
+   Configuring Kerberos Authentication for Sqoop2:
+    1. Using the kadmin program, run the following commands to create
+       principals for Sqoop 2:
+addprinc -randkey HTTP/<FQDN>@<REALM>
+addprinc -randkey mapr/<FQDN>@<REALM>
+       Kerberos uses the principal HTTP/<FQDN>@<REALM> for communication
+       between Sqoop2 client and Sqoop2 server. The principal
+       mapr/<FQDN>@<REALM> is the Sqoop2 user that communicates between
+       Sqoop2 server and MapR-FS.
+    2. Using the kadmin program, run the following commands to create
+       keytabs for the principals:
+xst -k /opt/mapr/conf/mapr.keytab HTTP/<FQDN>@<REALM>
+xst -k /opt/mapr/conf/mapr.keytab mapr/<FQDN>@<REALM>
+    3. Modify the following properties in Sqoop2 configuration file
+       (sqoop.properties).
+       In Sqoop 1.99.6, the sqoop.properties file is in the following
+       directory: /opt/mapr/sqoop/sqoop-<version>/server/conf/. In Sqoop
+       1.99.7, the sqoop.properties file is in the following directory:
+       /opt/mapr/sqoop/sqoop-<version>/conf/.
+org.apache.sqoop.security.authentication.type=KERBEROS
+org.apache.sqoop.security.authentication.handler=org.apache.sqoop.security.authe
+ntication.KerberosAuthenticationHandler
+org.apache.sqoop.security.authentication.kerberos.principal=mapr/<FQDN>@<REALM>
+org.apache.sqoop.security.authentication.kerberos.keytab=/opt/mapr/conf/mapr.key
+tab
+org.apache.sqoop.security.authentication.kerberos.http.principal=HTTP/<FQDN>@<RE
+ALM>
+org.apache.sqoop.security.authentication.kerberos.http.keytab=/opt/mapr/conf/map
+r.keytab
+org.apache.sqoop.security.authentication.enable.doAs=true
+org.apache.sqoop.security.authentication.proxyuser.mapr.users=*
+    4. Start Sqoop2 server.
+maprcli node services -name sqoop2 -action start -nodes <space delimited list of
+ nodes>
+    5. Using the kinit program, run the following command to generate a
+       ticket:
+kinit HTTP/<FQDN>@<REALM> -kt /opt/mapr/conf/mapr.keytab
+    6. Start the Sqoop2 client.
+sudo -u mapr /opt/mapr/sqoop/sqoop-<version>/bin/sqoop.sh client

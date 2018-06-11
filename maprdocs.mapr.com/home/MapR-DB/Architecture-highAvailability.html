@@ -1,0 +1,30 @@
+High Availability
+
+   Due to the architecture of how updates to table regions (also called
+   tablets) are applied and and replicated, data in table regions are
+   instantly available. Tables and table regions are part of abstract
+   entities called containers which provide the automatic replication of
+   table regions (with a default of three) across the nodes of a cluster.
+
+   Containers are replicated to a configurable number of copies, which are
+   distributed to different nodes in the same cluster as the original or
+   master container. A cluster's CLDB determines the order in which the
+   replicas are updated. Together, the replicas form a replication chain
+   that is updated transactionally. When an update is applied to a region
+   (also called tablets) in the master container (which is at the head of
+   a replication chain), the update is applied serially to the replicas of
+   that container in the chain. The update is complete only when all
+   replicas in the chain are updated.
+
+   The result of this architecture is that when a node goes down due to
+   hardware failure, the regions served by that node are available
+   instantly from one of the other nodes that have the replicated data.
+
+   MapR can detect the exact point at which replicas diverge, even at a 2
+   GB per second update rate. MapR randomly picks any one of the three
+   copies as the new master, rolls back the other surviving replicas to
+   the divergence point, and then rolls forward to converge with the
+   chosen master. MapR can do this on the fly with very little impact on
+   normal operations.
+   Note: The automatic replication factor is set at the volume level since
+   containers are contained in volumes.

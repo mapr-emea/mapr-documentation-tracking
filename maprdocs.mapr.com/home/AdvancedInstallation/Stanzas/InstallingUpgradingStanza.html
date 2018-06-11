@@ -1,0 +1,94 @@
+Installing or Upgrading MapR Core Using a MapR Installer Stanza
+
+   Use the Stanza install command to install MapR 5.1 or later, install
+   additional features, upgrade a cluster, perform a maintenance update,
+   or apply a patch.
+   You can use the install command of the MapR Installer Stanza command
+   suite to:
+     * Perform a fresh install of MapR 5.1 or later.
+     * Perform an incremental install (add or upgrade services that are
+       already installed on the cluster).
+     * Upgrade a cluster to a newer MapR version or a newer MEP version.
+     * Perform a [1]maintenance update.
+     * Apply a patch (see [2]Applying a Patch Using a MapR Installer
+       Stanza).
+     * Extend the cluster by adding nodes (see [3]Extending a Cluster by
+       Adding Nodes).
+
+   For the install command syntax and options, see [4]MapR Installer
+   Stanza Commands later in this section.
+   This example installs MapR software using the parameters specified in
+   the sample_basic.yaml Stanza file. To run this command, you should be
+   logged in as the mapr user. The -nv option specifies that certificates
+   will not be checked and the output mode is verbose. The -toption, which
+   is required, specifies the use of a template file:
+./bin/mapr-installer-cli install -nv -t ./examples/sample_basic.yaml
+
+   If you are using a MapR Installer Stanza to install MapR software on a
+   cluster that has never had MapR software installed (a fresh
+   installation), it is recommended to create the mapr user on all nodes.
+   You can create the mapr user by using the config.cluster_admin_password
+   override. For example:
+./bin/mapr-installer-cli install -nv -t ./examples/sample_basic.yaml -o config.c
+luster_admin_password=mapr
+
+   If you use the install command and an existing cluster is detected, the
+   installer attempts an incremental install or upgrade using the
+   parameters in the specified Stanza file:
+     * For incremental installs, the installer does not check or verify
+       the configuration.
+     * You cannot add nodes or services during a version upgrade.
+
+   Note: If the password in the Stanza file or in the command contains a
+   special character, such as an exclamation point (!), you might need to
+   escape the character with a backslash (\). For example:
+./bin/mapr-installer-cli install -u mapr:mapr\!@localhost -nv -t ../examples/sam
+ple_basic.yaml
+
+   If you do not want to include a password in the Stanza file, you can
+   specify a value contained in a secured file. This example uses a Stanza
+   file (sample_nopwd.yaml) in which the ssh_password line has been
+   removed. The secured file (installer.cfg) stores the value of
+   ssh_password as config.ssh_password=mapr. The contents of installer.cfg
+   are piped to the install command via an override (-o -). You must
+   include the - after the -o; otherwise, the file contents are not read.
+cat examples/installer.cfg | ./bin/mapr-installer-cli install -nv -t examples/sa
+mple_nopwd.yaml -o -
+
+   To check the progress of the installation or upgrade, see [5]Checking
+   the Progress of Operations. For another example of using the install
+   command, see [6]MapR Stanzas (blog).
+
+New Installation of MapR 6.0 Secure Cluster Using Stanzas
+
+   To install a MapR 6.0 secure cluster using Stanzas, you must add two
+   parameters to the Stanza:
+     * config.security: "true"
+     * config.cluster_admin_password: "<mapr_user_password>"
+
+   For example:
+config:
+  security: "true"
+  cluster_admin_password: "mapr"
+
+   After the installation completes, secure=true should be set in the
+   /opt/mapr/conf/mapr-clusters.conf file. This command should print the
+   ticket details:
+maprlogin print -ticketfile /opt/mapr/conf/mapruserticket
+
+   Note these considerations for installing a MapR 6.0 secure cluster:
+     * If you use a Stanza to perform a secure install, you must log out
+       and then log in one time for the bashrc to take effect.
+     * For non-bash environments, you must manually add the above epxort
+       to your login profile.
+     * You can use the probe command to detect whether a cluster is secure
+       or not.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/performing_maint_update.html#concept_zhy_ggq_hz
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/applying_patch_using_stanza.html#concept_jfv_cfq_hz
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/ExtendCluster.html#task_q2b_5kb_q1b
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/SilentInstallerCommands.html#reference_c11_wmk_cy
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/CheckProgressOperations.html#concept_yms_nym_cy
+   6. https://community.mapr.com/community/exchange/blog/2017/02/14/mapr-stanzas

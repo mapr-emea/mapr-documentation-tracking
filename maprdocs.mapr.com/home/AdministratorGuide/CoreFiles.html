@@ -1,0 +1,36 @@
+Managing Core Files
+
+   The Linux core_pattern file (in /proc/sys/kernel/core_pattern) can be
+   used to specify the location for storing core files. If any process
+   launched by MapR crashes, the core files are created in the directory
+   specified by the core_pattern file. A valid location in the
+   core_pattern file is a full path to the directory you want to use. For
+   example:
+/tmp/dir1/cores/%e.core.%p.%h
+
+   Tip: For details about the standard Linux % specifiers that you can use
+   to name core files, see the [1]core man page.
+
+   If the core_pattern file is empty, if the file does not contain a full
+   path, or if it uses the "|" redirection feature, by default, MapR sets
+   the location for core files (in the event of a core dump on a node) to
+   /opt/cores directory when:
+     * The configure.sh utility is run.
+     * The Warden init script is run.
+     * The MFS init script is run by Warden.
+
+   The default directory (/opt/cores) is also used if the core_pattern
+   file contains the default MapR value for core files.
+
+   For MapR software, the directory being used to store core files should
+   not be used for other purposes and should be empty. The cores directory
+   cannot be home directory because it can cause problems during SSH
+   access. The hoststats service monitors the directory specified in the
+   core_pattern file and raises the node-level [2]alarm if the directory
+   contains any entry other than "." and "..". When Warden is started,
+   sticky bit is set on the cores directory.
+
+References
+
+   1. http://man7.org/linux/man-pages/man5/core.5.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/NodeAlarms-CorePresentAlarm.html#concept_qm2_wgn_vt

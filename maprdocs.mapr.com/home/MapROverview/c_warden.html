@@ -1,0 +1,126 @@
+Warden
+
+   Warden is a light Java application that runs on all the nodes in a
+   cluster and coordinates cluster services. Warden’s job on each node is
+   to start, stop, or restart the appropriate services, and allocate the
+   correct amount of memory to them. Warden makes extensive use of the
+   znode abstraction discussed in the ZooKeeper section of this Guide to
+   monitor the state of cluster services.
+
+   Each service running in a cluster has a corresponding znode in the
+   ZooKeeper namespace, named in the pattern
+   /services/<servicename>/<hostname>. Warden’s Watcher interface monitors
+   znodes for changes and acts when a znode is created or deleted, or when
+   child znodes of a monitored znode are created or deleted.
+
+   Warden configuration is contained in the warden.conf file, which lists
+   service triplets in the form <servicename>:<number of
+   nodes>:<dependencies>. The number of nodes element of this triplet
+   controls the number of concurrent instances of the service that can run
+   on the cluster. Some services are restricted to one running instance
+   per cluster, while others, such as the FileServer, can run on every
+   node. The Warden monitors changes to its configuration file in real
+   time.
+
+   When a configuration triplet lists another service as a dependency, the
+   Warden only starts that service after the dependency service is
+   running.
+   Note: When warden is started/restarted, the irqbalancer is enabled on
+   nodes running MFS because it balances IRQ SMP affinities, which provide
+   better performance.
+
+Memory Management with the Warden
+
+   System administrators can configure how the cluster’s memory is
+   allocated to running the operating system, MapR-FS, and Hadoop
+   services. The configuration files /opt/mapr/conf/warden.conf and
+   /opt/mapr/conf/conf.d/warden.<servicename>.conf include parameters that
+   define how much of the memory on a node is allocated to the operating
+   system, MapR-FS, and Hadoop services.
+   You can edit the following memory parameters to reserve memory:
+     * The service.<servicename>.heapsize.percent parameter controls the
+       percentage of system memory allocated to the named service.
+     * The service.<servicename>.heapsize.max parameter defines the
+       maximum heapsize used when invoking the service.
+     * The service.<servicename>.heapsize.min parameter defines the
+       minimum heapsize used when invoking the service.
+
+   For example, the service.command.os.heapsize.percent,
+   service.command.os.heapsize.max, and service.command.os.heapsize.min
+   parameters in the warden.conf file control the amount of memory that
+   Warden allocates to the host operating system before allocating memory
+   to other services.
+   The actual heap size used when invoking a service is a combination of
+   the three parameters according to the formula:
+max(heapsize.min, min(heapsize.max, total-memory * heapsize.percent / 100))
+
+   For more information, see [1]Memory Allocation for Nodes.
+
+The Warden and Failover
+
+   The Warden on each node watches appropriate znodes to determine whether
+   to start or stop services during failover. The following paragraphs
+   provide failover examples for the CLDB and ResourceManager. Note that
+   not all failover involves the Warden; NFS failover is accomplished
+   using VIPs.
+
+   CLDB Failover
+          The ZooKeeper contains a znode corresponding to the active
+          master CLDB. This znode is monitored by the slave CLDBs. When
+          the master CLDB znode is deleted, the slave CLDBs recognize that
+          the master CLDB is no longer running. The slave CLDBs contact
+          Zookeeper in an attempt to become the new master CLDB. The first
+          CLDB to get a lock on the znode in Zookeeper becomes the new
+          master.
+
+   ResourceManager Failover
+          Starting in version 4.0.2, if the node running the
+          ResourceManager fails and the Warden on the ResourceManager node
+          is unable to restart it, Warden starts a new instance of the
+          ResourceManager on another node. The Warden on every
+          ResourceManager node watches the ResourceManager’s znode for
+          changes. When the active ResourceManager’s znode is deleted, the
+          Wardens on other ResourceManager nodes attempt to launch the
+          ResourceManager. The Warden on each ResourceManager node works
+          with the Zookeeper to ensure that only one ResourceManager is
+          running in the cluster.
+
+          In order for failover to occur in this manner, at least two
+          nodes in the cluster should include the ResourceManager role and
+          your cluster must be use the [2]zero configuration failover
+          implementation.
+
+The Warden and Pluggable Services
+
+   Services can be plugged into the Warden’s monitoring infrastructure by
+   setting up an individual configuration file for each supported service
+   in the /opt/mapr/conf/conf.d directory, named in the pattern
+   warden.<servicename>.conf. The <servicename>:<number of
+   nodes>:<dependencies> triplets for a pluggable service are stored in
+   the individual warden.<servicename>.conf files, not in the main
+   warden.conf file.
+   The following services have configuration files pre-configured at
+   installation:
+     * [3]Hue
+     * [4]HTTP-FS
+     * [5]The Hive metastore
+     * [6]HiveServer2
+     * [7]Oozie
+     * [8]Spark-Master
+
+   As with other Warden services, the Warden daemon monitors the znodes
+   for a configured component’s service and restarts the service as
+   specified by the configuration triplet. The configuration file also
+   specifies resource limits for the service, any ports used by the
+   service, and a location for log files.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/MemoryAllocation-Nodes.html#Memory-Allocation-for-Nod-Whenyourunconfigure-d3e67
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/RM-ZeroConfigFailover.html#Zero-Configuration-Failov-AsofMapR4.0.2youcan-d3e64
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hue/Hue.html#Hue
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/HttpFS/HttpFS.html#HttpFS
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hive/Hive.html#Hive
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hive/ConfiguringHive.html#ConfiguringHive
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Oozie/Oozie.html#Oozie
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/Spark.html#Spark

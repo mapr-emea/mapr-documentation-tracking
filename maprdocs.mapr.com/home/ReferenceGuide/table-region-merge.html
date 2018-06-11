@@ -1,0 +1,84 @@
+table region merge
+
+   Merges regions of a table together to reduce the number of regions that
+   a table occupies.
+
+   This command merges the region that you specify with the region that
+   contains the row keys that immediately follow the row keys of the
+   specified region.
+   Note: Consider the table configuration when you decide to merge regions
+   because it is possible that MapR-DB might immediately split the regions
+   after they are merged. If autosplit is set to true, MapR-DB splits a
+   region when the size of the region exceeds 150% of the average value
+   (regionsizemb). For example, if the average value is 4096 MB, MapR-DB
+   splits a region that is larger than 6144 MB.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * splitmergeperm permission on the table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table region merge
+  -fid <regionFID>
+  -path <table path>
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/region/merge?fid=<region FID>&path=<path>'
+  -u <username>:<password>
+
+Parameters
+
+   Parameter
+
+   Description
+
+   fid
+
+   The FID for the table region that you want to merge. The output of
+   maprcli [4]table region list lists the FIDs for the table.
+   path
+
+   The path to the table whose regions are being merged.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, if you want to merge regions for table named
+       test under volume1 which has a mount point at /volume1, specify the
+       following path: /volume1/test
+
+     * For a path on a remote, you must also specify the cluster name in
+       the path. For example, if you want to merge regions for table named
+       test under volume1 in the sanfrancisco cluster, specify the
+       following path:/mapr/sanfrancisco/volume1/customer
+
+Example
+
+   Merges the specified region:
+
+   CLI
+
+maprcli table region merge -path /user/test5 -fid 2086.32.131296
+
+   REST
+
+curl -k -X POST \
+  'https://myhost:8443/rest/table/region/merge?path=%2Fuser%2Ftest5&fid=2086.32.
+131296' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-region-list.html

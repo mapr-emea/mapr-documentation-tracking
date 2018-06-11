@@ -1,0 +1,148 @@
+MapR-DB HBase Shell (Binary Tables)
+
+   You can manage MapR-DB tables using HBase shell commands and additional
+   HBase shell commands included in the MapR distribution of Hadoop.
+
+   The HBase shell command is used on binary tables only. To run this
+   command, execute the following:
+hbase shell
+
+   Note: Before running the shell, ensure that your user ID has both the
+   readAce and writeAce permissions on the volume. For information about
+   these permissions, see [1]Managing Whole Volume ACEs.
+
+   When you specify a table in HBase shell, use the following syntax:
+     * For a table on the local cluster, start the path at the volume
+       mount point. For example, for a table named test under a volume
+       with a mount point at /volume1, specify the following path as the
+       table name: “/volume1/test”
+     * For a table on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named customer under
+       volume1 in the sanfrancisco cluster, specify the following path as
+       the table name: “/mapr/sanfrancisco/volume1/customer”
+
+   Note: You can access a table on a remote cluster when the remote
+   cluster has an entry in the [2]mapr-clusters.conf file on the node
+   where the HBase shell is running.
+
+   The following table lists the supported HBase shell commands that you
+   can use to manage MapR-DB tables:
+   Command Description
+   alter Performs the following actions on MapR-DB tables:
+     * Adds a new table or column family
+     * Modifies the following table-level attributes:
+     *
+          + BULKLOAD - A Boolean value that specifies whether to perform a
+            full bulk load of the table. The default is false. For more
+            information, see [3]Bulk Loading and MapR-DB Tables.
+          + MAX_FILESIZE
+          + AUTOSPLIT - A Boolean value that specifies whether to split
+            the table into regions automatically as the table grows. The
+            average size of each region is determined by the regionsizemb
+            parameter. The default value is true. If you set the value to
+            false, you can manually split tables into regions by using the
+            maprcli table region split command.
+     * Modifies the following attributes of a column family:
+     *
+          + TTL
+          + VERSIONS (max or min)
+          + COMPRESSION
+          + IN_MEMORY
+
+   Aside from the attributes listed above, no other attributes apply to
+   MapR-DB tables. Unlike HBase, you do not need to disable a table before
+   altering a table.
+   alter_async On MapR-DB tables, this has the same behavior as the alter
+   command.
+   count Counts the number of rows in a specified table.
+   create Creates a table in the specified path.
+   delete Deletes a value in a specified table, row, and column.
+   Optionally, you can also specify the timestamp associated with the
+   value that you want to delete.
+   deleteall Delete all values in a row based on the table name and row.
+   Optionally, you can also specify the timestamp associated with the
+   values that you want to delete.
+   describe Describes a specified table.
+   disable Marks a specified table as disabled. This state is recorded
+   only in the client process (HBase shell) memory and does not actually
+   disable any operations on a MapR-DB table.
+   disable_all Marks tables as disabled if they have names matching the
+   specified regular expression. This state is recorded only in the client
+   process (HBase shell) memory and does not actually disable any
+   operations on the MapR-DB tables.
+   drop Drops a specified table that is marked as disabled.
+   drop_all Drops all tables that are marked as disabled.
+   enable Marks a specified table as enabled. This state is recorded only
+   in the client process (HBase shell) memory.
+   enable_all Marks tables as enabled if they have a table name that
+   matches the specified regular expression. This state is recorded only
+   in the client process (HBase shell) memory.
+   exists Returns boolean value true if the specified table exists.
+   exit Exits the HBase shell.
+   get Gets the contents of a row or cell.
+   get_counter Returns the value of a counter at a specified table, row,
+   and column.
+   incr Increments a value at a specified table, row, and column.
+   is_disabled Returns a value that indicates if a specified table is
+   disabled. You can perform operations on MapR-DB tables that are
+   disabled.
+   is_enabled Returns a value that indicates if a specified table is
+   enabled. You can perform operations on MapR-DB tables even if they are
+   not enabled.
+   list For HBase 1.1 or above, if the mapr.hbase.default.db property is
+   set to maprdb, this command returns the MapR-DB tables under the user's
+   home directory.
+   list_perm Lists all permissions set by Access Control Expressions for a
+   specified table. This HBase shell command only operates on MapR-DB
+   tables. For more information, see [4]list_perm.
+   put Puts a value at a specified table, row, and column. Optionally, you
+   can also specify the timestamp for that value.
+   scan Scans a specified table. Optionally, you can also specify a
+   dictionary of scanner specifications.
+   set_perm Sets permissions with Access Control Expressions on a
+   specified table, column family, or column qualifier. This Hbase shell
+   command only operates on MapR-DB tables. For more information, see
+   [5]set_perm.
+   show_filters Shows all the filters supported by the Hbase or MapR-DB
+   tables. Provide the link to 4.1 supported filters doc
+   truncate Disables, drops, and recreates a specified table.
+   version Returns the HBase client version.
+   whoami Returns the current user.
+
+   MapR-DB does not support the following HBase shell commands:
+     * add_peer
+     * alter_status
+     * assign
+     * balance_switch
+     * balancer
+     * close_region
+     * compact
+     * disable_peer
+     * enable_peer
+     * flush
+     * grant
+     * hlog_roll
+     * list_peer
+     * major_compact
+     * move
+     * remove_peer
+     * start_replication
+     * stop_replication
+     * status
+     * split
+     * revoke
+     * unassign
+     * user_permission
+     * zk_dump
+
+   For more information about the HBase shell commands, see the [6]Apache
+   HBase documentation.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/VolumeDataACE.html#concept_a34_lk1_f5
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr-clusters.conf.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/BulkLoadingandMapR-DBTables-binary.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/list_perm.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/set_perm.html
+   6. http://hbase.apache.org/book.html#shell

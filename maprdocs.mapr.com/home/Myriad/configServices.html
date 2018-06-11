@@ -1,0 +1,63 @@
+Configuring Services
+
+   Services, such as JobHistoryServer, can be launched as a task from the
+   Myriad Framework.
+
+   To configure services, define the service in the Myriad configuration
+   file, myriad-config-default.yml. Once defined, the [1]Myriad Service
+   REST API can be used to launch an instance as a task for the service.
+
+   The services and service properties are as follows:
+<!-- Define services as a task -->
+services:
+    serviceName:        # Name of the service
+    jvmMaxMemoryMB:     # Memory needed for service
+    cpus:               # CPU needed for Service
+    ports:              # Map of ports: port property and value
+                        # (Default: 0 which indicates that port will be assigned
+ randomly)
+                        # Uses the syntax, <name>: <value>
+    envSettings:        # Any environment settings
+    taskName:           # Again service name
+    maxInstances:       # If defined maximum number of instances this service ca
+n have per myriad framework
+    command:            # Command to be executed
+    serviceOptsName:    # Name of the env. variable that may need to be set for
+the service that will include env. settings
+
+   To configure additional services:
+    1. Edit the myriad-config-default.yml file.
+    2. For the services property, specify a service and provide the
+       appropriate parameters.
+       For example, to define a TimeLineServer task:
+services:
+    jobhistory:
+        jvmMaxMemoryMB: 64
+        cpus: 0.5
+        ports:
+           myriad.mapreduce.jobhistory.admin.address: 10033
+           myriad.mapreduce.jobhistory.address: 10020
+           myriad.mapreduce.jobhistory.webapp.address: 19888
+        envSettings:
+        taskName: jobhistory
+        serviceOptsName: HADOOP_JOB_HISTORYSERVER_OPTS
+        command: $YARN_HOME/bin/mapred historyserver
+        maxInstances: 1
+    timelineserver:
+        jvmMaxMemoryMB: 1024
+        cpus: 1
+        ports:
+            myriad.mapreduce.timeline.address: 10200
+            myriad.mapreduce.timeline.webapp.address: 8188
+        envSettings:
+        taskName: timelineserver
+        command: $YARN_HOME/bin/yarn timelineserver
+        maxInstances: 1
+
+    3. Copy or update the myriad-config-default.yml file on every node in
+       the cluster.
+    4. Restart the initial Resource Manager from Marathon.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Myriad/myriadREST.html#myriadREST

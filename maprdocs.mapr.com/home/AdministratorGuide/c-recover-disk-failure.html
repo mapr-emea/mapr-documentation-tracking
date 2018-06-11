@@ -1,0 +1,79 @@
+Recovering from Disk Failure
+
+   Most software failures can be remedied by running the fsck utility,
+   which scans the storage pool that the disk belongs to and reports
+   errors. For hardware failures, remove the failed disk and replace it
+   according to the procedure in[1] Removing and Replacing Disks.
+   The following table lists types of failures and recommended courses of
+   action:
+   Error Failure Reason Recommended Course of Action
+   I/OTimeOut Error The default value for mfs.disk.io.timeout parameter is
+   60 seconds. The time to declare an IO as stuck is 3 times the value of
+   this parameter (3 x mfs.disk.io.timeout). The disk will be taken
+   offline even if a single IO has not completed.
+    1. Check if the disks are good and still reliable.
+    2. If disks are good, increase the value of the mfs.io.disk.timeout
+       parameter in the /opt/mapr/conf/mfs.conf file. Otherwise, replace
+       the disks.
+
+   No such device The $INSTALL_DIR/conf/disktab file contains
+   "/MissingDisk" or references a disk path not found in /proc/partitions
+   file. Run mrdisk <device path> to determine whether a disk is formatted
+   for MapR-FS. Also, check the device paths in $INSTALL_DIR/conf/disktab
+   file. The disktab file contains the disk path and disk GUID that is
+   used to load the disks in MFS. If the disk paths have been renamed, fix
+   them or run disksetup -X command to regenerate disktab from
+   /proc/partitions. Alternatively, restart MFS to resolve disk name
+   changes.
+
+   If the problem still persists, contact MapR support.
+   ENODEV: MissingDisk# Error: disktab file contains a /MissingDisk# entry
+   A disk corresponding to a GUID is missing and the corresponding disk
+   path in the disktab file belongs to another disk. When attempt is made
+   to automatically fix the disktab file, this entry is replaced with
+   /MissingDisk# path. If a disk corresponding to a GUID is permanently
+   lost, remove the line corresponding to it in the disktab file.
+   Alternatively, run maprcli disk remove _MissingDisk# command, where #
+   corresponds to the disk number and restart MFS.
+   EIO Error I/O error. This could be due to a bad block or disk. The
+   system will offline the SP after one final attempt to complete the IO.
+   Check /var/log/messages for errors from the disk drivers.
+   CRC error This could be due to a bad block or bit flip on the disk. The
+   SP will be taken offline immediately. Run fsck -n <sp> -d to perform a
+   CRC (Cyclic Redundancy Check) on the data blocks in the storage pool,
+   then bring it back online.
+
+   To load all the SPs to the list of SPs, run:
+mrconfig disk load or mrconfig sp load
+
+   To bring back all SPs online, run:
+mrconfig sp refresh
+
+   To bring specific SPs back online, run:
+mrconfig sp online <sp path>
+
+   SlowDisk Error The default value for mfs.disk.io.timeout parameter is
+   60 seconds. The time to declare an IO as slow is equal to the value of
+   this parameter (1 x mfs.disk.io.timeout). Thirty or more slow IO
+   completions in a short span of time (5 seconds) on the same disk is
+   recorded as a slow event. The SP will be taken offline if 3 such events
+   are recorded within an hour.
+   Note: After an hour, MapR-FS will reset tracking (to 0).
+    1. Check if the disks are good and still reliable.
+    2. If disks are good, increase the value of the mfs.io.disk.timeout
+       parameter in the /opt/mapr/conf/mfs.conf file. Otherwise, replace
+       the disks.
+
+   GUID of disk mismatches with the one in $INSTALL_DIR/conf/disktab It's
+   possible that disk names have changed. After a node restart, the
+   operating system can reassign the drive labels (for example, /sda),
+   resulting in drive labels no longer matching the entries in the disktab
+   file. The disktab file contains the disk path and disk GUID that is
+   used to load the disks in MFS. Run $INSTALL_DIR/server/disksetup -X to
+   update the disktab file by looking up the disks in /proc/partitions and
+   make the disk paths match the GUIDs.
+   Unknown error   Contact MapR support.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/c-remove-replace-disks.html#c-remove-replace-disks

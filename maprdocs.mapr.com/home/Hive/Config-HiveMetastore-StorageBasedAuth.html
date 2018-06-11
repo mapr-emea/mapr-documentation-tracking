@@ -1,0 +1,62 @@
+Configure Hive Metastore to use Storage-Based Authorization
+
+   To enable storage-based authorization for the Hive Metastore server,
+   set these properties in hive-site.xml:
+   Property Setting Explanation
+   hive.metastore.pre.event.listeners
+   org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventL
+   istener Turns on Metastore security.
+   hive.security.metastore.authorization.manager
+   org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizat
+   ionProvider
+   Note: The StorageBasedAuthorizationProvider setting first appeared, on
+   the Metastore side only, in Hive 0.10.0. With Hive 0.12.0 and later it
+   can also run on the client side.
+   Specifies use of an HDFS permission-based model (recommended) for the
+   Metastore-side authorization provider. The default
+   (DefaultHiveMetastoreAuthorizationProvider) implements the standard
+   Hive grant/revoke model.
+   hive.security.metastore.authenticator.manager
+   org.apache.hadoop.hive.ql.security.HadoopDefaultMetastoreAuthenticator
+   Default value.
+   hive.security.metastore.authorization.auth.reads true (default) Default
+   value (does not appear in hive-site.xml file). Set to true, Metastore
+   authorization also performs a read authorization check (first supported
+   in Hive 0.14.0).
+
+Sample hive-site.xml File
+
+<property>
+  <name>hive.security.metastore.authorization.manager</name>
+  <value>org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizat
+ionProvider</value>
+  <description>authorization manager class name to be used in the metastore for
+authorization.
+  The user defined authorization class should implement interface
+  org.apache.hadoop.hive.ql.security.authorization.HiveMetastoreAuthorizationPro
+vider.
+  </description>
+ </property>
+
+<property>
+  <name>hive.security.metastore.authenticator.manager</name>
+  <value>org.apache.hadoop.hive.ql.security.HadoopDefaultMetastoreAuthenticator<
+/value>
+  <description>authenticator manager class name to be used in the metastore for
+authentication.
+  The user defined authenticator should implement interface
+  org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider.
+  </description>
+</property>
+
+<property>
+  <name>hive.metastore.pre.event.listeners</name>
+  <value>AuthorizationPreEventListener</value>
+  <description>pre-event listener classes to be loaded on the metastore side to
+run code
+  whenever databases, tables, and partitions are created, altered, or dropped.
+  Set to org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventL
+istener
+  if metastore-side authorization is desired.
+  </description>
+</property>

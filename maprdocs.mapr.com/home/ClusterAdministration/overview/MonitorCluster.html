@@ -1,0 +1,116 @@
+Monitoring the Cluster
+
+   You can view the cluster health, disk, memory, CPU utilization metrics,
+   and alarms on the cluster using MCS and the CLI.
+
+Monitoring Cluster Health Using the MapR Control System
+
+   Log in to MCS and click Overview.
+
+   The Overview page displays the following panes:
+     * [1]Node Health — the health of the nodes on the cluster, by service
+       (default) or topology
+     * [2]Active Alarms — a summary of active alarms for the cluster
+     * [3]Cluster Utilization — CPU, memory, and disk space usage
+     * [4]Yarn — the number of running and queued applications, number of
+       Node Managers, and percent of memory and CPU's used relative to the
+       amount configured
+     * [5]Volume Data — the number of mounted and unmounted volumes on the
+       cluster
+
+   Note: During installation using the MapR Installer, you can configure
+   metrics and logging using settings on the Monitoring page of the MapR
+   Installer user interface. The metrics collection infrastructure must be
+   installed because the MapR Control System relies on these metrics to
+   provide graphs and charts in the panes. If the metrics collection
+   infrastructure is not installed, you cannot visualize the metrics in
+   the various panes. If you want, you can install metrics collection or
+   logging by selecting the feature during an [6]Incremental Install.
+
+Viewing Cluster Utilization Information in the MapR Control System
+
+   The Cluster Utilization pane in the Overview page displays the
+   following for:
+     * CPU — Percentage of cores currently utilized and total cores
+     * Memory — Percentage of memory (in GB) currently utlized and total
+       memory (in GB)
+     * Disk — Percentage of space (in GB) currently utilized and total
+       disk space (in GB)
+
+   The Cluster Utilization pane also shows the amount of raw data and the
+   savings (in percentage) after compression.
+
+   The Utilization Trend pane shows CPU, memory, and disk usage trend for
+   the specified time range. To view utilization trend for a time range,
+   you can either choose the time range from the dropdown menu (which can
+   be for the last 15 minutes, last hour, last 12 hours, last day, last 7
+   days, last 30 days, or last 90 days) or select a custom time range, and
+   zoom in (by clicking and dragging the cursor in the pane) for a more
+   granular view. Click Reset Zoom to zoom out and return to selected
+   date/time range view. If there were any alarms during the selected
+   date/time range, the Alarms pane above shows:
+     * When the alarm was raised
+     * The severity of the alarm
+          + [severeAlarm.png] — an error
+          + [warningAlarm.png] — a warning
+          + [infoAlarm.png] — information
+
+Monitoring Cluster Alarms in the MapR Control System
+
+   See [7]Viewing Active Cluster Alarms for more information.
+
+Retrieving Cluster Information Using the CLI or REST API
+
+   The basic command to retrieve cluster health and disk space information
+   is:
+maprcli dashboard info -cluster <cluster>
+
+   The utilization field in the output shows the total and utilized amount
+   of disk space, memory, and CPU for the cluster, which can also be
+   visualized in MCS. For example:
+# /opt/mapr/bin/maprcli dashboard info -json
+{
+        "timestamp":1525230746268,
+        "timeofday":"2018-05-01 08:12:26.268 GMT-0700 PM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        ...
+                        "utilization":{
+                                "cpu":{
+                                        "util":7,
+                                        "total":8,
+                                        "active":0
+                                },
+                                "memory":{
+                                        "total":15886,
+                                        "active":11281
+                                },
+                                "disk_space":{
+                                        "total":273,
+                                        "active":0
+                                },
+                                "compression":{
+                                        "compressed":0,
+                                        "uncompressed":0
+                                }
+                        },
+                        ...
+                }
+        ]
+}
+
+   For information on all the fields returned by this command, see
+   [8]dashboard info.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/overview/MonitorNodes.html#node-health
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Alarms-ViewClstrAlarms-MCS.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/overview/MonitorCluster.html#mcs-resource-util
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/overview/MonitorYarn.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/overview/MonitorVolumes.html#mount
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Using_incremental_install_function.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Alarms-ViewClstrAlarms-MCS.html
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dashboard-info.html

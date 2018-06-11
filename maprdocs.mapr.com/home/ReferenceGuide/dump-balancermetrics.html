@@ -1,0 +1,91 @@
+dump balancermetrics
+
+   Returns a cumulative count of container moves and MB of data moved
+   between storage pools.
+
+   The maprcli dump balancermetrics command returns a cumulative count of
+   container moves and MB of data moved between storage pools. You can run
+   this command periodically to determine how much data has been moved by
+   the disk space balancer between two intervals. For best results, use
+   the -json option when running dump balancermetrics from the command
+   line.
+
+   The disk space balancer is a tool that balances disk space usage on a
+   cluster by moving containers between storage pools. Whenever a storage
+   pool is over 70% full (or it reaches a threshold defined by the
+   cldb.balancer.disk.threshold.percentage parameter), the disk space
+   balancer distributes containers to other storage pools that have lower
+   utilization than the average for that cluster. The disk space balancer
+   aims to ensure that the percentage of space used on all the disks in
+   the node is similar. For more information, see [1]Disk Space Balancer.
+
+Syntax
+
+   CLI
+
+maprcli dump balancermetrics
+    [-cluster <cluster name>]
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter
+
+   Description
+
+   cluster
+
+   The cluster on which to run the command. If this parameter is omitted,
+   the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+
+Output
+
+   The maprcli dump balancermetrics command returns a cumulative count of
+   container moves and MB of data moved between storage pools since the
+   current CLDB became the master CLDB.
+# maprcli dump balancermetrics -json
+{
+    "timestamp":1337770325979,
+    "status":"OK",
+    "total":1,
+    "data":[
+        {
+            "numContainersMoved":10090,
+            "numMBMoved":3147147,
+            "timeOfLastMove": "Wed May 23 03:51:44 PDT 2012"
+        }
+    ]
+}
+
+   Output fields
+
+   Field
+
+   Description
+
+   numContainersMoved
+
+   The number of containers moved between storage pools by the disk space
+   balancer.
+
+   numMBMoved
+
+   The total MB of data moved between storage pools on the cluster.
+
+   timeOfLastMove
+
+   The date and time of most recent container move.
+
+Example
+
+   CLI
+
+maprcli dump balancermetrics -cluster 10.10.82.23 -json
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DiskSpaceBalancer.html#ConfiguringBalancerSettin_26982510-d3e171

@@ -1,0 +1,42 @@
+Configure User Impersonation for Flume
+
+   Configure impersonation for Flume agents to allow one user (the mapr
+   super user) to access data and submit jobs on behalf of another user.
+    1. Complete the steps to [1]enable Impersonation for the mapr
+       Superuser.
+    2. Configure the flume.conf file with the following properties:
+
+   Property Value Comment
+   <agent>.sinks.<sink>.type HDFS
+   <agent>.sinks.<sink>.hdfs.proxyUser user ID of target user Can be any
+   valid MapR user identity.
+   <agent>.sinks.<sink>.hdfs.kerberosPrincipal mapr/FQDN@REALM.COM The
+   user component of the principal must be the username of the user
+   running flume-ng. Flume agents that use impersonation must run as the
+   user mapr on the cluster.
+   <agent>.sinks.<sink>.hdfs.kerberosKeytab path to file If you are not
+   using Kerberos to authenticate, this can the path to any valid file. If
+   you are using Kerberos to authenticate, provide the path to your
+   flume.keytab file.
+    3. In the flume-ng file
+       (/opt/mapr/flume/flume-<version>/bin/flume-ng), add export
+       MAPR_IMPERSONATION_ENABLED=1 after the HADOOP_HOME setting:
+
+        Flume 1.6 Example
+
+if [ $HADOOP_VERSION == 1.0.3 ]; then
+   export HADOOP_HOME=${BASEMAPR}/hadoop/hadoop-0.20.2/
+else
+   export HADOOP_HOME=${BASEMAPR}/hadoop/${HADOOP_VERSION}/
+fi
+export MAPR_IMPERSONATION_ENABLED=1
+
+        Flume 1.5 Example
+
+HADOOP_VERSION=`readlink \`which hadoop\` | awk -F "/" '{print$5}'`
+export HADOOP_HOME=${BASEMAPR}/hadoop/${HADOOP_VERSION}/
+export MAPR_IMPERSONATION_ENABLED=1
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/t_enable_impersonation_mapr.html#task_uvr_d2z_dt

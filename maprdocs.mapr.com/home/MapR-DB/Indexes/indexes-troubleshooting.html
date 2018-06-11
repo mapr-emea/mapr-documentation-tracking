@@ -1,0 +1,145 @@
+Troubleshooting Secondary Indexes
+
+   Describes how to debug and troubleshoot usage of secondary indexes.
+
+   The following table lists problems you may encounter when using
+   secondary indexes. Based on the symptoms listed in the first column,
+   refer to the section in the third column to further troubleshoot the
+   issue.
+   Symptom Possible Cause Troubleshooting Steps
+   Query performance is slow Query is not using secondary indexes
+    1. [1]Determining the Query Execution Path for OJAI Queries
+    2. [2]Determining Secondary Index Usage
+
+   Non-optimal OJAI query plan chosen [3]Examining the OJAI Query Plan
+   Non-optimal query plan chosen by OJAI Distributed Query Service
+   [4]Determining Index Use
+   Inconsistent query results Secondary index update lag [5]Identifying
+   Secondary Index Lag
+   Unresolved encoding errors [6]Identifying and Resolving Secondary Index
+   Encoding Errors
+   Query runs out of memory Memory configuration in the OJAI Distributed
+   Query Service set too low [7]Adjusting Memory Settings in the OJAI
+   Distributed Query Service
+
+Secondary Index Restrictions
+
+   When troubleshooting secondary indexes, you should also keep in mind
+   the following restrictions:
+
+   Type Restrictions
+
+          + Indexed fields must contain scalar types. Scalar types include
+            integer, character, boolean, string, and byte. See [8]Data
+            Types Supported for Secondary Indexes for the complete list of
+            types.
+          + Indexed fields cannot contain nested documents. An indexed
+            field can be a subfield of a nested document, provided the
+            subfield contains scalar types.
+          + Indexed fields cannot contain arrays.
+
+   Size Restrictions
+
+          + The maximum size of all indexed fields in an index is 32KB. If
+            the collective size exceeds 32KB, then an insert of the
+            corresponding document results in an encoding error
+            (INDEX_ROW_KEY_ENCODER_ERROR_ENCODING_IS_TOO_LONG).
+          + The maximum number of indexes that you can create on a JSON
+            table is 32.
+
+   Field Definition Restrictions
+
+          + Indexed fields cannot be individual elements of an array.
+          + You can include a specific field once as an indexed field and
+            once as an included field, not both. This restriction does not
+            apply if you cast the field to different types. For example:
+               o You can create an index where the score field is an
+                 indexed field cast as a double type, and score is also an
+                 included field. The included field retains the original
+                 data type of the score field.
+maprcli table index add -path /castTable \
+   -index castIdx1 \
+   -indexedfields '$CAST(score@DOUBLE)' \
+   -includedFields score
+               o You can create an index where the score field is an
+                 indexed field, cast as a double type, and the score field
+                 is also another indexed field, cast as a long type.
+maprcli table index add -path /castTable \
+   -index castIdx2 \
+   -indexedfields '$CAST(score@DOUBLE)','$CAST(score@LONG)'
+          + You cannot use casts with included fields.
+          +
+          + You cannot specify a field as either an indexed or included
+            field if the field is also specified as a column family JSON
+            path name. For example, suppose you have the following JSON
+            table:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" :
+                    {
+                         "c" : "value",
+                         "d" : "value"
+                    },
+               "e" : "value"
+          }
+}
+            If you created a column family at field c in the JSON path
+            a.b.c, you cannot define field a.b.c as either an indexed or
+            included field. You can define the fields a, a.b, a.b.d as
+            either indexed or included fields.
+          + You cannot specify an included field where the data in the
+            field spans more than one column family. In the following
+            example, the included field sl1.sl2 spans column families, cf2
+            and cf3:
+maprcli table cf list -path /cftab
+compressionperm  readperm  traverseperm  jsonfamilypath   writeperm  minversions
+  maxversions  compression  ttl         inmemory  cfname   memoryperm
+u:root           u:root    u:root                         u:root     0
+  1            lz4          2147483647  false     default  u:root
+u:root           u:root    u:root        sl1              u:root     0
+  1            lz4          2147483647  false     cf1      u:root
+u:root           u:root    u:root        sl1.sl2.sl3      u:root     0
+  1            lz4          2147483647  false     cf2      u:root
+u:root           u:root    u:root        sl1.sl2.sl3.sl4  u:root     0
+  1            lz4          2147483647  false     cf3      u:root
+
+maprcli table index add -path /cftab -index i1 -indexedfields sl1.sl2.sl3.sl4.l4
+a, sl1.l1a -includedfields sl1.sl2,sl1.sl2.sl3.sl4.sl5.l5b -json
+{
+        "timestamp":1507419777919,
+        "timeofday":"2017-10-07 04:42:57.919 GMT-0700 PM",
+        "status":"ERROR",
+        "errors":[
+                {
+                        "id":22,
+                        "desc":"Data for included field sl1.sl2 may not span mor
+e than one column family."
+                }
+         ]
+}
+
+   Option Restrictions
+
+          + When creating an index, a splits option is not available.
+            Indexes are auto-split.
+
+   Index Usage Restrictions
+
+          + Indexes optimize filter conditions if you compare indexed
+            fields against scalar values, and the field and scalar value
+            have [9]Comparable JSON Document Data Types.
+          + Indexes do not optimize non-existence filter conditions.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/DeterminingQueryExecutionPath.html#concept_sv1_dxd_pbb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/DeterminingSIUsage.html#concept_zzy_yxd_pbb
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/ExaminingOJAIQueryPlan.html#concept_nml_g12_pbb
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/evaluating_queries.html#evaluating_queries
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/IdentifyingIndexLag.html#concept_gm3_jb2_pbb
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/IdentifyingResolvingSIEncodingErrors.html#task_dlc_1d2_pbb
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/AdjustMemoryOJAIQueryService.html#concept_qcf_wf2_pbb
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/datatypes-comparable.html

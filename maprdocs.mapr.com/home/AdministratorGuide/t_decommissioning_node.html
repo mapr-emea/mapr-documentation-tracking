@@ -1,0 +1,49 @@
+Decommissioning a Node and Uninstalling MapR Software from the Command-line
+
+   Use the following procedure to remove a node and uninstall the MapR
+   software. This procedure detaches the node from the cluster and removes
+   the MapR packages, log files, and configuration files, but does not
+   format the disks.
+   Note: Before Decommissioning a Node, make sure any data on the node is
+   replicated and any needed services are running elsewhere. If the node
+   you are decommissioning runs a critical service such as CLDB or
+   ZooKeeper, verify that enough instances of that service are running on
+   other nodes in the cluster. See [1]Planning the Cluster for
+   recommendations on service assignment to nodes.
+
+   Complete the following steps to permanently decommission a node:
+    1. Drain the node of data by moving the node to the /decommissioned
+       physical topology. All the data on a node in the /decommissioned
+       topology is migrated to volumes and nodes in the data topology.
+    2. Run the following command to check if a given volume is present on
+       the node:
+maprcli dump volumenodes -volumename <volume> -json | grep <ip:port>
+       Note: Run this command for each non-local volume in your cluster to
+       verify that the node being decommissioned is not storing any volume
+       data.
+    3. Change to the root user (or use sudo for the following commands).
+    4. Stop Warden on the node by running the following command:
+service mapr-warden stop
+    5. If ZooKeeper is installed on the node, stop it: service
+       mapr-zookeeper stop
+    6. Determine which MapR packages are installed on the node:
+          + dpkg --list | grep mapr (Ubuntu)
+          + rpm -qa | grep mapr (Red Hat or CentOS)
+    7. Remove the packages by issuing the appropriate command for the
+       operating system, followed by the list of services. Examples:
+          + apt-get purge mapr-core mapr-cldb mapr-fileserver (Ubuntu)
+          + yum erase mapr-core mapr-cldb mapr-fileserver (Red Hat or
+            CentOS)
+    8. Remove the /opt/mapr directory to remove any instances of hostid,
+       hostname, zkdata, and zookeeper left behind by the package manager.
+    9. Remove any MapR cores in the /opt/cores directory.
+   10. If the node you have decommissioned is a CLDB node or a ZooKeeper
+       node, then run configure.sh on all other nodes in the cluster. See
+       [2]Configuring the Node.
+   11. Remove the node by running the following command:
+maprcli node remove <node hostname|ip>
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/PlanningtheCluster.html#PlanningtheCluster
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/c_configure_node.html#ManagingNodes-configure-n_26982473-d3e499

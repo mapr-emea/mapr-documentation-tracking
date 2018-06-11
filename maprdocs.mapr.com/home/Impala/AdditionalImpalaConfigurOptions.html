@@ -1,0 +1,160 @@
+Additional Impala Configuration Options
+
+   You can modify the env.sh file located in
+   /opt/mapr/impala/impala-<version>/conf/ to set certain Impala start up
+   options.
+
+Modifying Startup Options
+
+   The env.sh file contains values that the Impala server, statestore, and
+   catalog services use during start up. The file also has information
+   about resources allocated for Impala. Most of the default values in the
+   env.sh file should work effectively, however there are some values that
+   you can modify. You can check the current value of all the settings
+   through the Impala web interface, available by default at
+   http://<impala-node-hostname>:25000/varz.
+
+   You may want to modify the following content in the env.sh file:
+     * Statestore address
+     * Amount of memory available to Impala
+     * Core dump enablement
+     * Session and query idle time
+
+   To modify the values, edit the env.sh file and then restart the Impala
+   server, Impala statestore, and Impala catalog to implement the changes.
+
+   Example of some file content that you may want to modify:
+HIVE_METASTORE_URI=thrift://localhost:9083
+  # not needed if /opt/mapr/hive is configured
+IMPALA_STATE_STORE_HOST=127.0.0.1
+IMPALA_STATE_STORE_PORT=24000
+IMPALA_BACKEND_PORT=22000
+IMPALA_LOG_DIR=/opt/mapr/impala/impala-1.1.1/log
+export IMPALA_STATE_STORE_ARGS=${IMPALA_STATE_STORE_ARGS:- \
+-log_dir=${IMPALA_LOG_DIR}} \
+-state_store_port=${IMPALA_STATE_STORE_PORT}
+export IMPALA_SERVER_ARGS=${IMPALA_SERVER_ARGS:- -log_dir=${IMPALA_LOG_DIR} \
+-state_store_port=${IMPALA_STATE_STORE_PORT} \
+-use_statestore
+-state_store_host=${IMPALA_STATE_STORE_HOST} \
+-be_port=${IMPALA_BACKEND_PORT}}
+export ENABLE_CORE_DUMPS=false
+
+   The following table contains a list of settings that you can edit in
+   /opt/mapr/impala/impala-<version>/conf/env.sh with descriptions for how
+   to change them:
+   Setting Description
+   Statestore address
+
+   You can modify this setting to change the statestore IP address or
+   hostname.
+
+   Example:
+
+   If a machine with an IP address of 192.168.0.28 is hosting statestore,
+   you can change
+IMPALA_STATE_STORE_HOST=127.0.0.1
+
+   to
+IMPALA_STATE_STORE_HOST=192.168.0.28.
+
+   Memory limits
+
+   If you run Impala on nodes that also run MapReduce, both frameworks may
+   compete for memory. Configure memory based on your job requirements and
+   SLAs to ensure that each framework has enough memory to avoid
+   conflicts.
+
+   You can include the mem_limit parameter in IMPALA_SERVER_ARGS to limit
+   the amount of memory available to Impala. Use absolute notation, such
+   as 500M or 2G, or a percentage of physical memory, such as 50% to
+   specify the memory limit. Impala aborts queries that exceeds the
+   specified memory limit. Percentage limits are based on the physical
+   memory of the machine.
+
+   You can also include the num_threads_per_disk parameter in
+   IMPALA_SERVER_ARGS to limit the number of threads that each disk
+   processes per impala server daemon. Limiting the number of threads per
+   disk can reduce the overall amount of memory consumed.
+
+   Example:
+   To limit Impala to 50% of system memory, modify:
+export IMPALA_SERVER_ARGS=${IMPALA_SERVER_ARGS:- \
+    -log_dir=${IMPALA_LOG_DIR} \
+    -state_store_port=${IMPALA_STATE_STORE_PORT} \
+    -use_statestore -state_store_host=${IMPALA_STATE_STORE_HOST} \
+    -be_port=${IMPALA_BACKEND_PORT}}
+
+   to
+export IMPALA_SERVER_ARGS=${IMPALA_SERVER_ARGS:- \
+    -log_dir=${IMPALA_LOG_DIR} \
+    -state_store_port=${IMPALA_STATE_STORE_PORT} \
+    -use_statestore -state_store_host=${IMPALA_STATE_STORE_HOST} \
+    -be_port=${IMPALA_BACKEND_PORT} \
+    -mem_limit=50% \
+    -num_threads_per_disk=2}
+
+   Core dump enablement
+
+   Core dump file locations can vary depending on your operating system
+   configuration. Other security settings may prevent Impala from writing
+   core dumps when you enable this option.
+   To enable core dumps, change export ENABLE_CORE_DUMPS=false to export
+   ENABLE_CORE_DUMPS=true.
+   Session and query idle time
+   You can modify the time for which sessions and queries can remain idle
+   by adding the following options to env.sh:
+--idle_session_timeout
+--idle_query_timeout
+
+   Example:
+IMPALA_SERVER_ARGS=" \
+ -log_dir=${IMPALA_LOG_DIR} \
+ -state_store_port=${IMPALA_STATE_STORE_PORT} \
+ -idle_query_timeout=<value in seconds> \
+ -idle_session_timeout=<value in seconds> \
+ -use_statestore \
+ -state_store_host=${IMPALA_STATE_STORE_HOST} \
+ -catalog_service_host=${CATALOG_SERVICE_HOST} \
+ -be_port=${IMPALA_BACKEND_PORT}"
+
+   Use background threads to loadand cache metadata
+
+   The following option controls the parallelism of metadata loading
+   during start up for the catalogd daemon and makes Impala use background
+   threads after start up to load and cache metadata.
+--load_catalog_in_background
+
+   The default setting is true.
+   Determine how much parallelism Impala devotes to loading metadata in
+   background
+
+   The following option controls the parallelism of metadata loading
+   during start up for the catalogd daemon and determines how much
+   parallelism Impala devotes to loading metadata in the background:
+--num_metadata_loading_threads
+
+   The default is 16, but you can increase this value for systems with a
+   huge number of databases, tables, or partitions. You can lower this
+   value for busy systems that have CPU-constraints due to jobs from other
+   components running in the cluster.
+   INSERT to create new partition and inherit permissions
+
+   The following option causes Impala INSERT statements to create each new
+   partition with the same MapR-FS permissions as its parent directory:
+--insert_inherit_permissions
+
+   By default, INSERT statements create directories for new partitions
+   using default MapR-FS permissions.
+
+   After you edit /opt/mapr/impala/impala-<version>/conf/env.sh, use the
+   following commands to restart the Impala server and services:
+     * Issue the following command to restart the Impala server:
+$ sudo maprcli node services -name impalaserver -action restart -nodes <IP addre
+ss where impala server is installed>
+     * Issue the following command to restart the Impala statestore:
+$ sudo maprcli node services -name impalastore -action restart -nodes <IP addres
+s where impala statestore is installed>
+     * Issue the following command to restart the Impala catalog:
+$ sudo maprcli node services -name impalacatalog -action restart -nodes <IP addr
+ess where impala catalog is installed>

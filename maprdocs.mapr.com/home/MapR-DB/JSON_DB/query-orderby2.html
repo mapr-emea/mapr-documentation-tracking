@@ -1,0 +1,197 @@
+Querying with Order By
+
+   The examples in this section query a document store and return specific
+   fields from the documents, sorted in a specific order. One of the
+   examples also uses offset and limit.
+   Note: You can improve the performance of order by queries by using
+   secondary indexes. See [1]ORDER BY Queries for more information.
+     * [2]Java - Order By
+     * [3]Java - Order By with Offset and Limit
+     * [4]dbshell
+
+   The following example shows how to return the _id, firstName, lastName,
+   and address.zipCode fields from documents in a store, sorting the
+   documents by _id. It uses the [5]Query.select and [6]Query.orderBy
+   methods.
+   Note: The example sorts in the default ascending order. To sort in
+   descending order, modify the orderby method call as follows:
+orderBy("_id", SortOrder.DESC)
+
+/**
+ * Copyright (c) 2017 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.mapr.ojai.examples;
+
+import org.ojai.Document;
+import org.ojai.DocumentStream;
+import org.ojai.store.Connection;
+import org.ojai.store.DocumentStore;
+import org.ojai.store.DriverManager;
+import org.ojai.store.Query;
+
+public class OJAI_010_FindQueryWithOrderBy {
+
+  public static void main(final String[] args) {
+
+    System.out.println("==== Start Application ===");
+
+
+    // Create an OJAI connection to MapR cluster
+    final Connection connection = DriverManager.getConnection("ojai:mapr:");
+
+    // Get an instance of OJAI DocumentStore
+    final DocumentStore store = connection.getStore("/demo_table");
+
+    // Build an OJAI query with an order by
+    final Query query = connection.newQuery()
+        .select("_id", "firstName", "lastName", "address.zipCode")
+        .orderBy("_id")
+        .build();
+
+    // fetch all OJAI Documents from this store
+    final DocumentStream stream = store.findQuery(query);
+
+    for (final Document userDocument : stream) {
+      // Print the OJAI Document
+      System.out.println(userDocument.asJsonString());
+    }
+
+    // Close this instance of OJAI DocumentStore
+    store.close();
+
+    // close the OJAI connection and release any resources held by the connectio
+n
+    connection.close();
+
+    System.out.println("==== End Application ===");
+  }
+
+}
+
+   The following example shows how to return the _id, firstName, lastName,
+   and address.zipCode fields from documents in a store, sorting the
+   documents by _id. It uses the [7]Query.select and [8]Query.orderBy
+   methods. In addition, the returned documents are offset and limited by
+   using the [9]Query.offset and [10]Query.limit methods.
+   Note: The example sorts in the default ascending order. To sort in
+   descending order, modify the orderBy method call as follows:
+orderBy("_id", SortOrder.DESC)
+
+/**
+ * Copyright (c) 2017 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.mapr.ojai.examples;
+
+import org.ojai.Document;
+import org.ojai.DocumentStream;
+import org.ojai.store.Connection;
+import org.ojai.store.DocumentStore;
+import org.ojai.store.DriverManager;
+import org.ojai.store.Query;
+
+public class OJAI_011_FindQueryWithOrderByLimitOffset {
+
+  public static void main(final String[] args) {
+
+    System.out.println("==== Start Application ===");
+
+
+    // Create an OJAI connection to MapR cluster
+    final Connection connection = DriverManager.getConnection("ojai:mapr:");
+
+    // Get an instance of OJAI DocumentStore
+    final DocumentStore store = connection.getStore("/demo_table");
+
+    // Build an OJAI query with an order by, offset, and limit
+    final Query query = connection.newQuery()
+        .select("_id", "firstName", "lastName", "address.zipCode")
+        .orderBy("_id")
+        .offset(2)
+        .limit(1)
+        .build();
+
+    // fetch all OJAI Documents from this store
+    final DocumentStream stream = store.findQuery(query);
+
+    for (final Document userDocument : stream) {
+      // Print the OJAI Document
+      System.out.println(userDocument.asJsonString());
+    }
+
+    // Close this instance of OJAI DocumentStore
+    store.close();
+
+    // close the OJAI connection and release any resources held by the connectio
+n
+    connection.close();
+
+    System.out.println("==== End Application ===");
+  }
+
+}
+
+   The following dbshell commands are equivalent to the code examples. See
+   [11]dbshell find or findbyid for more details about the syntax dbshell
+   provides.
+find /demo_table --query {
+  "$select":["_id","firstName","lastName","address.zipCode"],
+  "$orderby":"_id"
+}
+
+find /demo_table
+   --fields _id,firstName,lastName,address.zipCode
+   --orderby _id
+
+find /demo_table --query {
+  "$select":["_id","firstName","lastName","address.zipCode"],
+  "$orderby":"_id",
+  "$offset":2,
+  "$limit":1
+}
+
+find /demo_table
+   --fields _id,firstName,lastName,address.zipCode
+   --orderby _id
+   --offset 2
+   --limit 1
+
+   Note: The commands are shown split across multiple lines for
+   readability. When using dbshell, you must enter them in a single line.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby-queries.html#reference_cfw_jwl_f1b
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect1
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect2
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect3
+   5. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+   6. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
+   7. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+   8. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
+   9. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#offset-long-
+  10. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#limit-long-
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-find-findbyid.html

@@ -1,0 +1,78 @@
+Hue 3.10.0-1703 Release Notes
+
+   The notes below relate specifically to the MapR distribution for Apache
+   Hadoop.
+   Version 3.10.0
+   Release Date April 2017
+   MapR Version Interoperability See the [1]MEP Components and OS Support.
+   Source on GitHub [2]https://github.com/mapr/hue.git
+   GitHub Release Tag 3.10.0-mapr-1703
+   Maven Artifacts See [3]Maven Artifacts for MapR.
+   Package Names See [4]Package Names for MapR Expansion Packs (MEPs)
+
+New in This Release
+
+   Important: Note these considerations for Hue 3.10.0:
+     * The Livy version is a snapshot.
+     * Hue integration with Spark is an experimental feature.
+     * Livy is supported only for use with Hue. The Livy home directory
+       is:
+/opt/mapr/hue-livy/hue-livy-3.10.0/
+     * MapR does not support the integration between Hue 3.10.0 and the
+       following components:
+          + Solr Search
+          + Zookeeper
+     * Integration between Hue 3.10.0 and Sentry 1.6 is supported on
+       secure clusters that use Kerberos authentication, but it is not
+       supported on secure clusters that use MapR-SASL authentication.
+
+Patches
+
+   This MapR release includes the following new patches on the base
+   release. For details, refer to the commit log for this project in
+   GitHub.
+   GitHub Commit Number Date (YYYY-MM-DD) MapR Patch Number and
+   Description
+   df551f0 2016-12-30 [MAPR-25540] Hue adds the Sentry privilege of URIs
+   for Hive with "maprfs:////", not "maprfs:///"
+   d1dab93 2017-02-06 [MAPR-26005] Too many logs on migrate and syncdb
+   operations
+
+Known Issues and Limitations
+
+     * MAPR-18668: Hue does not work on RedHat/CentOS 7 when it is
+       configured to use a MySQL database. When this issue occurs, the
+       MapR Control System (MCS) displays the "Hue Down Alarm." Use this
+       workaround:
+         1. Run the following commands to install MariaDB and the RedHat 6
+            compatibility library:
+yum install mariadb
+rpm -ivh --nodeps http://yum.mariadb.org/$(rpm -qa mariadb|cut -d-
+-f2)/rhel7-amd64/rpms/MariaDB-$(rpm -qa mariadb|cut -d-
+-f2)-centos7-x86_64-compat.rpm
+
+         2. Run the following command to create a symlink for the Cyrus
+            SASL library:
+ln -s /lib64/libsasl2.so.3.0.0 /lib64/libsasl2.so.2
+         3. Run the following commands to reconfigure Hue:
+source /opt/mapr/hue/hue-3.10.0/build/env/bin/activate
+/opt/mapr/hue/hue-3.10.0/build/env/bin/hue syncdb --noinput
+/opt/mapr/hue/hue-3.10.0/build/env/bin/hue migrate
+
+         4. Run the following command to restart Hue:
+maprcli node services -name hue -action restart -nodes <space separated list of
+hostnames>
+       Note: Hue uses the [5]python parque lib to read the parquet files.
+       This library does not support all possible parquet formats.
+
+Resolved Issues
+
+   None.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/r_MEP_components.html#reference_pk5_5xb_tw
+   2. https://github.com/mapr/hue.git
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/DevelopmentGuide/MavenArtifacts.html#MavenArtifactsforMapR
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/EcosystemRN/MEPPkgNames.html#concept_zkc_jlh_hy
+   5. https://pypi.python.org/pypi/parquet/1.1

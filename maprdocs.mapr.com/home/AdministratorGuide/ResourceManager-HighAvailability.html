@@ -1,0 +1,90 @@
+ResourceManager High Availability
+
+   The ResourceManager service tracks a cluster's resources and schedules
+   YARN applications. Configure high availability for the ResourceManager
+   so that the failure of the ResourceManager service is not a single
+   point of failure for the cluster. The high availability of
+   ResourceManager is based on the cluster configuration of the restart,
+   recovery, and failover features.
+
+Restart
+
+   By default, the Warden attempts to restart a failed service three
+   times. You can configure the frequency that Warden attempts to restart
+   failed services before initializing failover in the warden.conf file.
+   For more information, see [1]warden.conf.
+
+Recovery
+
+   When a ResourceManager restarts or fails over, the active
+   ResourceManager can recover the state of the previously running
+   ResourceManager. By default, ResourceManager recovery is enabled and it
+   uses the FileSystemRMStateStore implementation to store the
+   ResourceManager state in the MapR-FS. You can configure the
+   ResourceManager to have no recovery or you can enable the recovery. You
+   can also configure the state store implementation that you want to use.
+   For more information, see [2]Recovery for the ResourceManager.
+
+Failover
+
+   When a ResourceManager fails, the cluster can fail over the
+   ResourceManager process to another node. To configure failover, the
+   cluster must have one or more nodes with the ResourceManager role.
+   Note:
+
+   Starting in Version 4.0.2, zero configuration failover provides
+   automatic failover without requiring that you specify the
+   ResourceManager nodes when you run configure.sh. It also does not
+   require any further configuration to yarn-site.xml.
+
+   Upgrade any client nodes to the 4.0.2 client to ensure proper
+   communication with the ResourceManager service. Earlier versions of the
+   MapR client do not support the zero configuration feature.
+
+   You can select one of the following failover implementations when you
+   use the configure.sh utility to configure each node:
+     * Zero Configuration Failover. With zero configuration failover, the
+       ResourceManager process only runs on one node in the cluster. When
+       the active ResourceManager fails, one of the standby
+       ResourceManager nodes automatically loads the working state from
+       the state store and continues providing services to the cluster.
+       Zero configuration failover is the default, recommended setting for
+       the following reasons:
+          + Only one ResourceManager process consumes cluster resources.
+            With the manual or automatic failover option, the active and
+            standby ResourceManagers consume cluster resources.
+          + Warden initiates failover automatically. With the manual
+            failover, you need to manually run the [3]yarn rmadmin command
+            for failover to occur.
+          + Simplified clients connectivity. Clients identify the active
+            ResourceManager with a single request to the Zookeeper. With
+            the manual or automatic failover option, ResourceManager
+            clients connect to each ResourceManager in a round-robin
+            fashion until they locate the active ResourceManager; this
+            results in delays when launching or querying jobs.
+          + Consistent Configuration. All cluster nodes and clients can
+            use the same yarn-site.xml configuration file. With manual or
+            automatic failover, you must maintain a customized
+            yarn-site.xml file for each node that runs the
+            ResourceManager.
+       For more information, see [4]Zero Configuration Failover for the
+       ResourceManager.
+     * Manual or Automatic Failover. With manual failover or automatic
+       failover, one active ResourceManager and one or more standby
+       Resource Managers run in the cluster. The standby ResourceManager
+       nodes run the ResourceManager process without loading the working
+       state. When the active ResourceManager fails, one of the standby
+       ResourceManager nodes can load the working state from the state
+       store and continue providing services to the cluster. For more
+       information, see [5]Manual or Automatic Failover for the
+       ResourceManager.
+
+   You can perform the following procedures to manage ResourceManager:
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/warden.conf.html#warden.conf
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/RM-Recovery.html#Recovery-for-the-Resource-Afterarestartorfailo-d3e64
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/yarn-rmadmin.html#yarnrmadmin
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/RM-ZeroConfigFailover.html#Zero-Configuration-Failov-AsofMapR4.0.2youcan-d3e64
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/RM-ManualAutomaticFailover.html#Manual-or-Automatic-Failo-Withmanualorautomati-d3e64

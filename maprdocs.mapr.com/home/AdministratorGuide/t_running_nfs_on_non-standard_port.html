@@ -1,0 +1,18 @@
+Running NFS on a Non-standard Port
+
+    1. To run NFS on an arbitrary port, modify the following line in
+       warden.conf:
+service.command.nfs.start=/etc/init.d/mapr-nfsserver start
+       Add -p <portnumber> to the end of the line, as in the following
+       example:
+service.command.nfs.start=/etc/init.d/mapr-nfsserver start -p 12345
+    2. After modifying warden.conf, restart the MapR NFS server by issuing
+       the following command:
+maprcli node services -nodes <nodename> -nfs restart
+    3. You can verify the port change with the rpcinfo -p localhost
+       command.
+       Warning: MapR uses version 3 of the NFS protocol. NFS version 4
+       bypasses the port mapper and attempts to connect to the default
+       port only. If you are running NFS on a non-standard port, mounts
+       from NFS version 4 clients time out. Use the -o nfsvers=3 option to
+       specify NFS version 3.

@@ -1,0 +1,39 @@
+Troubleshoot Myriad
+
+Resource Manager not Starting
+
+   The Resource Manager cannot be started from the command line using the
+   following command:
+$ yarn resourcemanager
+
+   The following error occurs:
+java.lang.UnsatisfiedLinkError: no mesos in java.library.path
+
+   Workaround:
+   Manually pass the MESOS_NATIVE_LIBRARY environment variable when
+   starting the Resource Manager. For example:
+env && export MESOS_NATIVE_LIBRARY=/usr/local/lib/libmesos.so && yarn
+          resourcemanager
+
+   Note: This is not an issue when starting Resource Manager from the
+   Marathon UI.
+
+Marathon Fails
+
+   The Mesos-3602 fix in Mesos version 0.26 causes an issue when using the
+   maprfs path for the URI. When starting Marathon, an extra forward slash
+   (/) is appended to the URI path. The application fails with a message
+   similar to the following:
+hadoop fs -copyToLocal '/maprfs:///dist/hadoop-2.7.0.myriad1.tar.gz'
+'/opt/mapr/slaves/67d1f64c-449b-4609-82f3-5da309f3c5c5-S9/frameworks/67d1f64c-44
+9b-4609-82f3-5da309f3c5c5-0000/executors/myriad1.63bbb98c-c072-11e5-b686-0cc47a5
+87d20/runs/427fe309-82c5-4f8b-9fa3-6dd39a4a5ef4/hadoop-2.7.0.myriad1.tar.gz
+-copyToLocal: java.net.URISyntaxException: Expected scheme-specific part at
+index 7: maprfs:
+
+   Workaround:
+
+   Replace maprfs:/// with hdfs:/// when specifying the URI on Marathon
+   application.
+   Note: This issue is fixed by MESOS-4304, which is available with in the
+   Mesos 0.27 release.

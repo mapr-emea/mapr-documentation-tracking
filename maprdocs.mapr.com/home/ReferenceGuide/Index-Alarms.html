@@ -1,0 +1,80 @@
+Secondary Index Alarms
+
+   Secondary index alarms indicate problems MapR-DB encounters while
+   updating secondary indexes. The following sections describe each alarm.
+
+Secondary Index Update Lag High
+
+   Logged As
+          VOLUME_ALARM_TABLE_INDEX_LAG_HIGH
+
+   Meaning
+          This alarm display the paths and names of the source tables for
+          which the replication lag is high. High lag times might be
+          caused by these conditions:
+
+          + High load on the source or replica
+          + Low network bandwidth between the source and replicas
+          + Miscellaneous error conditions that prevent replication from
+            proceeding
+          + Replication explicitly paused on the source cluster
+
+   Configuration
+          Configurable at the volume level. See [1]volume create for more
+          information.
+
+Secondary Index Update Error
+
+   Logged As
+          VOLUME_ALARM_TABLE_INDEX_ERROR
+
+   Meaning
+          This alarm occurs if the JSON table regions cannot connect to
+          any of the internal gateways used to update fields in a
+          secondary index. This might be caused by these conditions:
+
+          + The replication gateway failed.
+          + The replication gateway is under-configured.
+
+   Resolution
+          If the gateway failed, you may need to restart it. Otherwise,
+          the gateway may be under-configured, and you need to add more
+          gateways. See [2]Managing Gateways for further information.
+
+Secondary Index Encoding Error
+
+   Logged As
+          VOLUME_ALARM_TABLE_INDEX_ENCODING_ERROR
+
+   Meaning
+          This alarm occurs when the following encoding errors occur
+          during index updates:
+
+          + The indexed rowkey size is too big (> 32 Kb).
+          + The indexed field is an array or nested document.
+          + The indexed field is a subfield of a nested document, e.g.,
+            Field.subField, and Field contains an array of nested
+            documents. You must create the index using the container field
+            path Field[].subField to avoid this error.
+          + A CAST failure occurs.
+
+   Resolution
+          Important:
+
+          + If you encounter these encoding errors, you must either
+            correct your underlying data or redefine the index. Otherwise,
+            when a query uses secondary indexes, rows containing fields
+            with the errors will be missing from the results.
+          + You must manually [3]clear this alarm. Dropping the index or
+            dropping the table does not clear the alarm.
+
+          See [4]Identifying and Resolving Secondary Index Encoding Errors
+          for details about how to identify these errors and possible
+          corrective actions.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/Gateways-managing.html#topic_ynf_nkl_kz
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/alarm-clear.html#alarmclear
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/IdentifyingResolvingSIEncodingErrors.html#task_dlc_1d2_pbb

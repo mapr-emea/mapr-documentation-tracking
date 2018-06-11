@@ -1,0 +1,101 @@
+Drill Web UI and REST API Privileges
+
+   The following table and subsections describe the privilege levels for
+   accessing the REST API methods and corresponding Drill Web UI
+   functions.
+   Privileges in the table are listed as AMDIN, USER, and ALL. ALL
+   indicates privileges given to both the user and administrator.
+   Path Request Type Output Type Functionality Privileges
+   / GET text/html Returns Drillbit stats in a table in HTML format. ALL
+   /stats.json GET application/json Returns Drillbit stats such as ports
+   and max direct memory in json format. ALL
+   /status GET text/html Returns Running! ALL
+   /options.json GET application/json Returns a list of options. Each
+   option consists of name-value-type-kind (for example: (boot system
+   datatype). ALL
+   /options GET text/html Returns an HTML table where each row is a form
+   containing the option details and ability to modify the option values.
+   ALL
+   /option/{optionName} POST text/html Updates the options and calls
+   getSystemOptions to display list of options. ADMIN
+   /storage.json GET application/json Returns a list of storage plugin
+   wrappers each containing name-config (instance of StoragePluginConfig)
+   and enables the storage plugin configuration. ADMIN
+   /storage GET text/html Returns an HTML page with sections that contain:
+     * a table where each row is a form containing the plugin button for
+       update page link and a button to disable the plugin.
+     * a table where each row is a form containing the plugin button for
+       update page and a button to enable the plugin.
+
+   ADMIN
+   /storage/{name}.json GET application/json Returns a plugin config
+   wrapper for the requested web page. ADMIN
+   /storage/{name} GET text/html Returns an HTML page that has an editable
+   text box for configuration editing, followed by buttons for
+   creating,updating, and deleting. Each of the buttons make calls that
+   generate the new page again. ADMIN
+   /storage/{name}/enable/{val} GET application/json Updates the storage
+   plugin status. Returns success or failure. ADMIN
+   /storage/{name}.json DELETE application/json Deletes the storage
+   plugin. Returns success or failure. ADMIN
+   /storage/{name}/delete GET application/json Same as deletePluginJSON
+   but a GET instead of a DELETE request. ADMIN
+   /storage/{name}.json POST application/json Creates or updates the
+   storage plugin. Returns success or failure. Expects JSON input. ADMIN
+   /storage/{name} POST application/json Same as createOrUpdatePluginJSON
+   expects JSON or FORM input. ADMIN
+   /profiles.json GET application/json Returns currently running and
+   completed profiles from PStore. For each profile a queryId, startTime,
+   foremanAddress, query, user, and state is returned. Each list (running
+   and completed) is organized in reverse chronological order. ADMIN, USER
+   /profiles GET text/html Generates an HTML page from the data returned
+   by getProfilesJSON with a hyperlink to a detailed query page. ADMIN,
+   USER
+   /profiles/{queryid}.json GET application/json Returns the entire
+   profile in JSON. ADMIN, USER
+   /profiles/{queryid} GET text/html Returns a complex profile page.
+   ADMIN, USER
+   /profiles/cancel/{queryid} GET text/html Cancels the given query and
+   sends a message. ADMIN, USER
+   /query GET text/html Gets the query input page. ALL
+   /query.json POST application/json Submits a query and waits until it is
+   completed and then returns the results as one big JSON object. ALL
+   /query POST text/html Returns the results of submitQueryJSON in an HTML
+   table. ALL
+   /status/metrics GET application/json Returns a page that fetches metric
+   info from resource, status, and metrics. ALL
+   /status/threads GET text/html Returns a page that fetches metric
+   information from resource, status, and threads. ALL
+   /login
+   Note: Prior to Drill 1.5, the path was /log/in.
+   GET text/html Returns an HTML log in page. If the user is already
+   logged in, returns the home page. If the URL contains a redirect, sets
+   the redirect URI for the session and forwards the user to the redirect
+   page after the user is successfully logged in. ALL
+   /login
+   Note: Prior to Drill 1.5, the path was /log/in.
+   POST text/html Returns a validation error for incorrect credentials.
+   ALL
+   /logout GET text/html Ends a session. ALL
+   GET /profiles.json
+     * ADMIN - gets all profiles on the system.
+     * USER - only the profiles of the queries the user has launched.
+
+   GET /profiles
+     * ADMIN - gets all profiles on the system.
+     * USER - only the profiles of the queries the user has launched.
+
+   GET /profiles/{queryid}.json
+     * ADMIN - return the profile.
+     * USER - if the query is launched the by the requesting user return
+       it. Otherwise, return an error saying no such profile exists.
+
+   GET /profiles/{queryid}
+     * ADMIN - return the profile.
+     * USER - if the query is launched the by the requesting user return
+       it. Otherwise, return an error saying no such profile exists
+
+   GET /profiles/cancel/{queryid}
+     * ADMIN - can cancel the query.
+     * USER - cancel the query only if the query is launched by the user
+       requesting the cancellation.

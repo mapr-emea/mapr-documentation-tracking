@@ -1,0 +1,109 @@
+Step 8: Install Metrics Monitoring
+
+   To provide metrics monitoring, the MapR Control System (MCS) requires
+   the collectd and OpenTSDB components to be installed. Metrics
+   monitoring is part of MapR Monitoring, which also includes log
+   monitoring. MapR Monitoring components are available as part of the
+   MapR Expansion Pack (MEP) that you selected for the cluster.
+
+   Complete these steps to install metrics monitoring as the root user or
+   using sudo.
+    1. For metrics monitoring, install the following packages:
+
+   Component Requirements
+   collectd Install the mapr-collectd package on each node in the MapR
+   cluster.
+   OpenTSDB and AsyncHBase Install the mapr-opentsdb on one or more nodes.
+   To allow failover of metrics storage in the event that one OpenTSDB
+   node is unavailable, install OpenTSDB on at least three nodes in the
+   cluster.
+
+   Note: mapr-opentsdb is dependent on mapr-asynchbase, and
+   mapr-asynchbase is automatically installed on the node where you
+   install mapr-opentsdb.
+   Grafana Install the mapr-grafana package on at least one node in the
+   MapR cluster.
+       On a three node cluster, you could run the following commands to
+       install metrics packages:
+          + For CentOS/RedHat:
+               o Node A: yum install mapr-collectd mapr-grafana
+               o Node B: yum install mapr-collectd mapr-opentsdb
+               o Node C: yum install mapr-collectd
+          + For Ubuntu:
+               o Node A: apt-get install mapr-collectd mapr-grafana
+               o Node B: apt-get install mapr-collectd mapr-opentsdb
+               o Node C: apt-get install mapr-collectd
+          + For SUSE:
+               o Node A: zypper install mapr-collectd mapr-grafana
+               o Node B: zypper install mapr-collectd mapr-opentsdb
+               o Node C: zypper install mapr-collectd
+    2. MapR 6.0.1 and later: Configure a password for Grafana:
+          + For a secured cluster, copy the
+            /opt/mapr/conf/ssl_truststore.pem file from the CLDB master
+            node to /opt/mapr/conf on all nodes (or, at a minimum, to the
+            Grafana nodes).
+            Note: In a secure cluster, Grafana uses PAM to authenticate
+            using the cluster administrator login ID (typically the mapr
+            user ID) and password, so no additional information is needed.
+          + For a nonsecured cluster, you must configure a password for
+            the Grafana admin user ID at the time of running configure.sh.
+            If no password is provided, the password reverts to admin,
+            which is the default pre-MEP 5.0.0 password. Use one of the
+            following methods to pass the password to Grafana:
+               o On the nodes where Grafana is installed, export the
+                 password as an environment variable before calling
+                 configure.sh:
+export GRAFANA_ADMIN_PASSWORD="<newGrafanaPassword>"
+                 Then run configure.sh as you normally would run it (go to
+                 step 3).
+               o Add the following options to the configure.sh command in
+                 step 3. This method explicitly passes the password on the
+                 configure.sh command line:
+-EPgrafana '-password <newGrafanaPassword>'
+               o Add the following options to the configure.sh command in
+                 step 3. This method explicitly passes the password on the
+                 configure.sh command line by specifying a file:
+-EPgrafana '-password <name of local file containing new password>'
+    3. Run configure.sh on each node in the MapR cluster with the -R and
+       -OT parameters, and other parameters, as needed, for the Grafana
+       password. You must have a warden service running during
+       configure.sh -R -OT.
+/opt/mapr/server/configure.sh -R -OT <comma-separate list of OpenTSDB nodes>
+
+   Parameter Description
+   -R After initial node configuration, specifies that configure.sh should
+   use the previously configured ZooKeeper and CLDB nodes.
+   -OT Specifies a comma-separated list of host names or IP addresses that
+   identify the OpenTSDB nodes. The OpenTSDB nodes can be part of the
+   current MapR cluster or part of a different MapR cluster. The list is
+   in the following format:
+          + hostname/IP address[:port_no] [,hostname/IP
+            address[:port_no]...]
+
+   Note: The default OpenTSDB port is 4242. If you want to use a different
+   port, specify the port number when you list the OpenTSDB nodes.
+
+   Note: You must have a warden service running during configure.sh -R
+   -OT.
+       For example, to configure MapR Monitoring components you can run
+       one of the following commands:
+          + In this example, default ports are used for the OpenTSDB
+            nodes.
+/opt/mapr/server/configure.sh -R -OT NodeB
+          + In this example, non-default ports are specified for the
+            OpenTSDB nodes:
+/opt/mapr/server/configure.sh -R -OT NodeB:4040
+       After you run configure.sh -R, if errors are displayed see
+       [1]Troubleshoot MapR Monitoring Installation Errors.
+    4. To start collecting metrics for the NodeManager and ResourceManager
+       services, restart these services on each node where they are
+       installed.
+maprcli node services -name nodemanager -nodes <space separated list of hostname
+/IPaddresses> -action restart
+
+maprcli node services -name resourcemanager -nodes <space separated list of host
+name/IPaddresses> -action restart
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/TroubleshootMonitoringInstall.html#concept_k4r_y2h_qw

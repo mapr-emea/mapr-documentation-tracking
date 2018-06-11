@@ -1,0 +1,30 @@
+Integrate Spark with HBase
+
+   You integrate Spark with MapR-DB when you want to run Spark jobs on
+   MapR-DB tables.
+   If you installed Spark with the MapR Installer, these steps are not
+   required.
+    1. The HBase Client version depends on the current MEP and MapR
+       version that you are running. Configure the HBase version in the
+       /opt/mapr/spark/spark-<version>/mapr-util/compatibility.version
+       file:
+hbase_versions=<version>
+    2. On each Spark node, copy the hbase-site.xml to the
+       {SPARK_HOME}/conf/ directory.
+    3. Specify the hbase-site.xml file in the
+       SPARK_HOME/conf/spark-defaults.conf
+spark.yarn.dist.files SPARK_HOME/conf/hbase-site.xml
+    4. To verify the integration, complete the following steps:
+         a. Create a MapR-DB table, and populate it with some data.
+         b. Run the following command as the mapr user or as a user that
+            mapr impersonates:
+               o On Spark 2.0.1 and later:
+<spark-home>/bin/run-example --master <master> [--deploy-mode <deploy-mode>] HBa
+seTest <table-name>
+                 The master URL for the cluster is either
+                 spark://<host>:7077 or yarn. The deploy-mode is either
+                 client or cluster.
+               o On Spark 1.6.1:
+MASTER=<master-url> <spark-home>/bin/run-example HBaseTest <table-name>
+                 The master URL for the cluster is either
+                 spark://<host>:7077, yarn-client, or yarn-cluster.

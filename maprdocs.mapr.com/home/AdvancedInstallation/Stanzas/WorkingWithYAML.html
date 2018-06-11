@@ -1,0 +1,134 @@
+Working with MapR Installer Stanza Files
+
+   This topic describes how to use the sample Stanza files that are
+   provided with the MapR Installer.
+
+   The MapR Installer Stanza file specifies how the cluster should be
+   configured, including the configuration of nodes, disks, software
+   versions, and services. You must configure a Stanza file before using
+   MapR Installer Stanzas to install or upgrade a cluster. Sample Stanza
+   files (basic and advanced) are located in this directory:
+
+   /opt/mapr/installer/examples
+   To create your Stanza file:
+    1. Make a copy of one of the sample files. For example, make a copy of
+       the sample_basic or sample_advanced Stanza file, and rename the
+       copy to a name of your choosing.
+    2. Using any text editor, edit the Stanza file to address the needs of
+       your installation. Comment out any instructions that you don't
+       need.
+
+   This table describes how to complete the fields in the Stanza file:
+   Section Parameter Required/Optional Directions
+   environment mapr_core_version Required Specify 5.1.0 or later. Be sure
+   to include the third digit (for example, 5.1.0 or 5.2.0).
+     patch_location Optional Specify the location of a MapR core patch
+   file. The file name must use the format
+   mapr-patch-$[mapr_core_version}. For example:
+mapr-patch-5.2.0.39122.GA-4198.x86_64.rpm
+
+   Use an absolute path to specify the patch file location.
+   config hosts Required Specify the list of hosts on which you want to
+   install packages. You can list the hosts on a single line as follows:
+- examplenode[1-3].example.com
+
+   Or you can use multiple lines:
+- examplenode1.example.com
+- examplenode2.example.com
+- examplenode3.example.com
+
+   Note:
+     * The installer host must be one of the hosts in this list.
+     * A comma-separated list of hosts is not supported.
+     * You can override hosts and disks from the command line. The
+       following example specifies installing only on hosts 01 through 04.
+       To pass an array into an override, use single quotes, double
+       quotes, and brackets as follows:
+cli install -nv -t sample_adv.yaml -o config.hosts='["lab[01-04].yourlab.com"]'
+
+   Note: In a command with an override, the key=value pair or pairs that
+   follow -o must not contain a blank space. For more information about
+   key=value pairs, see [1]MapR Installer Stanza Commands.
+     ssh_id Required Specify the user ID that the installer will run under
+   when it installs the packages. This user must have root access and must
+   be present on every host defined in the hosts section.
+     ssh_password Optional Specify the password (for use with the
+   password-based login). This is the password that the installer uses to
+   log into the node using ssh. Comment this line if you want to use a
+   private-key-based login.
+     ssh_key_file Optional Specify the path to a file that contains the
+   private key (for use only with the private key-based login). Uncomment
+   this line if you want to use a private-key-based login. If both the
+   ssh_password and ssh_key_file lines are uncommented, the installer will
+   default to the ssh_key_file.
+     ssh_port Optional Uncomment this line if you need to specify a port
+   other than the default, which is 22.
+     license_type Required Specify M3 for the community edition or M5 for
+   the enterprise edition.
+     mep_version Required for MapR 5.2.0 and later Specify a currently
+   supported MEP, such as 2.0. For MEP information, see [2]MEP Components
+   and OS Support.
+     disks Required List the disks on which the packages will be
+   installed. The disk names should be the same on every node. This field
+   is required, and you must use the following notation:
+- /<diskname>
+- /<diskname>
+- /<diskname>
+
+   A comma-separated list of disks is not supported. Not all of the disks
+   need to be present, but at least one disk on each node must be present.
+     disk_stripe Optional Uncomment this line if you need to specify a
+   disk stripe value other than the default, which is 3.
+     elasticsearch_path Optional Uncomment this line if you need to
+   specify a path where elasticsearch data will be stored.
+     services Optional Specify a predefined template of services. Services
+   are the MapR core or ecosystem components (or tools) that run on each
+   group. The installer configures default services automatically unless
+   you specify a "groups" section in the Stanza file. To view the
+   predefined templates, use the list command with the --type TEMPLATE
+   argument.
+   Note:
+     * Metrics are provided by default. The metrics services apply only to
+       MapR 5.2 and later.
+     * Logging services, if specified, apply only to MapR 5.2 and later.
+     * If you do not specify any services, the Installer will install only
+       MapR Core services.
+     * For an incremental install or upgrade, the Installer discovers any
+       services already installed. Additional services are installed only
+       if you request specific services, a MEP upgrade, or a MapR Core
+       upgrade.
+     * You can override services using a command such as the following:
+-o config.services='{"mapr-oozie": {} , "mapr-hivemetastore":{"database": {"name
+": "hive", "user": "hive", "password": "mapr"}}}'
+     * In a command with an override, the string that follows -o must not
+       contain a blank space.
+
+   groups (advanced layout only)   Optional To provision the cluster
+   manually, add services in groups. A group is a collection of hosts
+   (nodes) that runs a specific set of services. The installer creates
+   groups automatically unless you specify the groups manually (manual
+   provisioning).
+
+   To specify the groups manually, you must include a groups section and
+   define the hosts, labels, and services that your cluster needs. For an
+   example, see the sample_advanced Stanza file.
+
+   The services you specify must not be of type GROUP. To view the type
+   for a given service, use the list services command with the --name
+   <name-of-service> argument.
+
+   Also, when provisioning manually, you must ensure that the mapr-core
+   service is present on every node.
+     hosts Required (if a groups section is specified) Hosts are nodes
+   that run a specific set of services.
+     label Optional The label is a descriptor for each group. Use the
+   label to describe the group function or some other aspect of the group
+   that is meaningful to your installation. If a label is not specified,
+   the installer will auto-generate a label based on the service names.
+     services Required (if a groups section is specified) See the
+   "Services" section earlier in this table.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/SilentInstallerCommands.html#reference_c11_wmk_cy
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/r_MEP_components.html#reference_pk5_5xb_tw

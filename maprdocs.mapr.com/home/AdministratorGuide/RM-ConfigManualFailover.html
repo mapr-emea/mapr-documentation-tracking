@@ -1,0 +1,24 @@
+Configuring Manual Failover for the ResourceManager
+
+   To configure manual failover, specify multiple ResourceManagers when
+   you run configure.sh on each node in the cluster and then edit
+   yarn-site.xml to disable automatic failover.
+    1. Specify multiple ResourceManagers when you run configure.sh on each
+       cluster and client node. The following the configure.sh script
+       syntax configures three ResourceManager nodes (one active and two
+       standby):
+/opt/mapr/server/configure.sh -C <CLDB node list> -Z <ZK node list> -RM <hostnam
+e1,hostname2,hostname3> -HS <hostname1> [additional parameters]
+       Note: After you run configure.sh, each ResourceManager node
+       contains a different value for the yarn.resourcemanager.ha.id
+       property in the yarn-site.xml.
+    2. Disable the following automatic failover properties in the
+       yarn-site.xml on each node with the ResourceManager role:
+          + yarn.resourcemanager.ha.automatic-failover.enabled
+          + yarn.resourcemanager.ha.automatic-failover.embedded
+    3. Restart the ResourceManager service. For more information, see
+       [1]Restarting the Services.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/nodes/Services-Restart.html

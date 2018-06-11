@@ -1,0 +1,56 @@
+How MapR Client Connects to the Cluster
+
+   The MapR client connects to the cluster via CLDB nodes. When a
+   connection attempt fails, the MapR client returns an error. When an
+   existing connection is no longer available, the MapR client attempts to
+   reconnect to a CLDB node.
+
+   For information about installing the MapR client, see [1]MapR Client.
+
+How the MapR Client Establishes Connections to the Cluster
+
+   Client applications connect to a cluster via CLDB nodes, which are
+   listed in the connection request or in the mapr-clusters.conf file on
+   the node that submits the connection request. When a client application
+   attempts to connect to the cluster for the first time, the following
+   scenarios can occur:
+     * At least one of the CLDB nodes is online, in which case the
+       connection is successful.
+     * None of the CLDB nodes are online, in which case the connection
+       attempt fails.
+     * The CLDB nodes are listed incorrectly (e.g. the IP addresses are
+       incorrect), in which case the connection attempt fails.
+
+   When a connection attempt fails, the MapR client returns one of the
+   following errors based on the application type:
+   Application Type Error
+   C Application using HBase API ErrorCode = 1.
+   C Applications using HDFS API NULL handle
+   Java Application using HBase, OJAI, or MapR-FS API java.io.IOException:
+   Could not create FileClient
+   Java Application using Kafka API for MapR-ES
+   org.apache.kafka.common.errors.NetworkException.
+
+How the MapR Client Re-establishes Failed Connections to the Cluster
+
+   If the CLDB goes down after a client application establishes its first
+   connection to MapR, the MapR client's behavior depends on the setting
+   for the fs.mapr.hardmount property in the core-site.xml file in the
+   client installation directory.
+     * If fs.mapr.hardmount is set to true, the MapR client hangs as it
+       continuously attempts to reconnect to the CLDB. The MapR client
+       stops hanging when the CLDB is brought back online. This is the
+       default behavior.
+     * If fs.mapr.hardmount is set to false, the MapR client attempts to
+       connect to each CLDB node that is listed in the mapr-clusters.conf
+       file on the node that submitted the connection request. If all of
+       the CLDB nodes are down, the MapR client returns the error
+       EAGAIN/-EAGAIN to the client application. This error indicates that
+       a connection could not be established because the CLDB nodes were
+       not available or because the request timed out due to reasons, such
+       as heavy traffic caused the network to be slow or other nodes were
+       unavailable.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/SettingUptheClient-mapr-client.html#SettingUptheClient-mapr-client

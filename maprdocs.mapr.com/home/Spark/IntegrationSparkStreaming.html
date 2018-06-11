@@ -1,0 +1,72 @@
+MapR-DB Binary Connector for Apache Spark Integration with Spark Streaming
+
+   [1]Spark Streaming is a micro-batching, stream-processing framework
+   built on top of Spark. HBase APIs and Spark Streaming make great
+   companions. When used alongside Spark Streaming, HBase APIs can serve
+   as:
+     * A place to grab reference data or profile data on the fly.
+     * A place to store counts or aggregates in a way that supports the
+       Spark Streaming promise of only once processing.
+
+   The MapR-DB Binary Connector for Apache Spark integration points with
+   Spark Streaming are similar to its normal Spark integration points. You
+   can use the following commands straight off a Spark Streaming DStream:
+   bulkPut Enables massively parallel sending of puts to HBase APIs.
+   bulkDelete Enables massively parallel sending of deletes to HBase APIs.
+   bulkGet Enables massively parallel sending of gets to HBase APIs to
+   create a new RDD.
+   mapPartition Enables the Spark Map function with a Connection object to
+   allow full access to HBase APIs.
+   hBaseRDD Simplifies a distributed scan to create an RDD.
+
+   bulkPut Example with DStreams
+   The following example shows a bulkPut with DStreams. It is similar to
+   the RDD bulk put.
+   Note: To invoke the hbaseBulkPut method, make sure you import the
+   HBaseDStreamFunctions class.
+import org.apache.hadoop.hbase.spark.HBaseDStreamFunctions._
+
+val sc = new SparkContext("local", "test")
+val config = new HBaseConfiguration()
+
+val hbaseContext = new HBaseContext(sc, config)
+val ssc = new StreamingContext(sc, Milliseconds(200))
+
+val rdd1 = ...
+val rdd2 = ...
+val queue = mutable.Queue[
+        RDD[(Array[Byte],
+        Array[(Array[Byte],
+        Array[Byte],
+        Array[Byte])])]]()
+
+queue += rdd1
+queue += rdd2
+
+val dStream = ssc.queueStream(queue)
+
+dStream.hbaseBulkPut(
+  hbaseContext,
+  TableName.valueOf(tableName),
+  (putRecord) => {
+   val put = new Put(putRecord._1)
+   putRecord._2.foreach((putValue) =>
+        put.addColumn(putValue._1, putValue._2, putValue._3))
+   put
+  })
+
+   The hbaseBulkPut function has three inputs:
+     * The hbaseContext that carries the configuration broadcast
+       information link to the HBase Connections in the executors.
+     * The table name of the table you are putting data into.
+     * A function that will convert a record in the DStream into an HBase
+       Put object.
+       The code snippet above has been extracted from
+       [2]https://github.com/mapr/hbase/blob/1.1.8-mapr-1703/hbase-spark/s
+       rc/test/scala/org/apache/hadoop/hbase/spark/HBaseDStreamFunctionsSu
+       ite.scala.
+
+References
+
+   1. http://spark.apache.org/streaming/
+   2. https://github.com/mapr/hbase/blob/1.1.8-mapr-1703/hbase-spark/src/test/scala/org/apache/hadoop/hbase/spark/HBaseDStreamFunctionsSuite.scala

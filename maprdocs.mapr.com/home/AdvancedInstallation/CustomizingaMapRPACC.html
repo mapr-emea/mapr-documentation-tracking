@@ -1,0 +1,58 @@
+Extending a MapR PACC
+
+   You can use a MapR PACC to create a new Docker image.
+   These pre-built Docker container base images -- called MapR Persistent
+   Application Client Containers (PACCs) -- are available in the
+   [1]maprtech/pacc public repository:
+
+   CAPTION: Table 1. PACC Base Images
+
+   PACC Repository and Tag Container OS
+   CentOS 6.8 CentOS 7.x Ubuntu 14.04 Ubuntu 16.04
+   6.0.1 N/A maprtech/pacc:​6.0.1_5.0.0_centos7 or maprtech/pacc:latest or
+   maprtech/pacc N/A maprtech/pacc:​6.0.1_5.0.0_ubuntu16
+   6.0.0 N/A maprtech/pacc:​6.0.0_4.0.0_centos7 N/A
+   maprtech/pacc:​6.0.0_4.0.0_ubuntu16
+   5.2.2 maprtech/pacc:​5.2.2_3.0.1_centos6
+   maprtech/pacc:​5.2.2_3.0.1_centos7 maprtech/pacc:​5.2.2_3.0.1_ubuntu14
+   maprtech/pacc:​5.2.2_3.0.1_ubuntu16
+   5.2.1 maprtech/pacc:​5.2.1_3.0_centos6 maprtech/pacc:​5.2.1_3.0_centos7
+   maprtech/pacc:​5.2.1_3.0_ubuntu14 N/A
+   5.2.0 maprtech/pacc:​5.2.0_2.0_centos6 maprtech/pacc:​5.2.0_2.0_centos7
+   maprtech/pacc:​5.2.0_2.0_ubuntu14 N/A
+
+   While you cannot modify a MapR-provided Docker image directly, you can
+   build a custom image that is based on a MapR Persistent Application
+   Client Container (PACC). The following example shows a custom
+   Dockerfile that is used to create a new Docker image. In this example,
+   an application has a JAR file that takes a producer as a parameter and
+   runs a custom function.
+
+   The example has two parts. In Part 1, the custom Dockerfile uses the
+   Docker FROM command to download a MapR PACC to a container on the user
+   platform. A directory is created, and a JAR file is copied into the
+   container so that it can be run in Java. The CMD command starts the
+   application inside the container. In Part 2, the custom Dockerfile is
+   built using the docker build command.
+
+   Part 1. Creating a Custom Dockerfile
+FROM maprtech/pacc:5.2.0_2.0_centos6
+
+# Copy jar to container
+RUN mkdir -p /usr/share/mapr-apps/
+COPY mapr-streams-examples-1.0-SNAPSHOT-jar-with-dependencies.jar /usr/share/map
+r-apps/mapr-app-001.jar
+
+# Run producer application in container
+CMD [ "java", "-cp", "$MAPR_CLASSPATH:/usr/share/mapr-apps/mapr-app-001.jar", "c
+om.mapr.examples.Run", "producer" ]
+
+   Part 2. Building a Custom Docker Image From the Dockerfile
+# docker build -t <new docker image> .
+Note: Above needs to be run in the same directory as Dockerfile
+Make sure the image is created and no issue building Docker image.
+# docker images –a
+
+References
+
+   1. https://hub.docker.com/r/maprtech/pacc/tags/

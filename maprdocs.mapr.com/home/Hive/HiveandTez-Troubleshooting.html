@@ -1,0 +1,42 @@
+Known Issues and Restrictions
+
+   Sqoop import to Hive as parquet file fails when the entire cluster is
+          configured to use Tez.
+          This is because of sqoop's incompatibility with Tez.
+
+          Workaround: Do not configure the entire cluster to use Tez.
+
+   Percentage sampling is not supported in
+          org.apache.hadoop.hive.ql.io.HiveInputFormat.
+          Hive uses org.apache.hadoop.hive.ql.io.HiveInputFormat by
+          default and so queries like 'SELECT * FROM tablename
+          TABLESAMPLE(20 percent);' will not work for Hive on Tez.
+
+          Workaround: Instead of
+          org.apache.hadoop.hive.ql.io.HiveInputFormat, use
+          org.apache.hadoop.hive.ql.io.CombineHiveInputFormat.
+
+          To change input format, do one of the following:
+
+          + Set hive.tez.input.format in hive shell. For example:
+hive> set hive.tez.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFor
+mat;
+          + Add org.apache.hadoop.hive.ql.io.CombineHiveInputFormat to
+            hive-site.xml file. For example:
+<property>
+  <name>hive.tez.input.format</name>
+  <value>org.apache.hadoop.hive.ql.io.CombineHiveInputFormat</value>
+</property>
+
+   Hive on Tez does not work well with Sequence Files Schema changes
+          TEZ-2741
+
+   Limitations with common joins
+          HIVE-11693: The CommonMergeJoinOperator only sets big table
+          position when it has inputs for big table. If the input is
+          empty, the method is not called.
+
+   HiveServer2 on Tez doesn't support concurrent queries within one
+          session
+          HIVE-9223: When multiple queries are submitted in the same HS2
+          session concurrently, some queries fail with an error.

@@ -1,0 +1,25 @@
+Determine if a disk or partition is ready for use by MapR
+
+   Any disk or partition that passes the following testing procedure can
+   be added to the list of disks and partitions passed to the [1]disksetup
+   command.
+    1. Run the command sudo lsof <partition> to determine whether any
+       processes are already using the disk or partition.
+       There should be no output when running sudo fuser <partition>,
+       indicating there is no process accessing the specific disk or
+       partition.
+    2. The disk or partition should not be mounted, as checked via the
+       output of the mount command. If the disk or partition is mounted,
+       unmount it using the umount command.
+    3. The disk or partition should not have an entry in the /etc/fstab
+       file; comment out or delete any such entries.
+    4. The disk or partition should be accessible to standard Linux tools
+       such as mkfs. You should be able to successfully format the
+       partition using a command like sudo mkfs.ext3 <partition> as this
+       is similar to the operations MapR performs during installation. If
+       mkfs fails to access and format the partition, then it is highly
+       likely MapR will encounter the same problem.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/disksetup.html#disksetup

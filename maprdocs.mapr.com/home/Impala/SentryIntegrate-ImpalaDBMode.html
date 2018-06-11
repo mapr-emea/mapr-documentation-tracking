@@ -1,0 +1,26 @@
+Configure Impala to Use Sentry Authorization With the Database Storage Model
+
+   As of Sentry 1.6, Sentry can be configured to use the Database storage
+   model. Complete the following steps to configure Impala to use Sentry
+   authentication when Sentry uses the DB storage model:
+    1. Set the following properties in env.sh
+       (/opt/mapr/impala/impala-<version>/conf/env.sh):
+IMPALA_SERVER_ARGS=" \
+                        -server_name=HS2 \
+                        -sentry_config=<SENTRY-HOME> /conf/sentry-site.xml
+                        IMPALA_CATALOG_ARGS=" \
+                        -sentry_config=<SENTRY-HOME> /conf/sentry-site.xml
+                        IMPALA_STATE_STORE_ARGS="
+                        -sentry_config=<SENTRY-HOME> /conf/sentry-site.xml
+    2. Run the following commands to restart Impala:
+sudo -u mapr maprcli node services -name impalaserver -action restart -nodes <no
+dename>
+
+sudo -u mapr maprcli node services -name impalastore -action restart -nodes <nod
+ename>
+
+sudo -u mapr maprcli node services -name impalacatalog -action restart -nodes <n
+odename>
+    3. When Impala is running, you can issue the following command to
+       start the impala-shell as a particular user:
+impala-shell -u <user_name>

@@ -1,0 +1,91 @@
+HColumnDescriptor and HTableDescriptor Support
+
+   This section describes the supported fields in the HColumnDescriptor
+   and the HTableDescriptor classes.
+
+   MapR-DB supports all of the methods that are in these classes. However,
+   it supports only a subset of their fields.
+
+HColumnDescriptor Class
+
+      Field                            Description
+   BLOCKSIZE    Size of blocks in files stored to the filesytem (hfiles).
+   BLOOMFILTER  Whether or not to use bloomfilters.
+   COMPRESSION  Compression type.
+   IN_MEMORY    Whether to serve from memory or not.
+   MIN_VERSIONS Minimum number of versions to keep.
+   NAME         Name of the column family.
+   TTL          Time to live of cell contents.
+   VERSIONS     Number of versions to keep.
+
+HTableDescriptor Class
+
+   Field Description
+   AUTOSPLIT
+
+   Specifies whether to split the table into regions automatically as the
+   table grows. The average size of each region is determined by
+   theregionsizemb parameter.
+
+   The default value is true.
+   BULKLOAD Boolean. Specifies whether to perform a full bulk load of the
+   table. The default is false. For more information, see [1]Bulk Loading
+   and MapR Tables.
+   DELETE_TTL
+
+   Used for multi-master replication.
+
+   Normally, delete operations are purged after the affected table cells
+   are updated. Whereas the result of an update is saved in a table until
+   another change overwrites or deletes it, the result of a delete is not
+   saved. In multi-master replication, this difference can lead to tables
+   being unsynchronized.
+
+   Example
+
+   Suppose that you have set up multi-master replication between table
+   customers in the cluster sanfrancisco and table customers in the
+   cluster newyork. Client applications then make these two changes:
+    1. On /mapr/sanfrancisco/customers, put row A at 10:00:00 AM.
+    2. On /mapr/newyork/customers, delete row A at 10:00:01 AM.
+
+   On /mapr/sanfrancisco/customers, the order of operations is:
+    1. Put row A with a timestamp of 10:00:00 AM
+    2. Delete row A with a timestamp of 10:00:01 AM (This operation is
+       repllicated from /mapr/newyork/customers.)
+
+   On /mapr/newyork/customers, the order of operations is:
+    1. Delete row A with a timestamp of 10:00:01 AM
+    2. Put row A with a timestamp of 10:00:00 AM (This operation is
+       replicated from /mapr/sanfrancisco/customers.)
+
+   Now, though the put happened on /mapr/sanfrancisco/customers at
+   10:00:00 AM, the put reaches /mapr/newyork/customers several seconds
+   after that. Suppose that the actual time that the put arrives at
+   /mapr/newyork/customers is 10:00:03 AM.
+
+   To ensure that both tables stay synchronized, /mapr/newyork/customers
+   should preserve the delete until after the put is replicated. Then, the
+   delete can be applied after the put. Therefore, the time-to-live for
+   the delete should be at least long enough for the put to arrive at
+   /mapr/newyork/customers. In this case, the time-to-live should be at
+   least 3 seconds.
+
+   In general, the time-to-live for deletes should be greater than the
+   amount of time that it takes replicated operations to reach replicas.
+   By default, the value is 24 hours.
+
+   For example, suppose (to extend the scenario above) that you pause
+   replication during weekdays and resume it on weekends. The put takes
+   place on Monday morning /mapr/sanfrancisco/customers at 10:00:00 AM and
+   the delete takes place at /mapr/newyork/customers at 10:00:01 AM.
+   Replication does not resume until 12:00:00 AM Saturday morning. Given
+   the volume of operations to be replicated and the potential for network
+   problems, it is possible that these operations will not be replicated
+   until Sunday. In this scenario, a value of 7 days for DELETE_TTL (7
+   multiplied by 24 hours) should provide sufficient margin.
+   NAME Name of the table.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/BulkLoadingandMapR-DBTables-binary.html

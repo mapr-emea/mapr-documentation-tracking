@@ -1,0 +1,116 @@
+dump zkinfo
+
+   Returns the ZooKeeper znodes.
+   Note: This command is used by the mapr-support-collect.sh script to
+   gather cluster diagnostics for troubleshooting.
+
+   This command enables you to view a snapshot of the data stored in
+   Zookeeper as a result of cluster operations
+
+   ZooKeeper prevents service coordination conflicts by enforcing a rigid
+   set of rules and conditions, provides cluster-wide information about
+   running services and their configuration, and provides a mechanism for
+   almost instantaneous service failover. Warden will not start any
+   services unless ZooKeeper is reachable and more than half of the
+   configured ZooKeeper nodes are live.
+
+   The mapr-support-collect.sh script calls the maprcli dump supportdump
+   command to gather cluster diagnostics for troubleshooting. For more
+   information, see [1]mapr-support-collect.sh.
+
+Syntax
+
+   CLI
+
+maprcli dump zkinfo
+    [-cluster <cluster name>]
+    [-zkconnect <connect string>]
+
+          Note: For best results, use the -json option from the command
+          line.
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster The cluster on which to run the command. If this parameter is
+   omitted, the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+   zkconnect A ZooKeeper connect string, which specifies a list of the
+   hosts running ZooKeeper, and the port to use on each, in the format:
+   '<host>[:<port>][,<host>[:<port>]...]'. To obtain zookeeper connection
+   strings, use the maprcli node listzookeepers command.
+
+Output
+
+   The maprcli dump zkinfo command is run as part of support dump tools to
+   view the current state of the Zookeeper service. The command should
+   always be run using the -json option, since output in the default
+   tabular format is not useful. Command output displays the data stored
+   in the ZooKeeper hierarchical tree of znodes.
+# maprcli dump zkinfo -json
+{
+        "timestamp":1335825202157,
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                "/_Stats":"\ncZxid = 0,ctime = Wed Dec 31 16:00:00 PST 1969,mZxi
+d = 0,mtime = Wed Dec 31 16:00:00 PST 1969,pZxid = 516,cversion = 12,dataVersion
+ = 0,aclVersion = 0,ephemeralOwner = 0,dataLength = 0,numChildren = 13",
+                        "/":[
+                                {
+                                     ....
+                                }
+        ]
+}
+
+   Output fields
+
+   You can use the maprcli dump zkinfo command as you would use a database
+   snapshot. The /services, /services_config, /servers, and /*_locks
+   znodes are used by Warden to store and exchange information.
+
+   Field
+
+   Description
+
+   services
+
+   The /services directory is used by Warden to store and exchange
+   information about services.
+
+   datacenter
+
+   The /datacenter directory contains CLDB "vital signs" that you can use
+   to identify the CLDB master, the most recent epoch, and other key data.
+   For more information, see [2]Moving CLDB Data.
+
+   services_config
+
+   The /services_config directory is used by Warden to store and exchange
+   information.
+
+   zookeeper
+
+   The /zookeeper directory stores information about the ZooKeeper
+   service.
+
+   servers
+
+   The /servers directory is used by Warden to store and exchange
+   information.
+
+   nodes
+
+   The /nodes directory (znode) stores key information about the nodes.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr-support-collect.sh.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/Moving-CLDB-Data.html#task_qsp_phg_vt

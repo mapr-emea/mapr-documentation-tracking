@@ -1,0 +1,70 @@
+Kafka Connect 2.0.1: Architecture
+
+   Kafka Connect for MapR-ES has the following major models in its design:
+   connector, worker, and data.
+
+Connector Model
+
+   A connector is defined by specifying a Connector class and
+   configuration options to control what data is copied and how to format
+   it.
+     * Each Connector instance is responsible for defining and updating a
+       set of Tasks that actually copy the data.
+     * Kafka Connect manages the Tasks; the Connector is only responsible
+       for generating the set of Tasks and indicating to the framework
+       when they need to be updated.
+     * Source and Sink Connectors/Tasks are distinguished in the API to
+       ensure the simplest possible API for both.
+
+   There are two types of tasks:
+     * Source - Source tasks ingest data from data storage systems and
+       stream the data to MapR-ES.
+     * Sink - Sink tasks stream data from MapR-ES to other storage
+       systems.
+
+   MapR supports the following connectors:
+     * JDBC Source Connector
+       The Kafka JDBC connector is a source type connector used to stream
+       data from relational databases into MapR-ES. Kafka Connect for
+       MapR-ES supports integration with Hive 1.2.
+     * HDFS Sink Connector.
+       The Kafka HDFS connector is a sink type connector used to stream
+       data from MapR-ES or Apache Kafka topics to MapR-FS. By default,
+       the resulting data is produced to MapR-FS in Avro format. In
+       addition, Parquet files can be written to MapR-FS.
+
+Worker Model
+
+   A Kafka Connect for MapR-ES cluster consists of a set of Worker
+   processes that are containers that execute Connectors and Tasks. A
+   worker is a JVM process with a REST API that is able to execute
+   streaming tasks.
+     * Workers automatically coordinate with each other to distribute work
+       and provide scalability and fault tolerance.
+     * The Workers distribute work among any available processes, but are
+       not responsible for management of the processes;
+     * Any process management strategy can be used for Workers. For
+       example, cluster management tools like YARN or Mesos, configuration
+       management tools like Chef or Puppet, or direct management of
+       process lifecycles.
+
+Data Model
+
+   Connectors copy streams of messages from a partitioned input stream to
+   a partitioned output stream, where at least one of the input or output
+   is always Kafka.
+     * Each of these streams is an ordered set messages where each message
+       has an associated offset.
+     * The format and semantics of these offsets are defined by the
+       Connector to support integration with a wide variety of systems;
+       however, to achieve certain delivery semantics in the face of
+       faults requires that offsets are unique within a stream and streams
+       can seek to arbitrary offsets.
+     * Message contents are represented by Connectors in a
+       serialization-agnostic format.
+     * Pluggable Converters are available for storing this data in a
+       variety of serialization formats.
+     * Schemas are built-in, allowing important metadata about the format
+       of messages to be propagated through complex data pipelines.
+       However, schema-free data can also be use when a schema is simply
+       unavailable.

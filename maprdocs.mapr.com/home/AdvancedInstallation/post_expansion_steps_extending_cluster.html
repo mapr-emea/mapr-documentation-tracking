@@ -1,0 +1,50 @@
+Post-Expansion Steps for Extending a Cluster
+
+   You must perform post-expansion steps if you added a node to a group
+   containing the CLDB or Zookeeper.
+   For more information about extending a cluster, see [1]Extending a
+   Cluster by Adding Nodes.
+
+Restarting Zookeeper Nodes
+
+   If you used the MapR Installer Extend Cluster function to add a node to
+   a group containing Zookeeper only, you must restart Zookeeper on all
+   Zookeeper nodes except for the added node.
+
+   One node at a time, stop and restart the Zookeeper service on all
+   Zookeeper nodes, restarting the master Zookeeper node last. Use the
+   restart steps below.
+
+Restarting All Services for Zookeeper and CLDB
+
+   If you used the MapR Installer Extend Cluster function to add a node to
+   a group containing Zookeeper and CLDB, or CLDB only, you must restart
+   all services on all nodes.
+
+   One node at a time, restart all services on all nodes following the
+   group upgrade order prescribed in [2]Manual Rolling Upgrade. You do not
+   need to restart the node that was added. Use the restart steps below.
+
+Restart Steps
+
+    1. Change to the root user (or use sudo for the following commands).
+    2. Stop Warden.
+sudo service mapr-warden stop
+    3. Stop Zookeeper.
+service mapr-zookeeper stop
+    4. Start the ZooKeeper on nodes where it is installed.
+service mapr-zookeeper start
+    5. On all nodes, start Warden. Example:
+service mapr-warden start
+    6. Over a period of time (depending on the cluster size and other
+       factors) the cluster comes up automatically. After the CLDB
+       restarts, there is a 15-minute delay before replication resumes, in
+       order to allow all nodes to register and heartbeat. This delay can
+       be configured using the [3]config save command to set the
+       cldb.replication.manager.start.mins parameter.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/ExtendCluster.html#task_q2b_5kb_q1b
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/Manual-Rolling-Upgrade.html#ManualRollingUpgradeto5.0
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/config-save.html#configsave

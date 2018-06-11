@@ -1,0 +1,244 @@
+Extending a Cluster by Adding Nodes
+
+   This section describes how to add capacity to a MapR cluster by adding
+   nodes.
+
+   You add nodes to a cluster by using the web-based MapR Installer
+   (version 1.6 or later) or MapR Installer Stanzas. The nodes are added
+   to a pre-existing group without disturbing the running cluster. You can
+   add nodes to on-premise clusters or to cloud-based clusters.
+
+   You can add multiple nodes to a group in the same operation, and you
+   can add nodes to custom groups. You can also add the same node to
+   multiple groups. The MapR Installer installs the new nodes with the
+   same patch level as the existing nodes.
+   Note: Before adding nodes, use the MapR Installer to ensure that your
+   cluster uses three-digit MEPs. If your cluster uses two-digit MEPs,
+   adding a node can result in a version mismatch between the cluster and
+   the newly added node. To change from two-digit to three-digit MEPs you
+   can perform an Incremental Install using the MapR Installer. For more
+   information, see [1]Understanding Two-Digit and Three-Digit MEPs.
+
+Restrictions
+
+   Note these restrictions for using the Extend Cluster operation. When
+   adding nodes:
+     * The cluster must already be installed before nodes can be added.
+     * You cannot add a node to a MASTER group, since these services can
+       run only on one node.
+     * If you add a node to a CONTROL group that has a CLDB, you must do a
+       manual, rolling restart of the entire cluster.
+     * If you add a node to a group that has OpenTSDB, you must add the
+       same node to the group that contains AsyncHBase (currently, the
+       MapR Installer does not check to ensure that this dependency is
+       met).
+     * You cannot add services.
+     * You cannot change the MEP version or MapR Core version.
+     * You cannot add new service groups.
+     * New nodes are added automatically to the DEFAULT group.
+     * A node added to a MapR secure cluster will be configured for
+       security automatically. If the cluster is custom secure, you cannot
+       use the MapR Installer. See [2]Custom Security in MapR.
+
+Before Adding Nodes
+
+    1. Determine the group(s) to which new nodes will be added.
+       You can add nodes to the following types of groups:
+          + CLIENT
+          + DATA
+          + CONTROL
+          + MULTI_MASTER
+          + MONITORING_MASTER
+       Note: If you add a node to a group containing a CLDB, you must
+       restart all the nodes except for the new node. If you add a node to
+       a group containing Zookeeper (but not CLDB), you must restart
+       Zookeeper on all the Zookeeper nodes except for the new node. And
+       you must restart the lead Zookeeper last.
+       To gather information about groups, see [3]Getting Information
+       About Services and Groups.
+    2. Ensure that the node(s) to be added meet the installation
+       prerequisites described in the [4]MapR Installer Prerequisites and
+       Guidelines.
+
+Adding Nodes Using the MapR Installer Web Interface
+
+    1. Use a browser to connect to the cluster using the MapR Installer
+       URL:
+https://<Installer Node hostname/IPaddress>:9443
+    2. On the status screen, click the Extend Cluster button. The MapR
+       Installer displays the Extend Cluster screen showing the currently
+       configured groups and services.
+       Note: If the Extend Cluster button is not visible, you might need
+       to clear your browser cache and refresh the browser page.
+    3. Specify the nodes to be added:
+          + On-Premise Cluster
+            In the Additional Nodes column, specify the host name(s) or IP
+            address(es) of the nodes to be added. If you are adding
+            multiple nodes, you can specify an array. The following
+            example adds perfnode132.perf.lab and perfnode133.perf.lab to
+            the CONTROL group and perfnode132.perf.lab to the MULTI_MASTER
+            group:
+            [add_node_example.png]
+          + Cloud-Based Cluster
+            In the Additional Nodes column, specify the number of nodes to
+            be added. You do not need to specify the host name or IP
+            address. The following example adds a node to each of the
+            CONTROL, DATA, and CLIENT groups:
+            [add_node_example_cloud.png]
+    4. Click Next. The MapR Installer checks the nodes to ensure that they
+       are ready for installation and displays the Authentication screen.
+    5. Enter your SSH password and other authentication information as
+       needed, and click Next. The installer displays the Verify Nodes
+       screen.
+       Note: For a cloud-based cluster, the Authentication screen requests
+       information that is specific to the type of cluster (AWS or Azure).
+       Use the tooltips to learn more about the authentication information
+       needed for your cluster.
+    6. Click a node icon to check the node status and see warnings or
+       error information in the right pane. The node-icon color reflects
+       the installation readiness for each node:
+          + Green (ready to install)
+          + Yellow (warning)
+          + Red (cannot install)
+       Note: If there are warnings or errors, hold your cursor over the
+       warning or error in the right pane to see more information.
+       Important: If node verification fails and you abort the
+       installation, you must use the Import State command to reset the
+       cluster to the last known state. Otherwise, you will not be able to
+       perform subsequent MapR Installer operations. See [5]Importing or
+       Exporting the Cluster State.
+    7. When you are satisfied that the nodes are ready to be installed,
+       click Next. The MapR Installer addes the nodes. After the nodes are
+       added, you can use the MapR Control System (MCS) to view the nodes
+       in the cluster.
+    8. Perform any post-expansion steps. Post-expansion steps are
+       necessary only if you added a node to a group containing a CLDB or
+       Zookeeper.
+
+   If you added a node to a group containing . . . Do this
+   Zookeeper only One node at a time, stop and restart the Zookeeper
+   service on all Zookeeper nodes, restarting the master Zookeeper node
+   last. You do not need to restart the Zookeeper node that was added. See
+   [6]Post-Expansion Steps for Extending a Cluster.
+   Zookeeper and CLDB
+
+   or
+   CLDB only
+   One node at a time, restart all services on all nodes following the
+   order prescribed in [7]Manual Rolling Upgrade. You do not need to
+   restart the node that was added. See [8]Post-Expansion Steps for
+   Extending a Cluster.
+
+Adding Nodes Using a MapR Installer Stanza
+
+   To add nodes using a MapR Installer Stanza, you add the scaled_hosts2:
+   parameter (on-premise clusters) or the scaled_count: parameter
+   (cloud-based clusters) to the Stanza file for the group that you want
+   to scale. Then you run the Stanza using the install command. The
+   services contained in the group are configured for the added node.
+   Note: If the group you are trying to scale does not contain the
+   mapr-core-5.2.x service, the first group containing mapr-core-5.2.x
+   will automatically get scaled.
+    1. In the Stanza file, add the scaled_hosts2: or scaled_count:
+       parameter:
+          + On-Premise Cluster
+            Add the scaled_hosts2: parameter to the group that you want to
+            scale, specifying the host name(s) or IP address(s) of the
+            nodes to be added. In the following example, the
+            perfnode132.perf.lab node is added to the CLIENT group:
+
+   Stanza Before Scaling Modified Stanza with scaled_hosts2 Parameter
+   (On-Premise Cluster)
+groups:
+- hosts:
+   - perfnode131.perf.lab
+   label: CLIENT
+- services:
+    - mapr-spark-client-2.0.1
+    - mapr-hive-client-1.2
+    - mapr-hbase-1.1
+    - mapr-asynchbase-1.7.0
+    - mapr-kafka-0.9.0
+
+groups:
+- hosts:
+   - perfnode131.perf.lab
+   label: CLIENT
+   scaled_hosts2:
+   - perfnode132.perf.lab
+- services:
+    - mapr-spark-client-2.0.1
+    - mapr-hive-client-1.2
+    - mapr-hbase-1.1
+    - mapr-asynchbase-1.7.0
+    - mapr-kafka-0.9.0
+
+          + Cloud-Based Cluster
+            Add the scaled_count: parameter to the group that you want to
+            scale. Include a number after the parameter to indicate the
+            number of additional nodes to be added to the group. You do
+            not need to specify the host names or IP addresses of the
+            nodes to be added. In the following example, one additional
+            node is added to the CLIENT group:
+
+   Stanza Before Scaling Modified Stanza with scaled_count Parameter
+   (Cloud-Based Cluster)
+groups:
+- hosts:
+   - perfnode131.perf.lab
+   label: CLIENT
+- services:
+    - mapr-spark-client-2.0.1
+    - mapr-hive-client-1.2
+    - mapr-hbase-1.1
+    - mapr-asynchbase-1.7.0
+    - mapr-kafka-0.9.0
+
+groups:
+- hosts:
+   - perfnode131.perf.lab
+   label: CLIENT
+   scaled_count: 1
+- services:
+    - mapr-spark-client-2.0.1
+    - mapr-hive-client-1.2
+    - mapr-hbase-1.1
+    - mapr-asynchbase-1.7.0
+    - mapr-kafka-0.9.0
+
+    2. Run the Stanza file using the install command. See [9]Installing or
+       Upgrading MapR Core Using a MapR Installer Stanza. The MapR
+       Installer SDK detects the new scaled_host(s) and gives you the
+       option to proceed with the installation or cancel.
+    3. Perform any post-expansion steps. Post-expansion steps are
+       necessary only if you added a node to group containing a CLDB or
+       Zookeeper.
+
+   If you added a node to a group containing . . . Do this
+   Zookeeper only One node at a time, stop and restart the Zookeeper
+   service on all Zookeeper nodes, restarting the master Zookeeper node
+   last. You do not need to restart the Zookeeper node that was added. See
+   [10]Post-Expansion Steps for Extending a Cluster.
+   Zookeeper and CLDB
+
+   or
+   CLDB only
+   One node at a time, restart all services on all nodes following the
+   order prescribed in [11]Manual Rolling Upgrade. You do not need to
+   restart the node that was added. See [12]Post-Expansion Steps for
+   Extending a Cluster.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Understand_2_3_Digit_MEPs.html#concept_oln_qlb_q1b
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/GettingInfoServices.html#concept_jhq_v5p_cy
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/c_install_prerequisites.html#concept_mt1_xzx_ft
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/importing_or_exporting_cluster_state.html#task_x4w_znb_hbb
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/post_expansion_steps_extending_cluster.html#task_mhz_1bn_z1b
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/Manual-Rolling-Upgrade.html#ManualRollingUpgradeto5.0
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/post_expansion_steps_extending_cluster.html#task_mhz_1bn_z1b
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/InstallingUpgradingStanza.html#concept_qv3_2nq_cy
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/post_expansion_steps_extending_cluster.html#task_mhz_1bn_z1b
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/Manual-Rolling-Upgrade.html#ManualRollingUpgradeto5.0
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/post_expansion_steps_extending_cluster.html#task_mhz_1bn_z1b

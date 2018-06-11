@@ -1,0 +1,82 @@
+Pre-Upgrade Steps for Drill
+
+   Complete the following steps before you upgrade Drill with or without
+   the MapR Installer.
+   As of Drill 1.11, Drill is automatically secured when installed in a
+   6.0 MapR cluster with the default MapR security configuration. The
+   default security configuration uses MapR security (mapr tickets) to
+   provide authentication, authorization, and encryption for cluster
+   security. See [1]Securing Drill for more information.
+   Note: The MapR default security feature introduced in MapR 6.0 is not
+   supported with Drill-on-YARN.
+   Note: Drill 1.11 is only supported in MapR 6.0 clusters.
+
+   Preserving Custom Security When Upgrading to MapR 6.0 and Drill 1.11
+
+   You can perform a manual upgrade from a secured MapR 5.2 cluster to 6.0
+   to preserve your security settings from 5.2. When you upgrade, a
+   special file, /opt/mapr/conf/.upgrade_from, checks for security
+   settings. If security is set, the same settings carry over to 6.0.
+
+   During a custom upgrade, Drill configurations are not carried over. You
+   must either reconfigure all of your Drill settings, or save your
+   previous settings and then override the default Drill 1.11 settings.
+   You can manually secure Drill either by copying over the old
+   drill-override.conf file into /opt/mapr/drill/drill-<version>/conf or
+   by updating the /opt/mapr/drill/drill-<version>/conf/drill-distrib.conf
+   file with the security settings.
+
+   After you upgrade, you must run [2]configure.sh -R to configure the
+   cluster. When you run the configuration script, it adds a
+   [3].customSecure file to the /opt/mapr/conf directory. This file calls
+   the internal ecosystem scripts, but does not configure Drill.
+   If you decide you want to enable the default security option, you can
+   do so by running configure.sh with the -secure and
+   -forceSecurityDefaults flags, as shown:
+/opt/mapr/server/configure.sh -forceSecurityDefaults [ -unsecure | -secure ]
+ -C <CLDB_node> -Z <ZK_node>
+
+   Running configure.sh with these flags secures the cluster and supported
+   ecosystem components. The internal Drill configuration script
+   configures Drill security in the drill-distrib.conf and distrib-env.sh
+   files. See [4]Securing Drill.
+
+   Drill Management Service
+
+   Drill can run under the MapR Warden service or under YARN. You can
+   upgrade Drill and continue to run Drill under the MapR Warden service.
+   If you are currently running Drill under the MapR Warden service, you
+   can migrate Drill to run under YARN. If you want to migrate Drill to
+   run under YARN, see [5]Migrate Drill to Run Under YARN.
+
+   If you are upgrading Drill to run under Warden, Drill should preserve
+   your storage plugin and configuration files when you upgrade. However,
+   you should backup and restore your configuration files and UDF JAR
+   files.
+
+   Pre-Upgrade Steps
+
+   Complete the following steps on Drill servers and clients before you
+   upgrade Drill:
+    1. Optionally, back up storage plugin configurations:
+         a. Open the [6]Drill Web Console. The Drill node that you use to
+            access the Web Console is a node that is currently running the
+            Drillbit process.
+         b. Click the Storage tab.
+         c. Click Update next to a storage plugin.
+         d. Copy the configuration to a text file, and save the file.
+         e. Repeat steps c and d for each storage plugin configuration
+            that you want to save.
+    2. To stop the Drillbit service on all nodes, issue the following
+       command:
+maprcli node services -name drill-bits -action stop -nodes <node host names sepa
+rated by a space>
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/securing_drill.html#securing_drill
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/securing_drill.html#securing_drill
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/migrate_drill_to_yarn.html#run_drill_as_a_yarn_application
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/start_the_web_console.html#start_the_web_console

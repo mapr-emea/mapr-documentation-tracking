@@ -1,0 +1,43 @@
+Using the webhdfs:// Protocol
+
+   This section describes how to copy data from an HDFS cluster to a MapR
+   cluster using the webhdfs:// protocol.
+
+   Before you can copy data from an HDFS cluster to a MapR cluster using
+   the webhdfs:// protocol, you must configure the MapR cluster to access
+   the HDFS cluster. To do this, complete the steps listed in
+   [1]Configuring a MapR Cluster to Access an HDFS Cluster for the
+   security scenario that best describes your HDFS and MapR clusters and
+   then complete the steps listed under [2]Verifying Access to an HDFS
+   Cluster.
+
+   To copy data from HDFS to MapR-FS using the webhdfs:// protocol,
+   complete the following steps:
+    1. The HDFS cluster must have WebHDFS enabled. Verify that the
+       following parameter exists in the hdfs-site.xml file and that the
+       value is set to true.
+<property>
+<name>dfs.webhdfs.enabled</name>
+<value>true</value>
+</property>
+       You also need the following information:
+          + <NameNode>: the IP address or hostname of the NameNode in the
+            HDFS cluster
+          + <NameNode HTTP Port>: the HTTP port on the NameNode in the
+            HDFS cluster
+          + <HDFS path>: the path to the HDFS directory from which you
+            plan to copy data
+          + <MapR-FS path>: the path in the MapR cluster to which you plan
+            to copy HDFS data
+    2. Run the following command from a node in the MapR cluster to copy
+       data from HDFS to MapR-FS using webhdfs://:
+hadoop distcp webhdfs://<NameNode>:<NameNode HTTP Port>/<HDFS path> maprfs:///<M
+apR-FS path>
+       For example:
+hadoop distcp webhdfs://nn2:50070/user/sara maprfs:///user/sara
+       Note the required triple slashes in maprfs:///.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Configuring-a-MapR-Cluster.html#Configuring-a-MapR-Cluste-Startinginrelease3.0-d3e62
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/VerifyingAccessToHDFSCluster.html#ConfiguringaMapRClusterto_26281156-d3e560

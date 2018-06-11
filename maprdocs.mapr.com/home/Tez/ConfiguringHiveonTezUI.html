@@ -1,0 +1,45 @@
+Configuring the Timeline Server to Use the Hive-on-Tez User Interface
+
+   This topic describes how to configure the timeline server to use the
+   Hive-on-Tez user interface. This topic includes security configuration
+   information.
+   When the timeline server is installed using the MapR Installer, the
+   installer secures the timeline server automatically. When you install
+   the timeline server manually, use these steps.
+   Note: This procedure assumes that you have previously configured the
+   cluster using the configure.sh script.
+    1. Run configure.sh -R (on all Hive nodes), replacing <hostname> with
+       the name of your timeline server node:
+sudo /opt/mapr/server/configure.sh -R -TL <hostname>
+       Note: Make sure the hostname matches the CN in ssl_keystore for
+       secure clusters. If not, all hive and yarn jobs fail. The hostname
+       can be obtained using the $hostname -f command.
+       Running configure.sh -R configures the timeline server properties
+       in /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/yarn-site.xml for
+       enhanced security.
+    2. To use the timeline server with Kerberos, you need to make
+       additional entries to the
+       /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/yarn-site.xml file.
+       Replace the following variables with real values:
+          + MAPR_PRINCIPAL
+          + PATH_TO_KEYTAB
+          + HTTP_PRINCIPAL
+<property>
+  <name>yarn.timeline-service.principal</name>
+  <value>MAPR_PRINCIPAL</value>
+</property>
+<property>
+<name>yarn.timeline-service.keytab</name>
+  <value>PATH_TO_KEYTAB</value>
+</property>
+<property>
+  <name>yarn.timeline-service.http-authentication.kerberos.principal</name>
+  <value>HTTP_PRINCIPAL</value>
+</property>
+<property>
+ <name>yarn.timeline-service.http-authentication.kerberos.keytab</name>
+ <value>PATH_TO_KEYTAB</value>
+</property>
+
+    3. Restart the resource manager:
+maprcli node services -name resourcemanager -action restart -nodes <hostname>

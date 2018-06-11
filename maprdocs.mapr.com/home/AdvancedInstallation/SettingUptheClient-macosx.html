@@ -1,0 +1,55 @@
+Installing the MapR Client on Mac OS X
+
+   This section describes how to install the MapR Client on Mac OS X.
+   Limitation: Under OS X, the getgroups command returns a maximum of 16
+   groups for a user. If the Mac OS user for which you are installing the
+   MapR Client attempts to read or write to a MapR-FS resource as a member
+   of a group that was not included in the list of 16 groups returned by
+   getgroups, file permission errors may result.
+    1. Create the directory /opt: sudo mkdir -p /opt
+    2. Download the file for the version that you want to install:
+http://package.mapr.com/releases/<version>/mac/<mapr-client package name>
+    3. Open the Terminal application.
+    4. Extract mapr-client-<version>.tar.gz into the /opt directory:
+sudo tar -C /opt -zxf mapr-client-<version>.tar.gz*
+    5. Before running configure.sh, make sure that JAVA_HOME is set
+       correctly for the client in the following script:
+       /opt/mapr/conf/env.sh
+       For example:
+$ export JAVA_HOME=$(/usr/libexec/java_home)
+    6. Run [1]configure.sh to configure the client.
+
+        Non-secure cluster example
+                In the following examples, the -N parameter specifies the
+                cluster name, the -c (lowercase) option specifies a client
+                configuration, the -C (uppercase) parameter specifies the
+                CLDB nodes, and -HS specifies the HistoryServer node:
+
+sudo /opt/mapr/server/configure.sh -N my.cluster.com -c -C mynode01:7222 -HS nod
+eA
+
+        Secure cluster example
+                In the following example, the -N parameter specifies the
+                cluster name, the -C (uppercase) parameter specifies the
+                CLDB nodes, the -c (lowercase) option specifies a client
+                configuration, and -secure indicates that the cluster is
+                secure:
+
+sudo /opt/mapr/server/configure.sh -N my.cluster.com -c -secure -C mynode01:7222
+
+    7. To use this client with a secure cluster or clusters, copy the
+       ssl_truststore file from the /opt/mapr/conf directory on the
+       cluster to the /opt/mapr/conf directory on the client.
+       If this client will connect to multiple clusters, merge the
+       ssl_truststore files with the /opt/mapr/server/manageSSLKeys.sh
+       tool. See [2]Managing Secure Clusters for details on how to connect
+       to a secure cluster.
+
+   For information about running Hadoop commands on Mac OS X, see
+   [3]Running Hadoop Commands on a Mac and Windows Client.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Secure-cluster-administration.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/SettingUptheClient-hadoop.html#SettingUptheClient-hadoop

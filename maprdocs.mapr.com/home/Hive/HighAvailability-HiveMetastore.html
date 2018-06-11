@@ -1,0 +1,46 @@
+Enabling High Availability for HiveMetastore
+
+   Perform the following steps to enable High Availability for
+   HiveMetastore.
+    1. Enable remote access for underlying database by granting
+       permissions in underlying database for different nodes.
+    2. Add all Metastore instances to hive.metastore.uris on all the
+       nodes.
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://<hostname>:9083,thrift://<hostname>:9083</value>
+</property>
+    3. Restart Hive.
+
+Example
+
+   Suppose HiveMetastore is on the following two nodes:
+    Ip address   Host name
+   192.168.33.11 node1
+   192.168.33.12 node2
+    1. Change MySQL configuration:
+nano /etc/my.cnf
+    2. Comment out the following properties:
+#bind-address
+#skip-networking
+       If these properties are not in my.cnf, then skip editing my.cnf.
+       Restart MySQL server.
+    3. Enable remote access for underlying database by granting
+       permissions in underlying database.
+mysql> GRANT ALL PRIVILEGES ON metastore.* TO 'root'@'192.168.33.11' IDENTIFIED
+BY 'secret' WITH GRANT OPTION;
+mysql> GRANT ALL PRIVILEGES ON metastore.* TO 'root'@'192.168.33.12' IDENTIFIED
+BY 'secret' WITH GRANT OPTION;
+    4. Verify connection to MySQL server from node1 and node2. For
+       example, run the following command on:
+          + node1:
+mysql -h node1 -uroot -psecret
+          + node2:
+mysql -h node1 -uroot -psecret
+    5. Add all Metastore instances to hive.metastore.uris on all nodes
+       with Hive instance:
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://192.168.33.11:9083,thrift://192.168.33.12:9083</value>
+</property>
+    6. Restart Hive.

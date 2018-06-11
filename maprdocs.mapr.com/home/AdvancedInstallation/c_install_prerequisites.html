@@ -1,0 +1,206 @@
+MapR Installer Prerequisites and Guidelines
+
+   The node on which you run the MapR installer and the nodes you plan to
+   include in your MapR cluster must meet the following requirements.
+
+Installer Requirements
+
+   The node that runs the MapR Installer must meet the following
+   requirements:
+   MapR Node
+
+   Beginning with MapR Installer 1.6, the node that runs the MapR
+   Installer does not need to be one of the nodes you plan to install the
+   cluster on.
+
+   Ensure that the default umask for the root user is set to 0022 on all
+   MapR nodes in the cluster. The umask setting is changed in the
+   /etc/profile file, or in the .cshrc or .login file. The root user must
+   have a 0022 umask because the MapR admin user requires access to all
+   files and directories under the /opt/mapr directory, even those
+   initially created by root services.
+   Package Dependencies
+   Based on the operating system, it requires the following packages:
+     On Ubuntu Nodes  On Red Hat / CentOS Nodes On SUSE Nodes
+     * ca-certificates
+     * curl
+     * debianutils
+     * dnsutils
+     * iputils-arping
+     * libnss3
+     * libssl1.0.0
+     * libsysfs2
+     * netcat
+     * nfs-common
+     * ntp
+     * ntpdate
+     * openssl
+     * python-dev
+     * python-pycurl
+     * sdparm
+     * sudo
+     * syslinux
+     * sysstat
+     * uuid-runtime
+     * wget
+
+     * curl
+     * device-mapper
+     * iputils
+     * libsysfs
+     * lvm2
+     * nc
+     * nfs-utils
+     * ntp
+     * nss
+     * openssl
+     * python-devel
+     * sdparm
+     * sudo
+     * syslinux
+     * sysstat
+     * wget
+     * which
+     * yum-utils
+
+     * ca-certificates
+     * curl
+     * device-mapper
+     * iputils
+     * libopenssl1_0_0
+     * sysfsutils
+     * lvm2
+     * mozilla-nss
+     * nfs-client
+     * ntp
+     * sdparm
+     * sudo
+     * syslinux
+     * sysstat
+     * util-linux
+     * wget
+     * libfreebl3
+
+   If these packages are not found, the MapR Installer will attempt to
+   download them from Internet repositories.
+   Java
+
+   The MapR Installer must have JDK 1.7 or higher. Even though MapR 6.0
+   requires JDK 1.8 or higher, the MapR Installer can function with JDK
+   1.7 because the installer can run outside the MapR cluster.
+
+   If JDK 1.7 or higher is unavailable, mapr-setup.sh will install
+   OpenJDK.
+     * On RedHat/CentOS, mapr-setup.sh installs Open JDK Java 1.8.
+     * On Ubuntu, mapr-setup.sh installs Open JDK Java 1.7.
+
+   SSH Access The MapR Installer must have SSH access to all nodes that
+   you want to include in the cluster.
+   Port Availability Port 9443 or the non-default port that you configure
+   using mapr-setup.sh must be accessible on the MapR Installer node to
+   all nodes that you want to include in the cluster.
+   Once the MapR Installer is installed and configured, the following web
+   browsers can be used to access the MapR Installer web interface:
+     * Safari
+     * Firefox
+     * Google Chrome
+
+   For more information, see the [1]MapR Installer Support Matrix.
+
+User Requirements
+
+   The installation process requires a valid MapR user to be present on
+   all nodes in the cluster. The MapR Installer can create a user (the
+   mapr user) for you or use a user that you have created. If you choose
+   to create a user, make sure the following conditions are met:
+     * The user must have a home directory and a password.
+     * The user must be present on all nodes in the cluster.
+     * The numeric user and group IDs (MAPR_UID and MAPR_GUID) must be
+       configured for the user, and these values must match on all nodes.
+     * The mapr user and root user must be configured to use bash. Other
+       shells are not supported.
+
+   If the user is not a valid user, installation errors can result. For
+   information about creating the user, see [2]Managing Users and Groups.
+
+   If you choose to have the installer create the user, the installer runs
+   the following command to add a local user to serve as the cluster admin
+   user:
+useradd -m -u $MAPR_UID -g $MAPR_GID -G $(stat -c '%G' /etc/shadow) $MAPR_USER
+
+   In this command:
+     * MAPR_USER defaults to mapr.
+     * MAPR_UID defaults to 5000.
+     * MAPR_GID defaults to 5000.
+     * The home directory is typically /home/mapr.
+
+   The installer also adds the following to the MAPR_USER's .bashrc file:
+[[ -f {{ mapr_home }}/conf/env.sh ]] && . {{ mapr_home }}/conf/env.sh
+
+Node Requirements
+
+   Nodes that you want to include in the cluster must meet the following
+   criteria:
+     * They are configured to accept operating system and security
+       updates. They must also be patched with the latest security fixes.
+       See your operating-system vendor documentation for details.
+     * They meet the requirements listed in [3]Preparing Each Node. The
+       MapR Installer will verify the requirements prior to installation.
+     * They have HTTPS access to the MapR Installer node over port 9443.
+
+   When you specify the nodes in the MapR Installer, the nodes must also
+   be defined by resolvable hostnames or static IP addresses.
+
+   If nodes in the cluster use an HTTP proxy server, the nodes must also
+   meet the following requirements:
+     * The no_proxy environment variable must be set.
+       Nodes in the MapR cluster need to be able to communicate without
+       the use of a proxy. If the https_proxy and http_proxy environment
+       variable is set for nodes in the cluster, you must also set the
+       no_proxy environment variable for the MapR admin user and the root
+       user on each node. Configure the no_proxy environment variable to
+       the IP range of the MapR nodes or to the sub-domain that contains
+       the MapR nodes.
+       In addition, you must follow this guideline from the [4]Python
+       documentation: "The no_proxy environment variable can be used to
+       specify hosts which shouldn't be reached via proxy; if set, it
+       should be a comma-separated list of hostname suffixes, optionally
+       with :port appended, for example
+       cern.ch,ncsa.uiuc.edu,some.host:8080."
+       For cloud-based clusters (Amazon EC2, Google Compute Engine (GCE),
+       and Microsoft Azure), you must include this entry in the no-proxy
+       configuration:
+169.254.169.254
+     * The global proxy for package repositories must be set.
+       MapR Installer creates repository files. However, the proxy setting
+       is not configured for each repository. Therefore, configure global
+       proxy settings on each node in the cluster.
+          + On CentOS/RedHat, set global proxy settings in /etc/yum.conf.
+          + On Ubuntu, set global proxy settings in /etc/apt/apt.conf.
+
+Using the MapR Installer on Nodes in the Cloud
+
+   When you run the MapR Installer on nodes in the cloud, you must:
+     * Verify that port 9443 is open.
+       The MapR Installer requires that this port is available.
+     * Ensure that the MapR Installer and service UI URLs should refer to
+       an external URL and not an internal URL.
+       For example, when you open the MapR installer URL, replace any
+       internal hostname or IP address with its associated external
+       address. For Amazon EC2 and Google Compute Engine (GCE) clusters,
+       the MapR Installer automatically translates internal addresses to
+       external addresses.
+     * On the Configure Nodes page of the MapR Installer web interface,
+       make sure that you do the following:
+          + Define each node with internal static IP addresses or internal
+            resolvable hostnames.
+          + For the remote authentication, use the same user ID and
+            private key that you use to ssh into your cloud instances.
+            This user must be root or a user with sudo permissions.
+
+References
+
+   1. http://maprdocs.mapr.com/home/InteropMatrix/r_installer_matrix.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/c-managing-users-and-groups.html#Managing-Users-and-Groups-rootisusedtoinstallM-d3e62
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/PreparingEachNode.html#PreparingEachNode
+   4. https://docs.python.org/2/library/urllib.html

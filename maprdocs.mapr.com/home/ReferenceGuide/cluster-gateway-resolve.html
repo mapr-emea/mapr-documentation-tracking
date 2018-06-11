@@ -1,0 +1,88 @@
+cluster gateway resolve
+
+   Lists the gateways configured on MapR cluster that are up and running
+   at the time that the command is issued.
+
+   Execute this command on a source MapR cluster to find out how many
+   gateways are available for table replication to a destination MapR
+   cluster or for indexing table data in an Elasticsearch cluster.
+
+   This command uses the following criteria to get the list:
+     * If the locations of the gateways were specified with the marpcli
+       cluster gateway set command, the maprcli cluster gateway resolve
+       command returns the list of the gateways.
+     * If the locations of the gateways were specified with a DNS record
+       only, this command performs a DNS lookup for gateways on the
+       specified MapR cluster and returns the list that it finds.
+     * If neither of the previous methods was used to specify the
+       locations of the gateways, this command assumes that gateways are
+       located on the CLDB nodes configured in the mapr-clusters.conf file
+       on the MapR cluster where the command is executed.
+
+   Note: Unresponsive gateways are not included in the list.
+
+   For more information about gateways, see [1]MapR Gateways.
+
+   Syntax
+
+   CLI
+
+maprcli cluster gateway resolve
+    -dstcluster <destination cluster name>
+    [ -cluster <cluster on which command to be run> ]
+
+   REST
+
+http[s]://<host>:<port>/rest/cluster/gateway/resolve?dstcluster=<clustername>
+
+Parameters
+
+   Parameter Description
+   dstcluster
+
+   The name of the cluster for which you want to list the available
+   gateways.
+
+   If you are replicating table data to another MapR cluster, specify the
+   name of that destination cluster. This destination cluster could be the
+   source cluster if you are performing intracluster replication.
+
+   If you are indexing table data in an Elasticsearch cluster, specify the
+   name of the source MapR cluster because that is where the gateways are
+   located.
+   cluster If you are not on the source MapR cluster, provide the name of
+   the source cluster that this command should be run on.
+
+Example
+
+   This example shows that only one gateway is up and running on the MapR
+   cluster cluster1. The IP address of this gateway was found in a DNS
+   record, as indicated by the Source field.
+
+   CLI
+
+maprcli cluster gateway resolve -dstcluster cluster1 -json
+
+   REST
+          https://<host>:<port>/rest/cluster/gateway/resolve?dstcluster=cl
+          uster1
+
+   Example Output
+
+{
+        "timestamp":1424266395862,
+        "timeofday":"2015-02-18 01:33:15.862 GMT+0000",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "GatewayHosts":"10.10.20.12:7660",
+                        "Source":"DNS"
+
+                }
+        ]
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/MapRGateways.html

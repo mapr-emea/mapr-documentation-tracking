@@ -1,0 +1,24 @@
+What Happens During Azure Deployment
+
+   The primary reference template for Azure (mainTemplate.json) is a
+   starting point for all the child templates that create Azure resources.
+   When the primary template is deployed, some resources are created in
+   parallel. Here is what happens in a typical deployment:
+    1. The primary template is deployed.
+    2. If the option to create a new network was selected, the
+       MapR.Network.Template is deployed.
+    3. MapR.Network.Template creates the virtual network and subnet(s).
+    4. MapR.VM.Template and, optionally, the MapR.OpenVPN.Template are
+       started in parallel.
+    5. MapR.VM.Template creates all the resources needed to install and
+       run MapR software. The number of resources varies depending on the
+       Node Count you selected. This process creates:
+          + Virtual machines
+          + Network interfaces
+          + Managed disks
+       After these resources are completely created, the MapR installation
+       starts via Stanza.
+    6. MapR.OpenVPN.Template creates one virtual machine, network
+       interface, and managed disk. This Ubuntu machine has the OpenVPN
+       server installed via script after these resources are completely
+       created.

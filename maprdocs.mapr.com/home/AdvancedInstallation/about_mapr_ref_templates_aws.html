@@ -1,0 +1,62 @@
+About the MapR Reference Templates for AWS
+
+   The MapR reference templates for AWS are sample CloudFormation
+   templates that you can use to set up a MapR cluster. You can use the
+   templates without modification, or you can customize them to suit your
+   environment. Be sure to review the following information before using
+   the reference templates. For more information about CloudFormation, see
+   [1]AWS CloudFormation.
+
+   The reference templates can be found on [2]GitHub in folders organized
+   by the MapR Installer version. To determine your MapR Installer
+   version, see [3]Checking the MapR Installer Version.
+
+   This table describes the AWS reference templates:
+   Template Type Template File Name Function
+   Primary Template aws_cf_maprcluster_with_role.yml Creates a MapR
+   cluster along with all the privileges and roles required by the MapR
+   Installer. Use this template if you are privileged to create roles and
+   policies in AWS.
+   Primary Template aws_cf_maprcluster.yml Creates a MapR cluster. This
+   template requires the IAM role to be provided as an input. If you do
+   not have the permission to create roles and privileges, ask your
+   administrator to create the role for them. The
+   aws_cf_maprcluster_role.yml template can be used for this purpose.
+   Primary Template aws_cf_maprcluster_ami.yml Creates a MapR cluster. For
+   this template, you must provide an AMI ID and ssh user with SUDO
+   privilege as inputs. The AMI can be any CentOS, Ubuntu, or SUSE image
+   on which the mapr-setup.sh image prep has not been run. The root disk
+   (where /opt/mapr will be installed) must have a minimum of 128 GB, and
+   swap space must be at least 10% of memory or less than 2 GB. Note that
+   the CentOS, Ubuntu, or SUSE version must be a [4]version that is
+   supported by MapR 5.2.2.
+   Utility Template* aws_cf_maprcluster_role.yml Creates a role with the
+   privileges necessary for the MapR Installer to create, modify, and
+   release AWS instances. Once the role is created, you can pass the role
+   name into the aws_cf_maprcluster.yml template.
+   Utility Template* aws_cf_maprcluster_nodes.yml Creates the launch
+   configuration and auto-scaling group. If you are doing a custom
+   deployment, you can customize this template to your needs.
+   Utility Template* aws_cf_vpc_openvpn.yml Deploys a VPC capable of
+   supporting a MapR cluster. It can also, optionally, set up an OpenVPN
+   Access Server. The OpenVPN Access Server supports two client
+   connections for testing purposes. You can buy licenses for the Access
+   Server from the [5]OpenVPN website. Once the VPC is created, you can
+   pass the subnet ID into any of the deployment templates.
+   Sample Stanza Input File mapr-core.yml Provided as a convenience for
+   users who need a script-based tool to install MapR software. See
+   [6]MapR Installer Stanzas.
+
+   *Utility templates support the main templates. You can modify them to
+   suit your needs. Updated utility templates must be uploaded to s3 and
+   referenced in your customized primary templates. The main templates
+   contain fully-qualified references to the utility templates.
+
+References
+
+   1. https://aws.amazon.com/cloudformation/
+   2. https://github.com/mapr/mapr-cloud-templates/tree/master/
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Checking_MapR_installer_version.html#task_clb_ntb_2db
+   4. http://maprdocs.mapr.com/home/InteropMatrix/r_os_matrix.html
+   5. https://openvpn.net/index.php/access-server/pricing.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/SilentInstaller.html#concept_wx2_rmd_cy

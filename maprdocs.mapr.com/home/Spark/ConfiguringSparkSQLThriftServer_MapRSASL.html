@@ -1,0 +1,31 @@
+Configuring Spark Thrift Server with MaprR-SASL
+
+   You can configure Spark Thrift server to use MapR-SASL for its
+   communications with various components on a secure MapR cluster.
+   Minimal configuration is required.
+   Note: Starting in MEP 4.0, for secure clusters, you can skip the steps
+   outlined in this section. For new installs done through the 6.0 MapR
+   Installer, the installer enables this configuration. For manual
+   installs and upgrades, [1]running configure.sh -R enables these
+   settings.
+
+   To manually enable MapR-SASL authentication on a non-secure cluster or
+   in versions earlier than MEP 4.0:
+    1. Set the hive.server2.authentication property in hive-site.xml to
+       the value, MAPRSASL.
+<property>
+     <name>hive.server2.authentication</name>
+     <value>MAPRSASL</value>
+</property>
+    2. Restart Spark Thrift server to apply this change. sbin is in your
+       Spark directory at /opt/mapr/spark/spark-2.1.0/.
+       Important: The MapR administrative user (generally, the account
+       named mapr) should start Spark Thrift server. Then, process
+       identifier (PID) files will be owned by this user, and
+       impersonation support (where applicable) will function correctly.
+./sbin/stop-thriftserver.sh
+./sbin/start-thriftserver.sh
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SparkConfigureShR.html#concept_x2q_5dl_3bb

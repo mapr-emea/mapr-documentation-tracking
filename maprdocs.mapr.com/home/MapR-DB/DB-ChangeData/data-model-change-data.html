@@ -1,0 +1,81 @@
+Data Modeling and CDC
+
+   Change Data Capture (CDC) changed data records propagate in one
+   direction; from a source table to a topic in a changelog stream. One
+   stream with one topic can be created for the changed data records or
+   multiple streams with multiple topics can be created.
+   Note: Propagation from multiple source tables to one stream topic is
+   not supported.
+
+One source to one destination topic on one stream
+
+   You might use this scenario if there is a large number of changed data
+   records being propagated and you want the topic on a separate or
+   isolated volume so that resources are dedicated to these particular
+   changed data records.
+
+   The following graphic shows a source table's change data records being
+   propagated to one topic on one stream.
+   [CDC-one-to-one.png]
+
+One source to multiple destination topics on one stream
+
+   You might use this scenario if you want to propagate specific changed
+   data records from one source table to different topics.
+
+   When you set up a table changelog for data propagation, you can specify
+   the column parameter to propagate a specific field or column family.
+   Default: All fields are propagated. See [1]table changelog add for
+   information about adding a table changelog.
+
+   The following graphic shows a source table's change data records being
+   propagated to multiple topics on a stream.
+   [CDC-one-to-many.png]
+
+One source to multiple destination topics on multiple streams
+
+   You might use this scenario if the change data records are important
+   and you want to have an extra copy for backup purposes.
+
+   The following graphic shows a source table's change data records being
+   propagated to topics on multiple streams.
+   [CDC-one-to-two-streams.png]
+
+Multiple sources to multiple destination topics on one stream
+
+   You might use this scenario if you want to set up permissions to one
+   stream so that a team has access to all the topics that they want to
+   access. For example, if table1 and table2 has change data records that
+   a team wants to monitor, then on the stream, you would grant permission
+   to the monitoring team.
+
+   The following graphic shows three source tables' change data records
+   being propagated to three topics on the same stream.
+   [CDC-many-to-many-one-stream.png]
+
+Source Cluster to Destination Cluster
+
+   If you are propagating changed data from a source table on a source
+   cluster to a destination stream topic on a remote destination cluster,
+   a gateway must be setup. Gateways are setup by installing the gateway
+   on the destination cluster and specifying the gateway node(s) on the
+   source cluster. See [2]Administering MapR Gateways and [3]Configuring
+   Gateways for Table and Stream Replication.
+
+   The following diagram shows a simple CDC data model, with one source
+   table to one destination topic on one stream. Because this scenario has
+   the destination stream topic on a remote destination cluster, a gateway
+   must be setup and configured.
+   Note: More complex CDC scenarioss can be implemented and multiple
+   gateways can be setup.
+   [CDC-simple-remoteCluster.png]
+   Important: If you have a secure cluster, secure configuration must be
+   setup. See [4]Configuring Secure Clusters for Cross-Cluster Mirroring
+   and Replication.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-changelog-add.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/MapRGateways.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/AddingCross-ClusterTickets.html

@@ -1,0 +1,49 @@
+Using Node Labels to Schedule YARN Applications
+
+   To set up node labels for the purpose of scheduling YARN applications
+   (including MapReduce applications) on a specific node or group of
+   nodes:
+    1. Create a text file and specify the labels you want to use for the
+       nodes in your cluster. In this example, the file is named
+       node.labels.
+    2. Copy the file to a location on MapR-FS where it will not be
+       modified or deleted, such as /var/mapr. hadoop fs -put
+       ~/node.labels /var/mapr
+hadoop fs -put ~/node.labels /var/mapr
+    3. Edit yarn-site.xml on all ResourceManager nodes and set the
+       node.labels.file parameter and the optional
+       node.labels.monitor.interval parameter as shown: <property>
+       <name>node.labels.file</name> <value>/var/mapr/node.labels</value>
+       <description>The path to the node labels file.</description>
+       </property> <property> <name>node.labels.monitor.interval</name>
+       <value>120000</value> <description>Interval for checking the labels
+       file for updates (default is 120000 ms)</description> </property>
+<property>
+   <name>node.labels.file</name>
+   <value>/var/mapr/node.labels</value>
+   <description>The path to the node labels file.</description>
+</property>
+
+<property>
+   <name>node.labels.monitor.interval</name>
+   <value>120000</value>
+   <description>Interval for checking the labels file for updates (default is 12
+0000 ms)</description>
+</property>
+    4. Restart ResourceManager to set up the labels from the node labels
+       file for the first time. For subsequent changes to take effect,
+       issue either of the following commands to manually tell the
+       ResourceManager to reload the node labels file:
+          + For any YARN applications, including MapReduce applications,
+            enter yarn rmadmin -refreshLabels
+          + For MapReduce applications, enter mapred job -refreshLabels
+    5. Verify that labels are implemented correctly by running either of
+       the following commands: yarn rmadmin -showLabels mapred job
+       -showLabels
+yarn rmadmin -showLabels
+mapred job -showLabels
+
+   The following flowchart summarizes these steps. In addition, the
+   flowchart introduces the concept of queue labels for the Fair Scheduler
+   and the Capacity Scheduler.
+   [27199826.png]

@@ -1,0 +1,31 @@
+Configuring Spark Thrift Server Encryption
+
+   Spark Thrift server encryption is supported when authentication is
+   enabled.
+   Note: Starting in MEP 4.0, for secure clusters, you can skip the steps
+   outlined in this section. For new installs done through the 6.0 MapR
+   Installer, the installer enables this configuration. For manual
+   installs and upgrades, [1]running configure.sh -R enables these
+   settings.
+   To manually configure encryption with MapR-SASL or Kerberos
+   authentication on a non-secure cluster or in versions earlier than MEP
+   4.0, complete the following steps:
+    1. Set the hive.server2.thrift.sasl.qop property in hive-site.xml to
+       the value, auth-conf. The SASL Quality of Protection (QOP), or
+       sasl.qop, setting and the authentication with confidentiality
+       (auth-conf) value support authentication.
+<property>
+            <name>hive.server2.thrift.sasl.qop</name>
+            <value>auth-conf</value>
+</property>
+    2. Restart Spark Thrift server to apply this change.
+       Important: The MapR administrative user (generally, the account
+       named mapr) should start Spark Thrift server. Then, process
+       identifier (PID) files will be owned by this user, and
+       impersonation support (where applicable) will function correctly.
+./sbin/stop-thriftserver.sh
+./sbin/start-thriftserver.sh
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SparkConfigureShR.html#concept_x2q_5dl_3bb

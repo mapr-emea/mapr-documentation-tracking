@@ -1,0 +1,711 @@
+Impala Built-In Functions
+
+   You can use built-in functions to transform data directly in SELECT
+   statements to avoid post processing in another application. Built-in
+   functions allow an SQL query to return result sets with formatting,
+   calculating, and type conversions already applied.
+
+   Impala supports the following categories of functions:
+     * Aggregation Functions
+     * Type Conversion Functions
+     * Mathematical Functions
+     * Date and Time Functions
+     * String Functions
+     * Conditional Functions
+     * Bit Manipulation Functions
+     * Analytic Window Functions
+     * Miscellaneous Functions
+
+   The following table provides a few rules that apply to built-in
+   functions:
+   Rule                                                                  Example
+
+   Call functions through the SELECT statement.
+
+   You can omit the FROM clause in most functions.
+
+   Supply literal values for any required arguments.
+select abs(-1);
+
+select concat('The sly ', 'brown
+                  fox');
+
+select power(2,5);
+
+   When you include a FROM clause and specify a
+
+   column name as a function argument, the function
+
+   is applied to each item in the result set.
+select concat('State = ',state_code) from
+                  all_states where population > 20000000;
+
+select round(price) as dollar_value
+                    from product_directory where price between 400.0 and
+              500.0;
+
+   If an argument to a built-in function is NULL, the result value NULL.
+select cos(null);
+
+select power(2,null);
+
+select
+              concat('a',null,'b');
+
+   Aggregate functions require a FROM clause in the query.
+
+   They calculate a return value across all items in a result set.
+
+   Aggregate functions ignore NULL values rather than returning a NULL
+   result.
+
+select count(customer_id) from
+                  customer_directory;
+
+select max(weight), avg(weight) from
+                  census_data where age > 40;
+
+   The following sections list the available functions:
+
+Aggregation Functions
+
+   You can use the following aggregation functions:
+     * APPX_MEDIAN()
+     * AVG()
+     * COUNT()
+     * MAX()
+     * MIN()
+     * NDV()
+     * STDDEV()
+     * STDDEV_SAMP()
+     * STDDEV_POP()
+     * SUM()
+     * VARIANCE()
+     * VARIANCE_SAMP()
+     * VARIANCE_POP()
+
+Type Conversion Functions
+
+   Use conversion functions in combination with other functions to
+   explicitly pass the expected data types.
+
+   CAST
+          Use CAST when passing a column value or literal to a function
+          that expects a parameter with a different type.
+          Syntax
+
+cast(expr as type)
+
+          Example
+
+select concat('Here are the first ',10,' results.'); -- Fails
+select concat('Here are the first ',cast(10 as string),' results.'); -- Succeeds
+
+   TYPEOF
+          Available as of Impala 2.5.0. Use typeof to reutrn the name of
+          the data type corresponding to an expression. For types with
+          extra attributes, such as length for CHAR and VARCHAR, or
+          precision and scale for DECIMAL, includes the full specification
+          of the type.
+          Syntax
+
+typeof(type value)
+
+          Examples
+
+select typeof(2);
+select typeof('xyz');
+select typeof(5.30001 / 2342.1);
+
+          The examples above return tinyint, string, and DECIMAL(13,11)
+          respectively.
+
+Mathematical Functions
+
+   The following functions were added in Impala 2.5.0:
+     * dceil(double a), dceil(decimal(p,s) a)
+     * dexp(double a)
+     * dfloor(double a), dfloor(decimal(p,s) a)
+     * dlog10(double a)
+     * dpow(double a, double p), fpow(double a, double p)
+     * dround(double a), dround(double a, int d), dround(decimal(p,s) a,
+       int_type d)
+     * dsqrt(double a)
+     * dtrunc(double_or_decimal a[, digits_to_leave])
+     * factorial(integer_type a)
+     * radians(double a)
+     * random(), random(int seed)
+
+   The following table lists the mathematical functions with their
+   descriptions and return types:
+   Function Description Return type
+   abs(double a) Ensures all return values are positive. Returns the
+   absolute value of the argument. double
+   acos(double a) Returns the arccosine of the argument. double
+   asin(double a) Returns the arcsine of the argument. double
+   bin(bigint a) Returns the binary representation of an integer value.
+   string
+   ceil(double a), ceiling(double a),dceil(double a), dceil(decimal(p,s)
+   a) Returns the smallest integer > or = to the argument. int or
+   decimal(p,s) depending on the type of the input argument
+   conv(bigint num, int from_base, int to_base), conv(string num, int
+   from_base, int to_base)
+
+   Returns a string representation of an integer value in a particular
+   base. The input value can be a string. To use the return value as a
+   number, use CAST() to convert to the appropriate type.
+
+   string
+   cos(double a) Returns the cosine of the argument. double
+   cot(double a) Returns the cotangent of the argument. double
+   degrees(double a) Converts the argument value from radians to degrees.
+   double
+   e() Returns the mathematical constant e. double
+   exp(double a),
+
+   dexp(double a)
+   Returns the mathematical constant e raised to the power of the
+   argument. double
+   factorial(integer_type a)
+
+   Computes the factorial of an integer value. It works with any integer
+   type. You can use either the factorial() function or the ! operator.
+   The factorial of 0 is 1. Likewise, the factorial() function returns 1
+   for any negative value. The maximum positive value for the input
+   argument is 20; a value of 21 or greater overflows the range for a
+   BIGINT and causes an error.
+   bigint
+   floor(double a), dfloor(double a), dfloor(decimal(p,s) a) Returns the
+   largest integer that is less than or equal to the argument. int,
+   bigint, or decimal(p,s) depending on the type of the input argument
+   fnv_hash(type v) Returns a consistent 64-bit value, derived from the
+   input argument. Use for implementing hashing logic in an application.
+   bigint
+   greatest() Returns the largest value from a list of expressions. The
+   return type is the same as the initial argument value. Integer values
+   are promoted to BIGINT. Floating-point values are promoted to DOUBLE.
+   Use CAST() when inserting into a smaller numeric column.
+   hex(bigint a), hex(string a) Returns the hexadecimal representation of
+   an integer value, or of the characters in a string. string
+   is_inf(double a) Tests whether a value is equal to the special value
+   "inf", signifying infinity. boolean
+   is_nan(double a) Tests whether a value is equal to the special value
+   "NaN", signifying "not a number". boolean
+   least() Returns the smallest value from a list of expressions. The
+   return type is the same as the initial argument value. Integer values
+   are promoted to BIGINT. Floating-point values are promoted to DOUBLE.
+   Use CAST() when inserting into a smaller numeric column.
+   ln(double a) Returns the natural logarithm of the argument. double
+   log(double base, double a) Returns the logarithm of the second argument
+   to the specified base. double
+   log10(double a), dlog10(double a) Returns the logarithm of the argument
+   to the base 10. double
+   log2(double a) Returns the logarithm of the argument to the base 2.
+   double
+   mod() This function returns the modulus of a number. MOD is equivalent
+   to using the % arithmetic operator. It works with any size integer
+   type, any size floating-point type, and DECIMAL with any precision and
+   scale. Same as the input value
+
+   negative(int a), negative(double a)
+
+   Returns the argument with the sign reversed; returns a positive value
+   if the argument was already negative.
+
+   If return values must be negative, use -abs(a) instead.
+   int or double
+   max_int(),min_smallint() Checks whether data values are in an expected
+   range. You might be able to switch a column to a smaller type to save
+   memory during processing. The same as the integral type being checked.
+   pi() Returns the constant pi. double
+   pmod(int a, int b), pmod(double a, double b) Purpose: Returns the
+   positive modulus of a number. int or double
+
+   positive(int a), positive(double a)
+
+   Returns the original argument; applies to negative arguments also.
+
+   If return values must be positive, use abs().
+   int or double
+   pow(double a, double p), power(double a, double p), dpow(double a,
+   double p), fpow(double a, double p) Returns the first argument raised
+   to the power of the second argument. double
+   quotient(int numerator, int denominator) Returns the first argument
+   divided by the second argument and discards any fractional part. Avoids
+   promoting arguments to DOUBLE as happens with the / SQL operator. int
+   radians(double a) Converts argument value from degrees to radians.
+   double
+   rand(), rand(int seed), random(), random(int seed) Returns a random
+   value between 0 and 1. After rand() is called with a seed argument,
+   produces a consistent random sequence based on the seed value.
+   Currently, the random sequence is reset after each query, and multiple
+   calls to rand() within the same query return the same value each time.
+   For different number sequences that are different for each query, pass
+   a unique seed value to each call to rand(). For example, select
+   rand(unix_timestamp()) from ... double
+   round(double a), round(double a, int d), dround(double a),
+   dround(double a, int d), dround(decimal(p,s) a, int_type d) Rounds a
+   floating-point value. By default (with a single argument), rounds to
+   the nearest integer. Values ending in .5 are rounded up for positive
+   numbers, down for negative numbers. The second argument is optional and
+   specifies how many digits to leave after the decimal point. Values
+   greater than zero produce a floating-point return value rounded to the
+   requested number of digits to the right of the decimal point. bigint
+   for single and double argument; double for two-argument signature when
+   second argument is greater than zero; for DECIMAL values, the smallest
+   DECIMAL(p,s) type with appropriate precision and scale
+   sign(double a) Returns -1, 0, or 1 to indicate the sign of the argument
+   value. int
+   sin(double a) Returns the sine of the argument. double
+   sqrt(double a), dsqrt(double a) Returns the square root of the
+   argument. double
+   tan(double a) Returns the tangent of the argument. double
+   truncate(double_or_decimal a[, digits_to_leave]),
+   dtrunc(double_or_decimal a[, digits_to_leave]) Removes some or all
+   fractional digits from a numeric value. With no argument, removes all
+   fractional digits, leaving an integer value. The optional argument
+   specifies the number of fractional digits to include in the return
+   value, and only applies with the argument type is DECIMAL. truncate()
+   and dtrunc() are aliases for the same function. decimal for DECIMAL
+   arguments; bigint for DOUBLE arguments
+   unhex(string a) Returns a string of characters with ASCII values
+   corresponding to pairs of hexadecimal digits in the argument. string
+
+Date and Time Functions
+
+   TIMESTAMP is the underlying datatype for data and time data. Functions
+   that extract a single field, such as hour() or minute(), typically
+   return an integer value. Functions that format the date portion, such
+   as date_add() or to_date(), typically return a string value.
+   The following table lists the date and time functions with their
+   descriptions and return types:
+   Function Description Return Type
+   add_months() Alias for the existing MONTHS_ADD() function. timestamp
+   date_add(string startdate, int days) Adds a specified number of days to
+   a date represented as a string. string
+   date_part() A new date and time function, similar to EXTRACT(), but
+   with the order of the arguments reversed. You can also call the
+   EXTRACT() function using the SQL-99 syntax, EXTRACT(unit FROM
+   timestamp). These enhancements simplify the porting process for
+   date-related code from other systems. int
+   date_sub(string startdate, int days) Subtracts a specified number of
+   days from a date represented as a string. string
+   datediff(string enddate, string startdate) Returns the number of days
+   between two dates represented as strings. int
+   day(string date), dayofmonth(string date) Returns the day field from a
+   date represented as a string. int
+   dayname(string date) Returns the day field from a date represented as a
+   string, converted to the string corresponding to that day name. The
+   range of return values is 'Sunday' to 'Saturday'. Use in
+   report-generating queries, instead of calling dayofweek() and turning
+   that numeric return value into a string using a CASE expression. string
+   dayofweek(string date) Returns the day field from a date represented as
+   a string, corresponding to the day of the week. The range of return
+   values is 1 (Sunday) to 7 (Saturday). int
+   extract() Returns one date or time field from a TIMESTAMP value.
+   timestamp
+   from_unixtime(bigint unixtime[, string format]) Converts the number of
+   seconds from the Unix epoch to the specified time into a string. string
+   from_utc_timestamp(timestamp, string timezone) Converts a specified UTC
+   timestamp value into the appropriate value for a specified time zone.
+   timestamp
+   hour(string date) Returns the hour field from a date represented as a
+   string. int
+   int_months_between(timestamp newer, timestamp older) Available as of
+   Impala 2.5.0. Returns the number of months between the date portions of
+   two TIMESTAMP values, as an INT representing only the full months that
+   passed. int
+   minute(string date) Returns the minute field from a date represented as
+   a string. int
+   month(string date) Returns the month field from a date represented as a
+   string. int
+   months_between(timestamp newer, timestamp older) Available as of Impala
+   2.5.0. Returns the number of months between the date portions of two
+   TIMESTAMP values. Can include a fractional part representing extra days
+   in addition to the full months between the dates. The fractional
+   component is computed by dividing the difference in days by 31
+   (regardless of the month). double
+   now() Returns the current date and time (in the UTC time zone) as a
+   timestamp value. timestamp
+   second(string date) Returns the second field from a date represented as
+   a string. int
+   timeofday() Available as of Impala 2.5.0. Returns a string
+   representation of the current date and time, according to the time of
+   the local system, including any time zone designation. string
+   timestamp_cmp(timestamp t1, timestamp t2) Available as of Impala 2.5.0.
+   Tests if one TIMESTAMP value is newer than, older than, or identical to
+   another TIMESTAMP int (either -1, 0, 1, or NULL)
+   to_date(string timestamp) Returns the date field from a timestamp
+   represented as a string. string
+   to_utc_timestamp(timestamp, string timezone) Converts a specified
+   timestamp value in a specified time zone into the corresponding value
+   for the UTC time zone. timestamp
+   trunc() Truncates date/time values to a particular granularity, such as
+   year, month, day, hour, and so on.
+   unix_timestamp(), unix_timestamp(string date), unix_timestamp(string
+   date, string pattern) Returns a timestamp representing the current date
+   and time, or converts from a specified date and time value represented
+   as a string. bigint
+   weekofyear(string date) Returns the corresponding week (1-53) from a
+   date represented as a string. int
+   year(string date) Returns the year field from a date represented as a
+   string. int
+
+String Functions
+
+   The following table lists the string functions with their descriptions
+   and return types:
+   Function Description Return Type
+   ascii(string str) Returns the numeric ASCII code of the first character
+   of the argument. int
+   btrim(string a), btrim(string a, string chars_to_trim) Available as of
+   Impala 2.5.0. Removes all instances of one or more characters from the
+   start and end of a STRING value. By default, removes only spaces. If a
+   non-NULL optional second argument is specified, the function removes
+   all occurrences of characters in that second argument from the
+   beginning and end of the string. string
+   chr(int character_code) Available as of Impala 2.5.0. Returns a
+   character specified by a decimal code point value. The interpretation
+   and display of the resulting character depends on your system locale.
+   Because consistent processing of Impala string values is only
+   guaranteed for values within the ASCII range, only use this function
+   for values corresponding to ASCII characters. In particular, parameter
+   values greater than 255 return an empty string. string
+   concat(string a, string b...) Returns a single string representing all
+   the argument values joined together. string
+   concat_ws(string sep, string a, string b...) Returns a single string
+   representing the second and following argument values joined together,
+   delimited by a specified separator. string
+
+   find_in_set(string str, string strList)
+
+   Returns the position (starting from 1) of the first occurrence of a
+   specified string within a comma-separated string. Returns NULL if
+   either argument is NULL, 0 if the search string is not found, or 0 if
+   the search string contains a comma. int
+   initcap(string str) Returns the input string with the first letter
+   capitalized. string
+   instr(string str, string substr) Returns the position (starting from 1)
+   of the first occurrence of a substring within a longer string. int
+   length(string a) Returns the length in characters of the argument
+   string. int
+   locate(string substr, string str[, int pos]) Returns the position
+   (starting from 1) of the first occurrence of a substring within a
+   longer string, optionally after a particular position. int
+   lower(string a), lcase(string a) Returns the argument string converted
+   to all-lowercase. string
+
+   lpad(string str, int len, string pad)
+
+   Returns a string of a specified length, based on the first argument
+   string. If the specified string is too short, it is padded on the left
+   with a repeating sequence of the characters from the pad string. If the
+   specified string is too long, it is truncated on the right. string
+   ltrim(string a) Returns the argument string with any leading spaces
+   removed from the left side. string
+   parse_url(string urlString, string partToExtract [, string
+   keyToExtract])
+
+   Returns the portion of a URL corresponding to a specified part. The
+   part argument can be 'PROTOCOL', 'HOST', 'PATH', 'REF', 'AUTHORITY',
+   'FILE', 'USERINFO', or 'QUERY'. Literal values must be uppercase. You
+   can specify a key to retrieve only the associated value from the
+   key-value pairs in the query string when you request the query portion
+   of the URL. Useful for importing web logs.
+
+   string
+   regexp_extract(string subject, string pattern, int index) Returns the
+   specified () group from a string based on a regular expression pattern.
+   string
+   regexp_like(string source, string pattern[, string options]) Available
+   as of Impala 2.5.0. Returns true or false to indicate whether the
+   source string contains anywhere inside it the regular expression given
+   by the pattern. The optional third argument consists of letter flags
+   that change how the match is performed, such as i for case-insensitive
+   matching. boolean
+   regexp_replace(string initial, string pattern, string replacement)
+   Returns the initial argument with the regular expression pattern
+   replaced by the final argument string. string
+   repeat(string str, int n) Returns the argument string repeated a
+   specified number of times. string
+   reverse(string a) Purpose: Returns the argument string with characters
+   in reversed order. string
+
+   rpad(string str, int len, string pad)
+
+   Returns a string of a specified length, based on the first argument
+   string. If the specified string is too short, it is padded on the right
+   with a repeating sequence of the characters from the pad string. If the
+   specified string is too long, it is truncated on the right. string
+   rtrim(string a) Returns the argument string with any trailing spaces
+   removed from the right side. string
+   space(int n) Returns a concatenated string of the specified number of
+   spaces. Shorthand for repeat(' ',n). string
+   split_part(string source, string delimiter, bigint n) Available as of
+   Impala 2.5.0. Returns the nth field within a delimited string. The
+   fields are numbered starting from 1. The delimiter can consist of
+   multiple characters, not just a single character. All matching of the
+   delimiter is done exactly, not using any regular expression patterns.
+   string
+   substr(string a, int start [, int len]), substring(string a, int start
+   [, int len]) Returns the portion of the string starting at a specified
+   point, optionally with a specified maximum length. The characters in
+   the string are indexed starting at 1. string
+   translate(string input, string from, string to) Returns the input
+   string with a set of characters replaced by another set of characters.
+   string
+   trim(string a) Returns the input string with leading and trailing
+   spaces removed. The same as passing the string through both ltrim() and
+   rtrim(). string
+   upper(string a), ucase(string a) Returns the argument string converted
+   to all-uppercase. string
+
+Conditional Functions
+
+   Use the conditional functions to test equality, comparison operators,
+   and nullity.
+   The following table lists the conditional functions with their
+   descriptions and return types:
+   Function Description Return Type
+   CASE a WHEN b THEN c [WHEN d THEN e]... [ELSE f] END Compares an
+   expression to one or more possible values, and returns a corresponding
+   result when a match is found. Same as the initial argument value
+   CASE WHEN a THEN b [WHEN c THEN d]... [ELSE e] END Tests whether any of
+   a sequence of expressions is true, and returns a corresponding result
+   for the first true expression. Same as the initial argument value
+   coalesce(type v1, type v2, ...) Returns the first specified argument
+   that is not NULL, or NULL if all arguments are NULL. Same as the
+   initial argument value
+   decode() Compares an expression to one or more possible values and
+   returns a corresponding result when a match is found. This function
+   works as a shorthand for a CASE() expression and improves compatibility
+   with SQL code containing vendor extensions. Same as the initial
+   argument value, except that integer values are promoted to BIGINT and
+   floating-point values are promoted to DOUBLE; use CAST() when inserting
+   into a smaller numeric column
+   if(boolean condition, type ifTrue, type ifFalseOrNull) Tests an
+   expression and returns a corresponding result depending on whether the
+   result is true, false, or NULL. Same as ifTrue argument value
+   isfalse(), isnotfalse(), isnottrue(), istrue(), notnullvalue(),
+   nullvalue() These conditional functions provide enhanced compatibility
+   when porting code that uses industry extensions.
+
+   isnull(type a, type ifNotNull)
+
+   Tests if an expression is NULL, and returns the expression result value
+   if not. If the first argument is NULL, returns the second argument.
+   Equivalent to the nvl() function from Oracle Database orifnull() from
+   MySQL. Same as the first argument value
+   nullif(expr1,expr2) Returns NULL if the two specified arguments are
+   equal. If the specified arguments are not equal, returns the value of
+   expr1. The data types of the expressions must be compatible. You cannot
+   use an expression that evaluates to NULL for expr1, so you can
+   distinguish a return value of NULL from an argument value of NULL,
+   which would never match expr2. Same as the initial argument value,
+   except that integer values are promoted to BIGINT and floating-point
+   values are promoted to DOUBLE; use CAST() when inserting into a smaller
+   numeric column
+   nullifzero(numeric_expr) Returns NULL if the numeric expression
+   evaluates to 0, otherwise returns the result of the expression. Same as
+   the initial argument value, except that integer values are promoted to
+   BIGINT and floating-point values are promoted to DOUBLE; use CAST()
+   when inserting into a smaller numeric column
+
+   nvl(type a, type ifNotNull)
+
+   Alias for the isnull() function; added in Impala 1.1. Tests if an
+   expression is NULL, and returns the expression result value if not. If
+   the first argument is NULL, returns the second argument. Equivalent to
+   the nvl() function from Oracle Database or ifnull() from MySQL. Same as
+   the first argument value
+   zeroifnull(numeric_expr) Returns 0 if the numeric expression evaluates
+   to NULL, otherwise returns the result of the expression. Same as the
+   initial argument value, except that integer values are promoted to
+   BIGINT and floating-point values are promoted to DOUBLE; use CAST()
+   when inserting into a smaller numeric column
+
+Bit Manipulation Functions
+
+   Impala 2.5.0 introduces bit manipulation functions.
+
+   The following table lists the bit manipulation functions with their
+   descriptions and return types:
+   Function Description Return Type
+   bitand(integer_type a, same_type b)
+
+   Returns an integer value representing the bits that are set to 1 in
+   both of the arguments. If the arguments are of different sizes, the
+   smaller is promoted to the type of the larger. The bitand() function is
+   equivalent to the & binary operator.
+   Same as the input value
+   bitnot(integer_type a)
+
+   Inverts all the bits of the input argument. The bitnot() function is
+   equivalent to the ~ unary operator.
+   Same as the input value
+   bitor(integer_type a, same_type b)
+
+   Returns an integer value representing the bits that are set to 1 in
+   either of the arguments. If the arguments are of different sizes, the
+   smaller is promoted to the type of the larger. The bitor() function is
+   equivalent to the | binary operator.
+   Same as the input value
+   bitxor(integer_type a, same_type b)
+
+   Returns an integer value representing the bits that are set to 1 in one
+   but not both of the arguments. If the arguments are of different sizes,
+   the smaller is promoted to the type of the larger. The bitxor()
+   function is equivalent to the ^ binary operator.
+   Same as the input value
+   countset(integer_type a [, int zero_or_one])
+
+   By default, returns the number of 1 bits in the specified integer
+   value. If the optional second argument is set to zero, it returns the
+   number of 0 bits instead.
+   Same as the input value
+   getbit(integer_type a, int position)
+
+   Returns a 0 or 1 representing the bit at a specified position. The
+   positions are numbered right to left, starting at zero. The position
+   argument cannot be negative. When you use a literal input value, it is
+   treated as an 8-bit, 16-bit, and so on value, the smallest type that is
+   appropriate. The type of the input value limits the range of the
+   positions. Cast the input value to the appropriate type if you need to
+   ensure it is treated as a 64-bit, 32-bit, and so on value.
+   Same as the input value
+   rotateleft(integer_type a, int positions)
+
+   Rotates an integer value left by a specified number of bits. As the
+   most significant bit is taken out of the original value, if it is a 1
+   bit, it is "rotated" back to the least significant bit. Therefore, the
+   final value has the same number of 1 bits as the original value, just
+   in different positions. Specifying a second argument of zero leaves the
+   original value unchanged. Rotating a -1 value by any number of
+   positions still returns -1, because the original value has all 1 bits
+   and all the 1 bits are preserved during rotation. Similarly, rotating a
+   0 value by any number of positions still returns 0. Rotating a value by
+   the same number of bits as in the value returns the same value. Because
+   this is a circular operation, the number of positions is not limited to
+   the number of bits in the input value. For example, rotating an 8-bit
+   value by 1, 9, 17, and so on positions returns an identical result in
+   each case.
+   Same as the input value
+   rotateright(integer_type a, int positions)
+
+   Rotates an integer value right by a specified number of bits. As the
+   least significant bit is taken out of the original value, if it is a 1
+   bit, it is "rotated" back to the most significant bit. Therefore, the
+   final value has the same number of 1 bits as the original value, just
+   in different positions. Specifying a second argument of zero leaves the
+   original value unchanged. Rotating a -1 value by any number of
+   positions still returns -1, because the original value has all 1 bits
+   and all the 1 bits are preserved during rotation. Similarly, rotating a
+   0 value by any number of positions still returns 0. Rotating a value by
+   the same number of bits as in the value returns the same value. Because
+   this is a circular operation, the number of positions is not limited to
+   the number of bits in the input value. For example, rotating an 8-bit
+   value by 1, 9, 17, and so on positions returns an identical result in
+   each case.
+   Same as the input value
+   setbit(integer_type a, int position [, int zero_or_one]) By default,
+   changes a bit at a specified position to a 1, if it is not already. If
+   the optional third argument is set to zero, the specified bit is set to
+   0 instead. If the bit at the specified position was already 1 (by
+   default) or 0 (with a third argument of zero), the return value is the
+   same as the first argument. The positions are numbered right to left,
+   starting at zero. (Therefore, the return value could be different from
+   the first argument even if the position argument is zero.) The position
+   argument cannot be negative. When you use a literal input value, it is
+   treated as an 8-bit, 16-bit, and so on value, the smallest type that is
+   appropriate. The type of the input value limits the range of the
+   positions. Cast the input value to the appropriate type if you need to
+   ensure it is treated as a 64-bit, 32-bit, and so on value. Same as the
+   input value
+   shiftleft(integer_type a, int positions)
+
+   Shifts an integer value left by a specified number of bits. As the most
+   significant bit is taken out of the original value, it is discarded and
+   the least significant bit becomes 0. The final value has either the
+   same number of 1 bits as the original value, or fewer. Shifting an
+   8-bit value by 8 positions, a 16-bit value by 16 positions, and so on
+   produces a result of zero. Specifying a second argument of zero leaves
+   the original value unchanged. Shifting any value by 0 returns the
+   original value. Shifting any value by 1 is the same as multiplying it
+   by 2, as long as the value is small enough; larger values eventually
+   become negative when shifted, as the sign bit is set. Starting with the
+   value 1 and shifting it left by N positions gives the same result as 2
+   to the Nth power, or pow(2,N).
+   Same as the input value
+   shiftright(integer_type a, int positions)
+
+   Shifts an integer value right by a specified number of bits. As the
+   least significant bit is taken out of the original value, it is
+   discarded and the most significant bit becomes 0. In computer science
+   terms, this operation is a "[1]logical shift".
+
+   Usage notes:
+
+   Therefore, the final value has either the same number of 1 bits as the
+   original value, or fewer. Shifting an 8-bit value by 8 positions, a
+   16-bit value by 16 positions, and so on produces a result of zero.
+   Specifying a second argument of zero leaves the original value
+   unchanged. Shifting any value by 0 returns the original value. Shifting
+   any positive value right by 1 is the same as dividing it by 2. Negative
+   values become positive when shifted right.
+   Same as the input value
+
+Analytic Functions
+
+   Analytic (window) functions operate on a set of rows and return a
+   single value for each row from the underlying query. The term "window"
+   describes the set of rows on which the function operates. A window
+   function uses values from the rows in a window to calculate the
+   returned values. When you use a window function in a query, you define
+   the window using the OVER() clause. The OVER() clause (window clause)
+   differentiates window functions from other analytical and reporting
+   functions.
+
+   As of Impala 2.2.0, you can use the following analytic functions in
+   queries:
+     * MAX()
+     * MIN()
+     * SUM()
+     * COUNT()
+     * AVG()
+     * RANK()
+     * LAG()
+     * LEAD()
+     * FIRST_VALUE()
+
+   As of Impala 2.5.0, you can use the following analytic functions in
+   queries:
+     * PERCENT_RANK
+     * NTILE
+     * CUME_DIST
+
+   The analytic functions support the following syntax:
+function(args) OVER([partition_by_clause] [order_by_clause [window_clause]])
+partition_by_clause ::= PARTITION BY expr [, expr ...]order_by_clause ::= ORDER
+BY expr  [ASC | DESC] [NULLS FIRST | NULLS LAST] [, expr [ASC |DESC] [NULLS FIRS
+T | NULLS LAST] ...]
+
+   The window clause supports the following syntax:
+ROWS BETWEEN [ { m | UNBOUNDED } PRECEDING | CURRENT ROW] [ AND [CURRENT ROW | {
+ UNBOUNDED | n } FOLLOWING] ]
+RANGE BETWEEN [ {m | UNBOUNDED } PRECEDING | CURRENT ROW] [ AND [CURRENT ROW | {
+ UNBOUNDED | n } FOLLOWING] ]
+
+Miscellaneous Functions
+
+   The following table lists miscellaneous functions with their
+   descriptions and syntax:
+   Function Description Syntax
+   uuid() The uuid() function generates an alphanumeric value that you can
+   use as a guaranteed unique identifier. The uniqueness applies across
+   tables in cases where an ascending numeric sequence is not suitable.
+
+   select uuid();
+
+References
+
+   1. https://en.wikipedia.org/wiki/Logical_shift

@@ -1,0 +1,138 @@
+table cf colperm set
+
+   Sets Access Control Expressions (ACEs) for a specified column.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * adminaccessperm on the table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table cf colperm set
+  -path <path>
+  -cfname <column-family name>
+  -name <column name>
+  [ -appendperm <Access Control Expression for column appends> ]
+  [ -readperm <Access Control Expression for column reads> ]
+  [ -writeperm <Access Control Expression for column writes> ]
+  [ -traverseperm <Access Control Expression for column traversals in JSON table
+s> ]
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/cf/colperm/set?path=<path>&cfname=<name>&n
+ame=<name>&<parameters>'
+  -u <username>:<password>
+
+Parameters
+
+    Parameter
+
+   Description
+
+   path
+
+   The path to the table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under volume1 which has
+       a mount point at /volume1, specify the following path:
+       /volume1/test
+
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named test under volume1
+       in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customer
+
+   cfname
+
+   The name of the column family in which the column is located.
+   name For binary tables: The name of the column for which you want to
+   set the ACEs.
+   For JSON tables: The fieldpath of the field on which you want to set
+   permissions. For example, if you wanted to grant readperm to a user on
+   field b in the following document. the fieldpath would be a.b.
+{
+  "a" : {
+          "b" : "value_b"
+        }
+}
+
+   appendperm
+
+   Applies to binary tables only: The Access Control Expression for column
+   appends. Use single quotation marks around the ACE.
+
+   Column appends require permission both at the column-family level and
+   at the column level.
+   readperm
+
+   The Access Control Expression for column reads. Use single quotation
+   marks around the ACE.
+
+   Reads require permission both at the column-family level and at the
+   column level (for binary tables) or field level (for JSON tables). In
+   JSON tables, this permission is inherited by fields within the column
+   family.
+   writeperm
+
+   The Access Control Expression for column writes (puts and deletes). Use
+   single quotation marks around the ACE.
+
+   Writes require permission both at the column-family level and at the
+   column level (for binary tables) or field level (for JSON tables). In
+   JSON tables, this permission is inherited by fields within the column
+   family.
+   traverseperm
+   Applies to JSON tables only: The Access Control Expressions that
+   specifies who has permission to pass over fields in JSON documents. For
+   example, suppose that a JSON table contains documents of this general
+   structure:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" : "value",
+               "c" : "value"
+          }
+}
+
+   Suppose further that the user sjohnson has read permission on a.b, but
+   not on a. For sjohnson to read a.b, the user needs the traverse
+   permission on a. The user can then pass over field a to a.b.
+
+   This permission is inherited by fields within the column family. By
+   default, this permission is given to the value of defaulttraverseperm
+   for the JSON table.
+
+Example
+
+   Sets readperm ACE for column col1 in table mytable and column family
+   cf1 :
+
+   CLI
+
+maprcli table cf colperm set -path /mytable -cfname cf1 -name col1 -readperm 'g:
+group1'
+
+   REST
+
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/cf/colperm/set?path=%2Fmytable&cfname=cf1&
+name=col1&readperm="g:group1"' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

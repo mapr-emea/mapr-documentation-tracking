@@ -1,0 +1,68 @@
+Migrating from MapReduce Version 1 to MapReduce Version 2
+
+   If you previously ran MRv1 jobs on your cluster, prepare your cluster
+   to run YARN applications in MapR 6.0 or later.
+
+Configuring the MapReduce Mode
+
+   Client and cluster nodes submit MapReduce applications to the YARN
+   framework (yarn mode) unless you configure them to use the classic
+   framework (classic mode). Because MapReduce version 1 (MRv1) is
+   deprecated for MapR 6.0 and later, you can no longer submit MRv1 jobs
+   using classic mode. If you previously configured your client and
+   cluster nodes to use classic mode, you must prepare your cluster to run
+   YARN applications in MapR 6.0 or later. Before upgrading to MapR 6.0 or
+   later, ensure that the MapReduce mode is set to yarn in the environment
+   variable, on client nodes, and on the cluster.
+
+   Configure the MapReduce mode for the following components:
+   Component How to Change the Mode to yarn:
+   Environment Variable
+   Set the MapReduce mode in an environment variable:
+    1. Open a terminal on the client node.
+    2. Enter the following command on the shell: export
+       MAPR_MAPREDUCE_MODE=yarn
+
+   Client In the [1]hadoop_version file on a MapR client node, verify the
+   MapReduce mode is set to yarn.
+    1. Open the hadoop_version file in the following location:
+       /opt/mapr/conf/
+    2. If the default_mode parameter is set to classic, change it to yarn:
+       default_mode=yarn.
+
+   Cluster Run the following command to display the cluster-wide mode:
+   maprcli cluster mapreduce get. If the cluster is set to classic mode,
+   use the command line or the MapR Control System to set it back to the
+   yarndefault for all nodes in the cluster:
+     * To set the cluster's MapReduce mode using maprcli:
+         1. Run the following command: maprcli cluster mapreduce set -mode
+            yarn.
+     * To set the cluster's MapReduce mode in the MapR Control System:
+         1. Log in to the MapR Control System.
+         2. Perform one of the following operations:
+               o In the header area, click the link that contains the
+                 current MapReduce version.
+               o In the System Settings view of the Navigation Pane, click
+                 MapReduce Version.
+         3. In the Configure MapReduceMode dialog, select the yarn option
+            for the cluster.
+         4. Click OK.
+
+Uninstalling MRv1 Packages
+
+   After verifying that the MapReduce mode is set to yarn, uninstall the
+   packages associated with MRv1:
+     * mapr-jobtracker
+     * mapr-tasktracker
+     * mapr-metrics
+
+   The following table lists uninstall commands by operating system. Use
+   these commands to uninstall the above packages:
+   Operating System       Uninstall Command
+   Ubuntu           apt-get remove <package name>
+   CentOS/RedHat:   yum remove <package name>
+   SUSE             zypper rm <package name>
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-version.html#hadoopversion

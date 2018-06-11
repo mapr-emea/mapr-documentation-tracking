@@ -1,0 +1,60 @@
+Query Examples with Other Options
+
+   This section contains examples of findbyid and find commands using
+   options not used in examples in other sections.
+
+Return all Documents
+
+   When you do not specify other options to find except the table path,
+   the command returns all documents. The following example returns all
+   documents that are in the /data/movies table:
+find /data/movies
+
+Return Limited Number of Documents with Specified Range of IDs
+
+   The following example returns at most 32 documents within a range of
+   IDs that includes the specified starting ID and excludes the specified
+   ending ID:
+find /data/movies --fromid movie0000001 --toid movie0000100 --limit 32
+
+Return all Documents with Specified ID
+
+   The following example returns the document that has the specified ID:
+findbyid /data/movies --id movie0000002
+
+Return Documents Using Projection and Conditions
+
+   The following example performs a find operation with a projection and
+   condition and limits the result to 10 documents:
+find /tbl --c {
+              "$and":[
+                 {"$eq":{"a.b[0].boolean":false}},
+                 {"$or":[
+                    {"$ne":{"a.c.d":5}},
+                    {"$gt":{"a.b[1].decimal":1}},
+                    {"$lt":{"a.b[1].decimal":10}}
+                 ]}
+              ]}
+           --fields m,a.c.e --limit 10
+
+   The projection is on fields on m and a.c.e. The condition is the
+   following expression:
+(a.b.[0].boolean == false && (a.c.d != 5 || a.b[1].decimal > 1 || a.b[1].decimal
+ < 10))
+
+Returns Documents in Specified Order
+
+   The following example is identical to the previous one, except it also
+   includes an ordering on the result:
+find /tbl --c {
+              "$and":[
+                 {"$eq":{"a.b[0].boolean":false}},
+                 {"$or":[
+                    {"$ne":{"a.c.d":5}},
+                    {"$gt":{"a.b[1].decimal":1}},
+                    {"$lt":{"a.b[1].decimal":10}}
+                 ]}
+               ]}
+           --fields m,a.c.e
+           --orderby m,a.c.e:desc
+           --limit 10

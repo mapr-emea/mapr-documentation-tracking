@@ -1,0 +1,13 @@
+Example: Upload a Text File to MapR-FS and use Pig to Save it as an ORC File
+
+    1. Upload the file to MapR-FS:
+cd /home/mapr
+sudo -u mapr hadoop fs -put ./test_pig.data /test_pig.data
+sudo -u mapr hadoop fs -mkdir /output
+    2. Start Pig and save the text file in ORC format:
+sudo -u mapr pig
+grunt> A = LOAD '/test_pig.data' using PigStorage(',') AS (first_name:chararray,
+ last_name:chararray);
+grunt> store A into '/output/A' using OrcStorage('');
+    3. Verify that the ORC file was created:
+hadoop fs -ls /output/A/

@@ -1,0 +1,132 @@
+JDBC Connection Parameters
+
+   Use the SSL JDBC connection parameters and fully qualified host name to
+   configure the jdbc connection string in SQLLine and connect to Drill.
+   The following table lists the parameters that you can include in the
+   jdbc connection string using SQLLine:
+   Note: Examples are provided after the table. For additional
+   instructions, see the [1]Drill JDBC Driver documentation.
+   Parameter Value Required
+   enableTLS true/false [Optional] If true, TLS is enabled. If not set or
+   set to false, TLS is not enabled.
+   trustStoreType string
+
+   [Optional]
+
+   Default: JKS
+
+   The trustStore type.
+
+   Allowed values are :
+
+   JKS
+
+   PKCS12
+
+   If the useSystemTrustStore option is set to true (on Windows only), the
+   allowed values are:
+
+   Windows-MY
+
+   Windows-ROOT
+
+   Import the certificate into the "Trusted Root Certificate Authorities”
+   and set trustStoreType=Windows-ROOT. Also import the certificate into
+   "Trusted Root Certificate Authorities" or "Personal" and set
+   trustStoreType=Windows-MY.
+   trustStorePath string
+
+   [Optional] Path to the truststore. If not provided the default Java
+   truststore will be used. If this is not provided the trustStorePassword
+   parameter will be ignored.
+
+   Note that the order for looking for the default trustStore
+
+   java-home/lib/security/jssecacerts
+
+   then
+
+   java-home/lib/security/cacerts
+   trustStorePassword string
+
+   [Optional] Password to the truststore.
+   disableHostVerification true/false
+
+   [Optional] If true, we will not verify that the host in the certificate
+   is the host we are connecting to.
+
+   False by default
+
+   (Hostname verification follows the specification in RFC2818).
+   disableCertificateVerification true/false
+
+   [Optional] If true we will not validate the certificate against the
+   truststore.
+
+   False by default.
+   TLSProtocol
+
+   TLS, TLSV1, TLSv1.1, TLSv1.2
+
+   [Optional]
+
+   Default: TLSv1.2 (recommended)
+   TLSHandshakeTimeout Time in milliseconds
+
+   [Optional]
+
+   Default: 10 seconds
+
+   In some cases, the TLS handshake may fail and leave the client hanging.
+   This option sets the time for the client to timeout.
+   TLSProvider JDK/OPENSSL
+
+   [Optional]
+
+   Default: JDK
+
+   Changes the underlying implementation to the chosen value.
+   useSystemTrustStore true/false
+
+   [Optional, Windows only]
+
+   Default: false
+
+   If provided, the client will read certificates from the Windows
+   truststore. In this case, trustStorePath and trustStorePassword, if
+   specified, will be ignored.
+
+   The user should set the default provider in
+   $JRE_HOME/lib/security/java.security to SunMSCAPI.
+
+   The trustStoreType should be set to either Windows-MY or Windows-ROOT.
+
+Examples
+
+   The following examples show you how to connect to Drill through SQLLine
+   with the jdbc connection string when SSL is not enabled and when SSL is
+   enabled with and without a truststore.
+
+   No SSL/TLS
+
+./sqlline -u "jdbc:drill:schema=dfs.work;drillbit=localhost:31010;enableTLS=fals
+e"
+
+   SSL/TLS Enabled - No truststore
+          The default JSSE truststore will be tried with default password;
+          the provided password will be ignored. If the default truststore
+          password has been changed, this gives an error. To use the
+          default truststore with a different password, pass the path to
+          the default truststore with the password.
+
+./sqlline -u "jdbc:drill:schema=dfs.work;drillbit=localhost:31010;enableTLS=true
+;trustStorePassword=drill123"
+
+   SSL/TLS enabled - With truststore
+
+./sqlline -u "jdbc:drill:schema=dfs.work;drillbit=localhost:31010;enableTLS=true
+;trustStorePath=~/ssl/truststore.ks;trustStorePassword=drill123"
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/attachments/JDBC_ODBC_drivers/DrillJDBCInstallandConfigurationGuide.pdf

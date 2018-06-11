@@ -1,0 +1,121 @@
+Converting fid and volid
+
+   The following MapR-FS APIs are available in com.mapr.fs.MapRFileSystem
+   for converting fid to file path and volid to volume name:
+     * public String getMountPathFidCached(String fidStr) throws
+       IOException
+     * public String getVolumeNameCached(int volId) throws IOException
+     * public String getVolumeName(int volId) throws IOException
+     * public String getMountPathFid(String fidStr) throws IOException
+
+Converting fid to File Path
+
+   The getMountPathFid(string) and getMountPathFidCached(string) APIs can
+   be used for converting file ID to the full path to the file. The
+   getMountPathFid() API makes a call to CLDB and MFS to get the file path
+   from the fid. Because this API does not cache or store this information
+   locally, it might make repeated requests to CLDB and MFS for the same
+   fid and this might result in many RPCs to both CLDB and MFS. The
+   getMountPathFidCached() API makes a call the CLDB and MFS one time and
+   stores the information locally in the shared library of the client. For
+   subsequent calls, it uses the locally stored information to retrieve
+   the file path from the fid. However, if there are many files in the
+   volume, there might still be a large number of calls to CLDB and MFS to
+   determine the file path for each fid in the volume. The caching is
+   useful if the API attempts to determine the file path for the same fid
+   repeatedly. The cache is purged after 15 seconds. If the file name
+   changes before the cache is purged, you will see the old name for the
+   file until the cache expires. You can use these APIs to convert the fid
+   to the file path.
+
+   For example, the [1]sample consumer application and the sample
+   [2]uncached consumer application for consuming audit logs as stream
+   messages use these methods as shown below.
+
+   Sample Cached Cosumer
+
+{
+     String token = st1.nextToken();
+     /* If the field has fid, expand it using Cached API */
+     if (token.endsWith("Fid")) {
+       String lfidStr = st1.nextToken();
+       String path= null;
+       try {
+           path = fs.getMountPathFidCached(lfidStr); // Expand FID to path
+       } catch (IOException e){
+     }
+     lfidPath = "\"FidPath\":\""+path+"\",";
+     // System.out.println("\nPAth for fid " + lfidStr +  "is " +  path);
+}
+
+   Sample Uncached Consumer
+
+{
+     String token = st1.nextToken();
+     if (token.endsWith("Fid")) {
+         String lfidStr = st1.nextToken();
+         String path= null;
+         try {
+           path = fs.getMountPathFid(lfidStr);// Expand FID to path
+         } catch (IOException e){
+         }
+     lfidPath = "\"FidPath\":\""+path+"\",";
+     // System.out.println("\nPAth for fid " + lfidStr +  "is " +  path);
+}
+
+Converting volid to Volume Name
+
+   The getVolumeName() and getVolumeNameCached() APIs can be used for
+   converting volume IDs to volume name. The getVolumeName() API makes a
+   call to the CLDB every time to get the volume name from the volid and
+   this may result in too many RPCs to CLDB. The getVolumeNameCached() API
+   makes a call the CLDB one time and stores the information locally in
+   the shared library of the client. For subsequent calls, it uses the
+   locally stored information to retrieve the volume name from the volid.
+   The cache is purged after 15 seconds. You can use these APIs to convert
+   the volid to volume name.
+
+   For example, the [3]sample consumer application and the sample
+   [4]uncached consumer application for consuming audit logs as stream
+   messages uses these methods as shown below.
+
+   Sample Cached Consumer
+
+if (token.endsWith("volumeId")) {
+       String volid = st1.nextToken();
+       String name= null;
+       try {
+         int volumeId = Integer.parseInt(volid);
+           // Cached API to convert volume Id to volume Name
+           name = fs.getVolumeNameCached(volumeId);
+         }
+       catch (IOException e){
+       }
+       lvolName = "\"VolumeName\":\""+name+"\",";
+       //  System.out.println("\nVolume Name for volid " + volid +  "is " +  nam
+e);
+}
+
+   Sample Uncached Consumer
+
+if (token.endsWith("volumeId")) {
+       String volid = st1.nextToken();
+       String name= null;
+       try {
+         int volumeId = Integer.parseInt(volid);
+           // API to convert volume Id to volume Name
+           name = fs.getVolumeName(volumeId);
+         }
+       catch (IOException e){
+       }
+       lvolName = "\"VolumeName\":\""+name+"\",";
+       //  System.out.println("\nVolume Name for volid " + volid +  "is " +  nam
+e);
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/SampleConsumer-java.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/SampleUncachedConsumer-java.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/SampleConsumer-java.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/SampleUncachedConsumer-java.html

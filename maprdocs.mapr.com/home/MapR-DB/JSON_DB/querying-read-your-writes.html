@@ -1,0 +1,87 @@
+Read Your Own Writes in Java OJAI
+
+   The Java OJAI DocumentStore and Query APIs provide the ability to track
+   writes to JSON tables. Use these APIs to ensure your application reads
+   recent writes on JSON tables with secondary indexes.
+
+Description
+
+   This feature might be used when it is important for a query to reflect
+   data synchronized between a JSON table and its secondary indexes. For
+   example, consider the following expense tracking system:
+     * You have been adding and tracking expenses for the quarter.
+     * You have some last minute expenses being added to the system.
+     * You have a secondary index that has a single indexed field, the
+       expenses field.
+     * You want to run a query that returns all of the expenses for the
+       quarter including the last minute ones.
+
+   In this case, you should use the DocumentStore and Query APIs to
+   resolve stale data associated with asynchronous indexes. The APIs allow
+   you to synchronize write operations on the JSON table with read
+   operations on a secondary index.
+
+API Details
+
+   The OJAI DocumentStore and Query interfaces provide the following
+   methods to support this functionality.
+
+   DocumentStore.beginTrackingWrites
+          Begins tracking the write operations performed through this
+          instance of DocumentStore. The method takes an optional
+          previousWritesContext parameter. If you specify this parameter,
+          the tracking uses that context as the base state.
+
+   DocumentStore.endTrackingWrites
+          Flushes any buffered writes operations for this DocumentStore
+          and returns a writesContext. Use this context to ensure that
+          writes are visible to later queries. You can use the context
+          across DocumentStore objects in the same, as well as different,
+          client processes, when the stores refer to the same JSON table.
+          For example, you can pass the writesContext returned by one
+          DocumentStore to a second DocumentStore, to begin write tracking
+          on the second store.
+
+   DocumentStore.clearTrackedWrites
+          Stops the write tracking and clears any state on this
+          DocumentStore instance.
+
+   Query.waitForTrackedWrites
+          Sets the writesContext parameter for this query. A writesContext
+          allows this query to "see" all the writes that happened inside
+          the writesContext of a DocumentStore.
+
+   For the complete API, see [1]Java OJAI Client API.
+
+Read Your Own Writes Example
+
+   The following code snippet demonstrates these calls. See
+   [2]OJAI_013_ReadYourOwnWrite.java for the complete example.
+public void updateAndQuery(Connection c, DocumentStore store) throws Exception {
+    store.beginTrackingWrites();
+    store.update("user0000", c.newMutation().set("salary", 114526.00));
+    // more mutations, then get the commit-context
+    String writesContext = store.endTrackingWrites();
+    System.out.println("updated");
+    Query query = c.newQuery()
+        .waitForTrackedWrites(writesContext)
+        .select("salary")
+        .where(c.newCondition().is("salary", Op.GREATER, 100000.00).build())
+        .build();
+    DocumentStream stream = store.findQuery(query);
+    // process query results
+
+    store.beginTrackingWrites();
+
+    try {
+        store.update("user0000", c.newMutation().set("salary", "abcd"));
+    } catch (Exception e) {
+        store.clearTrackedWrites();
+        throw e;
+    }
+}
+
+References
+
+   1. https://maprdocs.mapr.com/apidocs/60/OJAI/index.html
+   2. https://github.com/mapr-demos/ojai-2-examples/blob/master/src/main/java/com/mapr/ojai/examples/OJAI_013_ReadYourOwnWrite.java

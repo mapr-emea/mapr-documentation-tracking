@@ -1,0 +1,44 @@
+Restore Volume From a Dump
+
+   Describes how to restore from full and incremental dump files.
+
+   There are two ways to use volume dump restore:
+     * With a full dump file, volume dump restore recreates a volume from
+       scratch from volume data stored in the dump file.
+     * With an incremental dump file, volume dump restore updates a volume
+       using incremental changes stored in the dump file.
+
+   The volume that results from a volume dump restore operation is a
+   mirror volume whose source is the volume from which the dump was
+   created. After the operation, this volume can perform mirroring from
+   the source volume.
+
+   When you are updating a volume from an incremental dump file, you must
+   specify an existing volume and an incremental dump file. To restore
+   from a sequence of previous dump files would involve first restoring
+   from the volume's full dump file, then applying each subsequent
+   incremental dump file.
+   Note: In a secure cluster, you must use the MapR user ID. Using root or
+   any other user ID results in the system hanging.
+
+   A restored volume may contain mount points that represent volumes that
+   were mounted under the original source volume from which the dump was
+   created. In the restored volume, these mount points have no meaning and
+   do not provide access to any volumes that were mounted under the source
+   volume. If the source volume still exists, then the mount points in the
+   restored volume will work if the restored volume is associated with the
+   source volume as a mirror.
+
+   To restore from a full dump plus a sequence of incremental dumps:
+    1. Restore from the full dump file, using the -n option to create a
+       new mirror volume and the -name option to specify the name.
+       Example:
+maprcli volume dump restore -dumpfile fulldump1 -name restore1 -n
+    2. Restore from each incremental dump file in order, specifying the
+       same volume name.
+       Examples:
+maprcli volume dump restore -dumpfile incrdump1 -name restore1 maprcli
+                        volume dump restore -dumpfile incrdump2 -name restore1 m
+aprcli volume dump restore
+                        -dumpfile incrdump3 -name restore1
+       ...and so on.

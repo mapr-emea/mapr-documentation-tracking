@@ -1,0 +1,50 @@
+2. Locate the CLDB Data
+
+   After restoring the ZooKeeper service on the Community Edition cluster,
+   use the maprcli dump zkinfo command to identify the latest epoch of the
+   CLDB, identify the nodes where replicates of the CLDB are stored, and
+   select one of those nodes to serve the new CLDB node.
+
+   Secure cluster must first be converted to non-secure cluster before
+   running the maprcli dump zkinfo command. Perform the following steps as
+   root or use sudo:
+   Note: For non-secure clusters, skip to step 4.
+    1. On the ZooKeeper nodes, stop Warden and ZooKeeper by running the
+       following commands:
+service mapr-warden stop
+service mapr-zookeeper stop
+    2. Convert the secure cluster to non-secure cluster by running the
+       following command on the ZooKeeper nodes:
+       Note: The script configure.sh takes comma-separated lists of
+       cluster names and ZooKeeper host names (and optionally ports) or IP
+       addresses.
+/opt/mapr/server/configure.sh -C <host>[:<port>][,<host>:[<port>]...]|<IP>[,<IP>
+...] -Z <host>[:<port>][,<host>:[<port>]...]|<IP>[,<IP>...] -unsecure -R
+    3. Restart ZooKeeper:
+service mapr-zookeeper restart
+    4. Issue the maprcli dump zkinfo command using the -json flag.
+# maprcli dump zkinfo -zkconnect localhost:5181 -json | grep -i "Container ID"
+       The output displays the ZooKeeper znodes. For example:
+# maprcli dump zkinfo -zkconnect localhost:5181 -json |grep -i "Container ID" |
+more
+"/datacenter/controlnodes/cldb/epoch/1/KvStoreContainerInfo":" Container ID:1
+VolumeId:1 Master:10.10.104.34:5660-10.10.105.34:5660--9-VALID Servers:
+10.10.104.34:5660-10.10.105.34:5660--9-VALID
+10.10.104.33:5660-10.10.105.33:5660--9-VALID
+10.10.104.32:5660-10.10.105.32:5660--9-VALID
+Inactive Servers:  Unused Servers:  Latest epoch:9"
+       In the above example output, the latest epoch is 9.
+    5. In the /datacenter/controlnodes/cldb/epoch/1 directory, locate the
+       CLDB with the latest epoch.
+       The Latest Epoch field identifies the current epoch of the CLDB
+       data.
+    6. Select a CLDB from among the copies at the latest epoch. For
+       example, 10.10.105.32:5660--9-VALID indicates that the node has a
+       copy at epoch 9 (the latest epoch).
+
+   You can now install a new CLDB on the selected node. To convert the
+   non-secure cluster to a secure cluster, run the the following command:
+   Note: The script configure.sh takes comma-separated lists of cluster
+   names and ZooKeeper host names (and optionally ports) or IP addresses.
+/opt/mapr/server/configure.sh -C <host>[:<port>][,<host>:[<port>]...]|<IP>[,<IP>
+...] -Z <host>[:<port>][,<host>:[<port>]...]|<IP>[,<IP>...] -secure -R

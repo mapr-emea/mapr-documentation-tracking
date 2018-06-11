@@ -1,0 +1,54 @@
+GET /consumers/{string: group_name}/instances/{string: instance_id}/records
+
+   Fetches data for the topics or partitions specified using one of the
+   subscribe/assign APIs.
+
+Parameters
+
+   The format of the embedded data returned by this request is determined
+   by the format specified in the initial consumer instance creation
+   request and must match the format of the Accept header.
+   Note: This request must be made to the specific REST proxy instance
+   holding the consumer instance.
+
+   CAPTION: Table 1. Parameters
+
+   Parameter Description
+   group_name (string) Name of the consumer group.
+   instance (string) ID of the consumer instance.
+   timeout The number of milliseconds for the underlying client library
+   poll(timeout) request to fetch the records. Default: 5000ms.
+   max_bytes The maximum number of bytes of unencoded keys and values that
+   should be included in the response. This provides approximate control
+   over the size of responses and the amount of memory required to store
+   the decoded response. The actual limit is the minimum of this setting
+   and the server-side configuration consumer.request.max.bytes. Default:
+   unlimited
+
+Syntax
+
+http://<host>:8082/consumers/<group_name>/instances/<consumer_name>/records
+
+Request Example
+
+curl -X GET -H "Content-Type: application/vnd.kafka.v2+json"
+https://localhost:8082/consumers/grouptest/instances/user/records
+
+Response Example
+
+[
+  {
+    "topic": "test",
+    "key": "a2V5",
+    "value": "Y29uZmx1ZW50",
+    "partition": 1,
+    "offset": 100,
+  },
+  {
+    "topic": "test",
+    "key": "a2V5",
+    "value": "a2Fma2E=",
+    "partition": 2,
+    "offset": 101,
+  }
+]

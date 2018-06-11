@@ -1,0 +1,41 @@
+Configuring NodeManager Restart
+
+   NodeManager restart is enabled by default. Active containers will keep
+   running in the event that the NodeManager shuts down.
+
+   When the NodeManager restart is enabled, it stores the container state
+   of active containers in a recovery directory;when the NodeManager
+   restarts, it retrieves the container state from the recovery directory.
+
+   If you disable NodeManager restart, active containers are shut down
+   when the NodeManager shuts down and containers need to be reallocated
+   when the NodeManager starts again.
+
+   To configure NodeManager restart, enable the NodeManager recovery and
+   also specify a port that can be dedicated to run the NodeManager
+   service.
+    1. Add the following parameters to the yarn-site.xml on each
+       NodeManager node:
+         a. Set yarn.nodemanager.recovery.enabled to true.
+         b. Set yarn.nodemanager.address to include a port that is
+            dedicated to run the NodeManager on this node.
+         c. Optionally, set yarn.nodemanager.recovery.dir to a different
+            recovery directory for this node.
+            By default, the recovery directory is set
+            to$hadoop.tmp.dir/yarn-nm-recovery which resolves to
+            tmp/hadoop-mapr/nm-local-dir/yarn-nm-recovery. See the
+            following example configuration:
+<property>
+  <name>yarn.nodemanager.recovery.enabled</name>
+  <value>true</value>
+</property>
+<property>
+  <name>yarn.nodemanager.address</name>
+  <value>0.0.0.0:8099</value>
+</property>
+    2. Restart the NodeManager Service.
+       For more information, see [1]Managing Services.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/ManageServices.html

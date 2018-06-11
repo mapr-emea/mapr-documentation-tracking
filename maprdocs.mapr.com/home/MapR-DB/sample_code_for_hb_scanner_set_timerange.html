@@ -1,0 +1,51 @@
+Set Time Range Example
+
+   This example scans MapR-DB binary tables and sets the time range.
+int32_t scanWithTimeranges( std::string table_name, int32_t num_versions, uint64
+_t max_num_rows, std::string start_row_key,
+                std::string end_row_key, int64_t min_ts, int64_t max_ts, std::st
+ring name_space, std::string column_name) {
+        hb_scanner_t scanner = NULL;
+        int32_t retCode;
+
+        scan_num_rows = 0;
+        scan_cell_count = 0;
+        scan_done = false;
+        // scanner object create
+        hb_scanner_create(client, &scanner);
+
+        scan_data_t *scan_data = (scan_data_t *) calloc(1, sizeof(scan_data_t));
+
+        // set the table to scan
+        scan_data->table_name_ = bytebuffer_printf("%s", table_name.c_str());
+        hb_scanner_set_table(scanner, (char *) scan_data->table_name_->buffer, s
+can_data->table_name_->length));
+
+        // start and end row - optional
+        scan_data->start_row_key_ = bytebuffer_printf("%s", start_row_key.c_str(
+));
+        hb_scanner_set_start_row(scanner, scan_data->start_row_key_->buffer,
+                        scan_data->start_row_key_->length);
+
+        scan_data->end_row_key_ = bytebuffer_printf("%s", end_row_key.c_str());
+        hb_scanner_set_end_row(scanner, scan_data->end_row_key_->buffer,
+                        scan_data->end_row_key_->length);
+
+        // add columns
+        bytebuffer cfName   = bytebuffer_printf("%s", data_qualifier[0].c_str())
+;
+        bytebuffer columnName   = bytebuffer_printf("%s", data_qualifier[1].c_st
+r());
+        retCode=hb_scanner_add_column(scanner,(byte_t *)cfName->buffer,cfName->l
+ength,columnName->buffer,columnName->length);
+
+        // set versions
+        hb_scanner_set_num_versions(scanner, num_versions);
+
+        // set timerange
+        hb_scanner_set_timerange(scanner, min_ts, max_ts);
+
+        // scan data
+        retCode = hb_scanner_next(scanner, scan_callback, scan_data);
+        return retCode;
+}

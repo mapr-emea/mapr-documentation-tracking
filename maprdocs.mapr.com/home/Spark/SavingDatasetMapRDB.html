@@ -1,0 +1,52 @@
+Saving an Apache Spark Dataset to a MapR-DB JSON Table
+
+   Starting in the MEP 4.1.0 release, the MapR-DB OJAI Connector for
+   Apache Spark provides the following API to save a Dataset to a MapR-DB
+   table:
+     * [1]Scala
+     * [2]Java
+
+   For saving a Dataset, apply the following method on a Spark object:
+def saveToMapRDB(tableName: String, idFieldPath : String = "_id",
+            createTable: Boolean = false, bulkInsert:Boolean = false): Unit
+
+import org.apache.spark.sql.SparkSession
+import com.mapr.db.spark.sql._
+
+val ds = spark.loadFromMapRDB("/tmp/user_profiles")
+ds.saveToMapRDB(tableName, createTable = true)
+
+   For saving a Dataset, apply the following method on a MapRDBJavaSession
+   object:
+def saveToMapRDB[T](ds: Dataset[T], tableName: String, idFieldPath: String,
+            createTable:oolean, bulkInsert: Boolean): Unit
+
+import com.mapr.db.spark.sql.api.java.MapRDBJavaSession;
+import org.apache.spark.sql.SparkSession;
+
+MapRDBJavaSession maprSession = new MapRDBJavaSession(spark);
+Dataset<Row> ds = maprSession.loadFromMapRDB("/tmp/user_profiles");
+maprSession.saveToMapRDB(ds, true);
+
+   The MapR-DB OJAI Connector for Apache Spark also provides the following
+   API to insert a Dataset into a MapR-DB table:
+     * [3]Scala
+     * [4]Java
+
+import com.mapr.db.spark._
+
+ds.insertToMapRDB(tableName, idFieldPath, bulkInsert)
+
+import com.mapr.db.spark.sql.api.java.MapRDBJavaSession;
+
+maprSession.insertToMapRDB(ds, tableName, idFieldPath, bulkInsert)
+
+   Note: The insertToMapRDB API throws an exception if a row with the same
+   ID already exists.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDatasetMapRDB.html#div1entry1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDatasetMapRDB.html#div1entry2
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDatasetMapRDB.html#div2entry1
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/SavingDatasetMapRDB.html#div2entry2

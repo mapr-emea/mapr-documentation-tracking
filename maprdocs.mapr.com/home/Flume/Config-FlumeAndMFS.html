@@ -1,0 +1,67 @@
+Configure a Secure MapR-FS Sink
+
+   When writing to the MapR-FS on a secure cluster, you must configure
+   Flume agents to use either a MapR user ticket or a Kerberos ticket.
+
+   Secure MapR cluster may use either MapR-SASL or Kerberos to provide
+   authentication. Therefore, the user that launches the flume-ng JVM
+   agent on a secure cluster can authenticate with the MapR-FS using a
+   MapR user ticket or a Kerberos ticket. When you authenticate with
+   Kerberos, the user does not need to run the maprlogin utility to
+   authenticate with the cluster as long a a valid kerberos ticket is
+   present. When you authenticate with a mapr user ticket, you must run
+   the maprlogin utility to generate a maprticket before you launch the
+   flume-ng JVM agent.
+
+Configure Flume agents to use MapR user tickets when writing to MapR-FS
+
+   If you use MapR-SASL (MapR user ticket) to authenticate, configure a
+   dummy value for the Kerberos principal and keytab file in the
+   flume.conf. Example:
+agent1.sinks.sink1.hdfs.kerberosPrincipal = mapr
+agent1.sinks.sink1.hdfs.kerberosKeytab = /opt/mapr/conf/cldb.conf
+
+   These dummy Kerberos principal and keytab files are not used with the
+   HDFSSink operations. However, when the dummy Kerberos properties are
+   not configured, Flume agent error logs display the following error
+   messages:
+Dec 2013 13:01:42,448 ERROR [conf-file-poller-0]
+        (org.apache.flume.sink.hdfs.HDFSEventSink.authenticate:510)  - Hadoop ru
+nning in secure
+        mode, but Flume config doesn't specify a principal to use for Kerberos a
+uth.
+10 Dec 2013 13:01:42,448 ERROR [conf-file-poller-0]
+        (org.apache.flume.sink.hdfs.HDFSEventSink.configure:241)  - Failed to au
+thenticate!
+
+   These errors relate to Kerberos authentication prerequisite failures
+   and can be ignored when you are not using Kerberos. Secure Flume
+   operations with maprlogin-mediated tickets continue to be available.
+
+Configure Flume agents to use a Kerberos ticket when writing to MapR-FS
+
+    1. Create a keytab file called flume.keytab which contains a principal
+       that matches the Kerberos identity of the user that will be running
+       flume-ng. Example:
+# kadmin
+: addprinc -randkey username/<FQDN@REALM>
+: ktadd -k /opt/mapr/conf/flume.keytab username/<FQDN@REALM>
+       The flume.keytab file must be owned and readable only by the mapr
+       user.
+    2. In the flume.conf file, configure the following properties:
+
+   Property Value Comment
+   <agent>.sinks.<sink>.type HDFS
+   <agent>.sinks.<sink>.hdfs.proxyUser weblogs
+   <agent>.sinks.<sink>.hdfs.kerberosPrincipal username/FQDN@REALM.COM The
+   user component of the principal must be the username of the user
+   running flume-ng.
+   <agent>.sinks.<sink>.hdfs.kerberosKeytab path to file Provide the path
+   to your flume.keytab file.
+
+   For additional properties that you may want to configure, see the[1]
+   Apache Flume documentation.
+
+References
+
+   1. https://flume.apache.org/documentation.html

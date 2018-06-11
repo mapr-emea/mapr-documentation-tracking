@@ -1,0 +1,51 @@
+Set Up the Internet Repository: RHEL/CentOS
+
+   This section describes how to set up a maprtech.repo file before adding
+   an internet repository.
+
+   Before upgrading MapR, you need to set up or update a maprtech.repo
+   file. The baseurl properties of the maprtech.repo specify the URLs of
+   the packages you want to install. See the [1]Release Notes for the URLs
+   for all release packages.
+    1. Change to the root user or use sudo.
+    2. Create a text file called maprtech.repo in the /etc/yum.repos.d/
+       directory with the following content, replacing <version> with the
+       version of MapR that you want to install.
+[maprtech]
+name=MapR Technologies
+baseurl=http://package.mapr.com/releases/v<version>/redhat/
+     enabled=1
+     gpgcheck=0
+     protect=1
+
+[maprecosystem]
+name=MapR Technologies
+baseurl=http://package.mapr.com/releases/MEP/MEP-<version>/redhat
+    enabled=1
+    gpgcheck=0
+    protect=1
+
+    3. If your connection to the Internet is through a proxy server, set
+       the http_proxy environment variable before installation.
+          + Method 1:
+http_proxy=http://<host>:<port>
+export http_proxy
+          + Method 2: Set the value for the http_proxy environment
+            variable by adding settings to the /etc/yum.conf file.
+proxy=http://<host>:<port>
+proxy_username=<username>
+proxy_password=<password>
+    4. Download and install EPEL (Extra Packages for Enterprise Linux) if
+       you use the mapr-metrics service; otherwise, skip this step.
+          + RHEL/CentOS 6.x:
+wget http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch
+.rpm
+rpm -Uvh epel-release-6*.rpm
+          + RHEL/CentOS 7.0
+wget http://download.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-2.noar
+ch.rpm
+rpm -Uvh epel-release-7*.rpm
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReleaseNotes/c_packages_and_deps_60.html

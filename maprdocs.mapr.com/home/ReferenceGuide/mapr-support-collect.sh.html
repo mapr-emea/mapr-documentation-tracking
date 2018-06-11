@@ -1,0 +1,200 @@
+mapr-support-collect.sh
+
+   Collects information about a cluster's recent activity, to help MapR
+   Support diagnose problems.
+
+   The "mini-dump" option limits the size of the support output. When the
+   -m or --mini-dump option is specified along with a size,
+   mapr-support-collect.sh collects only a head and tail, each limited to
+   the specified size, from any log file that is larger than twice the
+   specified size. The total size of the output is therefore limited to
+   approximately 2 * size * number of logs. The size can be specified in
+   bytes, or using the following suffixes:
+     * b - bytes
+     * k - kilobytes (1024 bytes)
+     * m - megabytes (1024 kilobytes)
+
+Syntax
+
+ /opt/mapr/support/tools/mapr-support-collect.sh
+    [ -h|--hosts <host file> ]
+    [ -H|--host <host entry> ]
+    [ -Q|--no-cldb ]
+    [ -n|--name <name> ]
+    [ -d|--output-dir <path> ]
+    [ -l|--no-logs ]
+    [ -s|--no-statistics ]
+    [ -c|--no-conf ]
+    [ -i|--no-sysinfo ]
+    [ -x|--exclude-cluster ]
+    [ -u|--user <user> ]
+    [ -K|--strict-hostkey ]
+    [ -m|--mini-dump <size> ]
+    [ -f|--filter <filter string> ]
+    [ -L|--no-libraries
+    [ -O|--online ]
+    [ -p|--par <par> ]
+    [ -t|--dump-timeout <dump timeout> ]
+    [ -T|--scp-timeout <SCP timeout> ]
+    [ -C|--cluster-timeout <cluster timeout> ]
+    [ -y|--yes ]
+    [ -S|--scp-port <SCP port> ]
+    [ --collect-cores ]
+    [ --move-cores ]
+    [ --no-hadoop-logs ]
+    [ --no-hbase-logs ]
+    [ --port <port> ]
+    [ --use-hostname ]
+    [ --cldb <CLDB node> ]
+    [ --port <port> ]
+    [ -?|--help ]
+
+Parameters
+
+     Parameter
+
+   Description
+
+   -h or --hosts
+
+   A file containing a list of hosts. Each line contains one host entry,
+   in the format [user@]host[:port]
+
+   -H or --host
+
+   One or more hosts in the format [user@]host[:port]
+
+   -Q or --no-cldb
+
+   If specified, the command does not query the CLDB for list of nodes
+
+   -n or --name
+
+   Specifies the name of the output file. If not specified, the default is
+   a date-named file in the format YYYY-MM-DD-hh-mm-ss.tar
+
+   -d or --output-dir
+
+   The absolute path to the output directory. If not specified, the
+   default is /opt/mapr/support/collect/
+
+   -l or --no-logs
+
+   If specified, the command output does not include log files
+
+   --no-hadoop-logs
+
+   If specified, the command output does not include Hadoop log files.
+
+   --no-hbase-logs
+
+   If specified, the command output does not include HBase log files.
+
+   -f or --filter <filter string>
+
+   Use this option to specify a filter string. Support information is only
+   collected for nodes with names that match the filter string.
+
+   -L or --no-libraries
+
+   If specified, the command output does not include libraries.
+
+   -s or --no-statistics
+
+   If specified, the command output does not include statistics
+
+   -c or --no-conf
+
+   If specified, the command output does not include configurations
+
+   -i or --no-sysinfo
+
+   If specified, the command output does not include system information
+
+   -x or --exclude-cluster
+
+   If specified, the command output does not collect cluster diagnostics
+
+   -u or --user
+
+   The username for ssh connections
+
+   -K or --strict-hostkey
+
+   If specified, checks for strict host key in the SSH connection.
+
+   -m, --mini-dump <size>
+
+   For any log file greater than 2 * <size>, collects only a head and tail
+   each of the specified size. The <size> may have a suffix specifying
+   units:
+     * b - blocks (512 bytes)
+     * k - kilobytes (1024 bytes)
+     * m - megabytes (1024 kilobytes)
+
+   -O or --online
+
+   Specifies a space-separated list of nodes from which to gather support
+   output, and uses the warden instead of ssh for transmitting the support
+   data.
+
+   -p or --par
+
+   The maximum number of nodes from which support dumps will be gathered
+   concurrently (default: 10)
+
+   -t or --dump-timeout
+
+   The timeout for execution of the mapr-support-dump command on a node
+   (default: 120 seconds or 0 = no limit)
+
+   -T or --scp-timeout
+
+   The timeout for copy of support dump output from a remote node to the
+   local file system (default: 120 seconds or 0 = no limit)
+
+   -C or --cluster-timeout
+
+   The timeout for collection of cluster diagnostics (default: 300 seconds
+   or 0 = no limit)
+
+   -y or --yes
+
+   If specified, the command does not require acknowledgement of the
+   number of nodes that will be affected
+
+   -S or --scp-port
+
+   The local port to which remote nodes will establish an SCP session
+
+   --collect-cores
+
+   If specified, the command collects cores of running mfs processes from
+   all nodes (off by default)
+
+   --move-cores
+
+   If specified, the command moves mfs and nfs cores from /opt/cores from
+   all nodes (off by default)
+
+   --use-hostname
+
+   If specified, uses hostnames instead of IP address for SSH.
+
+   --cldb <cldbnode>
+
+   Use this option when the CLDB Service is down to point to a CLDB node.
+
+   --port
+
+   The port number used by FileServer (default: 5660)
+
+   -? or --help
+
+   Displays usage help text
+
+Examples
+
+   Collect support information and dump it to the file
+   /opt/mapr/support/collect/mysupport-output.tar:
+/opt/mapr/support/tools/mapr-support-collect.sh -n mysupport-output

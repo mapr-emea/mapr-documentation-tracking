@@ -1,0 +1,89 @@
+Architecture and CDC
+
+   This section provides an overview of how CDC works.
+
+   CDC uses a log-based data capture for the changed data records,
+   propagates the data (from the source table) using replication remote
+   procedural calls (RPCs) through an internal MapR gateway and produces
+   the data to a MapR-ES destination stream topic(s). Once data is
+   received by the topic, the changed data records can be consumed by
+   external applications. The consumer application registers the CDC
+   Deserializer as its record value deserializer and pulls the topic data
+   by using a Kafka API. The data changes can be read from the
+   ChangeDataRecord through the OJAI ChangeData APIs. Consumers could be
+   databases, data archives, search engines, or applications that perform
+   real-time analytics, security, or monitoring.
+   [cdc-architecture.png]
+
+How are the Change Data Records Propagated?
+
+   The propagation is accomplished by setting up a change log which
+   establishes a relationship between the source table and the destination
+   stream. The change log can be setup by either MCS, maprcli, or REST.
+   Each changelog can be paused, resumed, and removed. See
+   [1]Administering Change Data Capture and the maprcli [2]table changelog
+   command for more information.
+
+   As data is changed on the source table (through CRUD operations), each
+   changed data record is propagated (replicated) to an internal MapR
+   gateway. The order of when the data is produced to the stream topic is
+   the same order of when the changed data records are replicated to the
+   gateway. The data flow is one way, meaning, the flow is from a MapR-DB
+   source table to a MapR-ES destination stream topic(s).
+   Note: When an array value is updated, the changed data record is the
+   full array record rather the specific data change.
+
+What's the Impact of using Columns/Column Families?
+
+   When propagating a specific column family or column from a binary
+   source table and a row is deleted, the destination stream topic will
+   show only a deletion event for the specific column family or column.
+   When propagating a specific column from a binary source table and its
+   entire column family is deleted, the destination stream topic will show
+   only a deletion event for the specific column.
+   In the scenario where you have a binary source table with fam0, fam1,
+   and fam2 and you set up the changelog without columns or column
+   families.
+     * If you delete fam0, fam1, and fam2, the change data event will be
+       "delete fam0", "delete fam1" and "delete fam2".
+     * If you delete the row, the change data event will be "delete row".
+
+   In the scenario where you have a binary source table with fam0, fam1,
+   and fam2 and you set up the changelog with a column setup as fam1:col1,
+   fam2.
+     * If you delete fam0, fam1, and fam2, the change data event will be
+       "delete fam1:col1", "delete fam2".
+     * If you delete the row, the change data event will be "delete
+       fam1:col1", "delete fam2".
+
+Where is the Destination Stream Setup?
+
+   The destination MapR-ES stream can be in same cluster as the MapR-DB
+   source table or it can be on a remote MapR cluster. Where and how
+   destination streams are setup depends on the purpose for using CDC.
+
+   If you are propagating changed data from a source table on a source
+   cluster to a destination stream topic on a remote destination cluster,
+   a gateway must be setup. Gateways are setup by installing the gateway
+   on the destination cluster and specifying the gateway node(s) on the
+   source cluster. See [3]Administering MapR Gateways and [4]Configuring
+   Gateways for Table and Stream Replication.
+
+   The following diagram shows a simple CDC data model, with one source
+   table to one destination topic on one stream. Because this scenario has
+   the destination stream topic on a remote destination cluster, a gateway
+   must be setup and configured.
+   Note: More complex CDC scenarios can be implemented and multiple
+   gateways can be setup.
+   [CDC-simple-remoteCluster.png]
+   Important: If you have a secure cluster, secure configuration must be
+   setup. See [5]Configuring Secure Clusters for Cross-Cluster Mirroring
+   and Replication.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/admin-changeData.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-changelog.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/MapRGateways.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/AddingCross-ClusterTickets.html

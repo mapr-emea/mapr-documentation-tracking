@@ -1,0 +1,44 @@
+Run Pig Jobs with Oozie
+
+   Complete the following steps to configure Oozie to run Pig jobs:
+    1. Configure a Pig workflow.
+         a. Edit the workflow.xml file to include the following:
+              i. Optionally, specify the name of the script (for example,
+                 id.pig) that contains the Pig query in the script
+                 parameter.
+<workflow-app xmlns="uri:oozie:workflow:0.2" name="pig-wf">
+    <start to="pig-node"/>
+    <action name="pig-node">
+        <pig>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/output-data/pig"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+                <property>
+                    <name>oozie.action.sharelib.for.pig</name>
+                    <value>pig</value>
+                </property>
+                <property>
+                    <name>mapred.compress.map.output</name>
+                    <value>true</value>
+                </property>
+            </configuration>
+            <script>id.pig</script>
+            <param>INPUT=/user/${wf:user()}/input-data/text</param>
+            <param>OUTPUT=/user/${wf:user()}/output-data/pig</param>
+        </pig>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>Pig failed, error message[${wf:errorMessage(wf:lastErrorNode())
+}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

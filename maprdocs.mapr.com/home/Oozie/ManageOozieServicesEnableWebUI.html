@@ -1,0 +1,42 @@
+Enabling the Oozie Web UI
+
+   The Oozie web UI can display your job status, logs, and other related
+   information. You must enable the Oozie Web UI after you install Oozie.
+   However, depending on how you enable the Web UI, you may also need to
+   perform manual steps to start the Web UI after you run configure.sh on
+   the cluster.
+    1. Download the Ext JS 2.2 library as a zip archive (ext-2.2.zip). You
+       can download this library from the [1]Apache Oozie Quick Start
+       guide. Search for "ExtJS 2.2" on the page to find the link.
+       Note: The Ext JS 2.2 library is required only for the Oozie Web UI.
+       A [2]rewrite of the Oozie web UI has been proposed in the Oozie
+       user community.
+    2. Copy the Ext JS 2.2 library into the libext directory:
+cp ext-2.2.zip /opt/mapr/oozie/oozie-<version>/libext/
+    3. Perform one of the following options based on your preference:
+          + If you want the Oozie Web UI to start whenever Oozie starts or
+            restarts, perform the following steps:
+              a. If Oozie is running, shut it down:
+maprcli node services -name oozie -action stop -nodes <space delimited list of n
+odes>
+              b. Run the oozie-setup.sh script, and specify the hadoop
+                 version.
+/opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh -hadoop <version> /opt/mapr/h
+adoop/hadoop-<version>
+          + If you want to manually start the Web UI when Oozie starts or
+            restarts, perform the following steps:
+              a. If Oozie is running, shut it down:
+maprcli node services -name oozie -action stop -nodes <space delimited list of n
+odes>
+              b. Run the oozie-setup.sh script and specify the path to the
+                 extjs file.
+cd /opt/mapr/oozie/oozie-<version>
+bin/oozie-setup.sh prepare-war -extjs ~/ext-2.2.zip
+    4. Start Oozie.
+maprcli node services -name oozie -action start -nodes <space delimited list of
+nodes>
+
+References
+
+   1. http://oozie.apache.org/docs/4.3.0/DG_QuickStart.html
+   2. https://issues.apache.org/jira/browse/OOZIE-2683

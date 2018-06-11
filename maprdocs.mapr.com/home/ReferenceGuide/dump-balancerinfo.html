@@ -1,0 +1,232 @@
+dump balancerinfo
+
+   Returns detailed information about the storage pools on a cluster. If
+   there are any active container moves, the command returns information
+   about the source and destination storage pools.
+
+   The maprcli dump balancerinfo command enables you to see how much space
+   is used in storage pools and to track active container moves. For best
+   results, use the -json option when running dump balancerinfo from the
+   command line.
+
+   The disk space balancer is a tool that balances disk space usage on a
+   cluster by moving containers between storage pools. Whenever a storage
+   pool is over 70% full (or a threshold defined by the
+   cldb.balancer.disk.threshold.percentage parameter), the disk space
+   balancer distributes containers to other storage pools that have lower
+   utilization than the average for that cluster. The disk space balancer
+   aims to ensure that the percentage of space used on all the disks in
+   the node is similar. For more information, see [1]Disk Space Balancer.
+
+Syntax
+
+   CLI
+
+maprcli dump balancerinfo
+    [-cluster <cluster name>]
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter
+
+   Description
+
+   cluster
+
+   The cluster on which to run the command. If this parameter is omitted,
+   the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+
+Output
+
+   The maprcli dump balancerinfo command returns detailed information
+   about the storage pools on a cluster. If there are any active container
+   moves, the command returns information about the source and destination
+   storage pools.
+# maprcli dump balancerinfo -cluster my.cluster.com -json
+{
+        "timestamp":1337036566035,
+        "status":"OK",
+        "total":187,
+        "data":[
+{
+                        "spid":"4bc329ce06752062004fa1a537abcdef",
+                        "fsid":5410063549464613987,
+                        "ip:port":"10.50.60.72:5660-",
+                        "capacityMB":1585096,
+                        "usedMB":1118099,
+                        "percentage":70,
+                        "fullnessLevel":"AboveAverage",
+                        "inTransitMB":0,
+                        "outTransitMB":31874
+                },
+{
+                        "spid":"761fec1fabf32104004fad9630ghijkl",
+                        "fsid":3770844641152008527,
+                        "ip:port":"10.50.60.73:5660-",
+                        "capacityMB":1830364,
+                        "usedMB":793679,
+                        "percentage":47,
+                        "fullnessLevel":"BelowAverage",
+                        "inTransitMB":79096,
+                        "outTransitMB":0
+                },
+
+                ....
+
+
+{
+                        "containerid":4034,
+                        "sizeMB":16046,
+                        "From fsid":5410063549464613987,
+                        "From IP:Port":"10.50.60.72:5660-",
+                        "From SP":"4bc329ce06752062004fa1a537abcefg",
+                        "To fsid":3770844641152008527,
+                        "To IP:Port":"10.50.60.73:5660-",
+                        "To SP":"761fec1fabf32104004fad9630ghijkl"
+                },
+
+   Output fields
+
+   Field
+
+   Description
+
+   spid
+
+   The unique ID number of the storage pool.
+
+   fsid
+
+   The unique ID number of the file server. The FSID identifies an MapR-FS
+   instance or a node that has MapR-FS running in the cluster. Typically,
+   each node has a group of storage pools, so the same FSID will
+   correspond to multiple SPIDs.
+
+   ip:port
+
+   The host IP address and MapR-FS port.
+
+   capacityMB
+
+   The total capacity of the storage pool (in MB).
+
+   usedMB
+
+   The amount of space used on the storage pool (in MB).
+
+   percentage
+
+   The percentage of the storage pool currently utilized. A ratio of the
+   space used (usedMB) to the total capacity (capacityMB) of the storage
+   pool.
+
+   fullnessLevel
+
+   The fullness of the storage pool relative to the fullness of the rest
+   of the cluster. Possible values are OverUsed, AboveAverage, Average,
+   BelowAverage, and UnderUsed. For more information, see Monitoring
+   storage pool space usage below.
+
+   inTransitMB
+
+   The amount of data (in MB) that the disk space balancer is currently
+   moving into a storage pool.
+
+   outTransitMB
+
+   The amount of data (in MB) that the disk space balancer is currently
+   moving out of a storage pool.
+
+   The following fields are returned only if the disk space balancer is
+   actively moving one or more containers at the time the command is run.
+
+   Field
+
+   Description
+
+   containerid
+
+   The unique ID number of the container.
+
+   sizeMB
+
+   The amount of data (in MB) being moved.
+
+   From fsid
+
+   The FSID (file server ID number) of the source file server.
+
+   From IP:Port
+
+   The IP address and port number of the source node.
+
+   From SP
+
+   The SPID (storage pool ID) of the source storage pool.
+
+   To fsid
+
+   The FSID (file server ID number) of the destination file server.
+
+   To IP:Port
+
+   The IP address and port number of the destination node.
+
+   To SP
+
+   The SPID (storage pool ID number) of the destination storage pool.
+
+Examples
+
+   Monitoring storage pool space usage
+
+   You can use the maprcli dump balancerinfo command to monitor space
+   usage on storage pools.
+# maprcli dump balancerinfo -json
+
+....
+{
+                        "spid":"4bc329ce06752062004fa1a537abcefg",
+                        "fsid":5410063549464613987,
+                        "ip:port":"10.50.60.72:5660-",
+                        "capacityMB":1585096,
+                        "usedMB":1118099,
+                        "percentage":70,
+                        "fullnessLevel":"AboveAverage",
+                        "inTransitMB":0,
+                        "outTransitMB":31874
+                },
+
+   Tracking active container moves
+
+   Using the maprcli dump balancerinfo command you can monitor the
+   activity of the disk space balancer. Whenever there are active
+   container moves, the command returns information about the source and
+   destination storage pools.
+# maprcli dump balancerinfo -json
+      ....
+      {
+           "containerid":7840,
+           "sizeMB":15634,
+           "From fsid":8081858704500413174,
+           "From IP:Port":"10.50.60.64:5660-",
+           "From SP":"9e649bf0ac6fb9f7004fa19d20rstuvw",
+           "To fsid":3770844641152008527,
+           "To IP:Port":"10.50.60.73:5660-",
+           "To SP":"fefcc342475f0286004fad963flmnopq"
+       }
+
+   The example shows that a container (7840) is being moved from a storage
+   pool on node 10.50.60.64 to a storage pool on node 10.50.60.73.
+   Tip: You can use the storage pool IDs (SPIDs) to search the CLDB and
+   MFS logs for activity (balancer moves, container moves, creates,
+   deletes, etc.) related to specific storage pools.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DiskSpaceBalancer.html#ConfiguringBalancerSettin_26982510-d3e171

@@ -1,0 +1,54 @@
+Example: Setting Up CDC with Default Topic Partitions
+
+   This example creates the following: a volume for a MapR-DB table, a
+   MapR-DB JSON table, a MapR-ES changelog stream without changing the
+   default partitions, creates a topic while adding a table changelog
+   relationship from the source table to the destination stream topic and
+   and views the changelog information.
+     * [1]CLI Example
+     * [2]REST Example
+
+// Creating and mounting a volume for the source table
+   maprcli volume create -name tableVolume -path /tableVolume
+
+// Creating and mounting a volume for the destination stream
+   maprcli volume create -name streamVolume -path /streamVolume
+
+// Creating a new JSON table
+   maprcli table create -path /tableVolume/cdcTable -tabletype json
+
+// Creating a stream for CDC data
+   maprcli stream create -path /streamVolume/changelogStream -ischangelog true
+
+// Creating a changelog relationship between the source table and the stream
+   maprcli table changelog add -path /tableVolume/cdcTable -changelog /streamVol
+ume/changelogStream:cdcTopic1
+
+// Viewing the changelog information
+   maprcli table changelog info -changelog  /streamVolume/changelogStream:cdcTop
+ic1 -json
+
+// Creating and mounting a volume for the source table
+   https://10.10.100.17:8443/rest/volume/create?name=tableVolume&path=/tableVolu
+me
+
+// Creating and mounting a volume for the destination stream
+   https://10.10.100.17:8443/rest/volume/create?name=streamVolume&path=/streamVo
+lume
+
+// Creating a stream for CDC data
+   https://10.10.100.17:8443/rest/stream/create?path=/streamVolume/changelogStre
+am&ischangelog=true
+
+// Creating a changelog relationship between the source table and the stream
+   https://10.10.100.17:8443/rest/table/changelog/add?path=/tableVolume/cdcTable
+&changelog=/streamVolume/changelogStream:cdcTopic1
+
+// Viewing the changelog information
+   https://10.10.100.17:8443/rest/table/changelog/info?changelog=/streamVolume/c
+hangelogStream:cdcTopic1
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-cdc-example1.html#div1sect1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-cdc-example1.html#div1sect2

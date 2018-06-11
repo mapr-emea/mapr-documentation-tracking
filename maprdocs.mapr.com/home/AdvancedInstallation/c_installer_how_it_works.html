@@ -1,0 +1,257 @@
+Using mapr-setup.sh
+
+   This topic describes how you can use and run the MapR Installer setup
+   script.
+
+   Before you can run the MapR Installer, you must run the mapr-setup.sh
+   script to set up the installation environment on a node that will be
+   part of the cluster. Then, you can run the MapR Installer to perform
+   the installation.
+
+mapr-setup.sh
+
+   The mapr-setup.sh script performs the following steps to prepare the
+   node to run the MapR Installer:
+    1. Verifies and installs the operating system dependencies and Java
+       requirements on the current node.
+    2. Checks for Internet connectivity to the remote repository.
+          + If access to [1]package.mapr.com is not available, the script
+            prompts for MapR archive tarballs. Provide the full paths of
+            these tarballs in a space-delimited list.
+    3. Asks for the hostname and port that cluster nodes can use to
+       connect to the MapR Installer node.
+    4. Asks for the cluster admin user account and creates the account if
+       it does not exist. This account must exist or be created on each
+       node in the cluster.
+    5. Sets up a custom yum or apt repository.
+          + If no archive file is provided, the script configures access
+            to the [2]package.mapr.com repository. For example, on RedHat
+            / CentOS, the script creates the following remote repository:
+            /etc/yum.repos.d/mapr.installer.repo
+          + If archive files are provided, the script sets up a local
+            repository.
+    6. Starts the MapR Installer.
+
+   Syntax
+/opt/mapr/installer/bin/mapr-setup.sh
+[docker client]
+[docker installer]
+[-a <full_path_to_archive_file(s)>]
+[install]
+[reload]
+[remove]
+[update]
+[-h]
+[-i <full_path_to_installer_package>]
+[-n]
+[-p <hostname:port>]
+[-r <repository_URL>]
+[-y]
+
+   Options
+
+   Generally, run the mapr-setup.sh script without using any additional
+   options. Only consider using the following options if you have a known
+   Internet connectivity issue, your MapR Installer packages are not
+   located in the default repository, or you need help with the
+   installation process.
+   Option Description
+   docker client Use this option to create a MapR PACC image. For more
+   information, see [3]Creating a MapR PACC Image Using mapr-setup.sh.
+   docker installer Use this option to create a MapR Installer container.
+   install Use this option to install the MapR Installer and definition
+   files. If you don't specifiy an option for mapr-setup.sh, the install
+   option is invoked by default.
+   Example:
+./mapr-setup.sh install
+
+   reload Use this option to reinstall the MapR Installer and definition
+   files. This option is helpful in debugging. No prompt is returned when
+   you use this option.
+   Example:
+./mapr-setup.sh reload
+
+   remove Use this option to remove the MapR Installer and definition
+   files. This option does not remove the mapr-setup.sh script.
+   Example:
+./mapr-setup.sh remove
+
+   update Use this option to update the installer packages. The setup
+   script checks [4]package.mapr.com for new packages and installs the
+   packages if they are available.
+   Example:
+./mapr-setup.sh update
+
+   -a|--archives Use this option to bypass the Internet connectivity check
+   and directly create a local repository. Specify a space-delimited list
+   of the full paths to the following archive files (the order of the
+   files is important) as an argument to the option:
+     * MapR Installer archive
+     * MapR Expansion Pack (MEP) archive
+     * MapR archive for the current release
+
+   For more information, see [5]Using a Local, Shared Repository With the
+   MapR Installer.
+   Note: Use this option when the MapR Installer node does not have access
+   to the Internet or is behind a restricted VPN or firewall.
+   Example for MapR 5.2 and later:
+./mapr-setup.sh -a mapr-installer-v1.5.201705041557.deb.tgz
+mapr-mep-v3.0.0.201704051422.deb.tgz mapr-v5.2.1GA.deb.tgz
+
+   Example for MapR 5.0 and 5.1:
+./mapr-setup.sh -a mapr-5.0-5.1.201705082100.deb.tar.gz
+
+   For MapR 5.0 and 5.1, you only need to provide the MapR archive file.
+   -h|--help Use this option to display the command-line help for the MapR
+   Installer.
+   Note: If you use this option with other options, the MapR Installer
+   will ignore all options except for -h.
+   Example:
+./mapr-setup.sh -h
+
+   -i|--install Use this option to override the MapR Installer packages
+   stored in the remote or local repository. This option take a
+   space-delimited list of the two local packages needed to install the
+   MapR Installer (the order of the files is not important):
+     * MapR Installer package
+     * MapR Installer definitions package
+
+   Example:
+./mapr-setup.sh -i mapr-installer-definitions_1.5.201705021610_all.deb
+mapr-installer_1.5.201705021610_all.deb
+
+   -n|--noinet Use this option when you don't want mapr-setup.sh to fetch
+   packages from the Internet. Instead of taking the files as an argument
+   like -a, this option prompts you for a complete set of MapR archive
+   files (the order of the files is important):
+     * MapR Installer archive
+     * MapR Expansion Pack (MEP) archive
+     * MapR archive for the current release
+
+   Note: Configure this option when the MapR Installer node does not have
+   access to the Internet or is behind a restricted VPN or firewall. If
+   you use this option together with -a, mapr-setup.sh will ignore -n.
+   Example:
+./mapr-setup.sh -n
+
+   -p|--port This option specifies the hostname:port to use for
+   installation-related communication between the MapR Installer node and
+   other nodes in the cluster. The MapR Installer also adds the hostname
+   provided as a default entry for the list of cluster nodes on the
+   Configure Nodes page. Both the hostname and the port are not required
+   when configuring this option; you can choose to configure one or both
+   values.
+   Note: Configure this option when the MapR Installer node has multiple
+   interfaces or hostnames and the result of hostname is not a value that
+   other nodes in the cluster are able to communicate with.
+   Example:
+./mapr-setup.sh -p perfnode131.perf.lab:9441
+
+   -r|--repo When the MapR Installer packages are not located in the
+   default repository, specify the top-level URL of the repository in
+   which the MapR Installer packages are located. The default URL is
+   [6]package.mapr.com.
+   Example:
+./mapr-setup.sh -r http://myrepo.download.pkgs/mapr/releases/
+
+   -v Use this option when you want additional information about the setup
+   process.
+   Example:
+./mapr-setup.sh -v
+
+   -y|--yes Use this option to bypass the MapR Installer's usual prompts
+   and immediately proceed with the default options. This option produces
+   the same installation result as going through the mapr-setup.sh script
+   prompts and choosing all of the default options, but with increased
+   speed.
+   Example:
+./mapr-setup.sh -y
+
+After Running mapr-setup.sh
+
+   To validate that the MapR Installer started correctly, do one of the
+   following:
+     * Log in to the MapR Installer web interface using the cluster admin
+       user name and password.
+     * Run the MapR Installer Stanza exportcommand using the cluster admin
+       user name and password.
+
+   If the MapR Installer does not start up correctly, check the logs. See
+   [7]Logs for the MapR Installer.
+
+   If you want to change any parameter that you provided to mapr-setup.sh
+   on a previous run (for example, the repository URL, the cluster admin
+   user name, or another parameter), you can safely rerun mapr-setup.sh
+   with the new parameters. Doing so updates the MapR Installer
+   configuration to use the new parameters. However, do not rerun
+   mapr-setup.sh while an installation or a probe command is in progress.
+
+MapR Installer Web Interface
+
+   When you run the MapR Installer web interface, it performs the
+   following tasks:
+    1. Displays the MapR services and ecosystem components that you can
+       install based on the MapR version that you select.
+    2. Provides the option to install MapR Monitoring.
+    3. Guides you through node and cluster configuration.
+    4. Verifies that each node meets the node requirements.
+    5. Sets a default, configurable service layout across the nodes in the
+       cluster based on the requirements of each service.
+    6. Installs or upgrades the MapR software and associated
+       operating-system dependencies.
+    7. If you chose to install a trial or community license, it will
+       attempt to apply the license to your cluster.
+
+MapR Installer Stanzas
+
+   Running mapr-setup.sh also installs MapR Installer Stanzas. Stanzas
+   give you a script-based tool to perform all the installation tasks you
+   can perform using the MapR Installer web interface. See [8]MapR
+   Installer Stanzas. In addition, Stanza commands make it possible to
+   probe a cluster that was installed without using the MapR Installer and
+   use the import command to set up the installer database. See [9]Using
+   probe and import to Generate the Installer Database.
+
+MapR Installer Components
+
+   The MapR Installer uses the following components to set up the
+   installation environment:
+   Name Filename Description
+   Configuration Script mapr-setup.sh Script that configures a node to run
+   the MapR Installer. This includes setting up an Internet or local
+   repository. The mapr-setup.sh script can also be used to create a MapR
+   Persistent Application Client Container (PACC) or a MapR Installer
+   Container. For more information, see
+     * [10]Creating a MapR PACC Image Using mapr-setup.sh
+
+   Installer Package mapr-installer-<version> Package that contains the
+   MapR Installer.
+   Installer Definitions Package mapr-installer-definitions-<version>
+   Package that contains the list of MapR versions, services, and
+   ecosystem components that you can install with the MapR Installer.
+   MapR Service Packages various
+
+   If you use a remote repository, the MapR Installer accesses the
+   installation packages from [11]package.mapr.com.
+
+   If you use a local repository, the MapR Installer accesses the
+   installation packages from the local repository. The mapr-setup.sh
+   script creates the local repository with the packages available in the
+   archive files that you provide to the mapr-setup.sh script. For more
+   information, see [12]Using a Local, Shared Repository With the MapR
+   Installer.
+
+References
+
+   1. http://package.mapr.com/
+   2. http://package.mapr.com/
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/CreatingPACCImage.html#concept_x3f_25n_3z
+   4. http://package.mapr.com/
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/c_local_repo_install.html#concept_mt1_xzx_ft
+   6. http://package.mapr.com/
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/InstallerLogs.html#concept_lws_zq4_zx
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/SilentInstaller.html#concept_wx2_rmd_cy
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/UsingProbeImport.html#concept_oct_r3y_jz
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/CreatingPACCImage.html#concept_x3f_25n_3z
+  11. http://package.mapr.com/
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/c_local_repo_install.html#concept_mt1_xzx_ft

@@ -1,0 +1,71 @@
+table upstream list
+
+   Lists the binary tables that replicate data to the specified replica
+   binary table.
+
+Syntax
+
+   CLI
+
+maprcli table upstream list
+  -path <table path>
+
+   REST
+
+curl -k -X GET
+  'http[s]://<host>:<port>/rest/table/upstream/list?path=<path>'
+  -u <username>:<password>
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Parameters
+
+   Parameter Description
+   path
+
+   The path to the replica.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named testdst under volume1 which
+       has a mount point at /volume1, specify the following path:
+       /volume1/testdst
+
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named customerdst under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customerdst
+
+Sample Output
+
+maprcli table upstream list -path /volume2/company1 -json
+{
+        "timestamp":1423162601288,
+        "timeofday":"2015-02-05 10:56:41.288 GMT-0800",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "cluster":"mycluster",
+                        "table":"/volume1/company1",
+                        "idx":1,
+                        "uuid":"P?\\x18\\xCC\\x17\\xB1&\\xA7i,\\x04\\xBB\\xB8\\x
+D3T\\x00"
+                }
+        ]
+}
+
+Example
+
+   Lists sources that replicate data to the replica /volume2/company1:
+
+   CLI
+
+maprcli table upstream list -path /volume2/company1 -json
+
+   REST
+
+curl -k -X GET \
+  'https://r1n1.sj.us:8443/rest/table/upstream/list?path=%2Fvolume2%2Fcompany1'
+\
+  -u mapr:mapr

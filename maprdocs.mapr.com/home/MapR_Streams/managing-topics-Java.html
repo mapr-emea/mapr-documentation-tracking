@@ -1,0 +1,83 @@
+Managing Topics with Java
+
+   Provides Java code snippets for performing CRUD operations on MapR-ES
+   stream topics.
+
+Creating Topics
+
+   The createTopic API is used to create a topic with the default number
+   of partitions.
+Admin.createTopic(String streamPathAndName, String topicName)
+
+   Note: If you do not specify the number of partitions for a stream
+   topic, the default number of partitions is inherited from the stream.
+public void createTopicUtilFunction(String streamPathAndName, String topicName)
+throws IOException{
+        Configuration conf = new Configuration();
+        Admin streamAdmin = Streams.newAdmin(conf);
+        streamAdmin.createTopic(streamPathAndName, topicName);
+        streamAdmin.close();
+}
+
+   The createTopic API is used to create a topic with a specific number of
+   partitions.
+Admin.createTopic(String streamPathAndName, String topicName, int npartitions)
+public void createTopicWithPartitionsUtilFunction(String streamPathAndName, Stri
+ng topicName, int npartitions) throws IOException{
+        Configuration conf = new Configuration();
+        Admin streamAdmin = Streams.newAdmin(conf);
+        streamAdmin.createTopic(streamPathAndName, topicName, npartitions);
+        streamAdmin.close();
+}
+
+Editing Topics
+
+   The editTopic API is used to change timestamp type and the number of
+   partitions for a topic.
+Admin.editTopic(String streamPathAndName, String topicName, int npartitions)
+public void editTopicUtilFunction(String streamPathAndName, String topicName, in
+t npartitions) throws IOException{
+        Configuration conf = new Configuration();
+        Admin streamAdmin = Streams.newAdmin(conf);
+        streamAdmin.editTopic(streamPathAndName, topicName, npartitions);
+        streamAdmin.close();
+}
+
+Retrieving Topic Attributes
+
+   The getTopicDescriptor API is used to get or set the topic's attribute
+   values. TopicDescriptor is passed into methods to set and retrieve
+   topic partitions and timestamp type. The Enum TimestampType values are
+   CREATE_TIME and LOG_APPEND_TIME.
+   Note: TopicDescriptor is available as of MapR 6.0.1.
+
+Deleting Topics
+
+   The deleteTopic API is used to delete a topic from a stream.
+Admin.deleteTopic(String streamPathAndName, String topicName)
+public void deleteTopicUtilFunction(String streamPathAndName, String topicName)
+throws IOException{
+        Configuration conf = new Configuration();
+        Admin streamAdmin = Streams.newAdmin(conf);
+        streamAdmin.deleteTopic(streamPathAndName, topicName);
+        streamAdmin.close();
+}
+
+Counting Topics
+
+   The countTopics API is used to count the number of topics in a stream.
+   See the [1]mapr streamanalyzer utility for a sample application that
+   counts and queries topic messages.
+Admin.countTopics(String streamPathAndName)
+public int countTopicsUtilFunction(String streamPathAndName){
+        Configuration conf = new Configuration();
+        Admin streamAdmin = Streams.newAdmin(conf);
+        int count = streamAdmin.countTopics(streamPathAndName);
+        streamAdmin.close();
+
+        return count;
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr_streamanalyzer.html

@@ -1,0 +1,52 @@
+HBase Java Comparators Support
+
+   MapR-DB supports the following Java filters, which work identically to
+   their Apache HBase versions. See the [1]Apache HBase API for more
+   information, specifically, the [2]Apache HBase Filter package.
+   Comparator Description
+   >BinaryComparator
+
+   A binary comparator which lexicographically compares against the
+   specified byte array using Bytes.compareTo(byte[], byte[]).
+   BinaryPrefixComparator A comparator which compares against a specified
+   byte array, but only compares up to the length of this byte array. For
+   the rest it is similar to BinaryComparator.
+   BitComparator A bit comparator which performs the specified bitwise
+   operation on each of the bytes with the specified byte array. Then
+   returns whether the result is non-zero.
+   NullComparator A binary comparator which lexicographically compares
+   against the specified byte array using Bytes.compareTo(byte[], byte[]).
+   RegexStringComparator This comparator is for use with CompareFilter
+   implementations, such as RowFilter , QualifierFilter , and ValueFilter
+   , for filtering based on the value of a given column. Use it to test if
+   a given regular expression matches a cell value in the column.
+
+   Only EQUAL or NOT_EQUAL comparisons are valid with this comparator.
+
+   For example:
+ ValueFilter vf = new ValueFilter(CompareOp.EQUAL,
+     new RegexStringComparator(
+       // v4 IP address
+       "(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3,3}" +
+         "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(\\/[0-9]+)?" +
+         "|" +
+       // v6 IP address
+       "((([\\dA-Fa-f]{1,4}:){7}[\\dA-Fa-f]{1,4})(:([\\d]{1,3}.)" +
+         "{3}[\\d]{1,3})?)(\\/[0-9]+)?"));
+
+   SubstringComparator This comparator is for use with
+   SingleColumnValueFilter, for filtering based on the value of a given
+   column. Use it to test if a given substring appears in a cell value in
+   the column. The comparison is case insensitive.
+
+   Only EQUAL or NOT_EQUAL tests are valid with this comparator.
+
+   For example:
+ SingleColumnValueFilter scvf =
+   new SingleColumnValueFilter("col", CompareOp.EQUAL,
+     new SubstringComparator("substr"));
+
+References
+
+   1. https://hbase.apache.org/apidocs/index.html
+   2. https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html

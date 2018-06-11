@@ -1,0 +1,309 @@
+Troubleshooting Cluster Administration
+
+   The following list identifies how to address several cluster
+   administration issues:
+
+   The URL reported by YARN for tracking job details does not load.
+          This URL uses the output of the hostname -f command, which must
+          be the fully qualified domain name (FQDN) for the node. On
+          Ubuntu, make sure that the /etc/hostname file is configured with
+          the node’s FQDN. On CentOS/Redhat, make sure that the
+          /etc/sysconfig/network file is configured with the node’s FQDN,
+          then restart the node.
+
+   The ResourceManager does not start.
+          If the ResourceManager does not come up, check the following:
+
+          + Check that you supplied the correct ResourceManager hostname
+            or IP address in the -RM parameter when running
+            [1]configure.sh on each node at installation time. If you are
+            not sure, you can re-run configure.sh to correct the problem.
+          + Do not specify a ResourceManager port with the hostname or IP
+            address in the -RM parameter; there is no <port> option.
+          + Make sure that you specified the same ResourceManager hostname
+            or IP address on all nodes when running [2]configure.sh.
+          + For more information about what might be causing a problem,
+            check the ResourceManager
+            logs:/opt/mapr/hadoop/hadoop-<version>/logs
+
+   The NodeManager does not start.
+          If the NodeManager does not come up, check the following:
+
+          + Make sure that the fileserver role is installed on the node by
+            looking in the /opt/mapr/roles directory.
+          + Make sure that the fileserver service is running, using either
+            the [3]service list command or the MapR Control System.
+          + For more information about what might be causing a problem,
+            check the NodeManager logs:/opt/mapr/hadoop/hadoop-2.3.0/logs
+
+   Job history is not available.
+          If job history is not recorded, check the following:
+
+          + Make sure that the HistoryServer role is installed on the
+            desired node by looking in the /opt/mapr/roles directory. Note
+            that only one node in the cluster can have the HistoryServer
+            role.
+          + Make sure the HistoryServer is running on the desired node,
+            using either the [4]service list command or the MapR Control
+            System.
+          + Check that you supplied the correct HistoryServer hostname or
+            IP address in the -HS parameter when running [5]configure.sh
+            on each node at installation time. If you are not sure, you
+            can re-run configure.sh to correct the problem.
+
+   Submitted applications do not show up in the ResourceManager.
+          If you submit an application and it does not appear in the
+          ResourceManager, check the following:
+
+          + Make sure the application is running in YARN and not as a
+            local application (check for app_local or job_local in the
+            application output).
+          + Check the class path on which the application was invoked, and
+            make sure that /opt/mapr/hadoop/hadoop-<version>/etc/hadoop
+            includes the class paths.
+          + Make sure that you are running in the correct version of
+            Hadoop. Example:juser@Techpubs-rawnode01:~$ ls -l
+            /usr/bin/hadooplrwxrwxrwx 1 root root 40 Mar 4 11:38
+            /usr/bin/hadoop -> /opt/mapr/hadoop/hadoop-2.3.0/bin/hadoop
+
+   The application throws a ClassNotFound exception at job submission
+          time.
+          If you submit an application and it throws the ClassNotFound
+          exception, check the following:
+
+          + Check that the application jar is correctly packaged with the
+            required class.
+          + Make sure that you are running in the correct version of
+            Hadoop. Example:juser@Techpubs-rawnode01:~$ ls -l
+            /usr/bin/hadooplrwxrwxrwx 1 root root 40 Mar 4 11:38
+            /usr/bin/hadoop -> /opt/mapr/hadoop/hadoop-2.3.0/bin/hadoop
+
+   I want to move the HistoryServer and ResourceManager to different
+          nodes.
+          If you have installed the HistoryServer and the ResourceManager
+          on the same node (when you initially ran configure.sh you did
+          not specify the -HS parameter, or you specified the same IP
+          address or hostname for both the -RM and -HS parameters), you
+          can use configure.sh to move one or both services to different
+          nodes. Make sure to specify both the -HS parameter and the -RM
+          parameter, because if you only specify the -RM parameter the
+          HistoryServer will move to the ResourceManager node.
+
+   Timing issue prevents services from starting on a secure cluster.
+          If your cluster has security features enabled, you may encounter
+          a timing issue that results in services failing to start during
+          initial configuration with the -F option. (This issue does not
+          arise if you are bringing up a cluster that has already been
+          installed and configured.)
+
+          When you run the [6]configure.sh script with the -F option, the
+          ZooKeeper and Warden services start up on the primary node
+          first, then as other nodes are installed, services are
+          automatically started on those nodes. However, because of this
+          timing issue, Warden may fail to communicate with ZooKeeper, and
+          the cluster may fail to come up.
+
+          If you encounter this problem, do not use the -F option.
+          Instead, stop all ZooKeeper and Warden services on all nodes,
+          then start the ZooKeeper services on all of the ZooKeeper nodes
+          (that is, the nodes where the ZooKeeper packages are installed).
+          Finally, start the Warden services on all nodes.
+
+   How to find a node's serverid.
+          Some maprcli commands take an argument serverid, which is an
+          unique identifier for each node in a cluster. This id is also
+          sometimes referred to as the "node id".
+
+          To find the serverid, use the maprcli [7]node list command,
+          which lists information about all nodes in a cluster. The id
+          field is the value to use for serverid.
+
+          For example:
+
+$ maprcli node list -columns hostname,id
+id                   hostname     ip
+4800813424089433352  node-28.lab  10.10.20.28
+6881304915421260685  node-29.lab  10.10.20.29
+4760082258256890484  node-31.lab  10.10.20.31
+8350853798092330580  node-32.lab  10.10.20.32
+2618757635770228881  node-33.lab  10.10.20.33
+
+          You can also get this listing as a JSON object by using the
+          -json option. For example:
+
+$ maprcli node list -columns id,hostname -json
+{
+        "timestamp":1358537735777,
+        "status":"OK",
+        "total":5,
+        "data":[
+                {
+                        "id":"4800813424089433352",
+                        "ip":"10.10.20.28",
+                        "hostname":"node-28.lab"
+                },
+                {
+                        "id":"6881304915421260685",
+                        "ip":"10.10.20.29",
+                        "hostname":"node-29.lab"
+                },
+                {
+                        "id":"4760082258256890484",
+                        "ip":"10.10.20.31",
+                        "hostname":"node-31.lab"
+                },
+                {
+                        "id":"8350853798092330580",
+                        "ip":"10.10.20.32",
+                        "hostname":"node-32.lab"
+                },
+                {
+                        "id":"2618757635770228881",
+                        "ip":"10.10.20.33",
+                        "hostname":"node-33.lab"
+                }
+        ]
+}
+
+   Error 'mv Failed to rename maprfs...' when moving files across volumes.
+          Prior to version 2.1, you cannot move files across volume
+          boundaries in the MapR Data Platform. You can move files within
+          a volume using the hadoop fs -mv command, but attempting to move
+          files to a different volume results in an error of the form "mv:
+          Failed to rename maprfs://<source path> to <destination path>".
+
+          As a workaround, you can copy the file(s) from source volume to
+          destination volume, and then remove the source files.
+
+          The example below shows the failure occurring. In this example
+          directories /a and /b are mount-points for two distinct volumes.
+
+root@node1:~# hadoop fs -ls /
+Found 2 items
+drwxrwxrwx   - root root          0 2011-12-02 15:14 /a
+drwxrwxrwx   - root root          0 2011-12-02 15:09 /b
+root@node1:~# hadoop fs -put testfile /a
+root@node1:~# hadoop fs -ls /a
+Found 1 items
+-rwxrwxrwx   3 root root    2048000 2011-12-02 15:18 /a/testfile
+root@node1:~# hadoop fs -mv /a/testfile /b
+mv: Failed to rename maprfs://10.10.80.71:7222/a/testfile to /b
+root@node1:~#
+
+          The example below shows the work-around, moving a file
+          /a/testfile to directory /b, and then removing the source file.
+
+root@node1:~# hadoop fs -cp /a/testfile /b/testfile
+root@node1:~# hadoop fs -ls /b
+Found 1 items
+-rwxrwxrwx   3 root root    2048000 2011-12-02 15:19 /b/testfile
+root@node1:~# hadoop fs -rmr /a/testfile
+Deleted maprfs://10.10.80.71:7222/a/testfile
+root@node1:~# hadoop fs -ls /a
+root@node1:~#
+
+          This workaround is only necessary if /a and /b correspond to
+          different volumes.
+
+   'ERROR com.mapr.baseutils.cldbutils.CLDBRpcCommonUtils' in cldb.log,
+          caused by mixed-case cluster name in mapr-clusters.conf.
+          MapR cluster names are case sensitive. However, some versions of
+          MapR v1.2.x have a bug in which the cluster names specified in
+          /opt/mapr/conf/mapr-clusters.conf are not treated as case
+          sensitive. If you have a cluster with a mixed-case name, after
+          upgrading from v1.2 to v2.0+, you may experience CLDB errors (in
+          particular for mirror volumes) which generate messages like the
+          following in cldb.log:
+
+2012-07-31 04:43:50,716 ERROR com.mapr.baseutils.cldbutils.CLDBRpcCommonUtils
+[VolumeMirrorThread]: Unable to reach cluster with name: qacluster1.2.9. No
+entry found in file /conf/mapr-clusters.conf for cluster qacluster1.2.9.
+Failing the CLDB RPC with status 133
+
+          (The path given in this message is relative to /opt/mapr/, which
+          might be misleading.)
+
+          As a work-around after upgrading, to continue working with
+          mirror volumes created in v1.2, duplicate any lines with
+          upper-case letters in mapr-clusters.conf, converting all letters
+          to lower case.
+
+          Mirror volumes created in v2.0+ do not exhibit this behavior.
+
+   MapR Control System doesn't display on Internet Explorer.
+          The MapR Control System supports Internet Explorer version 9 and
+          above. In IE9, Compatibility View under the Tools menu must be
+          turned off, or else the user interface will not display
+          correctly.
+
+   Unable to kill a job using the Metrics UI.
+          The following error displays when the root user tries to kill a
+          job using the Metrics UI: Failed to get Job information for
+          job_x, Error: mapr is not allowed to impersonate root
+
+          To resolve this issue, add the following properties to
+          [8]core-site.xml in directory
+          /opt/mapr/hadoop/hadoop-0.20.2/etc/ :
+
+<property>
+<name>hadoop.proxyuser.mapr.groups</name>
+<value>*</value>
+<description>Allow the superuser mapr to impersonate any member of any
+group</description>
+</property>
+
+
+<property>
+<name>hadoop.proxyuser.mapr.hosts</name>
+<value>*</value>
+<description>The superuser can connect from any host to impersonate a
+user</description>
+</property>
+
+   YARN logs are deleted before the application completes.
+          The duration that YARN container logs are maintained starts from
+          the time that the application starts running.
+
+          When YARN container logs are not aggregated, the YARN container
+          logs are retained for 3 hours on each node. To update the
+          duration, edit the value of yarn.nodemanager.log.retain-seconds
+          in yarn-site.xml file.
+
+          When YARN container log aggregation is enabled, by default, the
+          aggregated logs are not deleted. However, this setting can be
+          overridden in yarn-site.xml. To update the duration, edit the
+          value of log-aggregation.retain-seconds in yarn-site.xml file.
+
+          You must consider how long you want the log to remain past the
+          amount of time that the application will take to run. For
+          example, if you expect most applications to take 20 seconds to
+          run, do not set the value of this property to 20 seconds because
+          the log may be deleted before the applications competes.
+
+   YARN applications fail because /tmp subdirectories have been deleted.
+          Some RHEL and CentOS platforms include the tmpwatch service by
+          default. This service cleans up the /tmp directory on a regular
+          basis. However, this operation causes the deletion of
+          directories that are needed for applications to run (for
+          example, nm-local-dir for YARN). The running NodeManager process
+          does not re-create these missing directories, causing
+          applications to fail.
+
+   Jobs fail when the timeline server is down
+          The timeline server for the Hive-on-Tez user interface does not
+          support high availability. Jobs fail when the resource manager
+          cannot connect to the timeline server. However, you can change
+          the yarn.timeline-service.client.best-effort property to TRUE in
+          yarn-site.xml to allow applications to run successfully even
+          when the timeline server is down.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/service-list.html#servicelist
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/service-list.html#servicelist
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html#configure.sh
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/node-list.html#nodelist
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/core-site.xml.html#core-site.xml

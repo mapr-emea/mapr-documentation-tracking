@@ -1,0 +1,41 @@
+Copying Data
+
+   Note: The Apache CopyTable tool launches a MapReduce application. The
+   nodes on your cluster must have the correct version of the mapr-hbase
+   package installed. To ensure that your existing HBase applications and
+   workflow work properly, install the mapr-hbase package that provides
+   the same version number of HBase as your existing Apache HBase.
+   Launch the CopyTable tool with the following command, specifying the
+   full destination path of the table with the --new.name parameter:
+hbase org.apache.hadoop.hbase.mapreduce.CopyTable
+-Dhbase.zookeeper.quorum=<ZooKeeper IP Address>
+-Dhbase.zookeeper.property.clientPort=2181 --new.name=/user/john/foo/mytable01
+
+   This example migrates the existing Apache HBase table mytable01 to the
+   MapR-DB tables /user/john/foo/mytable01. On the node in the MapR
+   cluster where you will launch the CopyTable tool, modify the value of
+   the hbase.zookeeper.quorum property in the hbase-site.xml file to point
+   at a ZooKeeper node in the source cluster. Alternately, you can specify
+   the value for the hbase.zookeeper.quorum property from the command
+   line. This example specifies the value in the command line.
+    1. Create the destination table. This example uses the HBase shell.
+       The [1]maprcli and [2]MapR Control System (MCS) are also viable
+       methods.
+[user@host]$ hbase shell
+HBase Shell; enter 'help<RETURN>' for list of supported commands.
+Type "exit<RETURN>" to leave the HBase Shell
+
+hbase(main):001:0> create '/user/john/foo/mytable01', 'usernames', 'userpath'
+0 row(s) in 0.2040 seconds
+    2. Exit the HBase shell.
+hbase(main):002:0> exit
+[user@host]
+    3. From the HBase command line, use the CopyTable tool to migrate
+       data.
+[user@host] hbase org.apache.hadoop.hbase.mapreduce.CopyTable -Dhbase.zookeeper.
+quorum=zknode1,zknode2,zknode3 --new.name=/user/john/foo/mytable01 mytable01
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/tablecommands.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/working_with_tables.html

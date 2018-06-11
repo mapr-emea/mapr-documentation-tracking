@@ -1,0 +1,56 @@
+Configuring the Tomcat Server
+
+   This topic describes how to configure and manage the Tomcat server used
+   by the Hive-on-Tez user interface.
+
+Extracting the Tomcat Server
+
+   You can extract the Tomcat server only after manually installing Tez.
+   Tez has a built-in archive of Tomcat Server of the latest version. You
+   can find the archive at:
+$TEZ_HOME/tomcat/tomcat.tar.gz
+
+   To extract the Tomcat server, use these commands in the command line:
+cd $TEZ_HOME/tomcat/
+sudo tar -zxvf tomcat.tar.gz -C $TEZ_HOME/tomcat
+
+   Change the permissions for the tomcat directory to the user who will be
+   running the Tomcat server:
+sudo chown -R <$USER>:<$USER_GROUP> $TEZ_HOME/tomcat
+
+Configuring the Timeline Server Base URL and Resource Manager WEB URL
+
+   To set the timelineBaseUrl and RMWebUrl in the configs.js file:
+nano $TEZ_HOME/tomcat/apache-tomcat-<version>/webapps/tez-ui/scripts/configs.js
+
+   For a non-secure configuration:
+    1. Replace TIME_LINE_BASE_URL with the real URL. For example:
+       'http://localhost:8188'
+    2. Replace RM_WEB_URL with the real URL. For example:
+       'http://localhost:8088'
+
+   For a secure configuration:
+    1. Replace TIME_LINE_BASE_URL with the real URL. For example:
+       'https://localhost:8190'
+    2. Replace RM_WEB_URL with the real URL. For example:
+       'https://localhost:8090'
+
+   Note: If TIME_LINE_BASE_URL and RM_WEB_URL are not specified in quotes
+   or double-quotes, the Tez UI page itself would be blank with no errors
+   in the log.
+
+Starting and Stopping the Tomcat Server
+
+   To start the Tomcat server, run this script:
+$TEZ_HOME/tomcat/apache-tomcat-<version>/bin/startup.sh
+
+   To stop the Tomcat server, run this script:
+$TEZ_HOME/tomcat/apache-tomcat-<version>/bin/shutdown.sh
+
+   Note: The timelineBaseUrl maps to the YARN Timeline Server, and the
+   RMWebUrl maps to the YARN Resource Manager. For default port
+   information, see [1]Ports Used by MapR.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/MapRPorts.html#PortsUsedbyMapR

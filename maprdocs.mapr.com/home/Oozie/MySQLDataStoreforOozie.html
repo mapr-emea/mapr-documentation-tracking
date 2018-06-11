@@ -1,0 +1,59 @@
+MySQL Data Store for Oozie
+
+   Follow these steps to configure Oozie to use a MySQL database as the
+   Oozie data store (instead of the default Apache Derby database). The
+   MySQL database can also be used to support [1]high availability (HA).
+    1. Using the mysql command-line tool, create a MySQL database, user,
+       and password for the Oozie user. For example:
+mysql> create database oozie;
+mysql> grant all privileges on oozie.* to '<oozie-user>'@'%' identified by '<ooz
+ie-passwd>';
+    2. Stop the Oozie server:
+maprcli node services -name oozie -action stop -nodes <node-list>
+    3. Set the following JPAService properties in the oozie-site.xml file:
+       Note: In the JDBC URL property, use the correct hostname (where
+       MySQL is running).
+<property>
+    <name>oozie.service.JPAService.jdbc.driver</name>
+    <value>com.mysql.jdbc.Driver</value>
+</property>
+<property>
+    <name>oozie.service.JPAService.jdbc.url</name>
+    <value>jdbc:mysql://localhost:3306/oozie</value>
+    </property>
+<property>
+    <name>oozie.service.JPAService.jdbc.username</name>
+    <value>oozie</value>
+</property>
+<property>
+    <name>oozie.service.JPAService.jdbc.password</name>
+    <value>oozie</value>
+</property>
+    4. Copy the MySQL JDBC driver (mysql-connector-java-<version>-bin.jar)
+       to the following directory:
+/opt/mapr/oozie/oozie-<oozieversion>/libext
+    5. Execute the oozie-setup.sh script:
+/opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh -hadoop <version> /opt/mapr/h
+adoop/hadoop-<version>
+
+                        Parameter
+                       Description
+       oozie-<version>
+       Specify the version from the directory path.
+       -hadoop <version>
+       Specify the hadoop version.
+       hadoop-<version>
+       Specify the version from the directory path.
+    6. Start the Oozie server:
+maprcli node services -name oozie -action start -nodes <node-list>
+    7. Check that MySQL is now in use by looking at the contents of the
+       oozie.log file. For example:
+cat /opt/mapr/oozie/oozie-<version>/logs/oozie.log |grep mysql
+2015-07-24 06:10:07,023  INFO JPAService:541 - SERVER[local.novalocal] USER[-]
+GROUP[-] TOKEN[-] APP[-] JOB[-] ACTION[-] JPA configuration:
+DriverClassName=com.mysql.jdbc.Driver,Url=jdbc:mysql://localhost:3306/oozie,User
+name=oozie,...
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Oozie/HighAvailabilityforOozie.html

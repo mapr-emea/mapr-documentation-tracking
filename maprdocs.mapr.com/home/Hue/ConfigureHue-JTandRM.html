@@ -1,0 +1,53 @@
+Establish Communication between Hue and ResourceManagers
+
+   If you run YARN applications, integrate Hue with the ResourceManager to
+   view the status of applications in the Job Browser.
+   Note: If you installed Hue with the MapR Installer, steps 2-4 are not
+   required as they are performed automatically.
+    1. If high availability for the Resource Manager is not configured,
+       set the default_jobtracker_host to the ResourceManager host and
+       port in the desktop section.
+    2. In the hadoop section, set webhdfs_url to be the node that runs
+       HttpFS.
+    3. In the yarn_clusters section within the hadoop section, set the
+       submit_to value to True.
+    4. In the mapred_clusters section, set the submit_to value to False.
+
+YARN Example
+
+[desktop]
+
+        ...
+        # Set the default JobTracker host to maprfs to enable HA for JobTracker.
+        # If there is a standby JobTracker, it will be found automatically.
+        # In the event of failover, Hue will submit queries to the standby JobTr
+acker.
+        default_jobtracker_host=maprfs:///
+
+        ...
+
+        [hadoop]
+
+        # Use WebHdfs/HttpFs as the communication mechanism.
+        # This should be the web service root URL.
+        # The ip_address corresponds to the node running httpfs.
+        webhdfs_url=http://<ip_address>:14000/webhdfs/v1
+
+        [[yarn_clusters]]
+        [[[default]]]
+        # Enter the host on which you are running the ResourceManager
+        resourcemanager_host=localhost
+
+        # The port where the ResourceManager IPC listens on
+        resourcemanager_port=8032
+
+        # Whether to submit jobs to this cluster
+        submit_to=True
+
+        ...
+
+        [[mapred_clusters]]
+        [[[default]]]
+
+        # Whether to submit jobs to this cluster
+        submit_to=False

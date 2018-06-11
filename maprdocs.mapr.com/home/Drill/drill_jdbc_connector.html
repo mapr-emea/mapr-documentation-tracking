@@ -1,0 +1,117 @@
+Drill JDBC Driver
+
+   MapR provides a [1]Drill JDBC driver that you can use on all platforms
+   to connect BI tools, such as SQuirreL and Spotfire, to Drill. The Drill
+   JDBC driver provides read-only access to Drill data sources and
+   supports the security features described in [2]Securing Drill.
+   You can download and use the [3]Drill JDBC driver provided by MapR
+   (recommended) or use the [4]open-source JDBC driver embedded in Drill.
+   After you install Drill from the mapr-drill package, you can locate the
+   open-source JDBC driver files in the following directories:
+     * $DRILL_HOME/jars/jdbc-driver/drill-jdbc-all-1.11.0.jar
+     * $DRILL_HOME/jars/drill-jdbc-1.11.0.jar
+
+   Note: The open-source JDBC driver is not tested on the MapR Converged
+   Data Platform. The driver supports Kerberos and Plain authentication
+   mechanisms, but does not support the MapR-SASL authentication
+   mechanism.
+
+Drill JDBC Driver Download and Instructions
+
+   You can download the latest Drill JDBC driver provided by MapR [5]here.
+   The documentation for the Drill JDBC 1.5.6 driver is available at
+   [6]Drill JDBC Driver.
+   Note: The Registering the Driver Class section of the [7]Drill JDBC
+   Driver driver documentation incorrectly lists the driver classes for
+   MapR as com.simba.drill.jdbc41.Driver and
+   com.simba.drill.jdbc41.DataSource. The correct driver classes for MapR
+   are:
+     * com.mapr.drill.jdbc41.Driver
+     * com.mapr.drill.jdbc41.DataSource
+
+   Note: The following information is not included in the documentation
+   for the Drill JDBC driver:
+     * You can indicate the schema parameter in the connection string, as
+       shown in the following example:
+jdbc:drill:zk=10.10.100.30:5181,10.10.100.31:5181,10.10.100.32:5181/drill/drillb
+its1;schema=hive
+     * If using the MapR-SASL or Plain authentication mechanism, you must
+       add the Drill JDBC JAR files and /opt/mapr/lib/* to the classpath
+       of the third-party client tool, as shown in the following example
+       for SQuirreL when the path to the driver is
+       C:\driver\MapRDrillJDBC41-1.5.6.1012:
+-cp "%SQUIRREL_CP%;C:\driver\MapRDrillJDBC41-1.5.6.1012\*;C:\opt\mapr\lib\*"
+       The driver JAR files should appear before /opt/mapr/lib/* in the
+       classpath.
+     * If you plan to use MapR-SASL for authentication on Windows, a MapR
+       user ticket is required. See the Using MapR-SASL for Authentication
+       on Windows section below for instructions.
+
+Using MapR-SASL for Authentication on Windows
+
+   Drill is automatically configured with [8]MapR security when you
+   install Drill 1.11 and later on a MapR 6.0 cluster configured with
+   default security. To successfully connect to Drill from a Windows JDBC
+   client, a MapR user ticket must exist on the Windows client in the
+   %TEMP% directory or in the location specified by the
+   $MAPR_TICKETFILE_LOCATION environment variable.
+
+   The JDBC driver locates user tickets for the current Windows user in
+   the default ticket location, %TEMP%, or in the location specified by
+   the environment variable, $MAPR_TICKETFILE_LOCATION. See [9]Tickets and
+   [10]Generating a MapR User Ticket for more information.
+   You can either copy a user ticket that was generated on the MapR
+   cluster into the default location (%TEMP%), or you can install the MapR
+   client on the Windows client and then run the [11]maprlogin command to
+   generate the ticket on the Windows client.
+   Note: The JDBC user must be the same as the Windows user that created
+   the ticket.
+
+   Example
+   If you want to connect to Drill as the mapr user, you must create a
+   ticket for the mapr user, as shown:
+$ maprlogin password -user mapr
+[Password for user 'mapr' at cluster 'Cluster1':]
+
+   The MapR credentials for the mapr user in Cluster1 are written to
+   /tmp/maprticket_1000.
+   Next, place the ticket in the %TEMP% directory on the Windows client.
+   For example, the default location for a Windows 10 user named Tabetha
+   Stephens is shown:
+'C:\Users\TABETH~1\AppData\Local\Temp/maprticket_Tabetha Stephens'
+
+   To override this location, set the "MAPR_TICKETFILE_LOCATION" global
+   variable for the Windows user.
+   Note: Using the MAPR_TICKETFILE_LOCATION is recommended because the
+   %TEMP% directory differs between Windows versions. You may also want to
+   set the MAPR_TICKETFILE_LOCATION per user on the operating system to
+   prevent all users from using the same user ticket on the client.
+
+Avoiding Driver Conflicts
+
+   If you download and use the Drill JDBC driver provided by MapR, rename
+   the embedded JDBC driver files to avoid any conflict between the
+   downloaded driver and the open-source driver. The embedded JDBC driver
+   files are in the following directories after you install Drill:
+$DRILL_HOME/jars/jdbc-driver/drill-jdbc-all-1.10.0.jar
+$DRILL_HOME/jars/drill-jdbc-1.10.0.jar
+
+   Changing the file extension to rename these files, as shown in the
+   following example, prevents Drill or any other application, such as
+   SQLLine, from picking up the embedded driver:
+$DRILL_HOME/jars/jdbc-driver/drill-jdbc-all-1.10.0.jar.original
+$DRILL_HOME/jars/drill-jdbc-1.10.0.jar.original
+
+References
+
+   1. http://package.mapr.com/tools/MapR-JDBC/MapR_Drill/
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/securing_drill.html#securing_drill
+   3. http://package.mapr.com/tools/MapR-JDBC/MapR_Drill/
+   4. https://drill.apache.org/docs/using-the-jdbc-driver/
+   5. http://package.mapr.com/tools/MapR-JDBC/MapR_Drill/MapRDrill_jdbc_v1.5.6.1012/
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/attachments/JDBC_ODBC_drivers/DrillJDBCInstallandConfigurationGuide.pdf
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/attachments/JDBC_ODBC_drivers/DrillJDBCInstallandConfigurationGuide.pdf
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/drill-mapr-security-enable-authent-encrypt.html#drill-mapr-security-enable-authent-encrypt
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Tickets.html#tickets
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/GeneratingMapRUserTicket.html#TicketsandCertificates-Ge_26281159-d3e202
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility

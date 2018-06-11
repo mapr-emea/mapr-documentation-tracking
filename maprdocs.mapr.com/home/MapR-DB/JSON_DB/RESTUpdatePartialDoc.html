@@ -1,0 +1,56 @@
+POST /api/v2/table/{path}/document/{id}
+
+   Updates a partial document by id in a MapR-DB JSON table using
+   mutations
+
+Parameters
+
+   Name Description
+   path
+
+   string
+
+   (path)
+   Required: Path to the MapR-DB JSON table
+   id
+
+   string
+
+   (path)
+   Required: Id of the document to update. If the document does not exist,
+   inserts a new document.
+   condition
+
+   string
+
+   (query)
+   Query condition (in JSON format) used to perform OJAI
+   DocumentStore.checkAndMutate evaluation. See [1]JSON Document Query
+   Conditions Using OJAI Syntax for a description of the syntax.
+   body
+
+   (body)
+   Required: The body of the new field values in the document
+
+Request Example
+
+   The following updates the first_name field the document in
+   /apps/employees with id user001, replaceing the field with the value
+   Jay:
+curl -X POST \
+'https://10.10.100.42:8243/api/v2/table/%2Fapps%2Femployees/document/user001' \
+  -H 'Content-Type: application/json' \
+  -u root:mapr \
+  -d '{"$set":{"first_name":"Jay"}}'
+
+   See [2]dbshell update for additional details about the syntax of
+   mutations.
+
+Response Example
+
+200 OK
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-update.html#dbshell-update

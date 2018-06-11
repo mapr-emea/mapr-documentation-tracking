@@ -1,0 +1,251 @@
+Setting Up CDC
+
+   To set up the Change Data Capture (CDC) feature, the following must
+   exist or be created: a MapR-DB source table (JSON or binary), a MapR-ES
+   changelog stream, a MapR-ES stream topic, and a MapR-DB table changelog
+   relationship between the source table and the destination stream topic.
+
+Before Setting Up CDC
+
+   The destination MapR-ES stream can be in same cluster as the MapR-DB
+   source table or it can be on a remote MapR cluster. If you are
+   propagating changed data from a source table on a source cluster to a
+   destination stream topic on a remote destination cluster, a gateway
+   must be setup. Gateways are setup by installing the gateway on the
+   destination cluster and specifying the gateway node(s) on the source
+   cluster. See [1]Administering MapR Gateways and [2]Configuring Gateways
+   for Table and Stream Replication.
+
+   The following diagram shows a simple CDC data model, with one source
+   table to one destination topic on one stream. Because this scenario has
+   the destination stream topic on a remote destination cluster, a gateway
+   must be setup and configured.
+   Note: More complex CDC scenarios can be implemented and multiple
+   gateways can be setup. See [3]Data Modeling and CDC for more
+   information about CDC data models.
+   [CDC-simple-remoteCluster.png]
+   Important: If you have a secure cluster, secure configuration must be
+   setup. See [4]Configuring Secure Clusters for Cross-Cluster Mirroring
+   and Replication.
+
+Create Table
+
+   A MapR-DB table (JSON or binary) must be established for the CDC data.
+   You can create a new table and add data or use an existing table with
+   data. See [5]maprcli table create for creating a new table or use the
+   MCS. Example code is provided for completing this task using either the
+   maprcli or REST. Alternatively, depending on whether you are
+   establishing JSON documents or binary files, you can use the following:
+     * [6]mapr dbshell for MapR-DB JSON documents
+     * [7]hbshell for MapR-DB binary data
+
+   Attention: Ensure that a volume exists and mounted for both tables and
+   streams. Even though MapR-DB tables and MapR-ES stream can exist in the
+   same volume, for organizational purposes, you could create separate
+   volumes for both tables and streams.
+   The following code examples show how to:
+     * Create and mount a volume for a source table.
+     * Create a new binary table. The -tabletype parameter's default
+       setting is binary so you don't need to specify this parameter.
+     * Create a new JSON table.
+
+     * [8]CLI
+     * [9]REST
+
+// Create Volume for table
+maprcli volume create -name tableVolume -path /tableVolume
+
+// Create Binary table
+maprcli table create -path /tableVolume/cdcTable
+
+// Create JSON table
+maprcli table create -path /tableVolume/cdcTable -tabletype json
+
+// Create Volume for table
+https://10.10.100.17:8443/rest/volume/create?name=tableVolume&path=/tableVolume
+
+// Create Binary table
+https://10.10.100.17:8443/rest/table/create?path=/tableVolume/cdcTable
+
+// Create JSON table
+https://10.10.100.17:8443/rest/table/create?path=/tableVolume/cdcTable&tabletype
+=json
+
+Create Stream
+
+   A MapR-ES changelog stream must be created for the propagated changed
+   data records using the maprcli stream create -ischangelog parameter.
+   See [10]maprcli stream create or use the MCS.
+   Note: Ensure that a volume exists and mounted for both tables and
+   streams. Even though MapR-DB tables and MapR-ES stream can exist in the
+   same volume, for organizational purposes, you could create separate
+   volumes for tables and streams.
+   Important: The changelog stream's default partitions can impact how
+   many partitions a stream topic can have. This is because once you
+   create a stream topic for a changelog stream, the number of topic
+   partitions is locked. The number of topic partitions cannot change.
+     * If the stream topic create command is used to create a stream
+       topic, then the number of topic partitions can be set at creation
+       time and then is locked.
+     * If the table changelog add command is used to add a stream topic
+       (as well as establish a relationship between the source table and
+       the changelog stream), then the number of topic partitions is
+       inherited from the changelog stream and is locked.
+
+   The following code examples show how to:
+     * Create and mount a volume for a changelog stream.
+     * Create a changelog stream using the default partitions value of one
+       (1).
+     * Create a changelog stream changing the default partitions to three
+       (3).
+
+     * [11]CLI
+     * [12]REST
+
+// Create Volume for stream
+maprcli volume create -name streamVolume -path /streamVolume
+
+// Create stream (default partitions: 1)
+maprcli stream create -path /streamVolume/changelogStream -ischangelog true
+
+// Create stream  (default partitions: 3)
+maprcli stream create -path /streamVolume/changelogStream -ischangelog true -def
+aultpartitions 3
+
+// Create Volume for stream
+https://10.10.100.17:8443/rest/volume/create?name=streamVolume&path=/streamVolum
+e
+
+// Create stream (default partitions: 1)
+https://10.10.100.17:8443/rest/stream/create?path=/streamVolume/changelogStream&
+ischangelog=true
+
+// Create stream (default partitions: 3)
+https://10.10.100.17:8443/rest/stream/create?path=/streamVolume/changelogStream&
+ischangelog=true&defaultpartitions=3
+
+Create Topic
+
+   A MapR-ES stream topic must be created for the changed data records.
+   This can be accomplished in a variety of ways:
+     * Use the [13]maprcli table changelog add command. This command
+       establishes a changelog relationsip between the source table and
+       the destination stream topic.
+     * Use the [14]maprcli stream topic create command. I
+     * Use the REST equivalent of the above maprcli commands.
+     * Use the MCS.
+
+   Important: Once a changelog relationship is established between the
+   source table and the destination stream topic, the number of topic
+   partitions is locked. (The maprcli table changelog add command is used
+   to establish the changelog relationship.) The stream topic edit command
+   can not be used to modify the topic's number of partitions.
+   The following describes when to create a stream topic a specific way.
+     * If the changelog stream's default partitions are acceptable for the
+       stream topic (because the topic inherits the stream's default
+       partitions), you can either:
+          + Go directly to adding the changelog relationship with the
+            maprcli table changelog add command and create the topic
+            there.
+          + Create the topic with the stream topic create command and not
+            specify the -partitions parameter.
+     * If you want to change the topic's partitions, create the topic with
+       the stream topic create command and set the -partitions parameter.
+     * If you use the MCS, either of the above methods are available.
+
+   The following code examples show how to create a stream topic and
+   change the default partition to five (5).
+     * [15]CLI
+     * [16]REST
+
+// Create topic (default partitions: 5
+maprcli stream topic create -path /streamVolume/changelogStream -topic cdcTopic1
+ -partitions 5
+
+// Create topic (default partitions: 5
+https://10.10.100.17:8443/rest/stream/topic/create?path=/streamVolume/changelogS
+tream&topic=cdcTopic1&partitions=5
+
+Add Changelog
+
+   A table changelog relationship must be added between the source table
+   and the destination stream topic by using the [17]maprcli table
+   changelog add command or the MCS. By adding a table changelog
+   relationship, you are creating an environment that propagates changed
+   data records from a source table to a MapR-ES stream topic.
+     * If you are creating a changelog relationship and the stream topic
+       does not exist, you specify the stream path and topic.
+     * If you are creating a changelog relationship and the stream topic
+       does exist, specify the stream path and topic plus the
+       -useexistingtopic parameter. The -useexistingtopic parameter can
+       only be used with a changelog stream's newly created topic or a
+       previous changelog stream topic for the same source table.
+
+   Note: Propagation of existing table data is enabled by default. If you
+   do not want to propagate existing source table data, set the
+   -propagateexistingdata parameter to false. The default is true.
+   Note: Propagation is enabled as soon as the table changelog
+   relationship is added. If you do not want propagation to begin, set the
+   -pause parameter to true. The change data records are stored in a
+   bucket until you resume the changelog relationship; at this point, the
+   stored change data records are propagated to the stream topic. See
+   [18]table changelog resume for more information.
+   The following code examples show how to:
+     * Create a changelog relationship between the source table and the
+       destination stream topic, where the stream topic does not exist.
+     * Create a changelog relationship between the source table and the
+       destination stream topic, where the stream topic does exist.
+
+     * [19]CLI
+     * [20]REST
+
+maprcli table changelog add -path /tableVolume/cdcTable -changelog /streamVolume
+/changelogStream:cdcTopic1
+
+maprcli table changelog add -path /tableVolume/cdcTable -changelog /streamVolume
+/changelogStream:cdcTopic1 -useexistingtopic true
+
+https://10.10.100.17:8443/rest/table/changelog/add?path=/tableVolume/cdcTable&ch
+angelog=/streamVolume/changelogStream:cdcTopic1
+
+https://10.10.100.17:8443/rest/table/changelog/add?path=/tableVolume/cdcTable&ch
+angelog=/streamVolume/changelogStream:cdcTopic1&useexistingtopic=true
+
+   The following example verifies that the table changelog relationship
+   exists:
+maprcli table changelog list -path /tableVolume/cdcTable
+
+What's Next: Modifying and Consuming Data
+
+   In order to have CDC changed data records to consume, you need to
+   perform inserts, updates, and deletes on the MapR-DB table data. See
+   CRUD operations on documents using mapr dbshell for JSON documents,
+   mapr hbshell for binary data, Java applications for MapR-DB JSON, C or
+   Java applications for MapR-DB Binary.
+   A MapR-ES Kafka/OJAI consumer application subscribes to the topic and
+   consumes the change data records. See [21]Consuming CDC Records for
+   more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/MapRGateways.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/data-model-change-data.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/AddingCross-ClusterTickets.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-create.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr_dbshell.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/HBaseShellforMapR-DB.html
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-CDC.html#div1entry1
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-CDC.html#div1entry2
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/stream_create.html
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-CDC.html#div2entry1
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-CDC.html#div2entry2
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-changelog-add.html
+  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/stream_topic_create.html
+  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-CDC.html#div3entry1
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-CDC.html#div3entry2
+  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-changelog-add.html
+  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-changelog-resume.html
+  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-CDC.html#div4entry1
+  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/setting-up-CDC.html#div4entry2
+  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/api-changedData.html

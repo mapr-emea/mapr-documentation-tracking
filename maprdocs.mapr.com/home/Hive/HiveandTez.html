@@ -1,0 +1,85 @@
+Hive 2.1 and Tez 0.8
+
+   You can use Tez, instead of MapReduce, for generic data processing
+   tasks. Tez significantly increases the processing speed. Tez, working
+   with Hive, provides smaller latency for interactive queries and higher
+   throughput for batch queries. Some key improvements include:
+     * Added UDF aes_encrypt and aes_decrypt functions for encrypting and
+       decrypting input using AES (Advanced Encryption Standard).
+       Oracle JRE supports AES-128 out of the box; AES-192 and AES-256 are
+       supported if Cryptography Extension (JCE) Unlimited Strength
+       Jurisdiction Policy Files are installed.
+     * Added banker's rounding BROUND UDF.
+       With banker's rounding, the value is rounded to the nearest even
+       number. Also known as "Gaussian rounding", and, in German,
+       "mathematische Rundung".
+     * ORC file dump in JSON format.
+       ORC file dump uses custom format. Will be useful to dump ORC
+       metadata in json format so that other tools can be built on top it.
+     * Provided a way for developers/users to modify the numRows and
+       dataSize for a table/partition.
+       Although they are part of the table properties, in prior versions,
+       they were set to -1 when the task did not come from a statsTask.
+
+   MapR Hive on Tez also includes the following:
+     * Dynamically partitioned hash join for Tez.
+     * Support for aggregate push down through joins.
+     * DBTokenStore support to HS2 delegation token.
+     * Hive View Column Authorization.
+     * UDF substring_index function that returns the substring from string
+       str before count occurrences of the delimiter.
+     * QUARTER(data/time/string) function that returns the quarter of the
+       year for a date, timestamp, or string in the range 1 to 4.
+     * Support for limited integer type promotion in ORC.
+     * Possibility for Hive Parser to support multi col in clause (x,y..)
+       in ((..),..., ()).
+     * Support of special characters in quoted table names.
+     * Support for "show create database".
+     * Support escaping carriage return and new line for LazySimpleSerDe.
+     * Support vectorizing when the input format is TEXTFILE and other
+       formats for better Map Vertex performance.
+     * Support for NULLS FIRST/NULLS LAST.
+       The NULLS FIRST and NULLS LAST options can be used to determine
+       whether nulls appear before or after non-null data values when the
+       ORDER BY clause is used.
+     * Supports aggregate functions in over clause.
+
+   The following features are available for experimental use and not
+   recommended for use in production:
+     * Command to kill an ACID transaction.
+       This cleans up all state related to this transaction. The initiator
+       of this (if still alive) will get an error trying to
+       heartbeat/commit and will become aware that the transaction failed.
+     * Hive Hybrid Procedural SQL On Hadoop (HPL/SQL).
+       Hive Hybrid Procedural SQL On Hadoop (HPL/SQL), which is available
+       in Hive 2.1, is a tool that implements procedural SQL for Hive.
+       HPL/SQL is an open source tool that implements procedural SQL
+       language for Apache Hive, SparkSQL, Impala, as well as any other
+       SQL-on-Hadoop implementation, any NoSQL, and any RDBMS.
+       HPL/SQL is a hybrid and heterogeneous language that understands
+       syntaxes and semantics of almost any existing procedural SQL
+       dialect, and you can use with any database (for example, running
+       existing Oracle PL/SQL code on Apache Hive and Microsoft SQL
+       Server, or running Transact-SQL on Oracle, Cloudera Impala, or
+       Amazon Redshift).
+       Note: Create the hplsql-site.xml file to configure HPL/SQL feature.
+       See [1]http://www.hplsql.org/configuration for more information.
+
+   MapR does not support:
+     * Hive on Spark
+       You cannot use Spark as an execution engine for Hive. However, you
+       can run Hive and Spark on the same cluster. You can also use Spark
+       SQL and Drill to query Hive tables.
+     * HDFS encryption in Hive tables
+     * Hbase-0.9X with Hive-2.1
+       Only Hbase-1.X is compatible with Hive-2.1.
+     * LLAP with Hive-2.1 since Apache Slider is not in the MapR ecosystem
+     * Apache Knox and Apache Ranger
+       HiveServer2 HTTP mode is not available with X-Forwarded-Host header
+       for authorization/audits.
+     * Masking and filtering of rows/columns since Apache Ranger is not in
+       the MapR ecosystem.
+
+References
+
+   1. http://www.hplsql.org/configuration

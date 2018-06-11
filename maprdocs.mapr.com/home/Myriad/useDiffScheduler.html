@@ -1,0 +1,33 @@
+Using a Different Scheduler
+
+   Myriad uses MyriadFairScheduler by default. However,
+   MyriadCapacityScheduler and MyriadFifoScheduler can also be used to run
+   jobs.
+   The Myriad Scheduler property is set in the yarn-site.xml file:
+<property>
+  <name>yarn.resourcemanager.scheduler.class</name>
+  <value>org.apache.myriad.scheduler.yarn.MyriadFairScheduler</value>
+  <description>You can configure other schedulers from following list:
+     org.apache.myriad.scheduler.yarn.MyriadCapacityScheduler,
+     org.apache.myriad.scheduler.yarn.MyriadFifoScheduler</description>
+</property>
+
+   Important: Fine-grained scaling only works with a MyriadFairScheduler
+   configuration.
+
+   To use either MyriadCapacityScheduler or MyriadFifoScheduler:
+    1. Edit the /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/yarn-site.xml
+       file.
+    2. For the yarn.resourcemanager.scheduler.class property, specify
+       either org.apache.myriad.scheduler.yarn.MyriadCapacityScheduler or
+       org.apache.myriad.scheduler.yarn.MyriadFifoScheduler
+    3. Modify the YARN scheduler minimum allocation properties.
+       The configure.sh sets these properties to zero (0) by default. When
+       using a different scheduler, the properties must be set (as a
+       minimum) to the following values:
+yarn.scheduler.minimum-allocation-mb = 1024
+yarn.scheduler.minimum-allocation-vcores = 1
+yarn.scheduler.minimum-allocation-disks = 0
+
+    4. Copy or update the yarn-site.xml file on every node in the cluster.
+    5. Restart the initial Resource Manager from Marathon.

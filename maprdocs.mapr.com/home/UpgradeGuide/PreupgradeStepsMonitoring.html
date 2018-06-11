@@ -1,0 +1,100 @@
+Pre-Upgrade Steps for MapR Monitoring
+
+   Complete the following steps before you upgrade MapR Monitoring
+   Components with or without the MapR Installer.
+   During an upgrade, a script backs up many of the configuration files.
+   However, it is a best practice to manually backup the files in case an
+   error occurs or if the specific file you customized is not
+   automatically backed up by the script.
+    1. Before you upgrade metric monitoring components, create a backup of
+       the configuration files to a location outside your MapR
+       installation directory. The following configuration file lists
+       include files that are commonly used for configuration and may not
+       include every file that you may have customized.
+          + Collectd configuration files:
+               o /opt/mapr/conf/conf.d/warden.collectd.conf
+               o /opt/mapr/collectd/collectd-<version>/etc/collectd.conf
+               o /etc/logrotate.d/collectd
+          + Grafana configuration files:
+               o /opt/mapr/conf/conf.d/warden.grafana.conf
+               o /opt/mapr/grafana/grafana-<version>/etc/grafana/grafana.i
+                 ni
+               o /opt/mapr/grafana/grafana-
+                 <version>/etc/grafana/ldap.toml
+          + OpenTSDB configuration files:
+               o /opt/mapr/conf/conf.d/warden.opentsdb.conf
+               o /opt/mapr/opentsdb/opentsdb-<version>/etc/opentsdb/opents
+                 db.conf
+               o /opt/mapr/opentsdb/opentsdb-<version>/etc/opentsdb/logbac
+                 k.xml
+               o opt/mapr/opentsdb/opentsdb-<version>/bin/tsdb_cluster_mgm
+                 t.sh (This file is not automatically backed up.)
+          + For Elasticsearch:
+               o /opt/mapr/conf/conf.d/warden.elasticsearch.conf
+               o /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elast
+                 icsearch/elasticsearch.yml
+               o /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elast
+                 icsearch/logging.yml
+               o /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elast
+                 icsearch/curator.yml
+               o /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elast
+                 icsearch/curator_actions/delete_indices.yml (This file is
+                 not automatically backed up.)
+          + For OpenTSDB:
+               o /opt/mapr/conf/conf.d/warden.opentsdb.conf
+               o /opt/mapr/opentsdb/opentsdb-<version>/etc/opentsdb/opents
+                 db.conf
+               o /opt/mapr/opentsdb/opentsdb-<version>/etc/opentsdb/logbac
+                 k.xml
+               o opt/mapr/opentsdb/opentsdb-<version>/bin/tsdb_cluster_mgm
+                 t.sh (This file is not automatically backed up.)
+    2. Before you upgrade log monitoring components, create a backup of
+       the following files to a location outside your MapR installation
+       directory. The following configuration file lists include files
+       that are commonly used for configuration and may not include every
+       file that you may have customized.
+          + Kibana configuration files:
+               o /opt/mapr/conf/conf.d/warden.kibana.conf
+               o /opt/mapr/kibana/kibana-<version>/etc/conf/kibana.js
+          + fluentd configuration files:
+               o /opt/mapr/conf/conf.d/warden.fluentd.conf
+               o /opt/mapr/fluentd/fluentd-<version>/etc/fluentd/fluentd.c
+                 onf
+               o /opt/mapr/fluentd/fluentd-<version>/etc/fluentd/es_config
+                 .conf
+               o /opt/mapr/fluentd/fluentd-<version>/etc/fluentd/maprfs_co
+                 nfig.conf
+               o /opt/mapr/fluentd/fluentd-<version>/etc/fluentd/grok-patt
+                 erns
+               o /etc/logrotate/fluentd
+          + Elasticsearch configuration files:
+               o /opt/mapr/conf/conf.d/warden.elasticsearch.conf
+               o /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elast
+                 icsearch/elasticsearch.yml
+               o /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elast
+                 icsearch/logging.yml
+               o /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elast
+                 icsearch/curator.yml
+               o /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elast
+                 icsearch/curator_actions/delete_indices.yml (This file is
+                 not automatically backed up.)
+    3. Stop all MapR Monitoring Services on the cluster.
+         a. To stop collectd, run the following command:
+maprcli node services -name collectd -nodes <space separated list of hostname/IP
+addresses> -action stop
+
+         b. To stop Grafana, run the following command:
+maprcli node services -name grafana -nodes <space separated list of hostname/IPa
+ddresses> -action stop
+         c. To stop OpenTSDB, run the following command:
+maprcli node services -name opentsdb -nodes <space separated list of hostname/IP
+addresses> -action stop
+         d. To stop Kibana, run the following command:
+maprcli node services -name kibana -nodes <space separated list of hostname/IPad
+dresses> -action stop
+         e. To stop fluentd, run the following command:
+maprcli node services -name fluentd -nodes <space separated list of hostname/IPa
+ddresses> -action stop
+         f. To stop Elasticsearch, run the following command:
+maprcli node services -name elasticsearch -nodes <space separated list of hostna
+me/IPaddresses> -action stop

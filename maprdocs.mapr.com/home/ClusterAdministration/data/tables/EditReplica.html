@@ -1,0 +1,133 @@
+Modifying Table Replica
+
+   You can edit the properties of a replica using MCS and the CLI.
+
+Modifying a Table Replica Using MCS
+
+   To modify the porperties of a table replica:
+    1. Go to the table information page.
+       See [1]Viewing Table Information.
+    2. Click Replicas to go to that tab.
+    3. Click [editPencil-Blue.png] associated with the replica to modify.
+       The Edit Replica page displays.
+    4. Make changes to the following as desired:
+
+   Path to Replica
+
+   The path to the replica.
+          + For a table on the local cluster, start the path at the volume
+            mount point. For example, for a table named testdst under a
+            volume with a mount point at /volume1, specify the following
+            path: /volume1/testdst
+          + For a table on another cluster, you must also specify the
+            cluster name in the path. For example, for a table named
+            customerdst under volume1 in the sanfrancisco cluster, specify
+            the following path: /mapr/sanfrancisco/volume1/customerdst
+
+   Note: For replication to a table, the command will fail if the replica
+   path you specify points to a table that already exists.
+   Replication State Specify whether or not to start replication by
+   choosing one of the following:
+          + Automatic Setup — Creates the table on the destination
+            cluster, registers the table on the destination cluster as a
+            replica, adds the current table as an upstream source, copies
+            the content of the current table into the replica, and start
+            replication.
+          + Pause Replication — Creates the table on the destination
+            cluster, registers the table on the destination cluster as a
+            replica, adds the current table as an upstream source, but
+            prevents replication from immediately starting after. Pausing
+            replica like this allows you to load the data into the replica
+            from the current table, after which you can restart
+            replication.
+
+   Multi-Master Setup (Available only with Automatic Setup) Multi-master
+   topology, in which there are two master-slave relationships, with each
+   table playing both the role of a master and a slave. Client
+   applications update both tables and each table replicates updates to
+   the other.
+
+   See [2]Master-slave replication.
+   If this is not selected, table replication will be basic master-slave
+   topology, which is the default. In this topology, you replicate one way
+   from source tables to replicas. The replicas can be in a remote cluster
+   or in the cluster where the source tables are located.
+
+   See [3]Master-slave replication.
+   Note: Access control expressions on the replica that control
+   permissions for updates to column families and columns are irrelevant
+   because all updates from a source table arrive at a replica after
+   having been authenticated at a gateway, which has the implicit
+   authority to update replicas.
+    5. Set the following optional properties:
+
+   Throttle Specify whether (Yes) or not (No) to throttle replication
+   operations. Throttle the replication stream to minimize the impact of
+   the replication process on incoming operations during periods of heavy
+   load.
+   Replicate Synchronously Specify whether replication is synchronous
+   (Yes) or asynchronous (No).
+   Encrypt On Wire Specify whether (Yes) or not (No) to enable on-wire
+   encryption. If you enable this, the local cluster and any other cluster
+   that is part of the replication process must be enabled for security.
+   Compress On Wire The type of on-wire compression. Choose one of the
+   following:
+          + Inherited
+          + OFF
+          + LZF
+          + LZ4
+          + ZLib
+
+    6. Choose whether to:
+          + For JSON table replica:
+               o Replicate Entire Document
+               o Replicate Selected Field Paths — Specify the full path to
+                 the field in dotted notation. For example, suppose the
+                 table contained JSON documents that were of this general
+                 structure:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" :
+                    {
+                         "c" : "value",
+                    },
+               "e" : "value"
+          }
+}
+                 To replicate field c, you must specify a.b.c as the field
+                 path. Do not use quotation marks and do not include
+                 spaces after each dot. Click:
+                    # Add Field to add another field to replicate.
+                    # [deleteRow.png] to remove a field.
+          + For Binary table replica:
+               o Replicate All Column Families
+               o Replicate Selected Column Families — Specify the column
+                 family name and select:
+                    # Include All Columns — to replicate all columns
+                      associated with the column family.
+                    # Assign Columns — to specify specific columns
+                      associated with the column family. To add more
+                      columns, click +.
+    7. Click Edit Replica for the changes to take effect.
+
+Modifying a Table Replica Using the CLI or REST API
+
+   The basic command to modify a table replica is:
+maprcli table replica edit -path <table path> -replica <replica table path>
+
+   To run this command, your user ID must have the following permissions:
+     * readAce and writeAce on both the source volume and the target
+       volume
+     * lookupdir on directories in the paths of both tables
+     * readperm and replperm permissions on the source table
+
+   For complete reference, see [4]table replica edit.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/tables/ViewTableDetails.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/ReplicatingMapR-DBTables-master-slave.html#ReplicatingMapR-DBTables-master-slave
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/ReplicatingMapR-DBTables-master-slave.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-replica-edit.html

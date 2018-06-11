@@ -1,0 +1,67 @@
+Enable SSL Encryption Between Hue and HttpFS
+
+   As of HttpFS 1.0-1504 and Hue 3.7-1505, you can enable SSL encryption
+   and mutual-based authentication between Hue and HttpFS on a secure MapR
+   cluster that is version 4.0.2 or greater.
+
+   Complete the following steps to enable SSL encryption and mutual-based
+   authentication between Hue and HttpFS on a secure cluster:
+    1. Start Hue:
+maprcli node services -name hue -action start -nodes <node name>
+       When you start or restart Hue on a secure cluster, the secure.sh
+       script ($HUE_HOME/bin/secure.sh) generates the following files in
+       $HUE_HOME:
+          + hue_private_keystore.pem
+          + keystore.pem
+          + keystore.p12
+          + cert.pem
+       Note: $HUE_HOME should be replaced with the full path manually.
+       The secure.sh script runs with a set of default parameters, which
+       should not be changed. If generated keystore files already exist in
+       that location, the script does not regenerate the files.
+    2. Add the following configuration in the hue.ini file under the
+       [[hdfs_clusters]] [[[default]]] section. (Use the absolute paths
+       for ssl_cert and ssl_key.)
+          +
+security_enabled=${security_enabled}
+          +
+mechanism=${mechanism}
+          +
+ssl=True
+          +
+mutual_ssl_auth=True
+          +
+ssl_cert=/opt/mapr/hue/hue-version.no/cert.pem
+          +
+ssl_key=opt/mapr/hue/hue-version.no/hue_private_keystore.pem
+          +
+ssl_cert_ca_verify=False
+       The changes are summarized in the following example hue.ini file,
+       which you can use as a template:
+[[hdfs_clusters]]
+# HA support by using HttpFs
+  [[[default]]]
+     ....
+      # Change this if your HDFS cluster is Kerberos-secured
+      security_enabled=True
+
+      # SSL certificate based authentication
+       ssl=True
+       ssl_cert=$HUE_HOME/cert.pem
+       ssl_key=$HUE_HOME/hue_private_keystore.pem
+
+      # If certificate verified against certificate authority
+      ssl_cert_ca_verify=False
+    3. Configure HttpFS to use SSL or verify that HttpFS is configured to
+       use SSL. For details, see [1]SSL Security for HttpFS.
+    4. Restart Hue.
+maprcli node services -name hue -action start -nodes <ip_address>
+    5. To test that SSL encryption is enabled for HttpFS, run the
+       following command:
+curl k cert /opt/mapr/hue/hue<version.no>/cert.pem key /opt/mapr/hue/hue<version
+.no>/hue_private_keystore.pem
+"https://localhost:14000/webhdfs/v1?op=GETFILESTATUS&user.name=mapr"
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/HttpFS/SSLSecurityforHttpFS.html

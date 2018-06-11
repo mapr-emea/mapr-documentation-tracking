@@ -1,0 +1,89 @@
+exports
+
+Access control for hosts
+
+   On each node, the file /opt/mapr/conf/exports lists the clusters and
+   mount points available to mount with NFS.
+
+   Specify access control for hosts with a space-separated list of hosts,
+   appending (rw) for read-write or (ro) for read-only access after each
+   host. To specify a default access for all hosts not otherwise
+   specified, add (rw) or (ro) after a space at the end of a line. The
+   exports file follows the same semantics as a standard UNIX exports
+   table. The following export options are supported:
+   Export option Definition
+   ro Provides read-only access.
+   rw Provides read-write access.
+   root_squash
+
+   Squashes root privileges for remote users.
+
+   For example, you can use:
+/mapr (rw,root_squash)
+
+   This entry prevents the /mapr directory from being written to by the
+   root user on remote hosts.
+   no_root_squash Turns off root squashing for remote users.
+   all_squash Squashes every remote user, including root.
+   anonuid, anongid Specifies user and group IDs to use with remote users
+   from a particular host.
+
+Restricting clusters to specific hosts
+
+   To restrict access to a specific export path to particular hosts, use
+   the following format:
+<Path> <space-separated list of hosts and access rights>
+
+   For example, the line /mapr/cluster1 host01(rw) host02(ro) restricts
+   read-write access to the cluster in /mapr/cluster1 to host host01, and
+   restricts read-only access to host host02. No other hosts have access.
+   Note: After making changes to this file, you do not have to restart the
+   NFS server. You can run a maprcli command to refresh the exports
+   definition without a restart. See [1]nfsmgmt refresh exports.
+
+Enabling Central Configuration
+
+   To enable [2]Central Configuration for exports, specify a value for the
+   AutoRefreshExportsTimeInterval parameter in the
+   /opt/mapr/conf/nfsserver.conf file. The value of the
+   AutoRefreshExportsTimeInterval parameter determines the number of
+   minutes after which the NFS server refreshes the exports file. The
+   default value of 0 disables central configuration for NFS exports.
+
+Sample exports file
+
+# Sample Exports file
+
+# for /mapr exports
+# <Path> <exports_control>
+
+#access_control -> order is specific to default
+# list the hosts before specifying a default for all
+#  host01(ro) host02(ro) host03(ro) (rw)
+#  enforces ro for a.b.c.d & 1.2.3.4 and everybody else is rw
+
+# special path to export clusters in mapr-clusters.conf. To disable exporting,
+# comment it out. to restrict access use the exports_control
+#
+/mapr (rw)
+
+#to export only certain clusters, comment out the /mapr & uncomment.
+# Note: this will cause /mapr to be unexported
+#/mapr/clustername (rw)
+
+#to export /mapr only to certain hosts (using exports_control)
+#/mapr a.b.c.d(rw) e.f.g.h(ro)
+
+# export /mapr/cluster1 rw to a.b.c.d & ro to e.f.g.h (denied for others)
+#/mapr/cluster1 a.b.c.d(rw) e.f.g.h(ro)
+
+# export /mapr/cluster2 only to e.f.g.h (denied for others)
+#/mapr/cluster2 e.f.g.h(rw)
+
+# export /mapr/cluster3 rw to e.f.g.h & ro to others
+#/mapr/cluster2 e.f.g.h(rw) (ro)
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/nfsmgmt-refreshexports.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Central-Configuration.html#Central-Configuration-MapRprovidesacentral-d3e72

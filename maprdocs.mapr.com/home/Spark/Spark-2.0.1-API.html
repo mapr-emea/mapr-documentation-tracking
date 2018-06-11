@@ -1,0 +1,142 @@
+Spark 2.0.1-1611 API Changes
+
+   This topic describes the public API changes that occurred between
+   Apache Spark 1.6.1 and Spark 2.0.1.
+
+Removed Methods
+
+   The following items have been removed from [1]Apache Spark 2.0.1:
+     * Bagel (the Spark implementation of Google Pregel)
+     * Most of the deprecated methods from Spark 1.x, including:
+
+   Category Subcategory Instead of this removed API... Use...
+   GraphX   mapReduceTriplets aggregateMessages
+       runSVDPlusPlus run
+       GraphKryoRegistrator
+   SQL DataType DataType.fromCaseClassString DataType.fromJson
+     DecimalType DecimalType() DecimalType(precision, scale) to provide
+   precision explicitly
+       DecimalType(Option[PrecisionInfo]) DecimalType(precision scale)
+       PrecisionInfo DecimalType(precision, scale)
+       precisionInfo precision and scale
+       Unlimited (No longer supported)
+     Column Column.in() isin()
+     DataFrame toSchemaRDD toDF
+       createJDBCTable write.jdbc()
+       saveAsParquetFile write.parquet()
+       saveAsTable write.saveAsTable()
+       save write.save()
+       insertInto write.mode(SaveMode.Append).saveAsTable()
+     DataframeReader DataFrameReader.load(path) option("path",
+   path).load()
+     Functions cumeDist cume_dist
+       denseRank dense_rank
+       percentRank percent_rank
+       rowNumber row_number
+       inputFileName input_file_name
+       isNaN isnan
+       sparkPartitionId spark_partition_id
+       callUDF udf
+   Core SparkContext Constructors no longer take prefferedNodeLocationData
+   param
+       tachyonFolderName externalBlockStoreFolderName
+       initLocalProperties, clearFiles, clearJars (No longer needed)
+       runJob method no longer takes allowLocal param
+       defaultMinSplits defaultMinPartitions
+       [Double, Int, Long, Float]AccumulatorParam implicit objects from
+   AccumulatorParam
+       rddTo[Pair, Async, Sequence, Ordered]RDDFunctions implicit
+   functions from RDD
+       [double, numeric]RDDToDoubleRDDFunctions implicit functions from
+   RDD
+       intToIntWritable, longToLongWritable, floatToFloatWritable,
+   doubleToDoubleWritable, boolToBoolWritable, bytesToBytesWritable,
+   stringToText implicit functions from WriteableFactory
+       [int, long, double, float, boolean, bytes, string,
+   writable]WritableConverter implicit functions from WritableConverter
+     TaskContext runningLocally isRunningLocally
+       addOnCompleteCallback addTaskCompletionListener
+       attemptId attemptNumber
+     JavaRDDLike splits partitions
+       toArray collect
+     JavaSparkContext defaultMinSplits defaultMinPartitions
+       clearJars, clearFiles (No longer needed)
+     PairRDDFunctions PairRDDFunctions.reduceByKeyToDriver
+   reduceByKeyLocally
+     RDD mapPartitionsWithContext Taskcontext.get
+       mapPartitionsWithSplit mapPartitionsWithIndex
+       mapWith mapPartitionsWithIndex
+       flatMapWith mapPartitionsWithIndex and flatMap
+       foreachWith mapPartitionsWithIndex and foreach
+       filterWith mapPartitionsWithIndex and filter
+       toArray collect
+     TaskInfo TaskInfo.attempt TaskInfo.attemptNumber
+     Guava Optional Guava Optional org.apache.spark.api.java.Optional
+     Vector Vector, VectorSuite
+   Configuration options and params   --name
+       --driver-memory spark.driver.memory
+       --driver-cores spark.driver.cores
+       --executor-memory spark.executor.memory
+       --executor-cores spark.executor.cores
+       --queue spark.yarn.queue
+       --files spark.yarn.dist.files
+       --archives spark.yarn.dist.archives
+       --addJars spark.yarn.dist.jars
+       --py-files spark.submit.pyFiles
+   Note also the following deprecated configuration options and
+   parameters:
+     * Methods from Python DataFrame that returned RDD have been moved to
+       dataframe.rdd. For example, df.map is now df.rdd.map.
+     * Some streaming connectors (Twitter, Akka, MQTT, and ZeroMQ) have
+       been removed.
+     * org.apache.spark.shuffle.hash.HashShuffleManager no longer exists.
+       SortShuffleManager is the default since Spark 1.2.
+     * DataFrame is no longer a class. It is a subtype of DataSet.
+
+Behavior Changes
+
+   Spark 2.0.1 implements the following behavior changes:
+     * Spark 2.0.1 uses Scala 2.11 instead of 2.10.
+     * Floating literals in SQL are now parsed as decimal type instead of
+       double type.
+     * The Kryo version is now 3.0.
+     * Jersey version is now 2.
+     * Java RDD flatMap and mapPartitions functions now require functions
+       that return Java iterator instead of Iterable.
+     * Java RDD countByKey and countApproxDistinctByKey now return Map[K
+       => Long] instead of Map[K => Object].
+     * When writing Parquet files, the summary files are no longer written
+       (set parquet.enable.summary-metadata to true to re-enable).
+     * Lots were changed in MLLib. Follow the [2]Apache Spark Migration
+       Guide.
+     * Sparkcontext.emptyRDD now returns RDD instead of EmptyRDD.
+     * Spark Standalone Master no longer serves the jobs history.
+     * [3]org.apache.spark.api.java.JavaPairRDD methods were changed:
+          + countByKey and countApproxDistinctByKey now return
+            java.lang.Long instead of scala.Long.
+          + sampleByKey and sampleByKeyExact now return java.lang.Double
+            instead of scala.Double.
+     * The Old Application History format that created folders for each
+       application has been removed.
+     * org.apache.spark.Logging is now private. You can use slf4j directly
+       instead.
+
+Other Deprecated Items
+
+     * Java 7 is now deprecated.
+     * Python 2.6 is now deprecated.
+     * [4]TaskContext.isRunningLocally now is always false, as there is no
+       more local execution of yarn-client and yarn-cluster as masters.
+       Use --master yarn and --deploy-mode client/cluster.
+     * Instead of HiveContext, use SparkSession.builder.enableHiveSupport.
+     * Instead of SQLContext, use SparkSession.builder.
+     * Some methods related to Accumulators, ShuffleWriteMetrics,
+       SparklLoop, DataSet, and SQLContext are now deprecated. You will
+       see warnings in your application logs if you use them.
+
+References
+
+   1. https://spark.apache.org/docs/2.0.1/index.html
+   2. https://spark.apache.org/docs/2.0.1/ml-guide.html#migration-guide
+   3. https://spark.apache.org/docs/2.0.1/api/java/org/apache/spark/api/java/JavaPairRDD.html
+   4. https://spark.apache.org/docs/2.0.1/api/scala/index.html#org.apache.spark.TaskContext@isRunningLocally():Boolean

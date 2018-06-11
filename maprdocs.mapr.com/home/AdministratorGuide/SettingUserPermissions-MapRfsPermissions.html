@@ -1,0 +1,44 @@
+Setting MapR-FS Permissions
+
+   The MapR file system, MapR-FS, permissions are similar to the POSIX
+   permissions model. Each file and directory is associated with a user
+   (the owner) and a group. You can set read, write, and execute
+   permissions separately for:
+     * the owner of the file or directory.
+     * members of the group associated with the file or directory.
+     * all other users.
+
+   The permissions for a file or directory are called its mode. The mode
+   of a file or directory can be expressed in two ways:
+     * Text - a string that indicates the presence of the read (r), write
+       (w), and execute (x) permission or their absence (-) for the owner,
+       group, and other users respectively. Example: rwxr-xr-x
+     * Octal - three octal digits (for the owner, group, and other users),
+       that use individual bits to represent the three permissions.
+       Example: 755
+
+   Both rwxr-xr-x and 755 represent the same mode; the owner has all
+   permissions, and the group and other users have read and execute
+   permissions only.
+
+   When you [1]access the MapR-FS layer over NFS, the file-level
+   permissions are controlled through the Linux interface by using the
+   chmod (change mode) command or the chown (change owner) command, as
+   well as the hadoop fs -chmod and hadoop fs -chown equivalents. For
+   example:
+chown jsmith /mapr/my.cluster.com/jsmith/fileA
+hadoop -fs chown jsmith /mapr/my.cluster.com/jsmith/fileA
+chmod 744 /mapr/my.cluster.com/jsmith/fileA
+hadoop -fs chmod 744 /mapr/my.cluster.com/jsmith/fileA
+
+   These commands grant a user whose username is jsmith the read, write,
+   and execute privileges on fileA.
+
+   Once you set file permissions, authorization checks are performed when
+   a file is opened, and on every file access.
+   Note: To further protect your data, the MapR-FS data cache is never
+   included in a file server core dump.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/c_set_up_mapr_nfs.html

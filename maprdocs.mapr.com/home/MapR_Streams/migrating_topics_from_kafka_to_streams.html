@@ -1,0 +1,127 @@
+Mirroring Topics with Apache Kafka's MirrorMaker
+
+   Use Apache Kafka's MirrorMaker utility either to mirror topics that are
+   in Apache Kafka clusters to streams that are in MapR clusters or to
+   Mirror topics that are in MapR clusters to Apache Kafka clusters.
+   Mirroring is a type of replication that takes place in this sequence of
+   steps:
+    1. Messages that are published to topics in a source cluster are read
+       by consumers that MirrorMaker manages.
+    2. These consumers send the messages to producers that MirrorMaker
+       also manages.
+    3. The producers publish the messages in topics that are in the
+       destination cluster.
+
+   Mirroring can continue indefinitely. Alternatively, you can mirror your
+   data as a way of migrating it from Apache Kafka to MapR-ES. If you use
+   it for this purpose, you can stop mirroring after migrating your
+   producers and consumers to use MapR-ES, as described in [1]Migrating
+   Apache Kafka 0.9.0 Applications to MapR-ES.
+   Attention: MirrorMaker does not provide the same reliability guarantees
+   as the replication features in MapR-ES. In particular, MirrorMaker does
+   not replicate cursors or message positions, which makes disaster
+   recovery much more difficult than with replication of MapR-ES.
+   Therefore, MapR recommends MirrorMaker for use only for mirroring
+   between MapR-ES and Apache Kafka, not for replication of MapR-ES.
+
+Prerequisites
+
+     * Ensure that the destination stream in the MapR cluster exists. To
+       create a stream, run the command [2]maprcli stream create.
+     * Ensure that the ID of the user that runs MirrorMaker has the
+       produceperm and topicperm permissions on the stream.
+
+Command Syntax and Descriptions of Parameters
+
+bin/kafka-run-class.sh kafka.tools.MirrorMaker
+--consumer.config <File that lists consumer properties and values>
+--num.streams <Number of consumer threads>
+--producer.config <File that lists producer properties and values>
+[--whitelist=<Java-style regular expression for specifying the topics to mirror>
+]
+[--blacklist=<Java-style regular expression for specifying the topics not to mir
+ror>]
+
+   Parameter Description
+   consumer.config The path and name of the file that lists the consumer
+   properties. See the [3]Consumer Properties and Descriptions section for
+   detailed information.
+   num.streams Use the --num.streams option to specify the number of
+   mirror consumer threads to create. Note that if you start multiple
+   mirror maker processes then you may want to look at the distribution of
+   partitions on the source cluster. If the number of consumption streams
+   is too high per mirror maker process, then some of the mirroring
+   threads will be idle by virtue of the consumer rebalancing algorithm
+   (if they do not end up owning any partitions for consumption).
+   producer.config The path and name of the file that lists the producer
+   properties. See the [4]Producer Properties and Descriptions section for
+   detailed information.
+   whitelist A Java-style regular expression for specifying the topics to
+   copy. Commas (',') are interpreted as the regex-choice symbol ('|').
+
+   If you use this parameter, do not use the blacklist parameter.
+   blacklist A Java-style regular expression for specifying the topics not
+   to copy. Commas (',') are interpreted as the regex-choice symbol ('|').
+
+   If you use this parameter, do not use the whitelist parameter.
+
+Consumer Properties and Descriptions
+
+zookeeper.connect=<IP address>:<ZooKeeper port>
+zookeeper.connection.timeout.ms=<Timeout value in milliseconds>
+group.id=<ID>
+bootstrap.servers=<IP address>:<port>
+shallow.iterator.enable=false
+
+   Property Description
+   zookeeper.connect The IP address and port number of the ZooKeeper
+   instance for the Apache Kafka cluster.
+   zookeeper.connection.timeout.ms The max time that the client waits to
+   establish a connection to zookeeper. If not set, the value in
+   zookeeper.session.timeout.ms is used.
+   group.id A unique string that identifies the consumer group this
+   consumer belongs to. This property is required if the consumer uses
+   either the group management functionality by using subscribe(topic) or
+   the Kafka-based offset management strategy.
+
+   If group.id is not set and the value of the num.streams option is > 1 ,
+   messages might go multiple times to a stream.
+   bootstrap.servers A list of host/port pairs to use for establishing the
+   initial connection to the Kafka cluster. The client will make use of
+   all servers irrespective of which servers are specified here for
+   bootstrapping—this list only impacts the initial hosts used to discover
+   the full set of servers. This list should be in the form
+   host1:port1,host2:port2,.... Since these servers are just used for the
+   initial connection to discover the full cluster membership (which may
+   change dynamically), this list need not contain the full set of servers
+   (you may want more than one, though, in case a server is down).
+   shallow.iterator.enable Set this value to false.
+
+Producer Properties and Descriptions
+
+key.serializer=<serializer class>
+value.serializer=<serializer class>
+streams.producer.default.stream=<Path and name of the stream to copy the topics
+to>
+auto.create.topics.enable=true
+
+   Property Description
+   key.serializer The name of the appropriate serialization class in the
+   [5]org.apache.kafka.common.serialization package or a class that
+   implements the [6]Serializer interface for serializing keys.
+   value.serializer The class that implements the [7]Serializer interface
+   for serializing values.
+   streams.producer.default.stream Specifies the path and name of stream
+   that the topics will be copied to.
+   auto.create.topics.enable Enables auto-creation of topics within the
+   stream specifed with the streams.producer.default.stream parameter.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/migrating_kafka_applications_to_mapr_streams.html#migrating_kafka_applications_to_mapr_streams
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/stream_create.html#stream_create
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/migrating_topics_from_kafka_to_streams.html#migrating_topics_from_kafka_to_streams__consumer_props
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/migrating_topics_from_kafka_to_streams.html#migrating_topics_from_kafka_to_streams__producer_props
+   5. http://maprdocs.mapr.com/apidocs/60/mapr-streams-kafka/org/apache/kafka/common/serialization/package-summary.html
+   6. http://maprdocs.mapr.com/apidocs/60/mapr-streams-kafka/org/apache/kafka/common/serialization/Serializer.html
+   7. http://maprdocs.mapr.com/apidocs/60/mapr-streams-kafka/org/apache/kafka/common/serialization/Serializer.html

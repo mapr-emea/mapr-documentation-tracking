@@ -1,0 +1,75 @@
+Mirror Volumes
+
+   Creating a mirror volume is similar to creating a normal read/write
+   volume. However, when you create a mirror volume, you must specify a
+   source volume that the mirror retrieves content from. This retrieval is
+   called the mirroring operation. Like a normal volume, a mirror volume
+   has a configurable replication factor. Only one copy of the data is
+   transmitted from the source volume to the mirror volume; the source and
+   mirror volumes handle their own replication independently. MapR-FS
+   replicates source and mirror volumes independently of each other.
+   Note: Volume mirroring from a lower MapR version to higher MapR version
+   is supported. For example, you can mirror volumes from a MapR 4.0.1
+   cluster to a MapR 5.2 cluster. However, you cannot mirror volumes from
+   a MapR 5.2 cluster to a MapR 4.0.1 cluster.
+
+Mirroring Process
+
+   The MapR system creates a temporary snapshot of the source volume at
+   the start of a mirroring operation. The mirroring process reads content
+   from the snapshot into the mirror volume. The source volume remains
+   available for read and write operations during the mirroring process.
+
+   If the mirroring operation is schedule-based, the snapshot expires
+   according to the value of the schedule's Retain For parameter.
+   Snapshots created during manual mirroring persist until they are
+   deleted manually.
+
+   The mirroring process transmits only the differences between the source
+   volume and the mirror. The initial mirroring operation copies the
+   entire source volume, but subsequent mirroring operations can be
+   extremely fast. If the fastinodescan feature is enabled, mirroring will
+   proceed significantly faster when there are large number of files and
+   few changes since the last mirroring operation. The fastinodescan
+   feature is enabled by default for all new installations, but must be
+   manually enabled if you are upgrading from pre-5.2.x versions. See the
+   [1]Upgrade Guide for information on enabling this feature. To determine
+   whether the fastinodescan feature is enabled, run the following
+   command:
+maprcli config load -json | grep mfs.feature.fastinodescan.support
+
+   To avail of the fastinodescan feature on converted or promoted volumes,
+   mirroring must be restarted from the source volume after converting
+   volume from mirror to read-write and vice versa.
+
+   The mirroring operation never consumes all available network bandwidth,
+   and throttles back when other processes need more network bandwidth.
+   The server sending mirror data continuously monitors the total
+   round-trip time between the data transmission and arrival, and uses
+   this information to restrict itself to 30% of the available bandwidth
+   (continuously calculated). If the network or servers anywhere along the
+   entire path need more bandwidth, the sending server throttles back
+   automatically. If more bandwidth opens up, the sender automatically
+   increases how fast it sends data. Mirror throttling can be disabled so
+   that all available bandwidth is devoted to mirror operations. See
+   [2]Disabling Mirror Throttling for details.
+
+   During the copy process, the mirror is a fully-consistent image of the
+   source volume. Mirrors are atomically updated at the mirror
+   destination. The mirror does not change until all bits are transferred,
+   at which point all the new files, directories, blocks, etc., are
+   atomically moved into their new positions in the mirror-volume. The
+   previous mirror is left behind as a snapshot, which can be accessed
+   from the .snapshot directory. These old snapshots can be deleted on a
+   schedule.
+
+   Mirroring is extremely resilient. In the case of a network partition,
+   where some or all of the machines that host the source volume cannot
+   communicate with the machines that host the mirror volume, the
+   mirroring operation periodically retries the connection. Once the
+   network is restored, the mirroring operation resumes.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/Configuring-the-New-Version.html#ConfiguringtheNewVersion
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/MirrorVolumes-DisableThrottling.html#WorkingwithMirrorVolumes-_26982465-d3e1176

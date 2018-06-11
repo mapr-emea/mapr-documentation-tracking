@@ -1,0 +1,86 @@
+Configuring a Remote MySQL Database for the Hive Metastore
+
+   After installing MySQL, perform the following steps to configure Hive
+   Metastore on MySQL
+    1. Install the MySQL connector. To install:
+          +
+
+              MySQL connector on a RHEL 6+ system
+                      On the Hive Metastore server host, install
+                      mysql-connector-java and symbolically link the file
+                      to the /opt/mapr/hive/hive-<version>/lib/ directory.
+
+$ sudo yum install mysql-connector-java
+$ ln -s /usr/share/java/mysql-connector-java.jar /opt/mapr/hive/hive-<version>/l
+ib/mysql-connector-java.jar
+
+          +
+
+              MySQL connector on a SLES system
+                      On the Hive Metastore server host, install
+                      mysql-connector-java and symbolically link the file
+                      to the /opt/mapr/hive/hive-<version>/lib/ directory.
+
+$ sudo zypper install mysql-connector-java
+$ ln -s /usr/share/java/mysql-connector-java.jar /opt/mapr/hive/hive-<version>/l
+ib/mysql-connector-java.jar
+
+          +
+
+              MySQL connector on a Debian/Ubuntu system
+                      On the Hive Metastore server host, install
+                      mysql-connector-java and symbolically link the file
+                      into the /opt/mapr/hive/hive-<version>/lib/
+                      directory.
+
+$ sudo apt-get install libmysql-java
+$ ln -s /usr/share/java/libmysql-java.jar /opt/mapr/hive/hive-<version>/lib/mysq
+l-connector-java.jar
+
+    2. Create the database user.
+$ mysql -u root -p
+mysql> CREATE USER 'hive'@'metastorehost' IDENTIFIED BY 'mypassword';
+...
+mysql> REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'hive'@'metastorehost';
+mysql> GRANT ALL PRIVILEGES ON metastore.* TO 'hive'@'metastorehost';
+mysql> FLUSH PRIVILEGES;
+mysql> quit;
+    3. Configure the Metastore service to communicate with the MySQL
+       database by setting the necessary properties (shown below) in the
+       /opt/mapr/hive//hive-<version>/conf/hive-site.xml file.
+       Suppose a MySQL database running on myhost and the user account
+       hive with the password mypassword, set the following properties
+       (overwriting any existing values) in the hive-site.xml file:
+<property>
+  <name>javax.jdo.option.ConnectionURL</name>
+  <value>jdbc:mysql://myhost/metastore</value>
+  <description>the URL of the MySQL database</description>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionDriverName</name>
+  <value>com.mysql.jdbc.Driver</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionUserName</name>
+  <value>hive</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionPassword</name>
+  <value>mypassword</value>
+</property>
+
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://<n.n.n.n>:9083</value>
+  <description>IP address (or fully-qualified domain name) and port of the metas
+tore host</description>
+</property>
+       Note: Though you can set the same hive-site.xml properties on all
+       the hosts (client, Metastore, HiveServer), hive.metastore.uris is
+       the only property that must be configured on all the hosts; the
+       other properties are only needed on the Metastore host.
+    4. Run schemaTool to create the initial DB structure.
+/opt/mapr/hive/hive-<version>/bin/schematool -dbType mysql -initSchema

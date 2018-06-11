@@ -1,0 +1,53 @@
+Column Families in Binary Tables
+
+   Scanning an entire table for matches can be very performance-intensive.
+   Column families enable you to group related sets of data and restrict
+   queries to a defined subset, leading to better performance. When you
+   design a column family, think about what kinds of queries are going to
+   be used the most often, and group your columns accordingly.
+
+   You can specify compression settings for individual column families,
+   which lets you choose the settings that prioritize speed of access or
+   efficient use of disk space, according to your needs.
+
+   Be aware of the approximate number of rows in your column families.
+   This property is called the column family's cardinality. When column
+   families in the same table have very disparate cardinalities, the
+   sparser table's data can be spread out across multiple nodes, due to
+   the denser table requiring more splits. Scans on the sparser column
+   family can take longer due to this effect. For example, consider a
+   table that lists products across a small range of model numbers, but
+   with a row for the unique serial numbers for each individual product
+   manufactured within a given model. Such a table will have a very large
+   difference in cardinality between a column family that relates to the
+   model number compared to a column family that relates to the serial
+   number. Scans on the model-number column family will have to range
+   across the cluster, since the frequent splits required by the
+   comparatively large numbers of serial-number rows will spread the
+   model-number rows out across many regions on many nodes.
+
+   For a list of the properties that you can set when you create a column
+   family, see the documentation for the maprcli command [1]table cf
+   create .
+   Note: When replicating a specific column family or column from a binary
+   source table and a row is deleted, the destination table will show only
+   a deletion for the specific column family or column. When replicating a
+   specific column from a binary source table and its column family is
+   deleted, the destination table will show only a deletion for the
+   specific column.
+
+Column Design
+
+   MapR-DB tables split at the row level, not the column level. For this
+   reason, extremely wide tables with very large numbers of columns can
+   sometimes reach the recommended size for a table split at a
+   comparatively small number of rows.
+   Warning: In general, design your schema to prioritize more rows and
+   fewer columns.
+
+   Because MapR-DB tables are sparse, you can add columns to a table at
+   any time. Null columns for a given row don't take up any storage space.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-create.html

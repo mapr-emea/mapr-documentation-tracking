@@ -1,0 +1,62 @@
+User Impersonation for HttpFS
+
+   You can set up proxy user functionality if you want HttpFS to
+   impersonate a user from a set of hosts, or to impersonate a user that
+   belongs to a set of groups. When you configure proxy user
+   functionality, the proxy user can perform “doAs” operations. Add
+   configuration properties to the httpfs-site.xml and core-site.xml files
+   to configure proxy user functionality.
+   Complete the following steps to configure user impersonation for
+   HttpFS:
+    1. Add the following configuration properties to the
+       httpfs-site-site.xml file:
+          + httpfs.proxyuser.#USER#.hosts
+          + httpfs.proxyuser.#USER#.groups
+    2. Replace #USER# with the username of the proxy that can perform
+       “doAs” operations. For the host property, you can add a list of
+       host names as the value. For the group property, you can add a list
+       of groups as the value. Alternatively, you can add a wildcard
+       character (*) as the value for host and group properties. To add
+       multiple users, copy the property and replace #USER# with the proxy
+       user name.
+       Host Example
+<property>
+        <name>httpfs.proxyuser.mapr.hosts</name>
+        <value>*</value>
+</property>
+       Group Example
+<property>
+        <name>httpfs.proxyuser.mapr.groups</name>
+        <value>*</value>
+</property>
+
+   To use impersonation, issue a cURL command with the
+   doas=<impersonated_user's name> parameter.
+
+   Example 1
+
+   Where user.name is mapr and doas (or the impersonated user's name) is
+   sampleusername.
+curl -i -X PUT -T one
+"http://<node_name>:14000/webhdfs/v1/user/mapr/TEST/one
+?op=CREATE&user.name=mapr&doas=sampleusername&data=true"
+-H "Content-Type:application/octet-stream"
+
+   Example 2
+
+   For any user (and password) other than the mapr user (for example,
+   test_user1), set the following property in the
+   /opt/mapr/httpfs/httpfs-1.0/etc/hadoop/httpfs-site.xml file:
+<property>
+          <name>hadoop.proxyuser.<test_user1>.hosts</name>
+          <value>*</value>
+</property>
+
+   Run cURL.
+
+   Where trueuser.name is test_user1 and doas (or the impersonated user's
+   name) is test_user2.
+curl -u fred -i -X PUT -T /etc/hosts --header "Content-Type:application/octet-st
+ream"
+"http://<node_name>:14000/webhdfs/v1/<path_to_test_file>
+?op=CREATE&doas=<test_user2>&data=true&user.name=<test_user1>"

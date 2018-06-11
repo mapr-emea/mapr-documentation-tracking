@@ -1,0 +1,43 @@
+How Tickets Work
+
+   When an authenticated user runs a client, the client uses that user's
+   ticket to communicate securely with the server. After [1]Enabling
+   Wire-level Security, supported communications channels between client
+   and server are encrypted.
+
+   Nodes use tickets to identify themselves to one another in order to
+   prevent spoofing, a condition where an untrusted machine presents
+   itself as a trusted machine to gain access to the cluster.
+
+User Blacklisting
+
+   System administrators can use the [2]command line interface to
+   blacklist a user. A blacklist command invalidates all of a user's
+   tickets. Once a blacklist command is received by the CLDB, the name of
+   the blacklisted user is sent to all FileServer nodes, which reject any
+   request sent by that user that has a ticket older than the blacklist's
+   time stamp. Due to the nature of this check, there is no explicit
+   removal of a blacklist. Issuing a new ticket with a time stamp more
+   recent than the blacklist's time stamp implicitly removes the user from
+   the blacklist. To permanently prevent a user from logging in again,
+   revoke the user's credentials in the PAM registry.
+
+What Blacklisting Affects
+
+   A blacklisted user cannot access the MapR file system or the CLDB, but
+   since blacklisting only revokes a user's existing valid tickets, be
+   aware of the following interactions:
+     * Blacklisting has no effect on Oozie's cached credentials in
+       ~/.oozie-auth-token, and has no effect on Oozie in general, even
+       after a restart.
+     * Blacklisting does not affect a new authentication with user ID and
+       password or with existing Kerberos credentials.
+     * Since NFS does not use MapR tickets, blacklisting does not affect
+       NFS access.
+     * Blacklisted users can still be impersonated as impersonation does
+       not check whether a user is blacklisted or not.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/Enable-wire-level-security.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/blacklist-user.html

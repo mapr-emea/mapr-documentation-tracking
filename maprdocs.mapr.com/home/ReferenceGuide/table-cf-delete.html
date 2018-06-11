@@ -1,0 +1,78 @@
+table cf delete
+
+   Deletes a column family from a MapR-DB binary table or JSON table.
+   Deletion cannot be undone.
+   Important: As of MapR 6.0, a column family cannot be deleted from a
+   JSON table.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * deletefamilyperm on the table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table cf delete
+  -path <path>
+  -cfname <name>
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/cf/delete?path=<path>&cfname=<name>'
+  -u <username>:<password>
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Parameters
+
+   Parameter Description
+   path
+
+   The path to the table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under volume1 which has
+       a mount point at /volume1, specify the following path:
+       /volume1/test
+
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named test under volume1
+       in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customer
+
+   cfname
+
+   The name of the column family to delete.
+   Note: In JSON tables, it is not possible to delete column families in
+   addition to the default column family.
+
+Example
+
+   Deletes a column family mycf from table thetable:
+
+   CLI
+
+maprcli table cf delete -path /volume1/thetable -cfname mycf
+
+   REST
+
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/cf/delete?path=%2Fvolume1%2Fthetable&cfnam
+e=mycf' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

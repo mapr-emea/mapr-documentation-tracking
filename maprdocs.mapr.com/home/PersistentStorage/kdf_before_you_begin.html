@@ -1,0 +1,96 @@
+Before You Begin
+
+   Before configuration, be sure to review the following notes about
+   supported and unsupported features and parameters:
+
+MapR Parameters for Dynamic Provisioning
+
+   In dynamic provisioning, you can specify MapR parameters for the MapR
+   volume to be created. For a list of the MapR parameters that you can
+   use, see [1]volume create. Note these considerations for using the MapR
+   parameters:
+     * Volume attributes must be represented as a string (enclosed within
+       quotations). Using an integer or boolean is not supported. In the
+       following example, the aetype attribute will generate an error
+       because the value (1) is not enclosed in quotations.
+namePrefix: "pv"
+mountPrefix: "/pv"
+type: "rw"
+advisoryquota: "100M"
+aetype: 1
+     * The following MapR parameters are ignored because they are
+       redundant or not supported in the Kubernetes implementation:
+          + mount
+          + quota*
+          + createparent
+          + path
+          + name
+          + cluster
+
+   *Specifying resources: requests: storage in a PersistentVolumeClaim
+   (PVC) (see [2]Example: Mounting a PersistentVolume for Static
+   Provisioning) makes it unnecessary to set the MapR quota parameter.
+
+Kubernetes Access Modes
+
+   Kubernetes access modes control how a PersistentVolume (PV) is mounted
+   on the host. [3]Access modes can be specified on both PVs and PVCs.
+   Only Volumes with a matching Access Mode will be bound to a PVC.
+   Unfortunately, beyond the PVC/PV binding behavior, PVs using FlexVolume
+   drivers ignore these access modes in the current version of Kubernetes.
+   All access modes will work with the MapR Data Fabric for Kubernetes.
+   However, they will appear the same. This means the ROX mode will not
+   make the volume read only. If you want read-only behavior, specify
+   readOnly: in the FlexVolume driver flags.
+
+PersistentVolumeClaim Protection
+
+   PVC protection is a Kubernetes 1.9 alpha feature that restricts the
+   user from deleting a PVC while it is being used by an active Pod. Alpha
+   features are not tested for use with the volume plug-in and
+   provisioner. However, without PVC protection, you should not delete a
+   PVC that is still attached to Pods. If you have not turned on PVC
+   protection, ensure that you do not delete PVC’s that are in use. In the
+   current release of the MapR Data Fabric for Kubernetes, deleting a PVC
+   causes undefined behavior.
+
+Reclaim Policy
+
+   The Kubernetes reclaimPolicy parameter controls what happens to a
+   PersistentVolume if the corresponding PersistentVolumeClaim is deleted.
+   The Recycle Reclaim Policy is not supported by Kubernetes FlexVolume
+   Drivers, so it cannot be used with KDF. The Retain Policy is currently
+   broken in Kubernetes 1.9 StoragePolicies but not in static
+   PersistentVolumes. The MapR Data Fabric for Kubernetes has a workaround
+   that allows Retain policy on dynamically provisioned volumes by passing
+   the reclaimPolicy: in the parameters rather than in the standard place
+   that FlexVolumes ignore. You can specify the reclaim policy normally
+   when you configure a persistent volume.
+   The following table shows the supported values for the reclaim policy:
+   Reclaim Policy Value Description Support
+   Delete (default value) The PersistentVolume and the MapR volume are
+   deleted when the user deletes the corresponding PersistentVolumeClaim.
+   Supported
+   Retain The PersistentVolume and the MapR volume are not deleted when
+   the user deletes the corresponding PersistentVolumeClaim. Supported*
+   Recycle Performs a basic scrub on a PersistentVolume and makes it
+   available for a new PersistentVolumeClaim. Not Supported by Kubernetes
+   Flexvolumes
+
+   *Not supported for dynamic provision without a workaround.
+
+   For more information about the reclaim policy, see [4]Change the
+   Reclaim Policy of a PersistentVolume.
+
+Kubernetes Mount Options
+
+   The Kubernetes mountOptions parameter is not supported for use with the
+   MapR Data Fabric for Kubernetes because it is not supported for use
+   with the FlexVolume plug-in.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-create.html#volumecreate
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_example_static_provisioning_persistent_vol.html#concept_ogr_sxc_qcb
+   3. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+   4. https://kubernetes.io/docs/tasks/administer-cluster/change-pv-reclaim-policy/

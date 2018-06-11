@@ -1,0 +1,56 @@
+Updating ResourceManager Ports
+
+   To simplify the failover configurations in the yarn-site.xml, Warden
+   maintains the list of ResourceManager ports in the
+   warden.resourcemanager.conf file. For a list of the default port
+   number, see [1]Ports Used by MapR. If you want to edit the default
+   ResourceManager ports, edit the warden.resourcemanager.conf file and
+   the yarn-site.xml file on each ResourceManager node.
+   Note: If each node requires different ResourceManager ports, you must
+   maintain a separate yarn-site.xml for each node. Therefore, to you use
+   Central Configuration, you must create a customized configuration file
+   for each ResourceManager node in the cluster.
+
+   To update the port numbers, edit the values in
+   warden.resourcemanager.conf and add the values in yarn-site.xml.
+    1. Open the warden.resourcemanager.conf
+       (/opt/mapr/conf/conf.d/warden.resourcemanager.conf).
+    2. Edit the port numbers, which are listed using the following format:
+       service.extinfo.<port>= <port number>
+
+   Port Name Property Name in warden.resourcemanager.conf
+   ResourceManager Scheduler RPC (for ApplicationMasters)
+   service.extinfo.SCHEDULER_PORT
+   ResourceManager Resource Tracker RPC (for NodeManagers)
+   service.extinfo.RESOURCETRACKER_PORT
+   ResourceManager Client RPC service.port
+   ResourceManager Admin RPC service.extinfo.ADMIN_PORT
+   ResourceManager Web UI (HTTP) service.extinfo.WEBAPP_PORT
+   ResourceManager Web UI (HTTPS) service.extinfo.WEBAPP_HTTPS_PORT
+    3. Open the yarn-site.xml file
+       (/opt/mapr/hadoop/hadoop-2.x.x/etc/hadoop/yarn-site.xml).
+    4. For each port that you edited, add the associated property to the
+       yarn-site.xml file:
+
+   Port Name Property Name in yarn-site.xml
+   ResourceManager Scheduler RPC (for ApplicationMasters)
+   yarn.resourcemanager.scheduler.address
+   ResourceManager Resource Tracker RPC (for NodeManagers)
+   yarn.resourcemanager.resource-tracker.address
+   ResourceManager Client RPC yarn.resourcemanager.address
+   ResourceManager Admin RPC yarn.resourcemanager.admin.address
+   ResourceManager Web UI (HTTP) yarn.resourcemanager.webapp.address
+   ResourceManager Web UI (HTTPS)
+   yarn.resourcemanager.webapp.https.address
+       For example, to update the port number for the ADMIN_PORT to 9000
+       on each node, enter the following in the yarn-site.xml file on each
+       node:
+<property>
+   <name>yarn.resourcemanager.adminaddress</name>
+   <value>10.10.30.140:9000</value>
+</property>
+    5. Restart the Warden and the ResourceManager services.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/MapRPorts.html#PortsUsedbyMapR

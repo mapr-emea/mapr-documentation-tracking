@@ -1,0 +1,184 @@
+Troubleshoot MapR Monitoring Installation Errors
+
+   Review the following solutions to errors that you may encounter when
+   you run configure.sh to configure MapR Monitoring.
+
+Elasticsearch Errors
+
+   could not determine matching interface
+          Cause: The DNS is probably not setup correctly on this node.
+          Solution: Contact your DNS administrator or verify that
+          /etc/hosts and /etc/nssswitch.conf are configured correctly. The
+          etc/hosts file should list the host names and the hosts
+          parameter in /etc/nssswitch.conf should be set to files dns.
+
+   Failed to create <esdb directory name>
+          Cause: There is not enough disk space, configure.sh was not run
+          as the root user, or the index directory path is not valid.
+          Solution: Complete the following steps and then re-run
+          configure.sh:
+
+          + Verify that there is enough disk space.
+          + Verify that filesystem where the index directory will be
+            created is not read-only. See [1]Log Aggregation and Storage
+            for more information on the index directory location.
+          + If you included the -ESDB parameter, verify that the index
+            directory path uses a valid format:
+            /<existing_directory1>/<existing_directory2>/<new index
+            directory>.
+
+   Failed to resolve hostname
+          Cause: The DNS is probably not setup correctly on this node.
+          Solution: Contact your DNS administrator or verify that
+          /etc/hosts and /etc/nssswitch.conf are configured correctly.
+          /etc/hosts should list the host names if the DNS database is not
+          updated, and the hosts parameter in /etc/nssswitch.conf should
+          be set to files dns
+
+OpenTSDB Errors
+
+   Incompatible asynchbase jar found
+          Cause:The version of asynchbase installed on this node is not
+          compatible with OpenTSDB.
+          Solution:Install the correct asynchbase package on each OpenTSDB
+          node. See the MEP release notes to determine the compatibility
+          between package versions.
+
+   Failed to install asynchbase Jar file
+          Cause: There is not enough disk space, the filesystem is
+          read-only, or configure.sh was not run as the root user.
+          Solution: Complete the following steps and then re-run
+          configure.sh:
+
+          + Verify that you are logged in as the root user or using sudo.
+          + Verify that there is enough disk space.
+          + Verify that the filesystem containing the /opt/mapr/opentsdb
+            directory is mounted as read/write.
+
+   Failed to create TSDB tables - need to rerun configure.sh -R or run
+          create_table.sh as $MAPR_USER
+          Cause: On a secure cluster, this issue usually displays when you
+          run configure.sh to configure the nodes to use MapR Monitoring
+          without first creating a MapR user tickets for the root user and
+          the $MAPR_USER.
+          Solution: Complete one or all of the following steps:
+
+          + Verify that you have a MapR user ticket for both root and the
+            $MAPR_USER before running configure.sh or create_table.sh. Run
+            maprlogin print to verify that you have a MapR user ticket for
+            the mapr user and the root user. If you need to generate a
+            MapR user ticket, run maprlogin password.
+          + Re-run configure.sh. For example, configure.sh -R -OT
+            <comma-separate list of OpenTSDB nodes> -ES <comma-separate
+            list of Elasticsearch nodes>
+          + Run ${OTSDB_HOME}/share/opentsdb/tools/create_table.sh to
+            create OpenTSDB tables in the mapr.monitoring volume.
+
+Fluentd Errors
+
+   fluentd service not enabled - missing clusterid
+          Cause: The MapR cluster was not up and running before
+          configure.sh was run with the options to configure MapR
+          Monitoring.
+          Solution: Complete the following steps and then re-run
+          configure.sh:
+
+          + Verify that the CLDB services is running. If not, start Warden
+            with the following command: service mapr-warden start.
+          + Verify that $MAPR_HOME/conf/clusterid file exist.
+
+Collectd Errors
+
+   collectd service not enabled - missing clusterid
+          Cause: The MapR cluster was not up and running before
+          configure.sh was run with the options to configure MapR
+          Monitoring.
+          Solution: Complete one or all of the following steps and then
+          re-run configure.sh:
+
+          + Verify that the CLDB services is running. If not, start Warden
+            with the following command: service mapr-warden start.
+          + Verify that $MAPR_HOME/conf/clusterid file exist.
+
+Grafana Errors
+
+   Failed to pick default data source host
+          Cause: The OpenTSDB nodes list defined by the -OT parameter was
+          incorrect.
+          Solution: Check the syntax and the validity of those nodes.
+
+   Failed to create scratch config file
+          Cause: There is not enough disk space, configure.sh was not run
+          as the root user, or the filesystem was mounted as read-only.
+          Solution: Complete one or all of the following steps and then
+          re-run configure.sh:
+
+          + Verify that you are logged in as the root user or using sudo.
+          + Verify that there is enough disk space.
+          + Verify that the filesystem containing /opt/mapr/grafana is
+            mounted as read/write.
+
+   Failed to change the port
+          Cause: The sed utility failed to edit a port value in the
+          temporary configuration file. This may occur due to issues with
+          filesystem permissions, disk space, or file corruption.
+          Solution: Complete the following steps and then re-run
+          configure.sh:
+
+          + Verify that the filesystem containing /opt/mapr/grafana is
+            mounted as read/write.
+          + Verify that there is enough disk space.
+          + Re-install MapR Monitoring packages.
+
+   Failed to configure ssl for grafana
+          Cause: The sed utility failed to edit a port value in the
+          temporary configuration file. This may occur due to issues with
+          filesystem permissions, disk space, or file corruption.
+          Solution: Complete the following steps and then re-run
+          configure.sh:
+
+          + Verify that the filesystem containing /opt/mapr/grafana is
+            mounted as read/write.
+          + Verify that there is enough disk space.
+          + Re-install MapR Monitoring packages.
+
+   ERROR: Failed to install grafana warden config file
+          Cause: There is not enough disk space, configure.sh was not run
+          as the root user, or the filesystem containing /opt/mapr/grafana
+          is mounted as read-only.
+          Solution: Complete the following steps and then re-run
+          configure.sh:
+
+          + Verify that you are logged in as the root user or using sudo.
+          + Verify that there is enough disk space.
+          + Verify that the filesystem containing /opt/mapr/grafana is
+            mounted as read/write.
+
+Kibana Errors
+
+   Failed to configure elasticsearch server url
+          Cause: There is not enough disk space, configure.sh was not run
+          as the root user, or the filesystem containing /opt/mapr/kibana
+          is mounted read-only.
+          Solution: Complete the following steps and then re-run
+          configure.sh:
+
+          + Verify that you are logged in as the root user or using sudo.
+          + Verify that there is enough disk space.
+          + Verify that the filesystem containing /opt/mapr/kibana is
+            mounted as read/write.
+
+   Failed to configure ssl for kibana
+          Cause: There is not enough disk space or the root user does not
+          have the required directory permissions to create the file in
+          the /opt/mapr/kibana/kibana-<version>/config directory.
+          Solution: Complete the following steps and then re-run
+          configure.sh:
+
+          + Verify that there is enough disk space.
+          + Verify that the filesystem containing /opt/mapr/kibana is
+            mounted as read/write.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/LogAggregationAndStorage.html#concept_wzf_rwy_kw

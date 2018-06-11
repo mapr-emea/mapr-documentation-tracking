@@ -1,0 +1,79 @@
+Enable SSL Encryption Between Hue and Hive
+
+   The following procedure explains how to enable SSL encryption between
+   Hue and Hive.
+    1. Start Hue:
+maprcli node services -name hue -action start -nodes <node name>
+       When you start or restart Hue on a secure cluster, keys are
+       generated at $HUE_HOME. If generated keystore files already exist
+       in that location, the script does nothing. The script is located
+       here: $HUE_HOME/bin/secure.sh, and it runs with a set of default
+       parameters, which should not be changed.
+    2. On an unsecure cluster, complete the following steps to generate
+       the keys:
+         a. Generate a keystore (keystore.jks) with a private key.
+keytool -genkeypair -alias certificatekey -keyalg RSA -validity 7 -keystore keys
+tore.jks
+         b. Generate a certificate from the keystore.
+keytool -export -alias certificatekey -keystore keystore.jks -rfc -file cert.pem
+         c. Import the keystore from JKS to PKCS12. For example:
+keytool -importkeystore -srckeystore keystore.jks -destkeystore keystore.p12 -sr
+cstoretype JKS -deststoretype PKCS12 -srcstorepass mapr123 -deststorepass mapr12
+3 -srcalias certificatekey -destalias certificatekey -srckeypass mapr123 -destke
+ypass mapr123 -noprompt
+         d. Convert PKCS12 to PEM using OpenSSL. For example:
+openssl pkcs12 -in keystore.p12 -out keystore.pem -passin pass:mapr123 -passout
+pass:mapr123
+         e. Strip the pass phrase so Python doesn't prompt for password
+            while connecting to Hive. For example:
+openssl rsa -in keystore.pem -out hue_private_keystore.pem
+    3. In the [[ssl]] section of the hue.ini file (under the beeswax
+       section), set validate to true.
+[[ssl]]
+# SSL communication enabled for this server.
+# Path to certificate authority certificates.
+## cacerts=/path/cert.pem
+# Choose whether Hue should validate certificates received from the server.
+validate=true
+    4. Edit the hive-site.xml.
+          + On a non-secure cluster: Make sure that no custom
+            authentication mechanism is turned on and configure the
+            hive-site.xml with the following properties:
+<property>
+  <name>hive.server2.use.SSL</name>
+    <value>true</value>
+      <description>enable/disable SSL communication</description>
+      </property>
+<property>
+  <name>hive.server2.keystore.path</name>
+    <value>/opt/mapr/conf/ssl_keystore</value>
+      <description>path to keystore file</description>
+      </property>
+<property>
+  <name>hive.server2.keystore.password</name>
+    <value>mapr123</value>
+      <description>keystore password</description>
+      </property>
+          + On a secure cluster: Make sure that no custom authentication
+            mechanism is turned on and configure the hive-site.xml with
+            the following properties:
+<name>hive.server2.thrift.sasl.qop</name>
+<value>auth-conf</value>
+<description>Sasl QOP value; one of 'auth', 'auth-int' and 'auth-conf'</descript
+ion>
+</property>
+    5. Restart Hue, Hive Metastore, and HiveServer2.
+
+        To restart Hue
+
+maprcli node services -name hue -action start -nodes <hostname>
+
+        To restart Hive Metastore
+
+maprcli node services -name hivemeta -action start -nodes <space delimited list
+of nodes>
+
+        To restart HiveServer2
+
+maprcli node services -name hs2 -action start -nodes <space delimited list of no
+des>

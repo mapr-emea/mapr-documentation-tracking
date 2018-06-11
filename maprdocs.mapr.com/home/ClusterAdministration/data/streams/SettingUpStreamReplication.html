@@ -1,0 +1,56 @@
+Setting Up Stream Replication Using the CLI
+
+   You can run the maprcli stream replica autosetup command to set up
+   master-slave or multi-master replication from an existing source
+   stream.
+   Note: This procedure describes how to use the maprcli to automatically
+   set up stream replication. As an alternative, you can use the [1]MapR
+   Control Service (MCS) to automatically set up table replication or use
+   the maprcli to[2] manually set up master-slave replication.
+   Before you begin, review the following requirements:
+     * You must replicate all of the topics that are in a stream. You
+       cannot select only a subset of topics to replicate.
+     * The maximum number of replicas that a stream can replicate to is
+       64.
+     * The maximum number of upstream sources that a replica can accept
+       data from is 64.
+     * In multi-master replication, names of topics must be unique on all
+       streams. Messages are assigned sequential offsets. The offsets for
+       messages in a topic in one copy could conflict with the offsets for
+       messages in the other copy. As a result, messages could be lost.
+     * In many-to-one replication, topics with the same name should not be
+       replicated to an aggregate replica.
+
+   Set up replication automatically by following these steps:
+    1. Log into both the source and destination clusters.
+    2. Run the command maprcli stream replica autosetup:
+          + For master-slave replication:
+maprcli stream replica autosetup -path <path to source stream> -replica <path to
+ replica stream>
+            For example, to set up master-slave replication from the
+            activity stream in the sanfrancisco cluster to a new activity
+            stream in the newyork cluster, you could use this command:
+maprcli stream replica autosetup -path
+/mapr/sanfrancisco/activity -replica /mapr/newyork/activity
+          + For multi-master replication:
+maprcli stream replica autosetup -path <path to source stream> -replica <path to
+ replica stream> -multimaster yes
+            For example, to set up multi-master replication between the
+            activity stream in the sanfrancisco cluster and a new activity
+            stream in the newyork cluster, you could use this command:
+maprcli stream replica autosetup -path /mapr/sanfrancisco/activity
+-replica /mapr/newyork/activity -multimaster yes
+            Note: The parameter -multimaster is an optional parameter that
+            you use to set up multimaster replication.
+       Note: By default, maprcli stream replica autosetup sets up
+       asynchronous replication. If you want to set up synchronous
+       replication or use any of the other optional parameters, see
+       [3]stream replica autosetup.
+    3. To check the replication status, run [4]stream replica list.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/streams/AddReplica.html#task_ycj_ssq_rz
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/streams/SetupMasterSlaveReplica.html#task_a4j_s1r_rz
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/stream_replica_autosetup.html#stream_replica_autosetup
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/stream_replica_list.html#stream_replica_list

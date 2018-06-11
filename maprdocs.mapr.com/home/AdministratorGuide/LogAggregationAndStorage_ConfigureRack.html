@@ -1,0 +1,25 @@
+Configure Fluentd Services to Write to Elasticsearch Nodes on the Same Rack
+
+   On clusters with high-density racks, ensure you have at least one
+   Elasticsearch server per rack and configure each Fluentd service to
+   write to Elasticsearch nodes that run on the same rack as the Fluentd
+   service. This configuration minimizes the impact of log aggregation on
+   other processes that run on the cluster and in particular, minimizes
+   the amount of backbone bandwidth used by the log aggregation.
+
+   Complete the following steps on each node that runs the Fluentd
+   service.
+    1. Open the
+       /opt/mapr/fluentd/fluentd-<version>/etc/fluentd/es_config.conf
+       file.
+    2. Edit the hosts property to only include Elasticsearch nodes that
+       are on the same rack as the Fluentd service.
+       Example:
+hosts qa-node90:9200,qa-node91.qa.lab:9200,qa-node92.qa.lab:9200
+    3. Restart Fluentd.
+maprcli node services -name fluentd -nodes <space separated list of fluentd node
+s> -action restart
+
+   Warning: Changes to the es_config.conf files are overridden by
+   configure.sh. Therefore, you will need reconfigure the hosts property
+   in the es_config.conf file after configure.sh is run on Fluentd nodes.

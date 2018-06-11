@@ -1,0 +1,66 @@
+table delete
+
+   Deletes a MapR-DB binary or JSON table.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * adminaccessperm on the table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table delete -path <path>
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/delete?path=<path>'
+  -u <username>:<password>
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Parameters
+
+   Parameter
+
+   Description
+   path Path to the MapR table to delete.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, if you want to delete a table named test under
+       volume1 which has a mount point at /volume1, specify the following
+       path: /volume1/test
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, if you want to delete a table named
+       customer under volume1 in the sanfrancisco cluster, specify the
+       following path: /mapr/sanfrancisco/volume1/customer
+
+Example
+
+   Deletes the table table:
+
+   CLI
+
+maprcli table delete -path /mapr/mycluster/volume1/table
+
+   REST
+
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/delete?path=%2Fmapr%2Fmycluster%2Fvolume1%
+2Ftable' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

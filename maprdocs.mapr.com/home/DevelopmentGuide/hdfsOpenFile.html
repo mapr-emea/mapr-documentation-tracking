@@ -1,0 +1,71 @@
+hdfsOpenFile()
+
+   Supported by libMapRClient for hadoop-2.x
+
+   Opens a file in the specified mode. Creates the file and intermediate
+   directories if they do not exist.
+
+   Requires a valid filesystem handle, which one of the hdfsConnect() APIs
+   can provide.
+
+   Before the call to hdfsOpenFile(), hdfsExists() can check that the file
+   exists, if a check is needed.
+
+   After finishing work on a file, call hdfsCloseFile() to free the memory
+   that is associated with the file.
+
+Signature
+
+hdfsFile hdfsOpenFile(hdfsFS fs, const char* path, int flags, int bufferSize, sh
+ort replication, tSize blocksize)
+
+Parameters
+
+   Parameter Description
+   fs The handle of the filesystem where the file is located. Obtain this
+   handle with one of the hdfsConnect() APIs.
+   path The full path to the file.
+   flags One of the following values. These flags are included in the
+   fcntl.h header file.
+
+   O_RDONLY
+          Opens the file in read-only mode with the current offset at 0.
+
+   O_RDWR
+          Opens the file in read-write mode. If the file already exists,
+          it is truncated to offset 0, effectively deleting the content of
+          the file to offset 0.
+
+   O_RDWR | O_APPEND
+          Opens the file in read-write mode with the current offset at 0.
+          Writing to the file with hdfsWrite() appends the written data to
+          the end of the file. Data written with hdfsPwrite() is not
+          appended, but written starting at the offset specified in the
+          call to that API.
+
+   O_WRONLY
+          Opens the file in write-only mode. If the file already exists,
+          it is truncated to offset 0, effectively deleting the content of
+          the file.
+
+   O_WRONLY | O_APPEND
+          Opens the file in write-only mode with the current offset at 0.
+          Writing to the file with hdfsWrite() appends the written data to
+          the end of the file. Data written with hdfsPwrite() is not
+          appended, but written starting at the offset specified in the
+          call to that API.
+
+   bufferSize Ignored for files on MapR-FS
+   replication Ignored for files on MapR-FS
+   blocksize The size of chunks for the file in bytes. Specify 0 if you
+   want to use the value that is specified for the fs.mapr.block.size
+   parameter in the /opt/mapr/hadoop/hadoop-2.x/etc/hadoop/core-site.xml
+   file on the client (if the client is using the libMapRClient version of
+   hadoop-2.x). If this parameter is not set in core-site.xml, the default
+   value is taken from the directory’s .dfs_attrributes file.
+
+Return Value
+
+   Returns the handle to the open file or NULL on error.
+
+   Check errno for error codes and meanings.

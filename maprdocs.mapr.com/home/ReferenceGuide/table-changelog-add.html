@@ -1,0 +1,69 @@
+table changelog add
+
+Description
+
+   Creates a changelog and creates a stream topic if one does not already
+   exist. A changelog establishes a relationship between a MapR-DB source
+   table (JSON or binary) and a MapR-ES stream topic.
+
+Syntax
+
+   CAPTION: Table 1.
+
+   CLI
+maprcli table changelog add -path <source table path> -changelog <destination st
+ream path>:<topic name>
+
+   REST
+http://<ipaddress>:8443/rest/table/changelog/add?path=<source-table-path>&change
+log=<destination stream path>:<topic name>
+
+Parameters
+
+   CAPTION: Table 2.
+
+   Parameter Description
+   path (Required) Path of the source table.
+   changelog (Required) Target of the change log, specified as
+   <stream_path>:<topic_name>, to which all change data records will be
+   published. The stream must exist, otherwise, the command fails. If the
+   topic does not already exist, maprcli table changelog add creates it.
+   To propagate to an existing topic, specify -useexistingtopic.
+   Note: The maprcli stream create command is used to create the changelog
+   stream.
+   Important: A CDC changelog stream's default partitions can impact how
+   many partitions a stream topic can have. This is because once you
+   create a stream topic for a changelog stream, the number of topic
+   partitions is locked. The number of topic partitions cannot change.
+
+   When using the table changelog add command to add a stream topic (as
+   well as establish a relationship between the source table and the
+   changelog stream), then the number of topic partitions is inherited
+   from the changelog stream and is locked.
+   useexistingtopic If true, allows propagation to an existing topic.
+   Default: false.
+   propagateexistingdata If true, initiates propagation of the existing
+   data to the stream topic, otherwise, only new changes are propagated.
+   Default: true
+   columns For MapR-DB JSON, a comma separated list of field paths to be
+   propagated. For MapR-DB Binary, a comma separated list of column family
+   names, for example, <family>[:<column>] to be propagated. Default: All
+   fields are propagated.
+   throttle If true, data transfers to the specified sink are throttled.
+   Default: false
+   pause If true, pauses propagation after the changlog is created.
+   Default: false
+   synchronous If true, acknowledges the client writes to the table before
+   the internal CDC gateway receives the data. Default: false
+   networkencryption Specifies whether the data transfer between MFS and
+   the internal gateway is encrypted. If true, data propagation is
+   encrypted on-wire. Default: false
+   networkcompression Specifies the compression scheme (off|lzf|lz4|zlib)
+   of the data transfer on-wire. Default: lz4
+
+Example
+
+maprcli table changelog add -path /tableVolume/cdcTable -changelog /streamVolume
+/changelogStream:cdcTopic1
+https://ip.address:8443/rest/table/changelog/add?path=/tableVolume/cdcTable&chan
+gelog=/streamVolume/changelogStream:cdcTopic1

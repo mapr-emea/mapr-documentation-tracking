@@ -1,0 +1,299 @@
+Structured Streaming for Apache Spark
+
+   MapR supports Structured Streaming for Apache Spark in MEP 5.0.0.
+
+   The behavior of MapR Structured Spark Streaming is the same as in
+   Apache Spark.
+   To use MapR Structured Spark Streaming:
+     * Create a MapR Streams topic consisting of the stream path and topic
+       name separated by “:”. For example: /test_stream:topic1.
+     * Install Kafka-client on all nodes, or copy kafka-clients jar from
+       /opt/mapr/lib/kafka-clients-1.0.1-mapr-1803.jar to
+       /opt/mapr/spark/spark-<version>/jars/.
+
+   The following is an example of a word count application, written in
+   Scala, Java, and Python, to demonstrate how to get started with
+   Structured Spark Streaming:
+     * [1]Scala
+     * [2]Java
+     * [3]Python
+
+val spark = SparkSession
+      .builder
+      .appName("StructuredKafkaWordCount")
+      .getOrCreate()
+
+import spark.implicits._
+//Create a DataSet representing the stream of input lines from Kafka
+val lines = spark
+     .readStream
+     .format("kafka")
+     .option("kafka.bootstrap.servers", bootstrapServers)
+     .option(subscribeType, topics)
+     .load()
+     .selectExpr("CAST(value AS STRING)")
+     .as[String]
+//Generate a running word count
+val wordCounts = lines.flatMap(_.split(" ")).groupBy("value").count()
+//Start running the query that prints the running counts to the console
+val query = wordCounts.writeStream
+      .outputMode("complete")
+      .format("console")
+      .option("checkpointLocation", checkpointLocation)
+      .start()
+
+query.awaitTermination()
+
+SparkSession spark = SparkSession
+         .builder()
+         .appName("JavaStructuredKafkaWordCount")
+         .getOrCreate();
+//Create a DataSet representing the stream of input lines from Kafka
+Dataset<String> lines = spark
+         .readStream()
+         .format("kafka")
+         .option("kafka.bootstrap.servers", bootstrapServers)
+         .option(subscribeType, topics)
+         .load()
+         .selectExpr("CAST(value AS STRING)")
+         .as(Encoders.STRING());
+//Generate a running word count
+Dataset<Row> wordCounts = lines.flatMap(
+(FlatMapFunction<String, String>) x -> Arrays.asList(x.split(" ")).iterator(),
+Encoders.STRING()).groupBy("value").count();
+
+//Start running the query that prints the running counts to the console
+StreamingQuery query = wordCounts.writeStream()
+          .outputMode("complete")
+          .format("console")
+          .start();
+
+query.awaitTermination();
+
+spark = SparkSession\
+   .builder\
+   .appName("StructuredKafkaWordCount")\
+   .getOrCreate()
+
+#Create a DataSet representing the stream of input lines from Kafka
+lines = spark\
+    .readStream\
+    .format("kafka")\
+    .option("kafka.bootstrap.servers", bootstrapServers)\
+    .option(subscribeType, topics)\
+    .load()\
+    .selectExpr("CAST(value AS STRING)")
+
+#Split the lines into words
+words = lines.select(
+#explode turns each item in an array into a separate row
+     explode(
+       split(lines.value, ' ')
+      ).alias('word')
+)
+
+#Generate a running word count
+wordCounts = words.groupBy('word').count()
+
+#Start running the query that prints the running counts to the console
+query = wordCounts\
+   .writeStream\
+   .outputMode('complete')\
+   .format('console')\
+   .start()
+
+query.awaitTermination()
+
+   See [4]Spark 2.2.1-1803 (MEP 5.0.0) Release Notes for release specific
+   information.
+
+   For additional information about Structured Spark Streaming, you can
+   refer to the [5]open source documentation.
+
+Write Spark Stream to MapR-DB Sink
+
+   To write a Spark Stream to MapR-DB, specify the format with the
+   tablePath, idFieldPath, createTable, bulkMode, and sampleSize
+   parameters.
+
+   For writing Spark Streams to MapR-DB, the MapR-DB format must be
+   "MapRDBSourceConfig.Format" for Java and Scala or
+   "com.mapr.db.spark.streaming" for Python.
+
+   The following is an example of a method to write a Spark Stream to
+   MapR-DB:
+     * [6]Scala
+     * [7]Java
+     * [8]Python
+
+import com.mapr.db.spark.streaming.MapRDBSourceConfig
+import org.apache.spark.sql.streaming.{DataStreamReader, DataStreamWriter}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+
+def dataStreamWriter(spark: SparkSession, df: DataFrame): DataStreamWriter[Row]
+= {
+import spark.implicits._
+
+df.select($"value" as "_id")
+  .writeStream
+  .format(MapRDBSourceConfig.Format)
+  .option(MapRDBSourceConfig.TablePathOption, "/table/path")
+  .option(MapRDBSourceConfig.IdFieldPathOption, "value")
+  .option(MapRDBSourceConfig.CreateTableOption, true)
+  .option(MapRDBSourceConfig.BulkModeOption, true)
+  .option(MapRDBSourceConfig.SampleSizeOption, 1000)
+  .outputMode("append")
+}
+
+import com.mapr.db.spark.streaming.MapRDBSourceConfig;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.streaming.DataStreamReader;
+import org.apache.spark.sql.streaming.DataStreamWriter;
+import org.apache.spark.sql.streaming.StreamingQueryException;
+
+DataStreamWriter<Row> dataStreamWriter(Dataset<Row> df) {
+ return df.selectExpr("CAST(value AS STRING) as _id")
+          .writeStream()
+          .format(MapRDBSourceConfig.Format())
+          .option(MapRDBSourceConfig.TablePathOption(), "/table/path")
+          .option(MapRDBSourceConfig.IdFieldPathOption(), "value")
+          .option(MapRDBSourceConfig.CreateTableOption(), true)
+          .option(MapRDBSourceConfig.BulkModeOption(), true)
+          .option(MapRDBSourceConfig.SampleSizeOption(), 1000)
+          .outputMode("append");
+}
+
+from pyspark.sql import *
+
+def data_stream_writer_func(df, checkpoint_dir, table_path):
+ return df.selectExpr("CAST(value AS STRING) as _id") \
+          .writeStream \
+          .format("com.mapr.db.spark.streaming") \
+          .option("checkpointLocation", checkpoint_dir) \
+          .option("tablePath", table_path) \
+          .option("idFieldPath", "value") \
+          .option("createTable", True) \
+          .option("bulkMode", True) \
+          .option("sampleSize", 1000)
+
+   The following is an example of a word count application, written in
+   Scala, Java, and Python, to demonstrate how to write a Spark Stream to
+   MapR-DB:
+     * [9]Scala
+     * [10]Java
+     * [11]Python
+
+val spark = SparkSession
+      .builder
+      .appName("StructuredKafkaWordCount")
+      .getOrCreate()
+
+import spark.implicits._
+
+//Create DataSet representing the stream of input lines from kafka
+val lines = spark
+      .readStream
+      .format("kafka")
+      .option("kafka.bootstrap.servers", bootstrapServers)
+      .option(subscribeType, topics)
+      .load()
+      .selectExpr("CAST(value AS STRING)")
+      .as[String]
+
+//Generate running word count
+val wordCounts = lines.flatMap(_.split(" ")).groupBy("value").count()
+
+//Start running the query that save result to maprdb
+val query = wordCounts.writeStream
+      .format(MapRDBSourceConfig.Format)
+      .option(MapRDBSourceConfig.TablePathOption, resultTable)
+      .option(MapRDBSourceConfig.CreateTableOption, true)
+      .option(MapRDBSourceConfig.IdFieldPathOption, "value")
+      .outputMode("complete")
+      .start()
+
+query.awaitTermination()
+
+SparkSession spark = SparkSession
+        .builder()
+        .appName("JavaStructuredKafkaWordCount")
+        .getOrCreate();
+
+//Create DataSet representing the stream of input lines from kafka
+Dataset<String> lines = spark
+           .readStream()
+           .format("kafka")
+           .option("kafka.bootstrap.servers", bootstrapServers)
+           .option(subscribeType, topics)
+           .load()
+           .selectExpr("CAST(value AS STRING)")
+           .as(Encoders.STRING());
+
+//Generate running word count
+Dataset<Row> wordCounts = lines.flatMap(
+(FlatMapFunction<String, String>) x -> Arrays.asList(x.split(" ")).iterator(),
+ Encoders.STRING()).groupBy("value").count();
+
+//Start running the query that save result to maprdb
+StreamingQuery query = wordCounts.writeStream()
+          .format(MapRDBSourceConfig.Format())
+          .option(MapRDBSourceConfig.TablePathOption(), resultTable)
+          .option(MapRDBSourceConfig.CreateTableOption(), true)
+          .option(MapRDBSourceConfig.IdFieldPathOption(), "value")
+          .outputMode("complete");
+          .start();
+
+query.awaitTermination();
+
+spark = SparkSession\
+    .builder\
+    .appName("StructuredKafkaWordCount")\
+    .getOrCreate()
+
+#Create DataSet representing the stream of input lines from kafka
+lines = spark\
+   .readStream\
+   .format("kafka")\
+   .option("kafka.bootstrap.servers", bootstrapServers)\
+   .option(subscribeType, topics)\
+   .load()\
+   .selectExpr("CAST(value AS STRING)")
+
+#Split the lines into words
+words = lines.select(
+#explode turns each item in an array into a separate row
+   explode(
+       split(lines.value, ' ')
+        ).alias('word')
+)
+
+#Generate running word count
+wordCounts = words.groupBy('word').count()
+
+#Start running the query that save result to maprdb
+query = wordCounts\
+    .writeStream\
+    .format("com.mapr.db.spark.streaming") \
+    .option("tablePath", table_path) \
+    .option("createTable", True) \
+    .option("idFieldPath", "value") \
+    .outputMode('complete')\
+    .start()
+
+query.awaitTermination()
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/StructuredSparkStreaming.html#div1entry1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/StructuredSparkStreaming.html#div1entry2
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/StructuredSparkStreaming.html#div1entry3
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/EcosystemRN/SparkRN-2.2.1-1803.html
+   5. https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/StructuredSparkStreaming.html#div2entry1
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/StructuredSparkStreaming.html#div2entry2
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/StructuredSparkStreaming.html#div2entry3
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/StructuredSparkStreaming.html#div3entry1
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/StructuredSparkStreaming.html#div3entry2
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/StructuredSparkStreaming.html#div3entry3

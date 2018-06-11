@@ -1,0 +1,54 @@
+POST /api/v2/table/{path}
+
+   Adds or replaces one or more documents in a MapR-DB JSON table
+
+Parameters
+
+                                 Name                               Description
+   path
+
+   string
+
+   (path)
+   Required: Path to the MapR-DB JSON table
+   fieldAsKey
+
+   string
+
+   (query)
+   The name of the field that serves as the key in the JSON document
+   mode
+
+   string
+
+   (query)
+   Defines the behavior of the operation.
+   The following are the possible values:
+     * insertOrReplace - Inserts new document if specified document id
+       does not exist; otherwise, replaces existing document specified by
+       the id.
+     * insert - Inserts new document; if the specified document id already
+       exists, returns an error.
+     * replace - Replaces document with specified id; returns an error if
+       document does not exist.
+
+   Default: insertOrReplace
+   body
+
+   (body)
+   The body of the documents to add or replace
+
+Request Example
+
+   The following inserts 3 documents into /apps/employees:
+curl -X POST \
+  'https://10.10.100.42:8243/api/v2/table/%2Fapps%2Femployees' \
+  -u root:mapr \
+  -H 'Content-Type: application/json' \
+  -d '[{"_id":"user001","first_name":"John","last_name":"Doe"},
+ {"_id":"user002","first_name":"Jane","last_name":"Doe"},
+ {"_id":"user003","first_name":"Simon","last_name":"Davis"}]'
+
+Response Example
+
+200 OK

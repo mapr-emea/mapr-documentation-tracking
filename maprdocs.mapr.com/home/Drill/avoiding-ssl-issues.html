@@ -1,0 +1,88 @@
+Avoiding Common SSL Issues
+
+   The following sections provide insight to some common error messages
+   that you may encounter with SSL.
+
+ERROR: No Cipher suites in common.
+
+   This is a general purpose error message that may have many reasons. The
+   most common reason is that in order to use certain cipher suites, JSSE
+   needs to use the private key stored in the Keystore. If this key is not
+   accessible, JSSE filters out all cipher suites that need a private key.
+   This effectively prunes out all available cipher suites so that no
+   cipher suites match between the client and the server.
+   The private key from the keystore may be inaccessible for the following
+   reasons:
+     * Missing Keystore file
+     * Invalid Keystore password
+     * Empty key password or a key password that is different from the
+       keystore password
+
+   JSSE does not allow a key password that is null or an empty string even
+   though it is possible to create a keystore with such a key password.
+   Also, JSSE does not provide a system property to specify the key
+   password. Drill provides a way to set the key password, but if you are
+   using only system properties to configure JSSE, Drill will use the
+   *keystore* password. If the keystore password is not the same as the
+   key password, the key will again be inaccessible.
+     * Corrupt keystore
+
+   You can validate the keystore using keytool.
+
+ERROR: SSL is enabled, but cannot be initialized due to the ‘Cannot recover
+key’ exception.
+
+   The key is protected with a password and the provided password is not
+   correct.
+
+ERROR: Client connection timeout.
+
+   A client connection can timeout because of networking issues or if
+   there is a mismatch between the TLS/SSL configuration on the client and
+   server.
+
+   Before trying to debug the TLS/SSL configuration, check if the server
+   is reachable from the client.
+   If there is a mismatch between the TLS/SSL configuration, the TLS/SSL
+   handshake between the client and server will fail. The server will
+   silently drop the connection and the client will eventually time out.
+   The handshake may fail due to many reasons, including:
+    1. The server is configured to enableTLS and the client is not (and
+       vice versa).
+         a. If the client is not configured to use TLS and the server is,
+            the error message will be similar to the following:
+Error: Failure in connecting to Drill: org.apache.drill.exec.rpc.RpcException: H
+ANDSHAKE_COMMUNICATION : Channel closed /10.10.10.11:49907 <--> hostname/10.10.1
+0.11:31010. (state=,code=0)
+java.sql.SQLNonTransientConnectionException: Failure in connecting to Drill: org
+.apache.drill.exec.rpc.RpcException: HANDSHAKE_COMMUNICATION : Channel closed /1
+0.10.10.11:49907 <-->hostname/10.10.10.11:31010.
+
+         b. If the server is not configured to use TLS and the client
+            tries to connect using TLS, the error message will be similar
+            to the following:
+Error: Failure in connecting to Drill: org.apache.drill.exec.rpc.NonTransientRpc
+Exception: Connecting to the server timed out. This is sometimes due to a mismat
+ch in the SSL configuration between client and server. [ Exception: Timeout wait
+ing for task.] (state=,code=0)
+
+    2. The server presents a certificate to the client containing a
+       hostname that is not valid. When the client connects to a server,
+       the hostname the client used to connect to the server must match
+       the name of the host the certificate was assigned to. Certificates
+       can contain wildcards for the hostname, so if you’re connecting to
+       a Drill cluster via ZooKeeper, it would be best to have a
+       certificate that contains wildcards that cover all the hosts on
+       which Drill might be running. It is also important to ensure that
+       the DNS and the hostnames of the machines in the cluster are set up
+       consistently so that the Drillbits are registered with ZooKeeper
+       using the same name as the name assigned in the certificate. The
+       error message in this case is the same as the previous case:
+Error: Failure in connecting to Drill: org.apache.drill.exec.rpc.NonTransientRpc
+Exception: Connecting to the server timed out. This is sometimes due to a mismat
+ch in the SSL configuration between client and server. [ Exception: Timeout wait
+ing for task.] (state=,code=0)
+
+       Hostname verification can be turned off if there is no way to
+       change the host configuration or the certificate. This is generally
+       not recommended.

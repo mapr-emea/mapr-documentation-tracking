@@ -1,0 +1,252 @@
+Admission Control
+
+   Admission control enforces limits on concurrent SQL queries and
+   statements that run in an Impala cluster with heavy workloads. When
+   admission control is enabled, Impala queues SQL queries and statements
+   that it would otherwise cancel or re-run due to insufficient resources
+   or performance bottlenecks.
+
+   You can configure admission control options that Impala uses to enforce
+   limits on the following behaviors:
+     * Number of concurrent queries that run in the cluster
+     * Query queue size
+     * Number of delayed queries that the queue can hold
+     * Amount of memory that queries use
+     * Time that queries can exist in queue before Impala cancels them
+
+Query Queuing
+
+   Admission control is embedded within each impalad daemon and
+   communicates through the statestore service. The impalad daemon
+   determines if a query runs immediately or if the query is queued. The
+   queue can include queries submitted through multiple Impala nodes.
+
+   Impala executes queries in the order that they are submitted to allow
+   for dependent statements, such as a CREATE TABLE statement followed by
+   an INSERT INTO statement. Impala may not execute queries submitted
+   through different nodes in the order that the queries were received.
+   When Impala must execute a sequence of statements in order, you should
+   submit the statements on the same Impala node within a single session.
+   When statement order is not important, you can set up your table
+   structures and submit statements through different Impala nodes.
+
+   If a sudden flow of requests causes more queries to run concurrently
+   than expected, the overall Impala memory limit and the Linux cgroups
+   mechanism serve as hard limits to prevent over allocation of memory.
+   When queries hit these limits, Impala cancels the queries.
+
+Configuring Admission Control
+
+   You can use a combination of Impala start-up options, and optionally
+   edit configuration settings in fair-scheduler.xml, to configure
+   admission control. Admission control uses the Fair Scheduler
+   configuration settings to determine how to map users and groups to
+   different resource pools.
+
+   Fair Scheduler Settings
+
+   You can configure settings in fair-scheduler.xml that admission control
+   can use to determine how to map users and groups to different resource
+   pools. The <aclSubmitApps> tag in fair-scheduler.xml contains users and
+   groups that can submit Impala statements to a corresponding Impala
+   resource pool. The user and group lists are separated by a space, as
+   shown in the following example:
+<aclSubmitApps>user1,user2,user3 dev,tech,admin</aclSubmitApps>
+
+   If the <aclSubmitApps> tag is empty for a pool, no one can submit
+   directly to that pool, however child pools can have their own
+   <aclSubmitApps> values to allow users and groups to submit to the child
+   pools.
+
+   Impala does not use the vcores and disks values, however you must
+   specify them to satisfy YARN requirements for the file content. For
+   more information about Fair Scheduler configuration settings, refer to
+   the [1]Apache wiki.
+   The following fair-scheduler.xml shows examples of the <aclSubmitApps>
+   tag and also shows the vcores and disks values:
+<allocations>
+    <queue name="root">
+        <aclSubmitApps> </aclSubmitApps>
+        <queue name="default">
+            <maxResources>40000 mb, 0 vcores, 0 disks</maxResources>
+            <aclSubmitApps>*</aclSubmitApps>
+        </queue>
+        <queue name="dev">
+            <maxResources>100000 mb, 0 vcores, 0 disks</maxResources>
+            <aclSubmitApps>user1,user2 dev,tech,admin</aclSubmitApps>
+        </queue>
+        <queue name="prod">
+            <maxResources>2000000 mb, 0 vcores, 0 disks</maxResources>
+            <aclSubmitApps> tech,admin</aclSubmitApps>
+        </queue>
+    </queue>
+    <queuePlacementPolicy>
+        <rule name="specified" create="false"/>
+        <rule name="default" />
+    </queuePlacementPolicy>
+</allocations>
+
+Impala Start-up Options
+
+   To configure admission control, modify Impala’s start-up options. You
+   can modify the start-up options in
+/opt/mapr/impala/impala-<version>/conf/env.sh.
+
+   For more information about how to modify Impala start-up options, refer
+   to [2]Additional Impala Configuration Options.
+
+   The following table lists the admission control start-up options that
+   you can configure:
+   Option Type Default Description
+   -default_pool_max_queued int64 0 The maximum number of requests allowed
+   in the queue. Impala rejects additional requests when the queue reaches
+   this limit. This a “soft” limit that applies cluster-wide. Each Impala
+   node decides independently whether to run queries immediately or to
+   queue them. Impala allows for the overall number of queued queries to
+   be slightly higher that the limit during times of heavy load. A
+   negative value or 0 indicates that requests are always rejected once
+   the maximum concurrent requests are executing. Ignored if
+   fair_scheduler_config_path is set.
+
+   -default_pool_max_requests
+
+   int64 -1 The maximum number of concurrent requests allowed to run
+   before incoming requests are queued. This a “soft” limit that applies
+   cluster-wide. Each Impala node decides independently whether to run
+   queries immediately or to queue them. The overall number of concurrent
+   queries might be slightly higher during times of heavy load. A negative
+   value indicates no limit. Ignored if fair_scheduler_config_path is set.
+
+   -default_pool_mem_limit
+
+   string
+
+   "" (empty string)
+
+   The maximum amount of memory that all outstanding requests in this pool
+   can use before new requests to this pool are queued. Specified in
+   bytes, megabytes, or gigabytes by a number followed by the suffix b
+   (optional), m, or g, either upper- or lowercase. You can specify
+   floating-point values for megabytes and gigabytes, to represent
+   fractional numbers such as 1.5. You can also specify it as a percentage
+   of the physical memory by specifying the suffix %. 0 or no setting
+   indicates no limit. Defaults to bytes if no unit is given. This is a
+   soft limit applied cluster-wide. Each Impala node makes independent
+   decisions to run queries immediately or queue them, so the overall
+   memory used by concurrent queries might be slightly higher during times
+   of heavy load. Ignored if fair_scheduler_config_path is set.
+
+   Note: Impala relies on the statistics produced by the COMPUTE STATS
+   statement to estimate memory usage for each query.
+
+   -disable_admission_control
+
+   Boolean false Turns off the admission control feature entirely,
+   regardless of other configuration option settings.
+
+   -disable_pool_max_requests
+
+   Boolean false Disables all per-pool limits on the maximum number of
+   running requests.
+
+   -disable_pool_mem_limits
+
+   Boolean false Disables all per-pool memory limits.
+   -fair_scheduler_allocation_path String "" (empty string) Path to the
+   Fair Scheduler allocation file,
+fair-scheduler.xml
+
+   . Admission control can only use a small subset of the settings that
+   can go in this file.
+   -queue_wait_timeout_ms int64 60000 The maximum amount of time (in
+   milliseconds) that a request waits in queue to be executed before
+   timing out.
+
+Admission Control with Clients
+
+   Admission control works with JDBC and ODBC client interfaces, however
+   you may experience the following scenarios due to limits enforced by
+   this feature:
+     * The API call blocks SQL statements in the query queue instead of
+       running them immediately. Query execution begins when the statement
+       moves out of the query queue, at which time the client program can
+       request the results, which may also block until they become
+       available.
+     * If a SQL statement is canceled due to prolonged queue time or
+       because it exceeded the memory limit during execution, an error
+       occurs and the client program receives an error message.
+
+   You cannot set the following options from JDBC or ODBC applications:
+     * You must set the REQUEST_POOL option for a session through the
+       impala-shell interpreter, or through the Impala start-up options if
+       you want the setting to apply cluster-wide.
+     * You must set the MEM_LIMIT query option through the impala-shell
+       interpreter. It cannot be used directly through JDBC or ODBC
+       applications.
+
+Admission Control Guidelines
+
+   The admission control system is not aware of other Hadoop workloads,
+   such as MapReduce applications.
+
+   The following table lists some admission control guidelines to follow:
+   Guideline Description
+   Examine query profile output
+
+   Examine the profile output for a query to see how admission control
+   works for the query. The profile output provides details about the
+   admission decision, such as whether the query was queued or not and
+   which resource pool it was assigned to. It also includes the estimated
+   and actual memory usage for the query, so you can fine-tune the
+   configuration for the memory limits of the resource pools. In
+   impala-shell, you can also specify which resource pool to direct
+   queries to by setting the REQUEST_POOL query option.
+
+   You can run the PROFILE statement in the impala-shell right after you
+   run the query to see the query output, or you can review the Impala log
+   file.
+   You cannot use admission control with Hue deployed Unclosed Hue queries
+   accumulate and exceed the queue size limit. To use admission control,
+   you must explicitly enable it by specifying
+   --disable_admission_control=false in the impalad command-line options
+   safety valve field.
+   Set the MEM_LIMIT query option to override the query estimated memory
+   usage When a query cannot run due to high estimated memory usage, set
+   the MEM_LIMIT query option in the impala-shell and issue the query
+   through the shell in the same session to override the estimate. Impala
+   treats the MEM_LIMIT value as the estimated amount of memory and
+   overrides the estimate that Impala would generate based on table and
+   column statistics. This value is used only for making admission control
+   decisions, and is not pre-allocated by the query.
+   Increase memory if needed when inserting into Parquet tables Admission
+   control affects query statements, as well as INSERT and CTAS. Inserting
+   into a Parquet tables is memory intensive because 1GB of data is
+   buffered before writing out each Parquet data block. When inserting
+   into a partitioned Parquet table, Impala redistributes the data among
+   the nodes to reduce memory consumption. You may need to temporarily
+   increase the memory dedicated to Impala during the insert operation, or
+   break up the load operation into several INSERT statements, or both.
+   Limits on queued queries affect subsequent statements in the same
+   session If Impala queues a query due to a limit on concurrent queries
+   or memory usage, subsequent statements in the same session are also
+   queued to ensure that the statements are processed in the correct
+   order.
+   Reuse classifications and hierarchy developed for use with Sentry
+   security If you set up different resource pools for different users and
+   groups, consider reusing any classifications and hierarchy you
+   developed for use with Sentry security. See Enabling Sentry
+   Authorization for Impala for details. For details about all the Fair
+   Scheduler configuration settings, see the [3]Apache wiki, in particular
+   the tags such as <queue> and <aclSubmitApps> to map users and groups to
+   particular resource pools (queues).
+   Use the COMPUTE STATS statement for large tables involved in join
+   queries Although COMPUTE STATS is an important statement to help
+   optimize query performance, it is especially important when admission
+   control is enabled. Admission control relies on COMPUTE STATS to
+   generate accurate memory usage estimates for complex queries.
+
+References
+
+   1. http://hadoop.apache.org/docs/r2.5.1/hadoop-yarn/hadoop-yarn-site/FairScheduler.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Impala/AdditionalImpalaConfigurOptions.html
+   3. http://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/FairScheduler.html#Configuration

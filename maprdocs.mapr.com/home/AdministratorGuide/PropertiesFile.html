@@ -1,0 +1,136 @@
+FileMigrate.properties
+
+   Properties Default Value Description
+   UI Setting Property File
+   Full Scan Frequency upload.fullScanFrequencyMin 60 Frequency, in
+   minutes, at which full scan of all files detect changes missed by lite
+   scans and purge (per the configured policy) uploaded files.
+   Note: The actual time of a full scan is computed on a per directory
+   basis and spread randomly around the specified fullScanFrequency. Thus
+   specifying 60 minutes does not mean that all directories get a full
+   scan at exactly 60 minutes. Instead, directories randomly get a full
+   scan on average every 60 minutes (somewhere between 30 and 90 minutes).
+   This approach avoids load spikes.
+   Upload Scan Frequency upload.scanFrequencySec 60 Frequency, in seconds,
+   at which light scans of directories detect changes since the last scan.
+   This value cannot be below 10 seconds.
+   Completion Scan Frequency upload.completionScanFrequencySec 3
+   Frequency, in seconds, for checking upload status.
+
+   This impacts the time delay before the queue is cleared for more
+   uploads, the reporting time for completion, and statistics collection.
+   Note: Values below the default may consume extra system resources.
+   Minimum Wait Before Upload upload.minWaitBeforeUploadSecs 15 Length of
+   time, in seconds, to wait for uploading a file since the file was last
+   modified. Set a higher value to avoid uploading a file still being
+   modified.
+   Maximum Active Uploads upload.maxActiveUploads 10 Maximum number of
+   files to upload concurrently. The scanning component of the file
+   migration service is paused when 10 times this many files are waiting
+   for upload.
+   Minimum Wait After Failure upload.minWaitAfterFailureSecs 300 Amount of
+   time, in seconds, to wait (pause) before retrying if upload fails or if
+   there is an error in the file system.
+   Maximum Retries Per File upload.maxErrorsOnOneFileBeforeGiveUp 10
+   Maximum number of times to attempt to upload a file. If the limit is
+   reached, the file is dequeued to allow other files to be uploaded and
+   the file modification time does not change. The dequeued file is
+   rediscovered and queued for upload during the next full scan.
+   Maximum System Retries upload.maxErrorsBeforeAssumeSystemIssue 10
+   Maximum number of errors to allow before pausing all uploads. If this
+   limit is reached, uploads continue only after the amount of time
+   specified as value for the minWaitAfterFailureSecs property has
+   elapsed.
+   Minimum Idle Time Before Error upload.minIdleTimeBeforeErrorSec 300
+   Amount of time, in seconds, to wait before logging a warning (in the
+   filemigrate.log file) if all uploads are not progressing.
+   Bucket Location Region aws.region   Region information as defined here.
+   For:
+     * Older regions, specify the short region name.
+     * New regions, specify the short region name and the region endpoint.
+
+   The following regions can be specified using just the region name:
+   us-east-1, us-west-1, us-west-2, ap-northeast-1, ap-southeast-1,
+   ap-southeast-2, sa-east-1, eu-west-1, cn-north-1, us-gov-west-1. For
+   all other regions, you might have to specify the endpoint as well.
+   Note: When you create a bucket in a region, verify that the bucket is
+   really in that region; in some cases, buckets for one region are
+   actually hosted elsewhere.
+   Region Endpoint aws.regionendpoint   The AWS region endpoint.
+   Proxy Host aws.proxyHost   (Optional) Proxy host information.
+   Proxy Port aws.proxyPort
+   Proxy Username aws.proxyUsername
+   Proxy Password aws.proxyPassword
+   Access Key aws.accessKey   Credentials to use for accessing the S3
+   bucket.
+   Secret Key aws.secretKey
+   Directory Path dir<N>.path   The path from which the scan of the
+   directory or root directory starts. Replace <N> with an integer; for
+   each additional directory tree, increment the number and specify a
+   unique path.
+   Note: Do not create multiple policies or directory configurations
+   pointing to the same file system location.
+   Target Bucket dir<N>.bucket   The Amazon S3 bucket to upload to.
+   Purge Interval dir<N>.purgepolicy.hours 0 Amount of time, in hours,
+   after the file was last modified to wait before deleting the file. The
+   default value is never delete (0).
+   Note: Deletion is delayed until after the file upload occurs,
+   regardless of the purge time set.
+   Delete Empty Directories dir<N>.deleteEmptyDirectoryDelayMins 0 Amount
+   of time to wait, in minutes, before deleting empty directories. The
+   default value is never delete (0).
+   Server Side Encryption dir<N>.serverSideEncrypt false Specify whether
+   (true) or not (false) S3 server side encryption should be used. If the
+   value is true (enabled), the TransferManager API that specifies AES256
+   encryption is used automatically for each uploaded file.
+   Ignore Files Regex dir<N>.ignoreFilesRegex   File and directory names
+   to ignore, specified as regex pattern, as defined by java.util.regex.
+   For example:
+     * .*\.TEMP$ - ignore all files/directories ending in .TEMP
+     * .*TEMP.* - ignore all files/directories that contain the phrase
+       TEMP
+     * ^TEMP.* - ignore all files/directories that start with TEMP
+
+   Specify a single regular expression that matches multiple patterns, as
+   shown in the following examples:
+     * dir2.ignoreFilesRegex=^IGNORE.*|.*\.TMP$
+     * dir2.ignoreFilesRegex=^IGNORE.*|.*\.TMP$|.*\\.TXT$|.*\\.txt$
+     * dir2.ignoreFilesRegex=^temp$
+
+   X-Attributes dir<N>.xattrs   The space-separated list of AWS S3
+   attributes to copy from MFS to AWS S3 bucket when uploading a file.
+   Make a note of the following:
+     * While MFS attributes can be strings or binary, AWS S3 attributes
+       must be strings.
+     * While MFS attribute names are case sensitive, AWS S3 attribute
+       names are case insensitive.
+
+   Note: Only extended attributes from MapR-FS that start with user. are
+   considered for upload (since all user settable attributes begin with
+   user.). The attribute must be specified without user.. For example, to
+   upload a file with the extended attribute name user.foo, the value for
+   this property must be foo because the user. is implicit.
+   Extended attributes are uploaded when the file is first uploaded. If
+   extended attributes are set after file upload, the extended attributes
+   are not sent to AWS S3 unless the file modification timestamp changes.
+   Authorized Users authorized.users mapr The comma-separated list of
+   users who can login and use the File Migration Service. The UI
+   authorizes the following users to login and use the service:
+     * The owner of the file migrate process (on the cluster, this is
+       MAPR_USER).
+     * Any users belonging to the comma-separated list of authorized users
+       specified here.
+     * Any users belonging to any group in the comma-separated list
+       specified using authorized.groups property.
+
+   The default value is the MAPR_USER (who is mapr, by default) specified
+   with the [1]configure.sh utility.
+   Authorized Groups authorized.groups mapr The comma-separated list of
+   groups authorized to login and use the service. The default value is
+   the MAPR_USER (mapr, by default) specified with the [2]configure.sh
+   utility.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html

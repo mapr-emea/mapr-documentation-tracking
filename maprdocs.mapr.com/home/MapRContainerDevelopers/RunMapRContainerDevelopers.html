@@ -1,0 +1,73 @@
+Running the MapR Container for Developers Script
+
+   The MapR Container for Developers script,
+   mapr_devsandbox_container_setup.sh, downloads the docker image
+   associated with the container and launches the container image that
+   starts the MapR cluster. It also performs the configuration steps
+   needed to connect local MapR clients to the MapR cluster running in the
+   container.
+    1. Download mapr_devsandbox_container_setup.sh from
+       [1]https://raw.githubusercontent.com/mapr-demos/mapr-db-60-getting-
+       started/master/mapr_devsandbox_container_setup.sh
+    2. Modify the script so it is executable:
+chmod +x mapr_devsandbox_container_setup.sh
+    3. Run the script:
+./mapr_devsandbox_container_setup.sh
+       Note: The script may take 5-10 minutes to run the first time run
+       it. It requires downloading the docker image from the docker
+       repository.
+    4. When the docker image is running, you will see the following
+       output:
+Docker Container is coming up....
+Mac Client has been configured with the docker container.
+
+Please login to the container using (root password mapr): ssh root@localhost -p
+2222
+Login to MCS at https://localhost:8443
+    5. Log in to the docker container:
+ssh root@localhost -p 2222
+    6. Wait for the AdminApplication java process to start by viewing the
+       output from jps:
+root@maprdemo:~# jps
+3472 WardenMain
+28369 Jps
+5105 CLDB
+13810 RunJar
+28259 FsShell
+13235 AdminApplication
+3232 QuorumPeerManager
+12280 Drillbit
+14122 RunJar
+    7. When AdminApplication is running, you can access the MapR Control
+       System (MCS) in your browser using the following URL:
+https://localhost:8443
+    8. After all MapR services are running, you can access MapR-FS using
+       POSIX commands, with /mapr as your mount point. The following steps
+       show you how to determine that all services are running:
+         a. Determine the id of your docker container by examining the
+            output from the following command:
+docker ps
+         b. Examine the contents of the docker logs using the container id
+            from Step 8a:
+docker logs ca2c94d9e822
+         c. It may take a few minutes for all services to initialize,
+            depending on the load in your environment. Output similar to
+            the following in your log output indicates that all services
+            are running:
+This container IP : 172.17.0.2
+         d. Log in to the container using the command from Step 5
+         e. Run the following command to access MapR-FS using ls:
+root@maprdemo:~# ls /mapr
+
+   Note: Whenever you change your network environment, you must
+   reconfigure your container. Rerun the
+   mapr_devsandbox_container_setup.sh script and select option 2 when the
+   script shows the following prompt:
+MapR sandbox container is already running.
+1. Kill the earlier run and start a fresh instance
+2. Reconfigure the client and the running container for any network changes
+Please enter choice 1 or 2 :
+
+References
+
+   1. https://raw.githubusercontent.com/mapr-demos/mapr-db-60-getting-started/master/mapr_devsandbox_container_setup.sh

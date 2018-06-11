@@ -1,0 +1,24 @@
+PAM Authentication for HttpFS
+
+   Complete the following steps to enable PAM authentication for HttpFS.
+    1. Add the following properties to the
+       /opt/mapr/httpfs/httpfs-1.0/etc/hadoop/httpfs-site.xml file.
+<property>
+        <name>httpfs.hadoop.authentication.type</name>
+        <value>multiauth</value>
+</property>
+
+<property>
+        <name>httpfs.authentication.type</name>
+        <value>multiauth</value>
+</property>
+       Note: On secure clusters, the multiauth authentication is enabled
+       by default.
+    2. Restart the HttpFS service.
+sudo -u mapr /opt/mapr/httpfs/httpfs-1.0/sbin/httpfs.sh stop
+sudo -u mapr /opt/mapr/httpfs/httpfs-1.0/sbin/httpfs.sh start
+    3. Run cURL with the PUT operation as shown in this example after
+       restarting the service.
+       Note: If HttpFS is configured with plain authentication through
+       PAM, the cURL request must contain a username and password.
+curl -X PUT "http://mapr:mapr@node1:14000/webhdfs/v1/tmp/example? op=mkdirs"

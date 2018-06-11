@@ -1,0 +1,167 @@
+Operational Changes (MapR 6.0.0)
+
+   Note the following functional changes to existing commands in Version
+   6.0.
+
+MapR-DB
+
+   Mapr-DB JSON Client Table API
+
+   The MapR-DB JSON Client Table API is deprecated and replaced by the
+   OJAI DocumentStore API
+
+   MapR-DB JSON Client Connection
+
+   The client connection to the database has changed to the Connection and
+   Driver OJAI APIs
+
+   MapR-DB JSON Table Create
+
+   The insertionorder option for MapR-DB JSON tables is not supported.
+   When upgrading from MapR 5.x, all existing MapR-DB JSON tables with
+   insertionorder option set to true will show a new behavior where
+   insertionorder is set to false. This impacts maprcli table create,
+   maprcli table info, and dbshell create.
+
+   Library change
+
+   There was a library change for Hive. See [1]Hive 2.1.1-1710 Release
+   Notes
+
+   Secondary Indexes and SSDs
+
+   Solid-state drives (SSDs) are recommended when using MapR-DB JSON with
+   secondary indexes. See [2]Cluster Hardware.
+
+   Discontinuation of the Mapr-DB Elasticsearch Integration Capability
+
+   With the release of MapR 6.0, MapR-DB Elastic Search integration
+   capability has been deprecated and is no longer be available in the
+   MapR-DB product. Customers using this feature in MapR 5.x environments
+   will continue to be supported until the EOL of MapR 5.2 in April 2019.
+   No new version updates will be made to this feature in MapR 5.x. MapR
+   recommends that you use the MapR-DB Change Data Capture feature. See
+   [3]Change Data Capture
+
+MapR-FS
+
+   Chunk Size If chunk size is zero (0), when an application makes a
+   request for block size, MapR will now return 2^62
+   (4611686018427387904); however, hadoop mfs commands will continue to
+   display 0 for chunk size.
+
+   core-site.xml core-site.xml is now located in in
+   /opt/mapr/hadoop/hadoop-<version>/etc/hadoop/ The previous location was
+   /opt/mapr/hadoop/hadoop/conf
+
+Default Database
+
+   Configure.sh -defaultdb = HBase (hbase) is no longer supported. The
+   only supported option is MapR-DB (maprdb).
+
+Mapr-ES (Streams)
+
+   The message offset in a partition starts from zero (0). If you are
+   upgrading and do not enable the MapR-DB/ES feature,
+   mfs.feature.db.streams.v6.support, the message offset in a partition
+   starts from one (1).
+
+Spyglass
+
+   MapR-ES (Streams) is now the default mechanism through which metrics
+   flow from collectd to OpenTSDB.
+
+MapR Control System
+
+   In prior releases, the mapr-webserver package contained both the MCS UI
+   static files and the server running the Java application. Starting from
+   v6.0, the UI static files are in mapr-webserver and the mapr-apiserver
+   runs the server that handles the queries. The apiserver allows you to
+   perform cluster administration programmatically. For more information,
+   see [4]Setting Up the MapR Control System
+
+MapR Installer
+
+   Package dependencies have changed. Before using the installer, make
+   sure that the packages described in [5]MapR Installer Prerequisites and
+   Guidelines are installed. These packages are downloaded for you when
+   you use the MapR Installer, but must be installed manually before you
+   install without using the MapR Installer.
+
+MapR Installer Stanzas
+
+   MapR Installer 1.7 (which includes MapR Installer Stanzas) no longer
+   supports the scaled_hosts: parameter for adding nodes to an on-premise
+   cluster. Instead, you need to use the scaled_hosts2: parameter. See
+   [6]Extending a Cluster by Adding Nodes.
+
+Deprecated Features
+
+     * MRv1
+       MapReduce version 1 is no longer supported. If you were previously
+       using MapReduce version 1, verify the mode your cluster is running
+       in and uninstall packages related to MapReduce version 1 before
+       upgrading to MapR 6.0. For more information, see [7]Migrating from
+       MapReduce Version 1 to MapReduce Version 2. As part of this
+       deprecation, the ExpressLane feature is no longer available
+     * Ganglia
+       Ganglia is no longer supported. However, you can view cluster
+       metrics in MCS dashboards or custom MapR Monitoring dashboards. For
+       more information, see [8]Using MapR Monitoring (Spyglass
+       Initiative).
+     * Mahout
+     * Storm
+     * Sahara
+     * Hadoop Commands
+       The following hadoop commands are deprecated and replaced by mapred
+       command. See [9]Supported Commands for Hadoop 2.x
+          + hadoop job
+          + hadoop mradmin
+          + hadoop pipes
+          + hadoop queue
+     * HBase
+     * Node metrics
+     * maprcli commands: job and task
+          + The maprcli job changepriority, job kill, and job table
+            commands are no longer supported
+          + The maprcli task command including task failattempt, task
+            killattempt, and task table, is no longer supported.
+          + You may still see references to these commands in help text.
+
+REST API
+
+   As of v6.0, MapR supports HTTP requests of type POST for the following
+   operations: enable, disable, create, edit, delete, move, purge, remove,
+   rename, resolve, set. For example:
+     * To create a volume:
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?<parameters>' --user
+mapr:mapr
+     * To edit a volume:
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/edit?<parameters>' --user ma
+pr:mapr
+
+   For all other operations, send a request of type GET. For example:
+curl -k -X GET 'https://abc.sj.us:8443/rest/volume/list?<parameters>' --user map
+r:mapr
+
+MapR Client
+
+   For the Windows client, you do not need to configure the core-site.xml
+   file with the UID, GID, and user name of the cluster user to access a
+   secure cluster because the username information will be available
+   through the ticket. You must configure the core-site.xml file for
+   accessing non-secure cluster only. See [10]Configuring MapR Client User
+   on Windows
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/EcosystemRN/HiveRN-2.1.1-1710.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/PlanningtheCluster-hardware.html#PlanningtheCluster-Cluste_26982442-d3e1181
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/DB-ChangeData/changeData-overview.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/SettingUptheClient-mcs.html
+   5. https://maprdocs.mapr.com/home/AdvancedInstallation/c_install_prerequisites.html
+   6. https://maprdocs.mapr.com/home/AdvancedInstallation/ExtendCluster.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/MRv1_migration.html#MRv1_migration
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Monitoring.html#concept_gvl_jm5_vv
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/HadoopCommands-SupportedCommands-v2.x.html
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/SettingUptheClient-config-mapr-client.html

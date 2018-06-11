@@ -1,0 +1,84 @@
+Identifying the MapR Volume Created During Dynamic Provisioning
+
+   Describes how to find the name of the MapR volume created during
+   dynamic provisioning.
+
+   In dynamic provisioning, the provisioner creates a new MapR volume with
+   a name that is randomly generated using lower-case letters. For
+   example, if you specify PV as the namePrefix in the StorageClass, the
+   first dynamically created volume might be named PV.bevefsescr. If you
+   do not specify a prefix, the provisioner uses maprprovisioner as a
+   prefix.
+   To find the name of the new MapR volume and the path to the volume:
+    1. Use the kubectl describe command to get information about the PVC:
+       kubectl describe pvc -n <namespace> <pvc-name>
+       The command output shows the name of the PersistentVolume (PV) that
+       was created: For example:
+kubectl describe pvc -n mapr-examples maprfs-secure-pvc109
+Name:          maprfs-secure-pvc109
+Namespace:     mapr-examples
+StorageClass:  secure-maprfs
+Status:        Bound
+Volume:        pv-ikmqxfwtjh
+Labels:        <none>
+Annotations:   control-plane.alpha.kubernetes.io/leader={holderIdentity":"ed60e6
+49-0c68-11e8-acd5-36117e0e7e02","leaseDurationSeconds":15, "acquireTime":"2018-0
+2-09T22:09:43Z"
+               pv.kubernetes.io/bind-competed=yes
+               pv.kubernetes.io/bound-by-controller=yes
+               volume.beta.kubernetes.io/storage-provisioner=mapr.com/maprfs
+Finalizers:    []
+Capacity:      300M
+Access Modes:  RWO
+Events:
+    2. Use the kubectl get command and the PersistentVolume (PV) name to
+       obtain a description of the PersistentVolume:
+       kubectl get pv <pv-name> -o yaml
+       The command output shows the path to the MapR volume. For example:
+kubectl get pv pv-ikmqxfwtjh -o yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    mapr.com/description: 'Dynamically provisioned PV for MapR-FS: pv.ikmqxfwtjh
+'
+    mapr.com/maprProvisionerIdentity: mapr.com/maprfs
+    mapr.com/provisionerVersion: v1.0.0
+    mapr.com/restServers: 10.10.88.214:8443
+    mapr.com/secretName: mapr-provisioner-secrets
+    mapr.com/secretNamespace: mapr-examples
+    mapr.com/volumeName: pv.ikmqxfwtjh
+    pv.kubernetes.io/provisioned-by: mapr.com/maprfs
+  creationTimestamp: 2018-02-09T22:21:22Z
+  name: pv-ikmqxfwtjh
+  resourceVersion: "2875820"
+  selfLink: /api/v1/persistentvolumes/pv-ikmqxfwtjh
+  uid: 8f11aa11-0de7-11e8-bdd6-84a9c4fbf7cb
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 300M
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: maprfs-secure-pvc109
+    namespace: mapr-examples
+    resourceVersion: "2842548"
+    uid: ce5555e4-0de5-11e8 bdd6-84a9c4fbf7cb
+  flexVolume:
+    driver: mapr.com/maprfs
+    options:
+      cldbHosts: xx.xx.xx.xxx yy.yy.yy.yyy zz.zz.zz.zzz
+      cluster: Test5
+      mountOptions: ""
+      platinum: "true"
+      readOnly: "false"
+      securityType: secure
+      ticketSecretName: mapr-ticket-secret
+      ticetSecretNamespace: mapr-examples
+      volumePath: /pv/pv-ikmqxfwtjh
+  persistentVolumeReclaimPolicy: Delete
+  storageclassName: secure-maprfs
+status:
+  phase: Bound

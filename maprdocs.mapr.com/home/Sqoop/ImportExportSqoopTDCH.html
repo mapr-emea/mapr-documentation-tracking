@@ -1,0 +1,66 @@
+Importing and Exporting Data Using the MapR Connector for Teradata
+
+   You can specify MapR Connector for Teradata options using any of these
+   methods:
+     * Configuration file
+     * -D command line option
+     * Sqoop options
+
+   Some Sqoop options are unsupported in the current release. For a list
+   of unsupported Sqoop options, see [1]Sqoop TDCH Import and Export
+   Options.
+
+   This table shows examples for importing and exporting data:
+
+   CAPTION: Table 1. Examples for Importing and Exporting Data
+
+   Operation Example
+   Import from Hive and HCatalog Importing from Hive and HCatalog requires
+   that HIVE_HOME and HCAT_HOME be specified before the Sqoop command is
+   run or using --hive-home/--hcatalog-home options. This example shows
+   the environment variable setup:
+export HIVE_HOME=/opt/mapr/hive/hive-1.2
+export HCAT_HOME=/opt/mapr/hive/hive-1.2/hcatalog
+
+   Or
+sqoop import --connect jdbc:teradata://<hostname>/database=test --connection-man
+ager org.apache.connectors.td.TeradataManager --username test --password test --
+table test --hive-import --hive-overwrite --hive-home /opt/mapr/hive/hive-1.2/
+
+   Import from Teradata to MapR-FS
+sqoop import --connect jdbc:teradata://<hostname>/database=test --connection-man
+ager org.apache.connectors.td.TeradataManager --username test --password test --
+table test --target-dir /user/mapr/test
+
+   Import from Teradata into a Hive Table
+sqoop import --connect jdbc:teradata://<hostname>/database=test --connection-man
+ager org.apache.connectors.td.TeradataManager --username test --password test --
+table test --hive-import --hive-overwrite --hive-home /opt/mapr/hive/hive-1.2/ -
+-fields-terminated-by ';'
+
+   Import from Teradata into an HCatalog Table
+sqoop import --connect jdbc:teradata://<hostname>/database=test --connection-man
+ager org.apache.connectors.td.TeradataManager --username test --password test --
+table test --hcatalog-table test
+
+   Import from Teradata into a Hive Table Stored as RCFile
+   Note: If you must import to a table stored as an RCFile or ORCFile, the
+   table must be created before data is imported.
+sqoop import -D tdch.fileformat="rcfile" --connect jdbc:teradata://<hostname>/da
+tabase=test --connection-manager org.apache.connectors.td.TeradataManager --user
+name test --password test --table test --hive-import --hive-overwrite --hive-hom
+e /opt/mapr/hive/hive-1.2/
+
+   Export to Teradata
+sqoop export --connect jdbc:teradata://<hostname>/database=test --connection-man
+ager org.apache.connectors.td.TeradataManager --username test --password test --
+table test --export-dir /user/mapr/test
+
+   Export from an AVRO File to Teradata
+sqoop export -D tdch.fileformat="avrofile" --connect jdbc:teradata://<hostname>/
+database=test --connection-manager org.apache.connectors.td.TeradataManager --us
+ername test --password test --table test --export-dir /user/mapr/avro
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy

@@ -1,0 +1,76 @@
+Installing MapR and Kubernetes Software on the Same Nodes
+
+   This section describes how to install the configuration files for the
+   MapR Data Fabric for Kubernetes. In this configuration, MapR and
+   Kubernetes software can coexist on the same nodes if certain version
+   requirements are met.
+   Note: This procedure is presented as a developer preview. Developer
+   previews are not tested for production environments, and should be used
+   with caution.
+   Important: These steps require installing a MapR 6.0.1 or later cluster
+   and deploying version 1.0.1 or later of the MapR Data Fabric for
+   Kubernetes.
+
+Before Installation
+
+   Before installing the MapR Data Fabric for Kubernetes, note these
+   preinstallation requirements:
+     * This procedure assumes that the Kubernetes cluster is already
+       installed and functioning normally.
+     * Ensure that all Kubernetes nodes use the same Linux distribution.
+       For example, all nodes can be CentOS nodes, or all nodes can be
+       Ubuntu nodes. But a cluster with a mixture of CentOS and Ubuntu
+       nodes is not supported.
+     * This procedure requires stopping Warden and Zookeeper on all nodes
+       in the MapR cluster and then restarting Warden and Zookeeper on all
+       nodes. The steps cannot be performed online one node at a time.
+     * Do not install the MapR client on a node where the volume plug-in
+       configuration file is installed. The MapR client can be installed
+       on a node in the Kubernetes cluster, but it must be installed
+       before the MapR Data Fabric for Kubernetes is installed on the same
+       Kubernetes cluster.
+
+   CAUTION:
+   Do not try to install the volume plug-in without following the steps
+   below. Doing so can cause MapR libraries to be overwritten.
+
+Install the MapR 6.0.1 or Later Cluster on the Kubernetes Nodes
+
+   Use any of the methods described in [1]Installing with the MapR
+   Installer to install a MapR 6.0.1 or later cluster on the existing
+   Kubernetes nodes.
+
+Install the MapR Data Fabric for Kubernetes
+
+   Use these steps to install the MapR Data Fabric for Kubernetes on the
+   Kubernetes cluster:
+    1. On the MapR cluster, stop all running jobs.
+    2. Stop Warden on all MapR cluster nodes
+service mapr-warden stop
+    3. Stop Zookeeper on all MapR Zookeeper nodes:
+service mapr-zookeeper stop
+    4. Deploy the MapR Data Fabric for Kubernetes components by using
+       steps 1 through 6 of [2]Installing MapR and Kubernetes Software on
+       Separate Nodes.
+    5. Configure the MAPR_SUBNETS environment variable to ensure that MapR
+       software does not use the docker0 network interface on each node.
+       See [3]Designating NICs for MapR.
+       If MAPR_SUBNETS is not set, the CLDB uses all NICs present on the
+       node. When Docker is installed on a node, thedocker0 bridge is
+       created as a virtual NIC for use by the Docker containers. You must
+       configure the MAPR_SUBNET setting to include the physical NICs that
+       you want the CLDB to use and exclude the docker0 network interface.
+       In this way, you can avoid issues with duplicate or non-routable IP
+       addresses. For more information about docker0, see [4]Docker
+       container networking.
+    6. On all MapR Zookeepr nodes, start Zookeeper:
+service mapr-zookeeper start
+    7. On all MapR nodes, start Warden
+service mapr-warden start
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/c_get_started_install.html#concept_mt1_xzx_ft
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_installation_separate_nodes.html#concept_ogr_sxc_qcb
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/DesignatingNICs.html#DesignatingNICs
+   4. https://docs.docker.com/v17.09/engine/userguide/networking/

@@ -1,0 +1,67 @@
+Performing Filesystem Operations on MapR-DB Tables
+
+   The MapR file system stores tables in the same namespace as files. You
+   can move and delete tables in much the same way as you can with files.
+   All file system operations remain accessible with the hadoop fs
+   command.
+
+   Volume properties, such as replication factor or rack topology, that
+   apply to the specified location also apply to tables stored at that
+   location. You can move a table with the Linux mv command or the hadoop
+   fs -mv command.
+
+   When you use Direct Access NFS or the hadoop fs -ls command to access a
+   MapR cluster, tables and files are listed together. Because the
+   client's Linux commands are not table-aware, other Linux file
+   manipulation commands, notably file read and write commands, are not
+   available for MapR-DB tables.
+
+   This section describes the operations that you can perform on MapR-DB
+   tables through a Linux command line when you access the cluster through
+   NFS or with the hadoop fs commands.
+
+Setting Permissions
+
+   MapR-DB tables do not support setting user permissions through the UNIX
+   chmod command or the hadoop fs -chmod analogue. Instead, MapR-DB table
+   access is controlled with Access Control Expressions (ACEs). See
+   [1]Enabling Table and Stream Authorizations with ACEs.
+
+Read and Write
+
+   You cannot perform read or write operations on a MapR-DB table from a
+   Linux file system context. For example, you cannot use the cat command
+   to view the content of a table or search through a table with the grep
+   command. MFS returns an error when an application attempts to read or
+   write to a MapR-DB table.
+
+Move
+
+   You can move a MapR-DB table within a volume with the mv command over
+   NFS or with the hadoop fs -mv command. These moves are subject to the
+   standard permissions restrictions. Moves across volumes are not
+   currently supported.
+
+Remove
+
+   You can remove a table with the rm command over NFS or with the hadoop
+   fs -rm command. These commands remove the table from the namespace and
+   asynchronously reclaims the disk space. You can remove a directory that
+   includes both files and tables with the rm -r or hadoop fs -rmr
+   commands.
+   Note: To prevent users from deleting a particular table, you must
+   ensure that users do not have WRITE permission on the folder in which
+   the table is located. Permissions on the table itself are not used in
+   evaluating whether a user can delete the table. This convention follows
+   standard UNIX rules for file and directory permissions.
+
+Copy and Recursive/Directory Copy
+
+   Table copying at the file-system level is not supported. See
+   [2]Migrating Between Apache HBase Tables and MapR-DB Tables for
+   information on copying tables using the HBase shell.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/EnablingTableAuthorizations.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/MigratingBetweenApacheHBaseandMapRDB.html

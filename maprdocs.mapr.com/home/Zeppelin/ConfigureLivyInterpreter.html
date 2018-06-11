@@ -1,0 +1,110 @@
+Configuring the Livy Interpreter
+
+   The Livy interpreter provides support for Spark Python, SparkR, Basic
+   Spark, and Spark SQL jobs. To use the Livy interpreter for these
+   variations of Spark, you must take certain actions, including
+   configuring Zeppelin and installing software on your MapR cluster.
+
+   You must also issue your docker run command with the parameters the
+   Livy interpreter requires. See the following material for details about
+   these parameters:
+     * [1]Bridge Networking
+     * [2]Pig, Livy, and Spark Interpreters
+
+Spark Python
+
+   The Apache Livy interpreter supports both Python 2.x and Python 3.x.
+   You must install them on your MapR cluster to use them through Livy.
+   You do not need to install them in your container. If the versions
+   installed in your MapR cluster nodes are different from the versions
+   included in the container, some functionality may not work.
+
+   To install custom Python packages, see [3]Installing Custom Packages
+   for PySpark.
+   To use Python 2.x, specify the following in your notebook:
+%livy.pyspark
+
+   To use Python 3.x:
+%livy.pyspark3
+
+SparkR
+
+   You must install R on your MapR cluster to use Apache SparkR through
+   Livy. If the version installed in your cluster is different from the
+   version included in the container, some functionality may not work.
+
+   To install custom packages for SparkR, run the R interpreter and
+   execute R commands to install the target package. You must install the
+   packages on each node where SparkR will execute. This are the nodes
+   that contain a YARN NodeManager. By default, the Livy interpreter
+   submits Spark jobs in YARN cluster mode.
+   The following example installs the data.table and googleVis packages
+   using the R interpreter:
+sudo R
+> install.packages("data.table")
+> install.packages("googleVis")
+
+   To verify these installs, run the following code in your Zeppelin UI:
+%livy.sparkr
+
+print(packageVersion("data.table"))
+print(packageVersion("googleVis"))
+
+   Your output should look similar to the following, depending on your
+   package versions:
+[1] '1.10.4.3'
+[1] '0.6.2'
+
+Spark Jobs
+
+   By default, the Livy interpreter is configured to submit Apache Spark
+   jobs in YARN cluster mode.
+
+   To run Spark jobs in parallel, you must modify the Livy interpreter to
+   instantiate Per Note:
+   [LivyInterpreterForSpark.png]
+
+   You can set scoped to either of the two options.
+
+Hive Tables
+
+   To use Apache Spark SQL with Apache Hive, follow the steps described at
+   [4]Integrate Spark-SQL (Spark 2.0.1 and later) with Hive. As described
+   on that page, to access Hive tables through Spark, you must make the
+   hive-site.xml configuration file from your Hive cluster available to
+   Spark running in your Zeppelin container.
+
+   One way to make the file available is through a volume mount when you
+   start docker:
+    1. Copy the file /opt/mapr/hive/hive-<version>/conf/hive-site.xml from
+       your Hive cluster to the local host on which you are running the
+       docker container.
+    2. Add a volume mount argument to your docker run command.
+       In the following example, the local hive-site.xml file is in /tmp:
+docker run -it -p 9995:9995 -e MAPR_CLUSTER=<cluster-name> … \
+-v /tmp/hive-site.xml:/opt/mapr/spark/spark-2.2.0/conf/hive-site.xml:ro \
+maprtech/data-science-refinery:v1.2_6.0.1_5.0.0_centos7
+
+   Another way to make the file available is to copy it into your running
+   container:
+    1. Copy the file /opt/mapr/hive/hive-<version>/conf/hive-site.xml from
+       your Hive cluster to the local host on which you are running the
+       docker container.
+    2. Determine your container-id using the output from the following
+       command:
+docker ps
+    3. Copy hive-site.xml from your local host into your docker container:
+docker cp /tmp/hive-site.xml <container-id>:/opt/mapr/spark/spark-2.2.0/conf
+    4. Log in to your container as the user running the container using
+       the container-id:
+docker exec -it --user <MAPR_CONTAINER_USER> <container-id> bash -l
+    5. Restart the Livy service running in your container:
+/opt/mapr/livy/livy-<version>/bin/livy-server stop
+/opt/mapr/livy/livy-<version>/bin/livy-server start
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_h1n_pc2_rbb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_kfb_k32_3db
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Zeppelin/InstallCustomPySpark.html#task_nfn_qnc_ybb
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Spark/IntegrateSparkSQL_Hive.html#IntegrateSpark-IntegrateS_29656196-d3e85

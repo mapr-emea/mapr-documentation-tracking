@@ -1,0 +1,247 @@
+table index add
+
+   This topic describes how to add secondary indexes on MapR-DB JSON
+   tables.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * readAce on the volume
+     * lookupdir on directories in the table path
+     * indexperm permission on the table
+
+   If you created the table in version 6.0 or later, you automatically
+   have indexperm permission. For tables created before 6.0, even if you
+   are the owner of the table, you must explicitly add indexperm
+   permission.
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table index add
+  -path <path>
+  -index <index name>
+  -indexedfields < indexed field names >
+  [ -includedfields < included field names > ]
+  [ -hashed [ enable hashed index: true | false> ]
+  [ -numhashpartitions < number of hash index partitions when hashed index is en
+abled > ]
+
+   REST
+
+curl -k -X POST \
+  'http[s]://<host>:<port>/rest/table/index/add?path=<path>&index=<index name>&i
+ndexedfields=<indexed field names>&<parameters>' \
+  -u <username>:<password>
+
+Parameters
+
+   Parameter Description
+
+   path
+   (Required) Path to where the parent JSON table resides.
+
+   index
+   (Required) Name of the index.
+   indexedfields (Required) Names of the indexed fields. This is a comma
+   separated list of the fields from the JSON table that are indexed and
+   used for ordering the index. The sort ordering of each field can be
+   specified separately. The syntax is as follows:
+-indexedfields <fieldname>:<sort_order>,<fieldname>:<sort_order>,...
+
+   Important: Do not place a space between the commas and the field names.
+
+   A sort_order of asc, ASC, or 1 denotes an ascending sort order. This is
+   the default.
+
+   A sort _order of desc, DESC, or -1 denotes a descending sort order.
+   The following example specifies two indexed fields. fieldName1 has an
+   ascending sort, while fieldName2 is descending.
+-indexedfields fieldName1:asc,fieldName2:desc
+
+   If an indexed field contains a colon (:) in the name, you need to
+   escape the last colon in the name. In the example below, the indexed
+   field names are the following:
+    1. field1
+    2. field2
+    3. colonField:X:Y
+
+   The following shows how to escape the last colon in the third indexed
+   field.
+-indexedfields field1,field2,colonField:X\\:Y
+
+   Note: The CAST function can be applied on indexed fields. You must
+   enclose each CAST function call in single quotes. See the next section
+   for details.
+   includedfields (Optional) Names of the included fields. This is a comma
+   separated list of the fields from the JSON table that are part of the
+   index, but not used for ordering. The syntax is as follows:
+-includedfields <fieldname>,<fieldname>,...
+
+   Important: Do not place a space between the commas and the included
+   field names.
+   hashed (Optional) True | False. Default: false
+   numhashpartitions (Optional) Number of [1]hash index partitions when
+   the hashed index option is enabled. This parameter determines the
+   number of logical partitions MapR-DB distributes keys across. Incoming
+   keys are hashed to 2 byte partition IDs. Default: 10
+
+Applying CAST on Indexed Fields
+
+   Indexes can be defined with the CAST function applied to an indexed
+   field.
+
+   The following statement queries a table named lineitem and casts the
+   L_LINENUMBER and L_ORDERKEY fields to the int data type.
+SELECT L_LINESTATUS, L_QUANTITY FROM lineitem WHERE CAST(L_LINENUMBER as int) =
+1 AND CAST(L_ORDERKEY as int) = 550;
+
+   To optimize the previous statement, you can create an index on the
+   L_LINENUMBER and L_ORDERKEY fields, and use the CAST function to map
+   each field to a specific data type, as shown below:
+maprcli table index add \
+  -path /drill/testdata/qa/sf1/maprdb/json/lineitem \
+  -index l_cast_comp_1 -indexedfields '$CAST(L_LINENUMBER@INT)','$CAST(L_ORDERKE
+Y@INT)' \
+  -includedfields L_LINESTATUS,L_QUANTITY
+
+   The index stores the values of the L_LINENUMBER and L_ORDERKEY fields
+   as the int data type. MapR-DB can use the index for any subsequent
+   queries that cast these fields to int instead of accessing data in the
+   primary table and converting the values to int.
+
+   See [2]Using Casts in Secondary Indexes for more information.
+
+Restrictions
+
+   The following restrictions apply to creating indexes.
+
+   Type Restrictions
+
+          + Indexed fields must contain scalar types. Scalar types include
+            integer, character, boolean, string, and byte. See [3]Data
+            Types Supported for Secondary Indexes for the complete list of
+            types.
+          + Indexed fields cannot contain nested documents. An indexed
+            field can be a subfield of a nested document, provided the
+            subfield contains scalar types.
+          + Indexed fields cannot contain arrays.
+
+   Size Restrictions
+
+          + The maximum size of all indexed fields in an index is 32KB. If
+            the collective size exceeds 32KB, then an insert of the
+            corresponding document results in an encoding error
+            (INDEX_ROW_KEY_ENCODER_ERROR_ENCODING_IS_TOO_LONG).
+          + The maximum number of indexes that you can create on a JSON
+            table is 32.
+
+   Field Definition Restrictions
+
+          + Indexed fields cannot be individual elements of an array.
+          + You can include a specific field once as an indexed field and
+            once as an included field, not both. This restriction does not
+            apply if you cast the field to different types. For example:
+               o You can create an index where the score field is an
+                 indexed field cast as a double type, and score is also an
+                 included field. The included field retains the original
+                 data type of the score field.
+maprcli table index add -path /castTable \
+   -index castIdx1 \
+   -indexedfields '$CAST(score@DOUBLE)' \
+   -includedFields score
+               o You can create an index where the score field is an
+                 indexed field, cast as a double type, and the score field
+                 is also another indexed field, cast as a long type.
+maprcli table index add -path /castTable \
+   -index castIdx2 \
+   -indexedfields '$CAST(score@DOUBLE)','$CAST(score@LONG)'
+          + You cannot use casts with included fields.
+          +
+          + You cannot specify a field as either an indexed or included
+            field if the field is also specified as a column family JSON
+            path name. For example, suppose you have the following JSON
+            table:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" :
+                    {
+                         "c" : "value",
+                         "d" : "value"
+                    },
+               "e" : "value"
+          }
+}
+            If you created a column family at field c in the JSON path
+            a.b.c, you cannot define field a.b.c as either an indexed or
+            included field. You can define the fields a, a.b, a.b.d as
+            either indexed or included fields.
+          + You cannot specify an included field where the data in the
+            field spans more than one column family. In the following
+            example, the included field sl1.sl2 spans column families, cf2
+            and cf3:
+maprcli table cf list -path /cftab
+compressionperm  readperm  traverseperm  jsonfamilypath   writeperm  minversions
+  maxversions  compression  ttl         inmemory  cfname   memoryperm
+u:root           u:root    u:root                         u:root     0
+  1            lz4          2147483647  false     default  u:root
+u:root           u:root    u:root        sl1              u:root     0
+  1            lz4          2147483647  false     cf1      u:root
+u:root           u:root    u:root        sl1.sl2.sl3      u:root     0
+  1            lz4          2147483647  false     cf2      u:root
+u:root           u:root    u:root        sl1.sl2.sl3.sl4  u:root     0
+  1            lz4          2147483647  false     cf3      u:root
+
+maprcli table index add -path /cftab -index i1 -indexedfields sl1.sl2.sl3.sl4.l4
+a, sl1.l1a -includedfields sl1.sl2,sl1.sl2.sl3.sl4.sl5.l5b -json
+{
+        "timestamp":1507419777919,
+        "timeofday":"2017-10-07 04:42:57.919 GMT-0700 PM",
+        "status":"ERROR",
+        "errors":[
+                {
+                        "id":22,
+                        "desc":"Data for included field sl1.sl2 may not span mor
+e than one column family."
+                }
+         ]
+}
+
+   Option Restrictions
+
+          + When creating an index, a splits option is not available.
+            Indexes are auto-split.
+
+   Index Usage Restrictions
+
+          + Indexes optimize filter conditions if you compare indexed
+            fields against scalar values, and the field and scalar value
+            have [4]Comparable JSON Document Data Types.
+          + Indexes do not optimize non-existence filter conditions.
+
+Example
+
+   CLI
+
+maprcli table index add -path /demo/business -index newIndex -indexedfields fiel
+dName
+
+   REST
+
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/index/add?path=%2Fdemo%2Fbusiness&index=ne
+wIndex&indexedfields=fieldName' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/hashed-index.html#hashed-index
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-functional-index.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/datatypes-comparable.html

@@ -1,0 +1,116 @@
+Preparing Clusters for Table Replication
+
+   Preparing clusters for table replication includes configuring gateways
+   on destination clusters, configuring the mapr-clusters.conf file on the
+   source cluster, and, if the clusters are secure, setting up secure
+   communications between the clusters. After you prepare the clusters for
+   table replication, you can setup replication between tables.
+
+Before You Begin
+
+   The following topics identify concepts and tasks that that you need to
+   do before setting up your environment for table replication.
+     * Plan which replication topology you want to use. For information
+       about the various topologies, see [1]Supported replication
+       topologies.
+     * Ensure that your user ID has the readAce permission on the volume
+       where the source tables are located and the writeAce permission on
+       the volumes where the replicas are located. For information about
+       how to set permissions on volumes, see [2]Setting Whole Volume ACEs
+     * Ensure that you have administrative authority on the clusters that
+       you plan to use.
+     * If you upgraded your source cluster from a previous version of
+       MapR, enable table replication by running this maprcli command:
+       maprcli cluster feature enable -name mfs.feature.db.repl.support
+     * Depending on your use case, replication requires the installation
+       of gateways and may also require the HBase client. For more
+       information about installation requirements, see [3]Service Layout
+       Guidelines for Replication
+
+Setting Up Table Replication
+
+   The following steps show how to set up your environment for table
+   replication including setup for secure clusters.
+    1. In the mapr-clusters.conf file on every node in your source
+       cluster, add an entry that lists the CLDB nodes that are in the
+       destination cluster. This step is required so that the source
+       cluster can communicate directly with the destination cluster's
+       CLDB nodes. See the topic "[4]mapr-clusters.conf” for the format to
+       use for the entries.
+    2. On the destination cluster, configure gateways through which the
+       source cluster will send updates to the destination cluster. See
+       [5]Configuring Gateways for Table and Stream Replication.
+    3. If your clusters are secure, configure each cluster so that you can
+       access them all from one cluster. This way, you need not log into
+       each secure cluster separately and run maprcli commands locally on
+       them. See [6]Configuring Secure Clusters for Running Commands
+       Remotely for more information.
+    4. If your clusters are secure, add a cross-cluster ticket to the
+       source cluster, so that it can replicate data to the destination
+       cluster. See [7]Configuring Secure Clusters for Cross-Cluster
+       Mirroring and Replication.
+    5. Optional: If your clusters are secure, configure your source
+       cluster so that you can use the MapR Control System (MCS) to set up
+       and administer table replication from the source to the destination
+       cluster.
+       These steps make it convenient to use MCS for setting up and
+       managing replication involving two secure clusters. However, before
+       following them, perform these prerequisite tasks.
+       Note:
+          + Ensure that both clusters are managed by the same team or
+            group. The UIDs and GIDs of the users that are able to log in
+            to MCS on the source cluster must exactly match their UIDs and
+            GIDs on the destination cluster. This restriction applies only
+            to access to both clusters through MCS, and does not apply to
+            access to both clusters through the maprcli. If the clusters
+            are managed by different teams or groups, use the maprcli
+            instead of MCS to set up and manage table replication
+            involving two secure clusters.
+          + Ensure that the proper file-system and table permissions are
+            in place on both clusters. Otherwise, any user who can log
+            into MCS and has the same UID or GID on the destination
+            cluster will be able to set up replication either from the
+            source cluster to the destination cluster or vice versa. A
+            user could create one or more tables on the destination
+            cluster, enable replication to them from the source cluster,
+            load the new tables with data from the source cluster, and
+            start replication. A user could also create tables on the
+            source cluster, enable replication to them from tables in the
+            destination cluster, load the new tables with data from the
+            destination cluster, and start replication.
+         a. On the source cluster, generate a service ticket by using the
+            maprlogin command:
+maprlogin generateticket -type service -cluster <destination cluster>
+-user mapr -duration <duration> -out <output folder>
+            Where -duration is the length of time before the ticket
+            expires. You can specify the value in either of these formats:
+               o [Days:]Hours:Minutes
+               o Seconds
+         b. To every node of the source cluster, add the service ticket to
+            the file /opt/mapr/conf/mapruserticket file that was created
+            when you secured the source cluster:
+at <path and filename of the service ticket> >> /opt/mapr/conf/mapruserticket
+         c. Restart the webserver by running the maprcli node services
+            command. For the syntax of this command, see [8]node services.
+         d. Add the following two properties to the core-site.xml file.
+            For Hadoop 2.7.0, edit the file
+            /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/core-site.xml.
+<property>
+      <name>hadoop.proxyuser.mapr.hosts</name>
+      <value>*</value>
+ </property>
+ <property>
+      <name>hadoop.proxyuser.mapr.groups</name>
+      <value>*</value>
+ </property>
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/ReplicatingMapR-DBTables-topologies.html#ReplicatingMapR-DBTables-topologies
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetEditVolumeDataACE.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/PlanningtheCluster-services-layout-replication.html#concept_qyc_mjk_yz
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr-clusters.conf.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html#task_clg_ywy_5t
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/RunningCommandsOnRemoteSecureClusters.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/AddingCross-ClusterTickets.html
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/node-services.html

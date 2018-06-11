@@ -1,0 +1,121 @@
+Migrate Drill to Run Under YARN
+
+   You can migrate Drill to run under YARN instead of the MapR Warden
+   service. When you migrate Drill to run under YARN, you must back up
+   configurations, including files and storage plugins, shutdown the Drill
+   cluster running under Warden, and uninstall Drill on all Drill nodes in
+   the cluster. You may also want to determine which system settings have
+   been changed from the Drill defaults.
+   Note: Drill-on-YARN is an advanced feature used to manage a production
+   Drill cluster. Only skilled Drill and MapR administrators, familiar
+   with YARN, should configure Drill to run under YARN. If you are new to
+   Drill, consider running Drill under the MapR Warden service until you
+   are familiar with Drill and Drill cluster management.
+
+   The sections below provide the tasks required to migrate Drill under
+   YARN:
+
+Tasks
+
+   Complete the following tasks when you want to migrate Drill to run
+   under YARN:
+
+   Backup configurations and UDFs
+          Back up congfiguration files, storage plugin configurations, and
+          UDFs (user-defined functions) or custom JAR files. Back up the
+          configuration files located in
+          /opt/mapr/drill/drill-<version>/conf, including
+          drill-override.conf and drill-env.sh, to preserve your ZooKeeper
+          configuration and any options or custom configurations specified
+          in the files. Also back up logback.xml if you configured the
+          file for the Lilith software.
+
+          + To back up configuration files, go to
+            /opt/mapr/drill/drill-<version>/conf, and copy the files to a
+            location outside of the Drill installation directory.
+cp <file_name> drill-env.sh /path/to/directory
+          + To back up custom JARs or UDFs, go to
+            /opt/mapr/drill/drill-<version>/jars/3rdparty and copy the
+            JARs ro UDFs to a location outside of the Drill installation
+            directory.
+          + To back up storage plugin configurations, complete the
+            following steps:
+              1. [1]Start the Web Console. The Drill node that you use to
+                 access the Web Console must be a node that is currently
+                 running the Drillbit process.
+              2. Click Storage.
+              3. Click Update next to a storage plugin.
+              4. Copy the configuration to a text file, and save the file.
+              5. Repeat steps 3 and 4 for each storage plugin
+                 configuration that you want to save.
+
+   Verify system option settings
+          Drill should save set system options when you migrate Drill.
+          However, you may want to verify which system options were
+          changed from the default settings beforehand. You can run the
+          following query to see which system options were changed from
+          the defaults:
+
+select * from sys.options where status = 'CHANGED';
+
+          Example:
+
+select * from sys.options where status = 'CHANGED';
++-------------------------------------+----------+---------+----------+---------
+-+-------------+-----------+------------+
+|                name                 |   kind   |  type   |  status  | num_val
+ | string_val  | bool_val  | float_val  |
++-------------------------------------+----------+---------+----------+---------
+-+-------------+-----------+------------+
+| exec.errors.verbose                 | BOOLEAN  | SYSTEM  | CHANGED  | null
+ | null        | true      | null       |
+| new_view_default_permissions        | STRING   | SYSTEM  | CHANGED  | null
+ | 777         | null      | null       |
+| planner.enable_decimal_data_type    | BOOLEAN  | SYSTEM  | CHANGED  | null
+ | null        | true      | null       |
+| planner.enable_limit0_optimization  | BOOLEAN  | SYSTEM  | CHANGED  | null
+ | null        | true      | null       |
++-------------------------------------+----------+---------+----------+---------
+-+-------------+-----------+------------+
+4 rows selected (0.541 seconds)
+
+          After you migrate, run the query again to verify that the system
+          options are still set. If not, set the options.
+
+   Shutdown the Drill cluster
+          Issue the following command to shutdown the existing
+          Warden-managed Drill cluster:
+
+maprcli node services -name drill-bits -action stop -nodes <node host names sepa
+rated by a space>
+
+          Note: Do not shutdown nodes when queries are in progress.
+
+   Verify that Drillbits stopped
+          Run the following command to verify that the Drillbit service is
+          no longer running on each node:
+
+ps -ef | grep -i drill
+
+          No Drill processes should print to screen when you run this
+          command.
+
+          You can also log in to the MCS at https://<host name>:8443 to
+          verify the status of the Drillbit service. You should not see
+          Drillbit as a listed service.
+
+   Uninstall Drill
+          Uninstall Drill and then run configure.sh -R to refresh the
+          configuration.
+          Issue the command appropriate for your system as root or using
+          sudo to uninstall the mapr-drill package:
+
+          Operating System          Command
+          RedHat/CentOS    yum remove mapr-drill
+          Ubuntu           apt-get remove mapr-drill
+
+          Note: Verify that Drillbit processes stopped.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Drill/start_the_web_console.html#start_the_web_console

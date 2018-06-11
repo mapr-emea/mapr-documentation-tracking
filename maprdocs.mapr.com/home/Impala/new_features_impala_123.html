@@ -1,0 +1,203 @@
+New Features in Impala 1.2.3 for MapR
+
+Join Order Optimizations
+
+   A primary new feature of Impala 1.2.3 is join order optimizations that
+   automatically distribute and parallelize the work for a join query to
+   minimize disk I/O and network traffic. Automatic optimization reduces
+   the need to use query hints or to rewrite join queries with the tables
+   in a specific order based on size or importance.
+
+   Use the COMPUTE STATS statement when you want to gather critical,
+   statistical information about each table when you enable join
+   optimizations. If a join query is inefficient due to outdated
+   statistics or unexpected data distribution, you can use the
+   STRAIGHT_JOIN keyword immediately after the SELECT statement to prevent
+   Impala from reordering the joined tables.
+
+   The STRAIGHT_JOIN keyword turns off the reordering of join clauses that
+   Impala does internally, and produces a plan that relies on optimal
+   ordering of the join clauses in the query text. For example, you
+   rewrite the query so that the largest table is on the left, followed by
+   the next largest, and so on until the smallest table is on the right.
+
+Impala Catalog Service
+
+   When Impala changes table data or metadata on one node, the catalog
+   service communicates the new or updated metadata to all the other
+   Impala nodes. You no longer need to use the REFRESH or INVALIDATE
+   METADATA statements after issuing the following statements to Impala:
+     * CREATE TABLE
+     * ALTER TABLE
+     * DROP TABLE
+     * INSERT
+     * LOAD DATA
+
+   Note:
+
+   The catalog service only works on operations performed through Impala.
+   If you perform operations through the Hive shell or through MapR-FS,
+   you must issue the REFRESH and INVALIDATE METADATA statements. The
+   catalog service broadcasts the results of the REFRESH and INVALIDATE
+   METADATA results to other Impala nodes so that you only have to issue
+   the statements once.
+
+Impala Daemon Options
+
+   The following table lists new Impala daemon startup options that you
+   can add to the env.sh file:
+   Option Description
+   --idle_query_timeout Impala daemon option that controls how long a
+   query can be idle before Impala cancels the query.
+   --idle_session_timeout Impala daemon option that controls how long a
+   session can be idle before the session expires.
+   --enable_ldap_auth
+
+   Enables LDAP authentication between Impala and the client.
+
+   Example: -enable_ldap_auth=true \
+   --ldap_uri
+
+   Sets the URI of the LDAP server to use. Typically, the URI is prefixed
+   with ldap://<hostname>. Optionally, the URI can specify the port. For
+   example, ldap://<hostname>:<port>.
+
+   Example: -ldap_uri=ldap://10.250.1.5/ \
+   --ldap_manual_configextendingcolumn Bypasses all the automatic
+   configuration if you need to provide a custom SASL.
+   --ldap_tls Tells Impala to start a TLS connection to the LDAP server
+   and to fail authentication if Impala cannot start the TLS connection.
+
+Security
+
+   The following table contains new security features and their
+   descriptions:
+   Feature Description
+   Impersonation support Allows you to give users the permission to submit
+   requests using the credentials of another user. Only available through
+   the Hue interface.
+   LDAP authentication You can configure LDAP authentication for client
+   connections with Impala.
+
+Functions
+
+   The following table lists new functions and their descriptions:
+   Function Description
+   User-Defined Functions (UDFs) Reusable SQL functions that you can
+   create to encapsulate code that processes column values during an
+   Impala query. You can run scalar UDFs and UDAs (user-defined aggregate
+   functions). Impala accepts UDFs and UDAFs written in C++ or you can use
+   Hive functions written in Java. For more information about user-defined
+   functions, refer to [1]Impala User-Defined Functions.
+   NDV () An aggregate function that you can use to quickly return an
+   approximate result instead of using COUNT (DISTINCT col).
+   GROUP_CONCAT() An aggregate function that you can use to concatenate
+   column values across all rows of a result set.
+
+Built-In Functions
+
+   Several built-in functions and operators are now overloaded for more
+   numeric data types to reduce CAST() function use with INSERT
+   statements. Addition, subtraction, and multiplication functions now
+   produce a result that is only one step bigger than their arguments.
+   Numeric and conditional functions can return SMALLINT, FLOAT, and other
+   smaller types instead of BIGINT or DOUBLE.
+
+   The following table lists new built-in functions and their
+   descriptions:
+   Function Description
+   least ()
+
+   A mathematical function that returns the smallest value from a list of
+   expressions. The return type is the same as the initial argument value,
+   except that integer values are promoted to BIGINT and
+
+   floating-point values are promoted to DOUBLE. Use CAST() when inserting
+   into a smaller numeric column.
+   greatest ()
+
+   A mathematical function that returns the largest value from a list of
+   expressions. The return type is the same as the initial argument value,
+   except that integer values are promoted to BIGINT and
+
+   floating-point values are promoted to DOUBLE. Use CAST() when inserting
+   into a smaller numeric column.
+   initcap () Returns the input string with the first letter capitalized.
+   fnv_hash ()extending col
+
+   A mathematical function for constructing hashed values that returns a
+   consistent 64-bit value derived from the input argument, for
+   convenience of implementing hashing logic in an application.
+
+   The return type is BIGINT.
+
+Statements, Options, and Hints
+
+   The following table lists new statements, options, hints and their
+   descriptions:
+   Statement Description
+   COMPUTE STATS You can use this statement to collect table and column
+   statistics with a single statement. This is useful for query planning,
+   join queries, queries on partitioned tables, and any other data
+   intensive operations. Collect stats for each table involved in a join
+   query.
+   CREATE TABLE AS SELECT SQL syntax that you can use to create a table
+   and copy data into the table in a single operation.
+   SHOW TABLE STATS SQL syntax that you can use to verify that statistics
+   are available and to see the values used during query planning.
+   SHOW COLUMN STATS SQL syntax that you can use to verify that statistics
+   are available and to see the values used during query planning.
+   SHOW CREATE TABLE Summarizes the effects of the original CREATE TABLE
+   statement and subsequent ALTER TABLE statements to provide a CREATE
+   TABLE statement that recreates the current structure and layout for the
+   table. You can use this statement to create a simplified setup script
+   for a schema.
+   EXPLAIN_LEVEL A query option that you can enable and use with the
+   EXPLAIN and PROFILES statements to provide more verbose results. The
+   verbose results provide estimated resource requirements and the
+   available table and column statistics.
+   SYNC_DDL A query option that you can enable before you issue a DDL,
+   INSERT, or LOAD statement which causes the statement to wait and return
+   only after the Catalog service broadcasts changes to all Impala nodes
+   in the cluster.
+
+   [SHUFFLE]
+
+   [NOSHUFFLE]
+   You can use these hints in INSERT statements when inserting into
+   Parquet tables to avoid problems due to memory consumption and open
+   files in the file system, by collecting new data for each partition on
+   a specific node.
+
+Clauses and Operators
+
+   The following table lists new clauses, operators, and their
+   descriptions:
+   Feature Description
+   CROSS JOIN A clause that you can use in the SELECT statement to allow
+   joins without an equality comparison between columns in both tables.
+   NULLS FIRST A clause that you can use to ensure consistent placement of
+   NULL values in ORDER BY queries.
+   NULLS LAST A clause that you can use to ensure consistent placement of
+   NULL values in ORDER BY queries.
+   OFFSET A clause that you can use with the ORDER BY and LIMIT clauses to
+   produce paged result sets, like items 1-10, 11-20...
+   STORED AS PARQUET You can use this clause instead of STORED AS
+   PARQUETFILE for conciseness in new code.
+   TBLPROPERTIES A clause that you can use with the CREATE TABLE and ALTER
+   TABLE statements to associate random pieces of metadata with a table as
+   key-value pairs.
+   WITH SERDEPROPERTIES A clause that you can use with the CREATE TABLE
+   and ALTER TABLE statements to specify the serializer and deserializer
+   (SerDes) classes that read and write data for a table, which may be
+   needed for Hive compatibility with Impala.
+   LIMIT This clause accepts an arithmetic expression and numeric
+   literals.
+   STRAIGHT_JOIN You can use this operator to override the reordering of
+   tables in a join query. Uses the original technique of ordering join
+   tables in descending order of size enabling you to fine-tune the join
+   query plan.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Impala/ImpalaUser-DefinedFunctionImpUserDefined.html

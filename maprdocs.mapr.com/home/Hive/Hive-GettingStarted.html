@@ -1,0 +1,61 @@
+Getting Started with Hive
+
+   In this tutorial, you'll create a Hive table, load data from a
+   tab-delimited text file, and run a couple of basic queries against the
+   table. For details on setting up HiveServer2 and starting BeeLine, see
+   [1]Using JDBC or Beeline to Connect to HiveServer2.
+   Note: If you are using HiveServer2, you will use the BeeLine CLI
+   instead of the Hive shell, as shown below.
+
+Take a look at the source data
+
+   First, take a look at the contents of the file using the terminal:
+    1. Save the following data to a text file named sample-table.txt:
+1320352532 1001 http://www.mapr.com/doc http://www.mapr.com 192.168.10.1
+1320352533 1002 http://www.mapr.com http://www.example.com 192.168.10.10
+1320352546 1001 http://www.mapr.com http://www.mapr.com/doc 192.168.10.1
+       If you're working on the MapR Virtual Machine, we'll be loading the
+       file from the MapR Virtual Machine's local file system (not the
+       cluster storage layer), so save the file in the MapR Home directory
+       (for example, /home/mapr).
+    2. Make sure you are in the Home directory where you saved
+       sample-table.txt (type cd ~ if you are not sure).
+    3. Type cat sample-table.txt to display the following output.
+
+mapr@mapr-desktop:~$ cat sample-table.txt
+1320352532 1001 http://www.mapr.com/doc http://www.mapr.com 192.168.10.1
+1320352533 1002 http://www.mapr.com http://www.example.com 192.168.10.10
+1320352546 1001 http://www.mapr.com http://www.mapr.com/doc 192.168.10.1
+
+   Notice that the file consists of only three lines, each of which
+   contains a row of data fields separated by the TAB character. The data
+   in the file represents a web log.
+
+Create a table in Hive and load the source data:
+
+    1. Type the following command to start the Hive shell, using
+       tab-completion to expand the <version>:
+/opt/mapr/hive/hive-<version>/bin/hive
+    2. At the hive> prompt, type the following command to create the
+       table:
+CREATE TABLE web_log(viewTime INT, userid BIGINT, url STRING, referrer STRING, i
+p STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t';
+    3. Type the following command to load the data from sample-table.txt
+       into the table:
+LOAD DATA LOCAL INPATH '/home/mapr/sample-table.txt' INTO TABLE web_log;
+
+Run basic queries against the table
+
+     * Try the simplest query, one that displays all the data in the
+       table:
+SELECT web_log.* FROM web_log;
+       This query would be inadvisable with a large table, but with the
+       small sample table it returns very quickly.
+     * Try a simple SELECT to extract only data that matches a desired
+       string:
+SELECT web_log.* FROM web_log WHERE web_log.url LIKE '%doc';
+       This query launches a MapReduce application to filter the data.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hive/HiveServer2-ConnectWithBeelineOrJDBC.html

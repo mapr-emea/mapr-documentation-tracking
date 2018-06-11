@@ -1,0 +1,79 @@
+Hashed Indexes
+
+   A hashed index is a secondary index that distributes keys across
+   logical partitions to avoid creating hot spots when MapR-DB updates the
+   index with new keys from the JSON table.
+
+   Hot spots occur when data inserted into an indexed field has
+   monotonically increasing values, or when a burst of write activity
+   occurs. The former occurs with timestamp values. The latter occurs when
+   you have a burst of updates on an indexed field over a small range of
+   values. Hashed indexes enable MapR-DB to evenly distribute new writes
+   on an index and avoid hot spots.
+   Note: Hashed indexes do not resolve hot spots on the JSON table. For
+   information about how to design rowkeys and avoid hot spots in the JSON
+   table, see [1]Table Rowkey Design.
+
+   Hashed indexes support the same conditional queries as non-hashed
+   indexes, except that hashed indexes do not have a guaranteed sort
+   order. Hashed indexes do not support ORDER BY queries due to the
+   distribution of data across logical partitions. Consequently, sorting
+   is performed by the query layer, which can increase the CPU costs and
+   negatively impact performance.
+   By default, MapR-DB creates ten partitions for a hashed index. You can
+   modify this value when you create a hashed index using the [2]maprcli
+   table index add command or through the [3]MCS. When a hashed index
+   exists, MapR-DB distributes table updates to the index across the
+   logical partitions, which reside on different nodes. MapR-DB orders the
+   keys within each partition instead of ordering them across the entire
+   index.
+   Note: Once you create an index with hashing enabled, you cannot disable
+   hashing. You can remove the hashed index and then create a non-hashed
+   (default) index on the field. See [4]Removing Indexes and [5]Adding
+   Indexes.
+
+Guidelines on Creating Hashed Indexes
+
+     * Create a hashed index on fields with monotonically increasing
+       values, such as timestamp values.
+     * Create a hashed index on a fields that MapR-DB updates in bursts of
+       write activity, for example when MapR-DB updates a small range of
+       possible values for the indexed field.
+     * Do not create hashed indexes for ORDER BY queries.
+     * Use the maprcli table index list command or the MCS to determine if
+       an index is hashed. See [6]maprcli table index list or [7]Listing
+       Indexes.
+     * After you create an index with hashing enabled, you cannot disable
+       hashing.
+
+Example Comparison of a Non-Hashed Index and Hashed Index
+
+   The following images depict a non-hashed (default) index and a hashed
+   index. For the purpose of this example, assume that an index was
+   created on the DateCreated field of a JSON table in MapR-DB. Yellow
+   highlighted areas indicate updates to the index.
+
+   Non-Hashed (Default) Index
+   The non-hashed index propagates DateCreated field updates from the JSON
+   table to the index. Notice that the dates are sorted within the index
+   and no partitions exist. Depending on the size of the index, the index
+   may exist on one or multiple nodes
+   [non-hashed-index-a.png]
+   .
+
+   Hashed Index
+   The hashed index propagates DateCreated field updates across the index
+   partitions which reside on different nodes. Notice that dates are
+   sorted within each partition and each partition resides on a different
+   node.
+   [hashed-index-partitions-b.png]
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/designing_row_keys.html#designing_row_keys
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-index-add.html#table-index-create
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/admin-adding-indexes.html#creating-indexes
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/admin-removing-indexes.html#deleting-indexes
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/admin-adding-indexes.html#creating-indexes
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/table-index-list.html#table-index-list
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/admin-listing-indexes.html#listing-indexes

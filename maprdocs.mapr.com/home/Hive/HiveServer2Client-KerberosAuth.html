@@ -1,0 +1,33 @@
+Configure HiveServer 2 Clients to use Kerberos
+
+   When HiveServer 2 is configured to use Kerberos authentication, you
+   must also configure HiveServer2 clients to use Kerberos.
+   On each node where HiveServer2 clients (not including Beeline) are
+   installed, reconfigure the following option in env.sh
+   (/opt/mapr/conf/env.sh) file:
+               Existing Configuration             Required Configuration
+   MAPR_HIVE_LOGIN_OPTS="-Dhadoop.login=maprsasl"
+MAPR_HIVE_LOGIN_OPTS="-Dhadoop.login=hybrid"
+
+   Note: This configuration is listed in the portion of the file that
+   begins with if [ "$MAPR_SECURITY_STATUS" = "true" ];. However, you
+   should make the change in the /opt/mapr/conf/env_override.sh file. For
+   more information, see [1]About env_override.sh.
+   On each node where Beeline is installed, reconfigure the following
+   option in beeline.sh ($hive_home/bin/ext/beeline.sh) file:
+                 Existing Configuration              Required Configuration
+   HADOOP_OPTS="$HADOOP_OPTS${MAPR_HIVE_LOGIN_OPTS}"
+HADOOP_OPTS="$HADOOP_OPTS${KERBEROS_LOGIN_OPTS}"
+
+   For more information, see [2]Connecting to Hive.
+   Note: The MAPR_HIVE_LOGIN_OPTS and MAPR_HIVE_SERVER_LOGIN_OPTS were
+   added in 1504 release of Hive 0.13 and Hive 1.0. If you have Hive 0.13
+   from a prior release, you do not need to configure these properties.
+   Instead, set MAPR_ECOSYSTEM_LOGIN_OPTS and
+   MAPR_ECOSYSTEM_SERVER_LOGIN_OPTS to "-Dhadoop.login=hybrid" in
+   /opt/mapr/conf/env.sh.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Hive/ConnectingtoHive.html#ConnectingtoHive

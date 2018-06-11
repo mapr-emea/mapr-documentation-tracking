@@ -1,0 +1,182 @@
+Cluster Alarms
+
+   Cluster alarms indicate problems that affect the cluster as a whole.
+   The following sections describe the MapR cluster alarms.
+
+CLDB Low Memory Alarm
+
+   UI Column
+          Cluster freespace above CLDB heapsize
+
+   Logged As
+          CLUSTER_ALARM_CLDB_HEAPSIZE
+
+   Meaning
+          The CLDB process needs more memory to cache containers.
+
+   Resolution
+          The CLDB heap size is no longer sufficient for the CLDB to cache
+          containers. The solution is to increase the CLDB memory settings
+          on all CLDB nodes, using the same value for the minimum and
+          maximum heap sizes. The text the alarm code provides will
+          include the minimum amount of memory required to be sufficient;
+          however, to accommodate future growth, you should set these
+          values to a somewhat higher number. For example, if the alarm
+          indicates that the CLDB needs 4000 MB, you should set the
+          minimum and maximum heap sizes to a larger value such as 4400
+          MB.
+
+          The CLDB memory settings are controlled by the following
+          parameters in the warden.conf file located in $MAPR_HOME/conf/::
+
+          service.command.cldb.heapsize.max=<max heap size>
+          service.command.cldb.heapsize.min=<min heap size>
+
+          Restart the Warden service on each CLDB node after you edit the
+          warden.conf file.
+
+License Near Expiration
+
+   UI Column
+          License Near Expiration Alarm
+
+   Logged As
+          CLUSTER_ALARM_LICENSE_NEAR_EXPIRATION
+
+   Meaning
+          The Enterprise Edition license associated with the cluster is
+          within 30 days of expiration.
+
+   Resolution
+          Renew the Enterprise Edition license.
+
+   Configuration
+          Configurable at cluster level. See [1]Configuring the Alarm
+          Threshold Using the CLI for more information.
+
+License Expired
+
+   UI Column
+          License Expiration Alarm
+
+   Logged As
+          CLUSTER_ALARM_LICENSE_EXPIRED
+
+   Meaning
+          The Enterprise Edition license associated with the cluster has
+          expired. Enterprise Edition features have been disabled.
+
+   Resolution
+          Renew the Enterprise Edition license.
+
+Cluster Almost Full
+
+   UI Column
+          Cluster Almost Full
+
+   Logged As
+          CLUSTER_ALARM_CLUSTER_ALMOST_FULL
+
+   Meaning
+          The cluster storage is almost full. The percentage of storage
+          used before this alarm is triggered is 90% by default, and is
+          controlled by the configuration parameter
+          cldb.cluster.almost.full.percentage.
+
+   Resolution
+          Reduce the amount of data stored in the cluster. If the cluster
+          storage is less than 90% full, check the
+          cldb.cluster.almost.full.percentage parameter via the config
+          load command, and adjust it if necessary via the config save
+          command.
+
+   Configuration
+          Configurable at cluster level. See [2]Configuring the Alarm
+          Threshold Using the CLI for more information.
+
+Cluster Full
+
+   UI Column
+          Cluster Full
+
+   Logged As
+          CLUSTER_ALARM_CLUSTER_FULL
+
+   Meaning
+          The cluster storage is full. MapReduce operations have been
+          halted.
+
+   Resolution
+          Free up some space on the cluster.
+
+Maximum Licensed Nodes Exceeded alarm
+
+   UI Column
+          Licensed Nodes Exceeded Alarm
+
+   Logged As
+          CLUSTER_ALARM_LICENSE_MAXNODES_EXCEEDED
+
+   Meaning
+          The cluster has exceeded the number of nodes specified in the
+          license.
+
+   Resolution
+          Remove some nodes, or upgrade the license to accommodate the
+          added nodes.
+
+New Cluster Features Disabled
+
+   UI Column
+          New Cluster Features Disabled
+
+   Logged As
+          CLUSTER_ALARM_NEW_FEATURES_DISABLED
+
+   Meaning
+          Features added in version 2.0 or 3.0 are not enabled on the
+          cluster.
+
+   Resolution
+          Enable the latest features for the version of MapR that you are
+          currently running.
+
+Upgrade in Progress
+
+   UI Column
+          Software Installation & Upgrades
+
+   Logged As
+          CLUSTER_ALARM_UPGRADE_IN_PROGRESS
+
+   Meaning
+          A rolling upgrade of the cluster is in progress.
+
+   Resolution
+          No action is required. Performance may be affected during the
+          upgrade, but the cluster should still function normally. After
+          the upgrade is complete, the alarm is cleared.
+
+VIP Assignment Failure
+
+   UI Column
+          VIP Assignment Alarm
+
+   Logged As
+          CLUSTER_ALARM_UNASSIGNED_VIRTUAL_IPS
+
+   Meaning
+          MapR was unable to assign a VIP to any NFS servers.
+
+   Resolution
+          Check the VIP configuration, and make sure at least one of the
+          NFS servers in the VIP pool are up and running. See [3]Setting
+          Up VIPs for NFS. This alarm can also indicate that a VIP's
+          hostname exceeds the maximum allowed length of 16. Check the log
+          file /opt/mapr/logs/nfsmon.log for additional information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/admin/cluster/ConfigAlarmThreshold.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/admin/cluster/ConfigAlarmThreshold.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Setting-Up-VIPs-for-NFS.html#Setting-Up-VIPs-for-NFS-Toaddaservertoa-d3e78

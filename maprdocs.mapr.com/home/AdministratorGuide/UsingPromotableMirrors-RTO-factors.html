@@ -1,0 +1,42 @@
+Factors that Affect RTO
+
+   During a disaster, an administrator must first determine that the link
+   is down between the primary datacenter and the secondary datacenter.
+   Next, the administrator begins the process of switching applications
+   that were running on the primary datacenter over to the secondary
+   datacenter. For write applications, the administrator begins converting
+   mirror volumes to read-write volumes, starting with volumes that
+   contain the most critical data. Note that read applications can run on
+   read-only mirrors, but write applications can only run on read-write
+   volumes.
+
+   To gauge how long it will take to switch applications from the primary
+   datacenter to the secondary datacenter (and to set the RTO
+   accordingly), consider these factors:
+     * Detection time (how long it takes to determine that the link is
+       down between the two datacenters)
+     * Switching time (how long it takes to switch applications from one
+       datacenter to the other)
+     * Promotion time (how long it takes to change read-only mirror
+       volumes to read-write volumes that can run write applications).
+       Promotion time is based on the number of containers in a volume or
+       across volumes.
+     * Whether [1]mirror throttling is enabled (the default) or disabled
+       (which speeds up the mirroring process)
+
+   Various factors affect how much data can be recovered through the use
+   of mirror volumes. To specify a realistic recovery point objective in
+   your disaster recovery plan, take these factors into account:
+     * Mirror schedule (how often the mirror is synchronized with its
+       source volume) Note that the first mirror operation is a full
+       synchronization between source and mirror volumes. Subsequent
+       mirror operations are incremental - only the changes that occurred
+       since the last mirror event need to be copied in order to
+       synchronize the contents between the two volumes.
+     * Network link between the source volume and the mirror volume
+       (consider the stability and quality of the link, as well as
+       latency, throughput, and other activities across the link)
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/MirrorVolumes-DisableThrottling.html#WorkingwithMirrorVolumes-_26982465-d3e1176

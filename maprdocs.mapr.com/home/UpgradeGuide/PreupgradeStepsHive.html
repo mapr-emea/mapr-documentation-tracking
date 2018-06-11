@@ -1,0 +1,20 @@
+Pre-Upgrade Steps for Hive
+
+   Complete the following steps before you upgrade Hive with or without
+   the MapR Installer.
+
+   You need to back up the metastore database in case an error occurs
+   during the Hive upgrade. You also need to back up configuration files
+   if you made configuration changes that you want to carry over to the
+   next version.
+    1. Back up the metastore database.
+       mysqldump -u<user> -p<passwd> <metastore_db_name> -r
+       metastore-db-dump.sql
+    2. Copy the configuration files in /opt/mapr/hive/hive-<version>/conf/
+       to a location outside the MapR installation directory.
+       After upgrading, you can reapply changes to the updated Hive
+       installation using the backup.
+    3. Stop Hive services.
+maprcli node services -name hivemeta -action stop -nodes <list of hive nodes>
+maprcli node services -name hs2 -action stop -nodes <list of hive nodes>
+maprcli node services -name  hcat -action stop -nodes <list of hive nodes>

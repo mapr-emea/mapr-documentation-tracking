@@ -1,0 +1,20 @@
+Running Jobs as Other Users in Cluster Deploy Mode
+
+   This topic describes how to run jobs with Apache Spark on Apache Mesos
+   as users other than 'mapr' in cluster deploy mode.
+
+    1. Add additional permissions to the Spark logs directory.
+cd /opt/mapr/spark/spark-<version>
+sudo chmod -R 777 logs/
+    2. Start the Mesos dispatcher as the user who will be submitting jobs.
+       In the following example, user 'test' starts the dispatcher.
+sudo -u test /opt/mapr/spark/spark-2.1.0/sbin/start-mesos-dispatcher.sh \
+    --master mesos://<mesos-master-node>:5050
+    3. Run the job. The following example submits a job running the
+       SparkPi example as user 'test'.
+sudo -u test /opt/mapr/spark/spark-2.1.0/bin/spark-submit \
+    --class org.apache.spark.examples.SparkPi \
+    --master mesos://<node where dispatcher is running>:7077 \
+    --deploy-mode cluster \
+    maprfs:///user/mapr/spark-examples_2.11-2.1.0-mapr-SNAPSHOT.jar
+    100

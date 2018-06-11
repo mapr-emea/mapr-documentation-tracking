@@ -1,0 +1,161 @@
+Drill 1.6.0 Release Notes
+
+   The following release notes are for the 1.6.0 version of the Apache
+   Drill component included in the MapR distribution for Apache Hadoop.
+   Release notes for prior releases are posted on the [1]Apache Drill web
+   site.
+   Version 1.6.0
+   Release Date April 4, 2016
+   MapR Version Interoperability MapR Drill 1.6.0 is certified on the MapR
+   v5.1.0 converged data platform. See [2]Interoperability Matrix and
+   [3]Drill Support Matrix.
+   Download Location See [4]Installing Drill.
+
+Noteworthy New Features in the MapR Distribution of Drill
+
+   This release provides enhanced query improvements with the following
+   bug fixes and improvements:
+     * JDK 1.8 support.
+     * JSON and binary table support through the MapR-DB format plugin.
+     * [5]Inbound impersonation which is useful in a multi-tier
+       architecture where queries must run as the end user instead of the
+       application user.
+     * More [6]custom frames in the window function frame clause.
+     * [7]Row count based pruning for Limit N queries
+     * [8]Lazy reading of parquet metadata caching
+     * [9]Early application of partition pruning in query planning
+
+   Additional bug fixes and enhancements listed in the [10]Apache Drill
+   1.6.0 Release Notes.
+
+Resolved Issues
+
+   The following table lists resolved issues in Drill 1.6.0:
+   Issue Description
+   MD-803 LIMIT 0 optimization applies to the ranking and value window
+   functions.
+   MD-784 LIMIT 0 optimization applies to the Hive UDF xpath_double.
+   MD-781 LIMIT 0 optimization applies to the TRIM function.
+   MD-608 Complex data functions FLATTEN and KVGEN no longer return null
+   data when you issue queries through the ODBC driver.
+   MD-604 EXTRACT function with seconds no longer returns incorrect data
+   when you issue queries through the ODBC driver.
+   MD-361 Drill honors the Hive skip.header.line.count and
+   skip.footer.line.count table properties and skips header and footer
+   lines when querying Hive tables created with these properties.
+
+Known Issues
+
+   The following table lists known issues in Drill 1.6.0:
+   Issue Description
+   MD-851 Pushdown is disabled for columns with TIMESTAMP values which
+   makes these columns case-insensitive. See [11]Limitations.
+   MD-845 LIMIT 0 optimization does not apply when used in a query with a
+   FULL OUTER JOIN and the planner.enable_mergejoin option is set to true.
+   MD-817 LIMIT 0 optimization does not apply when a query contains math
+   operations between an interval type and a constant.
+   MD-802 LIMIT 0 optimization applies to the AVG window function.
+   MD-794 LIMIT 0 optimization does not apply when the return type is
+   VARBINARY.
+   MD-787 LIMIT 0 optimization does not apply to the Hive BIN function.
+   MD-786 LIMIT 0 does not apply to the Hive HEX function.
+   MD-747 SUM function queries with a decimal argument and LIMIT 0
+   optimization returns the wrong data types and nullability.
+   MD-727 If you query a column that does not exist in the records of the
+   queried table, Drill does not return any rows when it should return
+   rows with null values. See [12]Limitations.
+
+Limitations
+
+   (MD-851) Pushdown filtering is disabled on columns with TIMESTAMP
+   values, which results in these columns being case-insensitive. For
+   example, if a JSON table is created with the following JSON records
+   where the “access” columns are not of a particular case:
+{"_id":"ID1","name":"Alice","age":"25","access":"2013-10-23 11:11:11","DOB":{"$d
+ateDay":"1988-01-01"},"salary":"50.00"}
+{"_id":"ID2","name":"Bob","age":"21","access":"2013-10-23 11:11:11","DOB":{"$dat
+eDay":"1988-01-01"},"salary":"150.00"}
+{"_id":"ID3","name":"Frank","age":"32","ACCESS":"2013-10-23 11:11:11","dob":{"$d
+ateDay":"1988-01-01"},"salary":"250.00"}
+
+   Running a query on the “access” column returns all values because Drill
+   does not push the filtering process down to MapR-DB to get the subset
+   of columns from records where the name is "access" in lowercase.
+   Instead, MapR-DB returns every value from each record that has a column
+   named "access", regardless of the case. If some records include a
+   column named "ACCESS" or "Access," these values are also returned in
+   the result set.
+SELECT * FROM dfs.`/tmp/data/student_db` where access = timestamp '2013-10-23 11
+:11:11';
++------+----------------------+------+-------------+-----------+---------+
+| _id  |        access        | age  |     dob     |   name    | salary  |
++------+----------------------+------+-------------+-----------+---------+
+| ID1  | 2013-10-23 11:11:11  | 25   | 1988-01-01  | Alice  | 50.00   |
+| ID2  | 2013-10-23 11:11:11  | 21   | 1980-12-12  | Bob     | 150.00  |
+| ID3  | 2013-10-23 11:11:11  | 32   | 1970-10-12  | Frank      | 250.00  |
++------+----------------------+------+-------------+-----------+---------+
+3 rows selected (0.223 seconds)
+
+   In comparison, you can see that a query on the “dob” column in the same
+   table produces only one result because the column does not contain
+   TIMESTAMP values and is therefore case-sensitive:
+SELECT * FROM dfs.`/tmp/data/student_db` where dob = date '1988-01-01';
++------+----------------------+------+-------------+-------+---------+
+| _id  |        ACCESS        | age  |     dob     | name  | salary  |
++------+----------------------+------+-------------+-------+---------+
+| ID3  | 2013-10-23 11:11:11  | 32   | 1988-01-01  | Frank  | 250.00  |
++------+----------------------+------+-------------+-------+---------+
+1 row selected (0.359 seconds)
+
+   Although there are three records with “dob” columns, there is only one
+   record with the column name in lowercase.
+   (MD-727) If you query one column that is partially or completely
+   non-existent in the records of the queried table, Drill does not return
+   any rows for the records when it should return the rows with null
+   values. For example, if a JSON table is created from the following JSON
+   records where only one record has a “time” column with a value and the
+   other two records do not have time columns:
+{"_id":"student1", "name":"Alice", "street":"123 Ballmer Av", "zipcode":12345, "
+state":"CA"},
+{"_id":"student2", "name":"Bob", "time":"2016-03-08", "street":"1 Infinite Loop"
+, "zipcode":12345, "state":"CA"},
+{"_id":"student3", "name":"Frank", "street":"435 Walker Ct", "zipcode":12345, "s
+tate":"CA"}
+
+   The query returns only one row for the record in which the time column
+   exists with a value instead of returning three rows with two rows
+   having null values in the column.
+SELECT `time` FROM dfs.`/user/root/students`;
++-----------+
+| time      |
++-----------+
+| 2016-03-08|
++-----------+
+
+   In comparison, if you query all of the columns in the table, you can
+   see that the query returns all records and includes null values for
+   records missing a time column.
+SELECT * FROM dfs.`/user/root/students`;
++-----------+--------+--------+------------------+----------+-------------+
+|    _id    |  name  | state  |      street      | zipcode  |    time     |
++-----------+--------+--------+------------------+----------+-------------+
+| student1  | Alice  | CA     | 123 Ballmer Av   | 12345.0  | null        |
+| student2  | Bob    | CA     | 1 Infinite Loop  | 12345.0  | 2016-03-08  |
+| student3  | Frank  | CA     | 435 Walker Ct    | 12345.0  | null        |
++-----------+--------+--------+------------------+----------+-------------+
+3 rows selected (0.314 seconds)
+
+References
+
+   1. https://drill.apache.org/docs/release-notes/
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/c_matrix_intro.html#concept_nym_4pb_t5
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/InteropMatrix/r_drill_matrix.html#reference_lv3_2sb_t5
+   4. http://maprdocs.mapr.com/51/Drill/drill_installation.html
+   5. https://drill.apache.org/docs/configuring-inbound-impersonation/
+   6. https://drill.apache.org/docs/sql-window-functions-introduction/#syntax
+   7. https://issues.apache.org/jira/browse/DRILL-4363?jql=project%20%3D%20%22drill%22%20AND%20status%20%3D%20Resolved%20AND%20fixVersion%20%3D%201.6.0
+   8. https://issues.apache.org/jira/browse/DRILL-4287
+   9. https://issues.apache.org/jira/browse/DRILL-2517
+  10. https://drill.apache.org/docs/apache-drill-1-6-0-release-notes/
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/EcosystemRN/drill_1.6.0_release_notes.html#drill_1.6.0_release_notes__section_b2p_g13_4v
+  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/EcosystemRN/drill_1.6.0_release_notes.html#drill_1.6.0_release_notes__section_b2p_g13_4v

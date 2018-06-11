@@ -1,0 +1,89 @@
+Downloading and Configuring the Driver
+
+   This topic provides instructions for downloading and configuring the
+   Drill JDBC driver for SQuirreL.
+
+   When you configure the driver, you define the driver and create an
+   alias. The alias is a specific instance of the driver configuration.
+   SQuirreL uses the driver definition and alias to connect to Drill so
+   you can access data sources that you have registered with Drill. When
+   you create the alias, you provide a connection URL that includes the
+   name of the Drill directory stored in ZooKeeper and the cluster ID. The
+   URL has the following format:
+jdbc:drill:zk=<zookeeper_quorum>/<drill_directory_in_zookeeper>/<cluster_ID>
+
+   The following example shows a URL for Drill installed on a single node:
+jdbc:drill:zk=10.10.100.56:5181/drill/demo_mapr_com-drillbits
+jdbc:drill:zk=10.10.100.24:2181/drill/drillbits1
+
+   The following example shows a URL for Drill installed in distributed
+   mode with a connection to a ZooKeeper quorum:
+jdbc:drill:zk=10.10.100.30:5181,10.10.100.31:5181,10.10.100.32:5181/drill/drillb
+its1
+
+   Note:
+     * The ZooKeeper port is 2181. In a MapR cluster, the ZooKeeper port
+       is 5181.
+     * The Drill directory stored in ZooKeeper is /drill.
+     * The Drill default cluster ID is drillbits1. To determine the
+       cluster ID, check the following file:
+<drill-installation>/conf/drill-override.conf
+       For example:
+... drill.exec: { cluster-id: "docs41cluster-drillbits", zk.connect: "centos23.l
+ab:5181,centos28.lab:5181,centos29.lab:5181" } ...
+
+   To use the Drill JDBC driver with SQuirreL, complete the following
+   steps:
+    1. [1]Download the latest Drill JDBC Driver and then unzip the file.
+       The Drill JDBC Driver JAR files must exist in a directory on your
+       machine before you can configure the driver in the SQuirreL client.
+    2. If using the MapR-SASL or Plain authentication mechanism, add the
+       Drill JDBC JAR files and /opt/mapr/lib/* to Squirrel’s classpath,
+       as shown in the following example when the path to the driver is
+       C:\driver\MapRDrillJDBC41-1.5.6.1012:
+-cp "%SQUIRREL_CP%;C:\driver\MapRDrillJDBC41-1.5.6.1012\*;C:\opt\mapr\lib\*"
+       Note: The driver JAR files should appear before /opt/mapr/lib/* in
+       the classpath.
+    3. Define the driver.
+         a. Open the SQuirreL client.
+         b. In the SQuirreL toolbar, select Drivers > New Driver. The Add
+            Driver dialog appears.
+         c. Enter the following information:
+               o Name - Name for the Drill JDBC Driver
+               o Example URL - jdbc:drill:zk=<zookeeper_quorum>
+                 Example: jdbc:drill:zk=maprdemo:5181
+               o Website URL - jdbc:drill:zk=<zookeeper_quorum>
+                 Example: jdbc:drill:zk=maprdemo:5181
+                 Example:
+                 jdbc:drill:zk=10.10.100.113:5181,10.10.100.115:5181
+         d. Select Extra Class Path, and click Add.
+         e. Navigate to the directory that contains the JDBC JAR files.
+         f. Select all of the files in the directory, and click Choose.
+         g. In the Class Name drop-down field, select
+            com.mapr.drill.jdbc41.Driver. Type
+            com.mapr.drill.jdbc41.Driver in the field if the option does
+            not appear.
+         h. Click Ok. The SQuirreL client displays a message stating that
+            the driver registration is successful, and you can see the
+            driver in the Drivers panel.
+    4. Create a database alias.
+         a. Select the Aliases tab.
+         b. In the SQuirreL toolbar, select Aliases > New Alias. The Add
+            Alias dialog box appears.
+         c. Enter the following information and click Ok.
+               o Alias Name - A unique name for the Drill JDBC Driver
+                 alias
+               o Driver - Select the Drill JDBC Driver
+               o URL - Enter the connection URL with the name of the Drill
+                 directory stored in ZooKeeper and the cluster ID.
+               o User Name - admin
+               o Password - admin
+            The Connect to: dialog appears.
+         d. Click Connect. SQuirreL displays a message stating that the
+            connection is successful.
+         e. Click Ok. SQuirrel is connected to Drill through the Drill
+            JDBC driver. You can run your queries.
+
+References
+
+   1. http://package.mapr.com/tools/MapR-JDBC/MapR_Drill/

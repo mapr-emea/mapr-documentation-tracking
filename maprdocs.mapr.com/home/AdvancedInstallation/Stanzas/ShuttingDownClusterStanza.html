@@ -1,0 +1,36 @@
+Shutting Down a Cluster Using a MapR Installer Stanza Command
+
+   Use the Stanza shutdown command to shut down an on-premise or
+   cloud-based cluster.
+
+   The Stanza shutdown command is available with MapR Installer 1.6 or
+   later. The command shuts down Warden and Zookeeper, which in turn shut
+   down other running services that are part of a MapR cluster. When you
+   use the shutdown command, the MapR Installer implements the same
+   orderly shutdown that it uses to perform software upgrades.
+
+   You must supply the ssh ID and password or the ssh ID and ssh_key_file.
+   The shutdown command works differently for cloud-based clusters. Note
+   these considerations for the behavior of the shutdown command:
+   Cluster Location Shutdown Command Behavior
+   On premise Does not stop non-MapR software and does not power off the
+   nodes.
+   In the cloud Shuts down (but does not remove) all the nodes in the
+   cluster. If the installer node is part of the cluster, the installer
+   node is not shut down. To shut down the installer node, use AWS-console
+   or Azure-portal commands to stop the instance.
+
+   This example shuts down a MapR cluster. The command uses an override to
+   provide the ssh_id and ssh_password and includes -nv so that
+   certificates will not be checked, and the output mode is verbose.
+./bin/mapr-installer-cli shutdown -nv -o config.ssh-id=root -o config.ssh_passwo
+rd=mapr
+
+   This example shuts down a MapR cluster. The command uses an override to
+   provide the ssh_id and ssh_key_file and includes -nv so that
+   certificates will not be checked, and the output mode is verbose. The
+   ssh_key_file for root normally resides in /root/.ssh. In this example,
+   the file has been copied to /home/mapr/root so that the mapr user can
+   access the key file.
+./bin/mapr-installer-cli shutdown -nv -o config.ssh_id=root -o config.ssh_key_fi
+le=/home/mapr/root_user_id_rsa

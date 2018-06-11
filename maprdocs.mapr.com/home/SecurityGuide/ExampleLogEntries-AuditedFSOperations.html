@@ -1,0 +1,75 @@
+Example Log Entries for Audited Filesystem Operations
+
+   When auditing of filesystem operations is enabled at the cluster level,
+   volume level, and filesystem level, each operation on a directory or
+   file is logged on the node on which the operation was initiated.
+
+   Typical log entries provide a timestamp of the operation, the type of
+   operation, the UID of the user who ran the command, the IP address from
+   which the user ran the command, identifiers of the affected resources,
+   the volume identifier, and the status of the operation. Status codes
+   come from the Linux errno.h file. For a list of these codes, see
+   [1]Status Codes That Can Appear in Audit Logs.
+   Note: Due to the way that the creation of tables is processed
+   internally, sometimes the creation of tables is logged in
+   FSAudit.log.json, rather than in DBAudit.log.json.
+
+   Below are some typical log entries:
+{"timestamp":{"$date":"2015-06-06T10:44:22.800Z"},"operation":"MKDIR","uid":0,"i
+pAddress":
+"10.10.104.51","parentFid":"2049.51.131248","childFid":"2049.56.131258","childNa
+me":
+"ycsbTmp_1433587462796","volumeId":68048396,"status":0}
+{"timestamp":{"$date":"2015-06-06T10:44:22.823Z"},"operation":"LOOKUP","uid":0,"
+ipAddress":
+"10.10.105.51","srcFid":"2049.56.131258","srcName":"range0","volumeId":68048396,
+"status":2}
+{"timestamp":{"$date":"2015-06-06T10:44:22.824Z"},"operation":"CREATE","uid":0,"
+ipAddress":
+"10.10.104.51","parentFid":"2049.56.131258","childFid":"2049.57.131260","childNa
+me":"range0"
+,"volumeId":68048396,"status":0}
+{"timestamp":{"$date":"2015-06-06T10:44:22.838Z"},"operation":"WRITE","uid":0,"i
+pAddress":
+"10.10.105.51","srcFid":"2049.57.131260","volumeId":68048396,"status":0}
+{"timestamp":{"$date":"2015-06-06T10:44:48.628Z"},"operation":"READ","uid":0,"ip
+Address":
+"10.10.105.51","srcFid":"2049.63.131272","volumeId":68048396,"status":0}
+
+   To convert the user IDs to usernames, file identifiers to pathnames,
+   and volume IDs to volume names, run the [2]expandaudit utility. For
+   example, here are the same audit records after they were processed by
+   this utility:
+{"timestamp":"{$date=2015-06-06T10:44:22.800Z}","operation":"MKDIR","user":"root
+","uid":"0","ipAddress":
+"10.10.104.51","parentPath":"/ycsb1433587356934","childPath":"/ycsb1433587356934
+/ycsbTmp_1433587462796",
+"childName":"ycsbTmp_1433587462796","VolumeName":"mapr.cluster.root","volumeId":
+"68048396","status":"0"}
+{"timestamp":"{$date=2015-06-06T10:44:22.823Z}","operation":"LOOKUP","user":"roo
+t","uid":"0","ipAddress":
+"10.10.105.51","srcPath":"/ycsb1433587356934/ycsbTmp_1433587462796","srcName":"r
+ange0","VolumeName":
+"mapr.cluster.root","volumeId":"68048396","status":"2"}
+{"timestamp":"{$date=2015-06-06T10:44:22.824Z}","operation":"CREATE","user":"roo
+t","uid":"0","ipAddress":
+"10.10.104.51","parentPath":"/ycsb1433587356934/ycsbTmp_1433587462796","childPat
+h":
+"/ycsb1433587356934/ycsbTmp_1433587462796/range0","childName":"range0","VolumeNa
+me":"mapr.cluster.root",
+"volumeId":"68048396","status":"0"}
+{"timestamp":"{$date=2015-06-06T10:44:22.838Z}","operation":"WRITE","user":"root
+","uid":"0","ipAddress":
+"10.10.105.51","srcPath":"/ycsb1433587356934/ycsbTmp_1433587462796/range0","Volu
+meName":"mapr.cluster.root",
+"volumeId":"68048396","status":"0"}
+{"timestamp":"{$date=2015-06-06T10:44:48.628Z}","operation":"READ","user":"root"
+,"uid":"0","ipAddress":
+"10.10.105.51","srcPath":"/ycsb1433587356934/ycsbTmp_1433587462796/range6","Volu
+meName":"mapr.cluster.root",
+"volumeId":"68048396","status":"0"}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/AuditLogs-StatusCodes.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/r_expand_audit_logs.html

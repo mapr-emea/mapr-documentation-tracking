@@ -1,0 +1,129 @@
+Configure Sqoop2 to use Sentry Authorization
+
+   As of Sentry 1.6.0, you can configure Sqoop2 to use Sentry
+   authentication when Sentry uses the database storage model, the cluster
+   is secure, and the cluster uses Kerberos authentication. Use these
+   steps:
+
+    1. Add the following properties to the sentry-site.xml file
+       (/opt/mapr/sentry/sentry-<version>/conf/sentry-site.xml):
+<property>
+                        <name>sentry.sqoop.provider.backend</name>
+                        <value>org.apache.sentry.provider.db.generic.SentryGener
+icProviderBackend</value>
+                        </property>
+
+                        <property>
+                        <name>sentry.service.allow.connect</name>
+                        <value>mapr,sqoop</value>
+                        <description>comma separated list of users - List of use
+rs that are allowed to connect to the service (eg Hive, Impala)</description>
+                        </property>
+    2. Configure the following properties in the sqoop.properties file
+       (/opt/mapr/sqoop/sqoop-2.0.0/server/conf/sqoop.properties):
+# Authentication configuration
+                        org.apache.sqoop.security.authentication.type=KERBEROS
+                        org.apache.sqoop.security.authentication.handler=org.apa
+che.sqoop.security.authentication.KerberosAuthenticationHandler
+                        org.apache.sqoop.security.authentication.kerberos.princi
+pal=mapr/<FQDN>@<REALM>
+                        org.apache.sqoop.security.authentication.kerberos.keytab
+=/opt/mapr/conf/mapr.keytab
+                        org.apache.sqoop.security.authentication.kerberos.http.p
+rincipal=HTTP/<FQDN>@<REALM>
+                        org.apache.sqoop.security.authentication.kerberos.http.k
+eytab=/opt/mapr/conf/mapr.keytab
+                        org.apache.sqoop.security.authentication.enable.doAs=tru
+e
+                        org.apache.sqoop.security.authentication.proxyuser.mapr.
+users=*
+                        org.apache.sqoop.security.authentication.proxyuser.mapr.
+groups=*
+                        org.apache.sqoop.security.authentication.proxyuser.mapr.
+hosts=*
+
+                        # Authorization configuration
+                        org.apache.sqoop.security.authorization.handler=org.apac
+he.sentry.sqoop.authz.SentryAuthorizationHander
+                        org.apache.sqoop.security.authorization.access_controlle
+r=org.apache.sentry.sqoop.authz.SentryAccessController
+                        org.apache.sqoop.security.authorization.validator=org.ap
+ache.sentry.sqoop.authz.SentryAuthorizationValidator
+                        org.apache.sqoop.security.authorization.server_name=Sqoo
+pServer1
+                        sentry.sqoop.site.url=file:///opt/mapr/sqoop/sqoop-2.0.0
+/server/conf/sqoop-sentry-site.xml
+    3. Copy the following JAR files from
+       /opt/mapr/sentry/sentry-<version>/lib to
+       /opt/mapr/sqoop/sqoop-2.0.0/server/webapps/sqoop/WEB-INF/lib/. (For
+       Sqoop 1.99.7, use /opt/mapr/sqoop/sqoop-2.0.0/server/lib/):
+       For Sentry Version 1.6.0
+          + sentry-provider-db-1.6.0-incubating-mapr-1606.jar
+          + shiro-core-1.2.1.jar
+          + sentry-core-common-1.6.0-incubating-mapr-1606.jar
+          + sentry-core-model-db-1.6.0-incubating-mapr-1606.jar
+          + sentry-core-model-search-1.6.0-incubating-mapr-1606.jar
+          + sentry-core-model-sqoop-1.6.0-incubating-mapr-1606.jar
+          + sentry-provider-common-1.6.0-incubating-mapr-1606.jar
+          + sentry-policy-common-1.6.0-incubating-mapr-1606.jar
+          + libthrift-0.9.2.jar
+          + sentry-provider-file-1.6.0-incubating-mapr-1606.jar
+          + sentry-binding-sqoop-1.6.0-incubating-mapr-1606.jar
+          + sentry-policy-sqoop-1.6.0-incubating-mapr-1606.jar
+       For Sentry Version 1.7.0
+          + sentry-provider-db-1.7.0-mapr-1703.jar
+          + shiro-core-1.2.3.jar
+          + sentry-core-common-1.7.0-mapr-1703.jar
+          + sentry-core-model-db-1.7.0-mapr-1703.jar
+          + sentry-core-model-search-1.7.0-mapr-1703.jar
+          + sentry-core-model-sqoop-1.7.0-mapr-1703.jar
+          + sentry-provider-common-1.7.0-mapr-1703.jar
+          + sentry-policy-common-1.7.0-mapr-1703.jar
+          + libthrift-0.9.2.jar
+          + sentry-provider-file-1.7.0-mapr-1703.jar
+          + sentry-binding-sqoop-1.7.0-mapr-1703.jar
+          + sentry-policy-sqoop-1.7.0-mapr-1703.jar
+    4. Create sqoop-sentry-site.xml in the
+       /opt/mapr/sqoop/sqoop-2.0.0/server/conf/ directory. (If you use
+       Sqoop 1.99.7, create sqoop-sentry-site.xml in the
+       /opt/mapr/sqoop/sqoop-2.0.0/conf directory.)
+    5. Add the following properties to the sqoop-sentry-site.xml:
+<property>
+                        <name>sentry.service.security.mode</name>
+                        <value>kerberos</value>
+                        </property>
+
+
+                        <property>
+                        <name>sentry.service.server.principal</name>
+                        <value>mapr/<FQDN>@<REALM></value>
+                        </property>
+
+                        <property>
+                        <name>sentry.service.server.keytab</name>
+                        <value>/opt/mapr/conf/mapr.keytab</value>
+                        </property>
+
+                        <property>
+                        <name>sentry.service.client.server.rpc-address</name>
+                        <value>localhost</value>
+                        </property>
+
+                        <property>
+                        <name>sentry.service.client.server.rpc-port</name>
+                        <value>8038</value>
+                        </property>
+
+                        <property>
+                        <name>sentry.sqoop.provider.backend</name>
+                        <value>org.apache.sentry.provider.db.generic.SentryGener
+icProviderBackend</value>
+                        </property>
+
+                        <property>
+                        <name>sentry.service.admin.group</name>
+                        <value>sqoop2,sqoop,hive,impala,solr,mapr</value>
+                        </property>
+    6. Start the Sqoop2 server:
+maprcli node services -name sqoop2 -action start -nodes <space delimited list of
+ nodes>

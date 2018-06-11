@@ -1,0 +1,37 @@
+Composite Indexes
+
+   A composite index is an index that has more than one indexed field and
+   zero or more included fields. If all fields referenced in a query are
+   either indexed or included fields in a composite index, then the index
+   is a covering index for that query.
+
+Sort Order
+
+   MapR-DB sorts the composite index in the order in which you have
+   defined the keys. For example, if you have an index on fields, Field1
+   and Field2, MapR-DB sorts on Field1 as the primary sort key and Field2
+   as the secondary.
+
+   Each component in a composite field index can have its own ordering.
+   For example, you can specify an ascending sort order for one field and
+   a descending sort for another.
+
+Composite Index Example
+
+   Consider this example, which illustrates the impact of key order in a
+   composite index.
+   [CompositeField.png]
+
+   In the index on the left, the prefix key is Field1. MapR-DB sorts the
+   index first on Field1, and then on Field2. This aligns with the
+   equality condition, Field1 = 3. MapR-DB reads the least number of
+   entries from the index on the left, due to this equality condition and
+   the range condition on Field2.
+
+   In the index on the right, MapR-DB sorts the index on Field2, followed
+   by Field1. In this case, the matching key values are not contiguous in
+   the index, as highlighted by the entries in a lighter shade of yellow.
+   MapR-DB uses the filter conditions on Field2 to start the search in the
+   index. It applies the filter condition on Field1 while reading the
+   index. This is less efficient because MapR-DB must read those extra
+   non-matching key values.

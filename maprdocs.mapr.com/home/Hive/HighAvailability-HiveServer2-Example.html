@@ -1,0 +1,29 @@
+Example HiveServer2 High Availability Setup
+
+   This section describes a High Availability set up for HiveServer2 on a
+   sample MapR cluster. Suppose a three node cluster with the following
+   (optional) IP addresses and host names:
+    IO Address   Host Name
+   192.168.33.11 node1
+   192.168.33.12 node2
+   192.168.33.13 node3
+
+   Connection to HiveServer2 can be accomplished using the following
+   string:
+jdbc:hive2://node1:5181,node2:5181,node3:5181/;serviceDiscoveryMode=zooKeeper;zo
+oKeeperNamespace=hiveserver2
+
+   To deregister HiveServer2:
+    1. Launch the ZooKeeper command line interface using the following
+       command:
+/opt/mapr/zookeeper/zookeeper-3.4.5/bin/zkCli.sh -server 192.168.33.13:5181
+    2. Look at the ZooKeeper namespace using the following command:
+ls /hiveserver2
+       Output:
+[serverUri=node3:10000;version=2.1.1-mapr-1703;sequence=0000000004,
+serverUri=node1:10000;version=2.1.1-mapr-1703;sequence=0000000006]
+    3. Deregister:
+          + HiveServer2 on node3:
+delete serverUri=node3:10000;version=2.1.1-mapr-1703;sequence=0000000004
+          + All HiveServer2 instances:
+hive --service hiveserver2 --deregister 2.1.1-mapr-1703

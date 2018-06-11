@@ -1,0 +1,38 @@
+Creating Share on MapR Using Manila
+
+   The MapR driver for Manila enables you to create a share on MapR-FS
+   using the Manila APIs. To set up a share on MFS, log in to the node
+   where manila is installed and run the following command:
+manila create --share-type <shareType> <protocol> <quota> --name <volumename> --
+metadata _tenantuser=<tenantuser> _path=<mountpoint> _name=<shareName>
+
+   Here:
+   Option Description
+   name (Optional) Specifies the name for the share (or MapR volume). If
+   this is not specified, volumename is generated based on the share ID.
+   Protocol Specifies the protocols for share creation. Value must be
+   MAPRFS to create a share on MFS.
+   quota Specifies the amount of disk space in gigabytes (GB) to allocate
+   for the share.
+   metadata
+
+   Metadata defined as key=value pairs. For creating a share on MFS,
+   specify values for the following keys:
+     * tenantuser - The tenant user for whom the share is being created.
+     * path - (Optional) The path to the mount point for the share. The
+       default value is <maprfs_base_volume_dir>/<shareid>.
+
+   For example, suppose you are creating a volume, sampleVol, on MFS with
+   a quota of 2GB to be mounted in /cloud/egTenant for tenant user,
+   sampleTenant, your command should look similar to the following:
+manila create --name sampleVol MAPRFS 2 --share-type default --metadata _tenantu
+ser=sampleTenant _path=/cloud/egTenant _name=egTenantVol
+
+   Note: For more information, see:
+     * Documentation for [1]manila create command.
+     * OpenStack Manila [2]documentation to manage shares.
+
+References
+
+   1. https://docs.openstack.org/manila/latest/cli/manila.html#manila-create
+   2. https://docs.openstack.org/manila/latest/admin/shared-file-systems-share-management.html

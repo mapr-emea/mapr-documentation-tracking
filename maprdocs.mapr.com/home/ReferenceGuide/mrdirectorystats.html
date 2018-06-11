@@ -1,0 +1,106 @@
+mrdirectorystats
+
+   The mrdirectorystats utility prints the space usage per directory for a
+   container.
+
+   The mrdirectorystats utility, when run for a container, will print the
+   space usage information for all directories, starting from the root of
+   the container. This utility is considerably faster than running ls -R
+   command on the root of the container and is useful, for example, in
+   identifying directories which need to be moved out to a different
+   volume while trying to reduce the size of the current namespace
+   container.
+
+Syntax
+
+/opt/mapr/server/mrdirectorystats
+     -c <container_id>
+     [ -p ]
+     [ -h ]
+
+Parameters
+
+   Parameter Description
+   c The ID of the container.
+   h Prints help for running the command.
+   p Prints only parent file ID (PFid) and other information about the
+   file IDs (fids) in the container.
+
+Output
+
+   The utility prints the following information per directory to console
+   if only -c is specified:
+   DirFid The directory inode number.
+   files The number of regular files under the directory.
+   subdir The number of sub-directories inside the directory.
+   others The number of other types of files (except directories and
+   regular files), such as device, symlinks, kvstores, tables, etc.,
+   inside the directory.
+   tfiles The total number of regular files stored in the entire directory
+   tree.
+   tsubdir The total number of sub-directories stored in the entire
+   directory tree.
+   tothers The total number of other type of files stored in the entire
+   directory tree.
+   cntrBlocks The space occupied in block size (8k) by the direct blocks
+   of the total regular files (tfiles) in the directory tree, for the
+   current container.
+   fieletBlocks A rough estimation of the sum of all the data blocks of
+   all the filelets of regular files spread across different data
+   containers.
+   Note: The utility also shows volume links if any volume exists in the
+   container.
+
+   The utility prints the following if -p is specified with -c:
+   Inode   The inode of the file.
+   PFid    The parent file ID.
+   Type The type of entity in the container. Value can be one of the
+   following:
+     * Directory — indicates the entity is a directory.
+     * VolLink — indicates entity is a volume link.
+     * KvStore — indicates entity is KvStore.
+
+   SubType The sub-type of the entity in the container. Value can be one
+   of the following:
+     * Directory — indicates entity is directory.
+     * VolLink — indicates entity is a volume link.
+     * Table — indicates entity is a table. Entity can be table only if
+       type is KvStore.
+     * Tabletmap — indicates entity is a tabletmap. Entity can be
+       tabletmap only if type is KvStore.
+     * Schema — indicates entity is a schema. Entity can be schema only if
+       type is KvStore.
+
+Example
+
+   Retrieve the disk space usage information for a container by running
+   the utility with the -c option:
+#  ./mrdirectorystats -c 2245
+DirFid          files     subdir   others  tfiles    tsubdir  tothers cntrBlocks
+  fileletBlocks
+2245.16.2       5         3        3       6         4        3       0
+  65536
+2245.39.131308  1         0        0       1         0        0       0
+  0
+2245.40.131310  0         1        0       0         1        0       0
+  0
+2245.41.131312  0         0        0       0         0        0       0
+  0
+2245.45.131320  0         0        0       0         0        0       0
+  0
+symlinks 2 fidmaps 1 tables 1 schemas 1 tabletmaps 1
+
+   Retrieve information about the file IDs in the container by running the
+   utility with the -c and -p option:
+# ./mrdirectorystats  -p -c 2049
+Inode :32       PFid: 2049.16.2         Type: VolLink   SubType: VolLink
+Inode :33       PFid: 2049.16.2         Type: VolLink   SubType: VolLink
+Inode :34       PFid: 2049.16.2         Type: Directory SubType: Directory
+Inode :35       PFid: 2049.34.131372    Type: VolLink   SubType: VolLink
+Inode :36       PFid: 2049.16.2         Type: VolLink   SubType: VolLink
+Inode :37       PFid: 2049.16.2         Type: VolLink   SubType: VolLink
+Inode :38       PFid: 2049.16.2         Type: VolLink   SubType: VolLink
+Inode :39       PFid: 2049.16.2         Type: KvStore   SubType: Table
+Inode :40       PFid: 2049.16.2         Type: VolLink   SubType: VolLink
+Inode :41       PFid: 2049.39.262468    Type: KvStore   SubType: Tabletmap
+Inode :42       PFid: 2049.39.262468    Type: KvStore   SubType: Schema

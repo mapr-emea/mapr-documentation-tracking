@@ -1,0 +1,52 @@
+Configuring Gateways for Table and Stream Replication
+
+   Configuring gateways involves installing the mapr-gateway package on
+   nodes in a MapR destination cluster and then configuring the MapR
+   source cluster to communicate with the destination cluster. The Mapr
+   source cluster is configured by specifying the destination cluster's
+   CLDB node and gateway nodes.
+
+   Although it is possible to use a single gateway, the recommended
+   practice is to configure at least two (2), so that replication can
+   continue if a gateway fails. MapR source clusters distribute requests
+   among the gateways in a round-robin fashion. See [1]Gateways for
+   Replicating MapR-DB Tables, [2]Table Replication, and [3]Preparing
+   Clusters for Stream Replication for more information about replication.
+
+   See [4]Setting Up Cross-Cluster Security for more information about
+   setting up cross-cluster security including cross-cluster security for
+   table and stream replication.
+    1. On the destination cluster, install the mapr-gateway package on
+       each node where you want to run a gateway on. See [5]Installing
+       MapR Software.
+       Note: On the gateway nodes in the destination cluster, when you run
+       (or re-run) the configure.sh script (in addition to your regular
+       parameters) be sure to specify the -N parameter with the name of
+       the cluster that the gateway belongs to. See [6]configure.sh for
+       more information about configure.sh usage, options, and examples.
+    2. If you want to change the port that a gateway is using (by default,
+       gateways use port 7660):
+         a. On the node where the gateway is running, edit the
+            /opt/mapr/conf/gateway.conf file, uncommenting the line
+            #gateway.port=7660 and changing the port number.
+         b. After saving the file, restart the gateway by running this
+            command: maprcli node services -name gateway -action restart
+    3. On the source cluster, specify the destination cluster's name and
+       gateway nodes by using one of the following methods. See
+       [7]Managing Gateways for more information about using these
+       methods.
+          + Running the maprcli cluster gateway set command.
+maprcli cluster gateway set -dstcluster <cluster name> -gateways "<space-delimit
+ed list of gateways>"
+          + Adding a DNS record to your DNS server's zone file for your
+            domain.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/Gateways-replication-Tables.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/ReplicatingMapR-DBTables.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR_Streams/configuring_for_repl_between_streams.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetupCrossClusterSecurity.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdvancedInstallation/InstallingMapRSoftware.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/configure.sh.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/Gateways/Gateways-managing.html

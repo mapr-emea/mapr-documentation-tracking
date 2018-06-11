@@ -1,0 +1,103 @@
+Offline and Manual Upgrade
+
+   The offline, manual upgrade procedure is suitable for upgrading small
+   clusters. On large clusters, these steps are commonly performed on all
+   nodes in parallel using scripts and/or remote management tools.
+
+   This procedure assumes you have planned and prepared for the upgrade as
+   described earlier, and the cluster meets prerequisites, including the
+   correct JDK for the version you are upgrading to. See the [1]JDK
+   Support Matrix for more information.
+   Note: An offline upgrade is performed as the root user or with sudo.
+
+   At the end of this procedure, you use yum update or zypper update on
+   RHEL/CentOS or SUSE to upgrade packages. Ignore any warnings that
+   certain packages are not installed. Packages will be upgraded correctly
+   and no additional packages will be installed.
+    1. Notify stakeholders of the impending upgrade, and then stop
+       accepting new jobs and applications. Terminate running jobs and
+       applications by running maprcli commands on appropriate nodes in
+       the cluster.
+       For YARN applications, use the following commands:
+# yarn application -list
+          # yarn application -kill <ApplicationId>
+    2. Disconnect NFS mounts. Unmount the MapR NFS share from all clients
+       connected to it, including other nodes in the cluster. This allows
+       all processes accessing the cluster via NFS to disconnect
+       gracefully.
+       For example, if the cluster is mounted at /mapr: # umount /mapr
+    3. Display the services on each node in the cluster, and stop
+       ecosystem component services on the nodes.
+# maprcli node list -columns hostname,csvc
+# maprcli node services -multi '[{ "name": "hue", "action": "stop"}, { "name": "
+oozie", "action": "stop"}, { "name": "hs2", "action": "stop"}]' -nodes <hostname
+s>
+    4. Determine where CLDB and ZooKeeper services are installed.
+    5. Stop Warden on CLDB nodes first, and then on all remaining nodes.
+    6. Stop ZooKeeper on all nodes where it is installed.
+    7. Ensure that no stale MapR processes are running. If so, stop the
+       processes:
+ps -ef | grep mapr
+pkill -u mapr
+    8. Remove any existing patches.
+         a. Run one of the following commands to determine if a patch is
+            installed.
+               o RHEL/CentOS and SUSE: rpm -qa mapr-patch
+               o Ubuntu: dpkg l | grep mapr-patch
+            If the command displays no output, no patch is installed.
+         b. If one or more patches are installed, run one of the following
+            commands to remove the patches:
+               o RHEL/CentOS or SUSE: sudo rpm -e mapr-patch
+               o Ubuntu: sudo apt-get -y remove mapr-patch
+    9. Upgrade MapR core packages by installing the appropriate MapR
+       package key.
+          + RHEL/CentOS: sudo rpm --import
+            http://package.mapr.com/releases/pub/maprgpg.key
+          + SUSE: No package key needed.
+          + Ubuntu: wget -O -
+            http://package.mapr.com/releases/pub/maprgpg.key | sudo
+            apt-key add -
+   10. Upgrade these MapR core component and MapR hadoop common packages
+       on all nodes where packages exist.
+       Components to upgrade are:
+          + mapr-cldb
+          + mapr-core
+          + mapr-core-internal
+          + mapr-fileserver
+          + mapr-hadoop-core
+          + mapr-historyserver
+          + mapr-mapreduce2
+          + mapr-nfs
+          + mapr-nodemanager
+          + mapr-resourcemanager
+          + mapr-webserver
+          + mapr-zookeeper
+          + mapr-zk-internal
+       When using yum update or zypper update, do not use a wildcard such
+       as "mapr-*" to upgrade all MapR packages, which could erroneously
+       include Hadoop ecosystem components such as mapr-hive and mapr-pig.
+          + RHEL/CentOS:
+yum update mapr-cldb mapr-core mapr-core-internal mapr-fileserver mapr-hadoop-co
+re mapr-historyserver mapr-mapreduce2 mapr-nfs mapr-nodemanager mapr-resourceman
+ager mapr-webserver mapr-zookeeper mapr-zk-internal
+          + SUSE:
+zypper update mapr-cldb mapr-compat-suse mapr-core mapr-core-internal mapr-files
+erver mapr-hadoop-core mapr-historyserver mapr-mapreduce2 mapr-nfs mapr-nodemana
+ger mapr-resourcemanager mapr-webserver mapr-zookeeper mapr-zk-internal
+          + Ubuntu: First get a list of the MapR packages installed on the
+            node, and then run apt-get install on the listed packages.
+dpkg --list | grep "mapr" | grep -P "^ii"| awk '{ print $2}'|tr "\n" " "
+                            apt-get install <package-list>
+   11. Verify that packages were installed successfully on all nodes.
+       Confirm that there were no errors during installation, and check
+       that /opt/mapr/MapRBuildVersion contains the expected value.
+       For example:
+# cat /opt/mapr/MapRBuildVersion
+6.0.0.xxxxxxxxxxxxxx.GA
+
+   See [2]Post-Upgrade Steps for MapR Core
+
+References
+
+   1. http://maprdocs.mapr.com/home/InteropMatrix/r_jdk_matrix.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/UpgradeGuide/PostUpgradeCore.html

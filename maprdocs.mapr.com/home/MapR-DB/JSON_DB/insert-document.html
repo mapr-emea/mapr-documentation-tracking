@@ -1,0 +1,92 @@
+Inserting JSON Documents
+
+   This section contains sample code that inserts a JSON document into a
+   MapR-DB JSON table. It also shows the MapR-DB Shell syntax for
+   inserting documents.
+     * [1]Java
+     * [2]dbshell
+
+   The following code is available at
+   [3]OJAI_002_GetStoreAndInsertDocuments.java.
+
+   After you create the JSON document from a JavaBean, call the
+   [4]DocumentStore.insertOrReplace method to insert the document into
+   MapR-DB.
+/**
+ * Copyright (c) 2017 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.mapr.ojai.examples;
+
+import org.ojai.Document;
+import org.ojai.store.Connection;
+import org.ojai.store.DocumentStore;
+import org.ojai.store.DriverManager;
+
+import com.mapr.ojai.examples.data.Dataset;
+import com.mapr.ojai.examples.data.User;
+
+public class OJAI_002_GetStoreAndInsertDocuments {
+
+  public static void main(String[] args) {
+
+    System.out.println("==== Start Application ===");
+
+    // Create an OJAI connection to MapR cluster
+    final Connection connection = DriverManager.getConnection("ojai:mapr:");
+
+    // Get an instance of OJAI
+    final DocumentStore store = connection.getStore("/demo_table");
+
+    for (final User someUser : Dataset.users) {
+      // Create an OJAI Document form the Java bean (there are other ways too)
+      final Document userDocument = connection.newDocument(someUser);
+
+      System.out.println("\t inserting "+ userDocument.getId());
+
+      // insert the OJAI Document into the DocumentStore
+      store.insertOrReplace(userDocument);
+    }
+
+    // Close this instance of OJAI DocumentStore
+    store.close();
+
+    // close the OJAI connection and release any resources held by the connectio
+n
+    connection.close();
+
+    System.out.println("==== End Application ===");
+  }
+
+}
+
+   The following shows the syntax to insert a document with MapR-DB Shell.
+   See [5]dbshell insert for more information and examples.
+# mapr dbshell
+maprdb root:>
+
+// Syntax for inserting a document using the document ID
+maprdb root:> insert <table path> --value '{"_id": "<row-key", < table field >}'
+
+// Syntax for inserting a document using document value
+maprdb root:> insert <table path> --id <row-key> --value '{"_id": "<row-key", <
+table field >}'
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/insert-document.html#div1sect1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/insert-document.html#div1sect2
+   3. https://github.com/mapr-demos/ojai-2-examples/blob/master/src/main/java/com/mapr/ojai/examples/OJAI_002_GetStoreAndInsertDocuments.java
+   4. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#insertOrReplace-org.ojai.Document-
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-insert.html

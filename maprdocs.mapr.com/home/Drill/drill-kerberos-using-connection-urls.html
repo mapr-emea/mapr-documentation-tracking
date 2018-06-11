@@ -1,0 +1,177 @@
+Connection URLs for Kerberos using JDBC Drivers to connect via SQLLine
+
+   You can use client-side connection URL parameters for Kerberos
+   authentication in multiple combinations to authenticate a client with
+   Drill.
+
+Client Credentials
+
+   A client can provide its credentials in two ways:
+     * With a ticket granting ticket (TGT) generated on client side. The
+       TGT must be present on client node; Drill does not generate the
+       TGT.
+     * With a keytab file and the client principal provided in the user
+       property of the connection URL.
+
+Configuration Options
+
+   The following table lists configuration options for connection URLs.
+   See the Connection URL Examples section for sample URLs.
+   Connection Parameter (Apache Drill JDBC Driver) Connection Parameter
+   (MapR Drill JDBC Driver) Description Mandatory/Optional Default Value
+   auth AuthMech Authentication mechanism. The value is deduced if not
+   specified. Kerberos if principal is provided. Plain if a user and
+   password is provided. A Drill client can also explicitly specify a
+   particular authentication mechanism to use using this parameter. For
+   example, for Kerberos along with service_name, service_host or
+   principal and for the Plain authentication with username and password.
+   Optional The preference order is Kerberos and Plain.
+   principal KrbPrincipal Drillbit service principal. The format of the
+   principal is primary/instance@realm. For Kerberos, the Drill service
+   principal is derived if the value is not provided using this
+   configuration. service_name (primary) and service_host (instance) are
+   used to generate a valid principal. Since the ticket or keytab contains
+   the realm information, the realm is optional. Optional
+   keytab KrbKeytab For Kerberos, if the client chooses to authenticate
+   using a keytab rather than a ticket, set the keytab parameter to the
+   location of the keytab file. The client principal must be provided
+   through the user parameter. A Kerberos ticket is used as the default
+   credential (It is assumed to be present on client-side. The Drill
+   client does not generate the required credentials.) Optional
+   sasl_encrypt sasl_encrypt When set to true, ensures that a client
+   connects to a server with encryption capabilities. For example, Drill
+   1.11 drillbits, which support client-to-drillbit encryption. Optional
+   FALSE
+   service_name KrbServiceName Primary name of the Drillbit service
+   principal. Optional drill
+   service_host KrbHostFQDN Instance name of the Drillbit service
+   principal. Optional Since this value is usually the hostname of the
+   node where a drillbit is running, the default value is the drillbit
+   hostname is provided either through ZooKeeper or through a direct
+   connection string.
+   realm KrbRealm Kerberos realm name for the drillbit service principal.
+   The ticket or keytab contains the realm information. Optional
+
+Client Encryption
+
+   A client can specify that it requires a server with encryption
+   capabilities only by setting the
+   sasl_encrypt connection parameter to "true." If the cluster to which
+   client is connecting has encryption disabled, the client will fail to
+   connect to that server.
+drill.exec {
+ security:  {
+      user.auth.enabled: true,
+      auth.mechanisms: ["KERBEROS"],
+      auth.principal: "drill/serverhostname@REALM.COM",
+      auth.keytab: "/etc/drill/conf/drill.keytab",
+      user.encryption.sasl.enabled: true
+          }
+}
+
+Connection URL Examples
+
+   The following five examples show the JDBC connection URL that the
+   embedded JDBC client uses for Kerberos authentication. The first
+   section, Example of a Simple Connection URL, includes a simple
+   connection string and the second section, Examples of Connection URLs
+   Used with Previously Generated TGTs, includes examples to use with
+   previously generated TGTs.
+
+   Example of a Simple Connection URL
+
+   Example 1: TGT for Client Credentials
+   The simplest way to connect using Kerberos is to generate a TGT on the
+   client side. Only specify the service principal in the JDBC connection
+   string for the Drillbit the user wants to connect to.
+jdbc:drill:drillbit=10.10.10.10;principal=<principal for host 10.10.10.10>
+
+   In this example, the Drill client uses the:
+     * Default service_name, which is drill.
+     * service_host from the drillbit name provided in the connection URL,
+       which is 10.10.10.10.
+
+   The service principal format is <primary>/<instance>@<realm from TGT>.
+   The service principal is principal for host 10.10.10.10.
+
+   Examples of Connection URLs Used with Previously Generated TGTs
+
+   If you do not provide a service principal in the connection string when
+   using Kerberos authentication, then use the service_name or
+   service_host parameters. Since these parameters are optional, their
+   default values will be used internally (if not provided) to create a
+   valid principal.
+   Examples 2 through 4 show a valid connection string for Kerberos
+   authentication if a client has previously generated a TGT. Realm
+   information will be extracted from the TGT if it is not provided.
+   Note: For end-to-end authentication to function, it is assumed that the
+   proper principal for the Drillbit service is configured in the KDC.
+
+   Example 2: Drillbit Provided by Direct Connection String and Configured
+   with a Unique Service Principal
+
+   This type of connection string is used when:
+     * Each Drillbit in the cluster is configured with its own service
+       principal.
+     * The instance component is the host address of the Drillbit.
+       jdbc:drill:drillbit=host1;auth=kerberos
+
+   In this example, the Drill client uses the:
+     * Default service_name, which is drill.
+     * service_host, which is the drillbit name provided in the connection
+       URL (host1).
+
+   The internally created service principal will be drill/host1@<realm
+   from TGT>.
+
+   Example 3: Drillbit Selected by ZooKeeper and Configured with Unique
+   Service Principal
+   This type of connection string is used when the Drillbit is chosen by
+   ZooKeeper instead of directly from the connection string.
+jdbc:drill:zk=host01.aws.lab:5181;auth=kerberos;service_name=myDrill
+
+   In this example, the Drill client uses the:
+     * Provided service_name, which is myDrill as the primary name of the
+       principal.
+     * service_host as the address of the drillbit, which is chosen from
+       the list of active drillbits that ZooKeeper provides
+       (host01.aws.lab:5181).
+
+   The internally created service principal will be myDrill/<host address
+   from zk>@<realm from TGT>.
+
+   Example 4: Drillbit Selected by Zookeeper and Configured with a Common
+   Service Principal
+   This type of connection string is used when all Dillbits in a cluster
+   use the same principal.
+jdbc:drill:zk=host01.aws.lab:5181;auth=kerberos;service_name=myDrill;service_hos
+t=myDrillCluster
+
+   In this example, the Drill client uses the:
+     * Provided service_name, which is myDrill.
+     * service_host, which is myDrillCluster.
+
+   The internally created service principal, which will be
+   myDrill/myDrillCluster@<realm from TGT>.
+
+   Example 5: Keytab for Client Credentials
+   If a client chooses to provide its credentials in a keytab instead of a
+   TGT, it must also provide a principal in the user parameter. In this
+   case, realm information will be extracted from the /etc/krb5.conf file
+   on the node if it is not provided in the connection URL. All other
+   parameters can be used as shown in the preceding examples (1-4). This
+   connection string is for the case when all drillbits in a cluster use
+   the same principal.
+jdbc:drill:zk=host01.aws.lab:5181;auth=kerberos;service_name=myDrill;service_hos
+t=myDrillCluster;keytab=<path to keytab file>;user=<client principal>
+
+   In this example, the Drill client:
+     * Will authenticate itself with the:
+          + Keytab (path to keytab file) and
+          + Principal provided in the user parameter (client principal)
+     * Uses the:
+          + Provided service_name, which is myDrill.
+          + service_host, which is myDrillCluster.
+
+   The internally created service principal will be
+   myDrill/myDrillCluster@<realm from krb5.conf>.
