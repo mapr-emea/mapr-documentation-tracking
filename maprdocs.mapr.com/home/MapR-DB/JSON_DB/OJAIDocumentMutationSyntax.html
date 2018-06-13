@@ -1,0 +1,459 @@
+OJAI Mutation Syntax
+
+   To perform updates using OJAI, you specify the document you want to
+   update using its _id field, create mutations for that document, and
+   then update it in your document store. OJAI defines a syntax for
+   specifying mutations. Mutations allow you to append, decrement, delete,
+   increment, combine, replace, and update fields in a document. This
+   topic describes the syntax for the supported mutation operations and
+   provides examples.
+
+   The following table lists the mutations OJAI supports. Each entry in
+   the table contains a brief description of the mutation and a link to a
+   section in this topic that describes the mutation in more detail.
+   Mutation Operation                      Description
+   [1]Append          Appends values to binary, string, and array fields
+   [2]Decrement       Decrements field values
+   [3]Delete          Deletes fields
+   [4]Increment       Increments field values
+   [5]Merge           Combines a nested document with an existing document
+   [6]Put             Replaces field values or adds new fields
+   [7]Set             Updates field values or adds new fields
+
+   The examples in this topic use the following sample JSON document:
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : [ { "boolean" : false }, { "decimal" : 123.456 } ],
+    "c" : {
+      "d" : 10,
+      "e" : "Hello"
+    }
+  },
+  "m" : "MapR wins"
+}
+
+OJAI Append Mutations
+
+   Syntax
+
+{"$append":{"fieldpath":value}}
+
+{"$append":[{"fieldpath1":value1},{"fieldpath2":value2},...]}
+
+   Description
+          The $append mutation is a read-modify-write operation. Use it to
+          append specified values to existing binary, string, or array
+          type fields. If there is type mismatch in any intermediate field
+          specified in a fieldpath for the document, the mutation fails
+          with an error. For example, an append mutation on field path
+          a.b.c fails if the field a is a scalar.
+
+          To append multiple field paths, use an array notation to list
+          the field paths.
+
+   Example
+          The following mutation appends an element to the array a.b and
+          appends the string " MapR" to the end of the string already in
+          the field path a.c.e:
+
+{"$append":[{"a.b":{"appd":1}},{"a.c.e":" MapR"}]}
+
+          The mutation results in the following document, with the field
+          updates highlighted in bold:
+
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : [ { "boolean" : false }, { "decimal" : 123.456 }, { "appd" : 1 } ],
+    "c" : {
+      "d" : 10,
+      "e" : "Hello MapR"
+    }
+  },
+  "m" : "MapR wins"
+}
+
+OJAI Decrement Mutations
+
+   Syntax
+
+{"$decrement":"fieldpath"}
+
+{"$decrement":{"fieldpath":decrementValue}}
+
+{"$decrement":[{"fieldpath1":decrementValue1},{"fieldpath2":decrementValue2},...
+]}
+
+   Description
+          The $decrement mutation decrements the value in the fieldpath.
+          To decrement multiple field paths, use an array notation to list
+          the field paths.
+
+          If the fieldpath does not exist, the mutation adds a new field
+          to the document with the value decrementValue.
+
+          The decrementValue is optional and defaults to -1.
+
+          The mutation fails if there is a type mismatch in the field.
+
+   Example
+          The following updates the value 10 in a.c.d to 5 by using the
+          decrement mutation:
+
+{"$decrement":{"a.c.d":5}}
+
+          The mutation results in the following document, with the field
+          update highlighted in bold:
+
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : [ { "boolean" : false }, { "decimal" : 123.456 } ],
+    "c" : {
+      "d" : 5,
+      "e" : "Hello"
+    }
+  },
+  "m" : "MapR wins"
+}
+
+OJAI Delete Mutations
+
+   Syntax
+
+{"$delete":"fieldpath"}
+
+{"$delete":["fieldpath1","fieldpath2",...]}
+
+   Description
+          The $delete mutation removes either a single field or a list of
+          fields from a document. If the field does not exist, the delete
+          ignores that field.
+
+   Example
+          The following mutation removes two fields from the document:
+
+{"$delete":["a.b[1]","a.c.e"]}
+
+          The mutation results in the following document:
+
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : [ { "boolean" : false } ],
+    "c" : {
+      "d" : 10
+    }
+  },
+  "m" : "MapR wins"
+}
+
+OJAI Increment Mutations
+
+   Syntax
+
+{"$increment":"fieldpath"}
+
+{"$increment":{"fieldpath":incrementValue}}
+
+{"$increment":[{"fieldpath1":incrementValue1},{"fieldpath2":decrementValue2},...
+]}
+
+   Description
+          The $increment mutation increments the value in the fieldpath.
+          To increment multiple field paths, use an array notation to list
+          the field paths.
+
+          If the fieldpath does not exist, the mutation adds a new field
+          to the document with the value incrementValue.
+
+          The incrementValue is optional and defaults to 1.
+
+          The mutation fails if there is a type mismatch in the field.
+
+   Example
+          The following updates the value 10 in a.c.d to 15 by using the
+          increment mutation:
+
+{"$increment":{"a.c.d":5}}
+
+          The mutation results in the following document, with the field
+          update highlighted in bold:
+
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : [ { "boolean" : false }, { "decimal" : 123.456 } ],
+    "c" : {
+      "d" : 15,
+      "e" : "Hello"
+    }
+  },
+  "m" : "MapR wins"
+}
+
+OJAI Merge Mutations
+
+   Syntax
+
+{"$merge":{"fieldpath":nestedDocument}}
+
+   Description
+          The $merge mutation combines a nestedDocument with an existing
+          document at a specified fieldpath. If the original document
+          already contains subfields specified in the nestedDocument, then
+          the mutation replaces the values for those subfields. Otherwise,
+          it adds new subfields to the document.
+
+          Note: The $merge mutation does not support the array notation
+          that other mutation operations provide.
+
+          To specify more than one merge operation in a single mutation,
+          use the syntax described at either [8]Specifying Multiple
+          Mutation Operations or [9]OJAI Mutations Without Explicit
+          Mutation Operation Names. When using these syntax variations,
+          avoid specifying overlapping field paths. MapR-DB treats these
+          as [10]conflicting mutations and discards conflicts.
+
+   Examples
+          The following mutation replaces the pre-existing field path
+          a.c.d with the value 11. It adds a new subfield y to the nested
+          document a.c.
+
+{"$merge":{"a.c":{"d":11,"y":"yo"}}}
+
+          The mutation results in the following document, with the field
+          updates highlighted in bold:
+
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : [ { "boolean" : false }, { "decimal" : 123.456 } ],
+    "c" : {
+      "d" : 11,
+      "e" : "Hello",
+      "y" : "yo"
+    }
+  },
+  "m" : "MapR wins"
+}
+
+          The following mutation replaces the value in the field path a.b
+          and adds a new subfield a.d:
+
+{"$merge":{"a":{"b":1,"d":"MapR"}}}
+
+          The mutation results in the following document, with the field
+          updates highlighted in bold:
+
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : 1,
+    "c" : {
+      "d" : 10,
+      "e" : "Hello"
+    },
+    "d" : "MapR"
+  },
+  "m" : "MapR wins"
+}
+
+OJAI Put Mutations
+
+   Syntax
+
+{"$put":{"fieldpath":value}}
+
+{"$put":[{"fieldpath1":value1},{"fieldpath2":value2},...]}
+
+   Description
+          The $put mutation is a replace operation. If the specified
+          fieldpath exists, the mutation replaces the fieldpath's value
+          with the new value, regardless of the type of the original
+          value. For example, you can update a field a.b from an array to
+          a nested document. If the fieldpath does not exist, the mutation
+          creates a new field with the given value.
+
+          To replace multiple field paths, use an array notation to list
+          the field paths.
+
+   Example
+          The following example replaces the pre-existing fields a.b and
+          a.c.d with values whose types differ from the original types. It
+          also adds a new field a.x.
+
+{"$put":[{"a.b":{"boolean":true}},{"a.c.d":"eureka"},{"a.x":1}]}
+
+          The mutation results in the following document, with the field
+          updates highlighted in bold:
+
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : { "boolean" : true },
+    "c" : {
+      "d" : "eureka",
+      "e" : "Hello"
+    },
+    "x" : 1
+  },
+  "m" : "MapR wins"
+}
+
+          The mutation behaves as follows for the pre-existing fields:
+
+          + For a.b, the mutation replaces the original array of nested
+            documents with a single nested document.
+          + For a.c.d, the mtuation changes the the field from an integer
+            to a string.
+
+OJAI Set Mutations
+
+   Syntax
+
+{"$set":{"fieldpath":value}}
+
+{"$set":[{"fieldpath1":value1},{"fieldpath2":value2},...]}
+
+   Description
+          The $set mutation updates one or more fields in a document. It
+          is a read-modify-write operation. It validates the type of the
+          existing value before applying the mutation. If the specified
+          fieldpath does not exist in a document, the mutation creates a
+          new field. If the fieldpath exists but is not of the same type
+          as the type of new value, then the entire mutation fails.
+
+          To update multiple field paths, use an array notation to list
+          the field paths.
+
+   Example
+          The following example updates the pre-existing fields a.b.[0]
+          and a.c.d. It also adds a new field a.x.
+
+{"$set":[{"a.b[0].boolean":true},{"a.c.d":11},{"a.x":1}]}
+
+          The mutation results in the following document, with the field
+          updates highlighted in bold:
+
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : [ { "boolean" : true }, { "decimal" : 123.456 } ],
+    "c" : {
+      "d" : 11,
+      "e" : "Hello"
+    },
+    "x" : 1
+  },
+  "m" : "MapR wins"
+}
+
+Specifying Multiple Mutation Operations
+
+   You can specify more than one operation in a single mutation by
+   specifying each operation separated by a comma.
+
+   The following is a mutation with six operations:
+{
+   "$set":{"x":[1,2,3]},
+   "$put":{"a.c.e":{"$binary":"AAAADg=="}},
+   "$increment":"a.b[1].decimal",
+   "$delete":"a.b[0]",
+   "$merge":{"newDoc":{"k":"MapR DBShell rocks!!"}},
+   "$append":{"m":"!!!"}
+}
+
+   It results in the following document, with the field updates
+   highlighted in bold:
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : [ { "decimal" : 124.456 } ],
+    "c" : {
+      "d" : 10,
+      "e" : { "$binary" : "AAAADg==" }
+    }
+  },
+  "m" : "MapR wins!!!",
+  "newDoc" : { "k" : "MapR DBShell rocks!!" },
+  "x" : [ 1, 2, 3 ]
+}
+
+   The mutation applies the updates in the following manner:
+     * The $set mutation adds a new array field x with the value [1, 2,
+       3].
+     * The $put mutation replaces the string "Hello" with the nested
+       document {"$binary":"AAAADg=="}.
+     * The $increment mutation increments the value 123.456 in the second
+       element of the array a.b.
+     * The $delete mutation deletes the field path a.b[0], resulting in a
+       single element array a.b.
+     * The $merge mutation adds a new field newDoc with the nested
+       document {"k":"MapR DBShell rocks!!"} as its value.
+     * The $append mutation appends the string "!!!" to the end of the
+       string "MapR wins".
+
+   Conflicting Mutations
+
+   When you specify a mutation with field paths that are overlapping,
+   MapR-DB detects the conflict, discards the previous conflicting
+   operation, and proceeds with the next operation.
+   For example, suppose you have the following document:
+{"_id":"id1", "a":{"b":{"c":5}}}
+
+   The following mutation has two operations with overlapping fields a.b:
+{"$delete":"a.b","$set":{"a.b.d":10}}
+
+   You may have intended for the mtuation to first delete a.b and then to
+   replace it with a.b.d as follows:
+{"_id":"id1", "a":{"b":{"d":"10"}}}
+
+   But the actual result is the following:
+{"_id":"id1", "a":{"b":{"c":5,"d":"10"}}}
+
+   In this case, the set operation on a.b.d causes the delete operation on
+   a.b to be discarded.
+   Note: In the earlier example in this section, the $increment and
+   $delete operations are not conflicting because one operates on a.b[1],
+   while the other operates on a.b[0]. On the other hand, the following
+   are conflicting operations:
+{"$increment":"a.b[1].decimal","$delete":"a.b"}
+
+OJAI Mutations Without Explicit Mutation Operation Names
+
+   You can specify a mutation without using an explicit mutation name.
+   These mutations run as merge operations.
+
+   For example, the following mutation merges the fields k and a.c.d to
+   the document by adding a new field k and updating a.c.d:
+{"k":"eureka","a":{"c":{"d":1234}}}
+
+   The mutation results in the following document, with updates
+   highlighted in bold:
+{
+  "_id" : "id1",
+  "a" : {
+    "b" : [ { "boolean" : false }, { "decimal" : 123.456 } ],
+    "c" : {
+      "d" : 1234,
+      "e" : "Hello"
+    }
+  },
+  "k" : "eureka",
+  "m" : "MapR wins"
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__dl_pnl_trg_b2b
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__dl_qnl_trg_b2b
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__dl_tnl_trg_b2b
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__dl_unl_trg_b2b
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__dl_xnl_trg_b2b
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__dl_ynl_trg_b2b
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__dl_b4l_trg_b2b
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__section_lkc_wfh_b2b
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__section_kqj_znw_c2b
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax__sectiondiv_zn2_bbf_d2b

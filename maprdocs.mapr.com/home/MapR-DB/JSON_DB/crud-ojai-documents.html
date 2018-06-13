@@ -14,39 +14,23 @@ Document
 
 DocumentMutation
 
-   Use the methods in this interface to make changes to JSON documents.
+   To make changes to JSON documents, you must create a DocumentMutation
+   object. A DocumentMutation allows you to perform OJAI mutations.
+   [3]OJAI Mutation Syntax describes the types of mutations you can
+   perform and the syntax you use.
 
    You can pass DocumentMutation objects to the
    DocumentStore.checkAndMutate() method or the DocumentStore.update()
    method to apply the changes to documents. For more information, see the
    following OJAI interfaces:
-     * [3]DocumentMutation
-     * [4]DocumentStore
+     * [4]DocumentMutation
+     * [5]DocumentStore
 
    By default, the default maximum size of a JSON document is 32 MB. The
    DocumentMutation class does not enforce this limit. MapR-DB enforces
    the limit when you pass your DocumentMutation object to the
-   DocumentStore method. See [5]JSON Document Size for information about
+   DocumentStore method. See [6]JSON Document Size for information about
    how to increase this limit.
-   Note: When a document mutation is specified with field paths that are
-   overlapping and the conflict is detected, MapRDB's client-side encoding
-   for the mutation discards the previous mutation at the node where the
-   conflict is occurring and proceeds with the next mutation at that node.
-   For example, if the existing document is:
-{"a":{"b":{"c":5}}}
-
-   You perform a mutation with overlapping fields:
-DocumentMutation setMutation = MapRDB.newMutation();
-setMutation.delete("a.b").set("a.b.d", "10");
-
-   Where the desired result is:
-{"a":{"b":{"d":"10"}}}
-
-   The actual result is:
-{"a":{"b":{"c":5,"d":"10"}}}
-
-   In this case, the set operation on a.b.d causes the delete operation on
-   a.b to be discarded by the client.
 
 DocumentStore
 
@@ -64,26 +48,27 @@ DocumentStore
    query conditions, you can specify the conditions using QueryCondition
    methods.
    See the following OJAI interfaces for more information:
-     * [6]DocumentStore
-     * [7]Query
-     * [8]QueryCondition
+     * [7]DocumentStore
+     * [8]Query
+     * [9]QueryCondition
 
-   For more information about how to run OJAI queries, see [9]Querying
+   For more information about how to run OJAI queries, see [10]Querying
    with OJAI.
    Note: By default, OJAI implements non-buffered writes. If you desire
    buffered writes, use the ojai.mapr.documentstore.buffer-writes option
    and with the Document object. This option is available with the MapR
-   OJAI driver. See [10]Enabling Buffered Writes for more information.
+   OJAI driver. See [11]Enabling Buffered Writes for more information.
 
 References
 
    1. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/Document.html
    2. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
-   3. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentMutation.html
-   4. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
-   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/ojai_documents.html#ojai_documents__section_kfl_byf_pdb
-   6. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
-   7. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html
-   8. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/QueryCondition.html
-   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#querying_documents_with_maprdb_ojai_java_api_
-  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/ojai-nonBuffered-writes.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax
+   4. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentMutation.html
+   5. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/ojai_documents.html#ojai_documents__section_kfl_byf_pdb
+   7. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
+   8. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html
+   9. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/QueryCondition.html
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#querying_documents_with_maprdb_ojai_java_api_
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/ojai-nonBuffered-writes.html

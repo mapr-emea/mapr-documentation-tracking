@@ -1,0 +1,62 @@
+Aborting a Running Volume-Level Tiering Job
+
+   You can abort an ongoing offload or recall of a volume using the MapR
+   Control System and the CLI. Aborting a running:
+     * Offload operation does not prevent future offloads; if a schedule
+       is associated with the volume, data that is still on the cluster is
+       automatically offloaded based on the rules as per schedule. You can
+       also manually offload data again at any time by running the
+       [1]volume offload command.
+     * Recall operation does not prevent future recalls; you can run the
+       recall command again to recall the remaining data on the tier.
+       Based on the expiry time set on the volume (associated with the
+       recalled data), recalled data is offloaded if there are changes or
+       purged if there are no changes. See [2]Recalling a Volume to MFS
+       for more information.
+
+   You can check the status of an abort operation using the [3]volume
+   tierjobstatus command.
+   Note: If you abort a job that CLDB was retrying after a prior failed
+   attempt (FailureRetriable job), CLDB will stop trying to run the job
+   again. For more information on FailureRetriable job, see [4]Retrying
+   Failed Operation.
+
+   For information of aborting a file-level job, see [5]Aborting a Running
+   File-Level Tiering Job and [6]Running Tiering Commands when maprcli and
+   hadoop Commands are not Available.
+
+Aborting Volume Offload or Recall Operation Using the MapR Control System
+
+    1. Log in to MCS and click Data > Volumes.
+    2. Select the tiered volumes to offload from the list of volumes in
+       the Volumes pane.
+       Selecting a volume makes the Actions dropdown menu available.
+    3. Click Abort Tier Job from the Actions dropdown menu to display the
+       Abort Tier Job confirmation window.
+    4. Review the list of volumes and click Abort Volumes.
+
+Aborting Volume Offload or Recall Operation Using the CLI and REST API
+
+     * [7]CLI
+     * [8]REST API
+
+   Run the following command to abort a running offload or recall
+   operation:
+maprcli volume tierjobabort -name <volName>
+
+   For more information, see [9]volume tierjobabort.
+   Send a request of type POST. For example:
+curl -k -X POST 'https://<host>:8443/rest/volume/tierjobabort?name=<volName>' --
+user mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-offload.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RecallVolData.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-tierjobstatus.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RetryJob.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/AbortFileJob.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RunTierCommands-POSIXandNFSclients.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/AbortVolJob.html#div1entry1
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/AbortVolJob.html#div1entry2
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-tierjobabort.html

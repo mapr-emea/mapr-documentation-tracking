@@ -2,22 +2,20 @@ dbshell delete
 
 Description
 
-   The dbshell delete command is used to delete a single JSON document. To
-   delete a document, specify the path of the table where the document is
-   located and the ID of the document. Deletes of documents are based
-   based on row-key. If the condition evaluates to true, the row is
-   deleted. If the operation fails or an exception is thrown, an error
-   message is displayed at the terminal.
+   The dbshell delete command deletes a single JSON document. To delete a
+   document, specify the path of the table where the document is located,
+   the ID of the document, and an optional condition. If the condition for
+   the specified document evaluates to true, the document is deleted.
 
 Parameters
 
    delete Options Description
    *, --t, --table (Required) Table path
-   --id (Required) Document ID to delete
-   Note: Repeating _ids with a switch and within a condition payload is
-   not allowed.
-   --c, --where Condition in JSON format. See [1]JSON Document Query
-   Conditions Using OJAI Syntax for a description of the syntax.
+   --id (Required) ID of the document to delete
+   Note: You can specify this parameter only once.
+   --c, --where Optional OJAI condition in JSON format. The condition must
+   qualify to perform the delete. See [1]OJAI Query Condition Syntax for a
+   description of the syntax.
 
 Syntax
 
@@ -25,9 +23,9 @@ delete <table path> --id <row-key> --c <condition>
 
 Example: Delete a Document if a Condition is Met
 
-   The following example deletes the document with the _id id1 and the
+   The following example deletes the document with the _id id1, if the
    condition (a.b[0].boolean == false && (a.c.d != 5 || a.b[1].decimal >
-   1)):
+   1)) is met:
 delete /tbl --id id1
     --c {
         "$and":[
@@ -40,7 +38,8 @@ delete /tbl --id id1
 
 Example: Delete a Document
 
-   The following example deletes a document from the movies table:
+   The following example deletes a document with _id movie0000002 from the
+   movies table:
 delete /data/movies --id movie0000002
 
 References

@@ -1,0 +1,166 @@
+Data Reads, Writes, and Recalls
+
+   Once offloaded to the storage tier, data is considered to be warm or
+   cold on the storage tier, but the data can still be accessed (read,
+   written, and recalled).
+
+Read of Tiered Data
+
+   Depending on whether the standard volume dtaa is outside of the MapR
+   cluster and in the cloud (cold tiering) or on the MapR cluster (warm
+   tiering), MapR processes the request to read standard volume data and
+   mirror volume data.
+     * [1]Data Reads on Tiering-Enabled Standard Volumes
+     * [2]Data Reads on Tiering-Enabled Mirror Volumes
+
+   MapR processes client requests to read standard volume data on the warm
+   tier and the cold tier differently.
+
+   Warm Tier
+          When a client attempts to read, the read request is first sent
+          to the front-end volume and if the data exists in the front-end
+          volume, the data is returned from the front-end volume. If data
+          is not in the front-end volume, the data is returned from the
+          erasure coded volume.
+
+   Cold Tier
+          When a client attempts to read, the read request is first sent
+          to the volume on the MapR cluster and if the data exists in the
+          volume on the cluster, the data is returned from the volume. On
+          the other hand, if the data was offloaded, the MAST Gateway
+          recalls the data from the cold-tier to process the read request.
+          See [3]Recall of Tiered Data for more information on recalled
+          data.
+
+   The following illustration shows client sending data read request first
+   (#1) to the tiering-enabled volume and the response (#2) being served
+   from the volume on the MapR cluster. Then (#3), data is offloaded to
+   the back-end erasure coded volume (for Volume A) and to the cloud (for
+   Volume B). When the client next sends a read request to the volume on
+   the MapR cluster (#4), for:
+     * Volume A, the MAST Gateway forwards the request to the backend
+       erasure-coded volume (#5) from where data is returned (#6) to the
+       client.
+     * Volume B, the MAST Gateway recalls the data (#5 and #6) from the
+       cloud and returns the data (#7) to the client.
+
+   [DataReads.png]
+   MapR processes client requests to read mirror volume data on the warm
+   tier and the cold tier differently.
+
+   Warm Tier
+          When a client attempts to read, the read request is first sent
+          to the front-end volume and if the data exists in the front-end
+          mirror volume, the data is returned from the front-end volume.
+          If data is not in the front-end volume, the data is returned
+          from the erasure coded volume.
+
+   Cold Tier
+          When a client attempts to read, the read request is first sent
+          to the volume on the MapR cluster and if the data exists in the
+          volume on the cluster, the data is returned from the volume. On
+          the other hand, if the data was offloaded, the MAST Gateway
+          recalls or fetches a copy of the data (from the tier) into an
+          associated cache-volume, from where data is returned to the
+          client. See [4]Recall of Tiered Data for more information on
+          recalled data.
+
+   The following illustration shows client sending read request first (#1)
+   to the tiering-enabled mirror volume and the response (#2) being served
+   from the volume on the MapR cluster. Then (#3), data is offloaded to
+   the back-end erasure coded volume (for warm tier) and to the cloud (for
+   cold tier). When the client next sends a read request to the volume on
+   the MapR cluster (#4), for:
+     * Warm tier, data is returned from the backend erasure-coded volume
+       (#5).
+     * Cold tier, data is recalled in the associated cache-volume (#5 and
+       #6), from where data is returned to the client (#7).
+
+   [MirrorDataReads.png]
+
+   The cache-volume named mapr.internal.cv.<volume-name>_<id> is created
+   when the tiering-enabled mirror volume is created. Although it may not
+   hold any data initially, a copy of the tiered data is fetched into the
+   cache-volume whenever there is a read of the cold-tiered mirror volume
+   data or explicit recall of (cold or warm) tiered volume data. You can
+   use the [5]volume info command on the tiering-enabled mirror volume to
+   get the offload stats for the mirror volume and recall stats, which are
+   from the cache-volume.
+
+   The cache-volume has the same replication factor as the mirror volume
+   (at the time of volume creation); changes to the mirror volume
+   replication factor do not trigger a change to the replication factor of
+   the associated cache-volume.
+
+   If the tiering-enabled mirror volume is deleted, the cache-volume is
+   also deleted and if the tiering-enabled mirror volume is promoted to a
+   read-write volume, the associated cache-volume is deleted.
+   Note: If you promote a tiering-enabled mirror volume during an offload
+   or recall operation of the data associated with the mirror volume, the
+   offload or recall operation is aborted and the mirror volume is
+   converted to a read-write volume; the tierjobstatus command for the
+   offload or recall job shows AbortedInternal status.
+
+Write on Tiered Data
+
+   When writes happen, if the write is:
+     * An append, new data is offloaded when the data meets the criteria
+       in the rule (associated with the volume) for offload.
+     * A change to existing data (overwrite), the data is recalled to MFS
+       to allow the write to succeed and then offloaded when the data
+       meets the criteria in the rule (associated with the volume) for
+       offload. See [6]Recall of Tiered Data for more information on
+       recalled data.
+
+   Note: If cold data is accessed (read/written) frequently, IO to that
+   file may suffer large latencies. In such scenarios, MapR recommends
+   recalling the whole volume or the corresponding files.
+
+Recall of Tiered Data
+
+   Offloaded data is automatically recalled when a client performs a read
+   or overwrite on the data in the cold tier or when a client performs an
+   overwrite on the data in the warm tier. The MAST Gateway fetches a copy
+   of the data to allow the operations to succeed. You can also manually
+   trigger a recall of:
+     * All volume data in the cold tier using the maprcli command or REST
+       API.
+       See [7]Recalling a Volume to MFS for more information.
+     * File in the cold tier using the hadoop command, maprcli command,
+       REST API, (loopbacknfs or FUSE-based) POSIX client, or the NFS
+       client.
+       See [8]Recalling a File to MFS Using the CLI and REST API and
+       [9]Running Tiering Commands when maprcli and hadoop Commands are
+       not Available for more information.
+
+   Based on the expiration time period set at the volume level for
+   recalled data, recalled data is:
+     * Offloaded again based on the rules if there are changes to the
+       data.
+     * Purged when the compactor runs if there are no changes to the data.
+
+   For mirror volumes, when you recall tiered data, data from the tier is
+   recalled into an associated cache-volume, which is created at the time
+   of the creation of the tiering-enabled mirror volume. For all explicit
+   and automatic recalls of cold-tiered data, the MAST Gateway recalls
+   data into the associated cache-volume. The data in the cache-volume is
+   "hot" in the cluster, or available for reads, for the duration of the
+   expiry-period. The recalled data is purged by the compactor when the
+   expiration time that is set at the volume level is reached or has
+   passed.
+
+   If the recall fails, CLDB retries the operation after some time. See
+   [10]Retrying Failed Operation for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/DataReadwriteRecall.html#div1entry1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/DataReadwriteRecall.html#div1entry2
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/DataReadwriteRecall.html#DataReadwriteRecall__recall
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/DataReadwriteRecall.html#DataReadwriteRecall__recall
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-info.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/DataReadwriteRecall.html#DataReadwriteRecall__recall
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RecallVolData.html
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RecallFileData.html
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RunTierCommands-POSIXandNFSclients.html
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RetryJob.html

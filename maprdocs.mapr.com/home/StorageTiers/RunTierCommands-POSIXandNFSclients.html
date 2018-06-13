@@ -1,0 +1,76 @@
+Running Tiering Commands when maprcli and hadoop Commands are not Available
+
+   You can perform offload and/or recall a file with NFS, loopbacknfs, and
+   FUSE-based POSIX clients even if [1]maprcli or [2]hadoop commands are
+   not available. To perform file-level data tiering operations like
+   offload and/or recall using NFS, loopbacknfs, and FUSE-based POSIX
+   clients when [3]maprcli or [4]hadoop commands are not available, from
+   the mount point, provide the tiering command such as offload, recall,
+   tierjobstatus, and/or tierjobabort as described below. When you run the
+   command, the command creates a hidden .tier_attributes file that is
+   purged immediately after the operation completes.
+   Note: When you run the command, the tiering command is triggered
+   immediately and storage policy (or rule), if any, at the volume-level
+   is ignored.
+
+Usage
+
+/bin/echo "<command> <file-name>" > .tier_attributes
+
+   Note: Do not use echo in the terminal; instead, use /bin/echo.
+
+Options
+
+    Option                            Description
+   command The tiering related command to run. The following commands are
+   supported:
+     * offload
+     * recall
+     * tierjobstatus
+     * tierjobabort
+
+   file-name The name of the file.
+
+Return Values
+
+   On success, the command returns nothing. Otherwise, the command returns
+   one of the following:
+   Code Message Description
+   EEXIST File exists Indicates tier job is queued or is already in
+   progress.
+   ENOTEMPTY Directory not empty Indicates that tier job queue is full.
+   ENOENT No such file or directory Indicates that the specified file or
+   job ID does not exist.
+   EIO I/O error Indicates that the job could not be submitted. Run the
+   tierjobstatus command to determine the reason for this error.
+   EINVAL Invalid argument Indicates that the given command is invalid or
+   not available. See [5]Options for the list of supported commands.
+
+Examples
+
+   Offload file named test
+
+# /bin/echo "offload test" > .tier_attributes
+/bin/echo: write error: File exists
+
+   Recall a file named test
+
+# /bin/echo "recall test" > .tier_attributes
+/bin/echo: write error: File exists
+
+   Check the status of a running job for a file
+
+# /bin/echo "tierjobstatus test" > .tier_attributes
+
+   Abort a running job
+
+# /bin/echo "tierjobabort test" > .tier_attributes
+/bin/echo: write error: No such file or directory
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/file.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/file.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RunTierCommands-POSIXandNFSclients.html#RunTierCommands-POSIXandNFSclients__options

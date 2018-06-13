@@ -18,12 +18,13 @@ tore.jks
 keytool -export -alias certificatekey -keystore keystore.jks -rfc -file cert.pem
          c. Import the keystore from JKS to PKCS12. For example:
 keytool -importkeystore -srckeystore keystore.jks -destkeystore keystore.p12 -sr
-cstoretype JKS -deststoretype PKCS12 -srcstorepass mapr123 -deststorepass mapr12
-3 -srcalias certificatekey -destalias certificatekey -srckeypass mapr123 -destke
-ypass mapr123 -noprompt
+cstoretype JKS -deststoretype PKCS12 -srcstorepass <ssl-keystore-password> -dest
+storepass <ssl-keystore-password> -srcalias certificatekey -destalias certificat
+ekey -srckeypass <ssl-keystore-password> -destkeypass <ssl-keystore-password> -n
+oprompt
          d. Convert PKCS12 to PEM using OpenSSL. For example:
-openssl pkcs12 -in keystore.p12 -out keystore.pem -passin pass:mapr123 -passout
-pass:mapr123
+openssl pkcs12 -in keystore.p12 -out keystore.pem -passin pass:<ssl-keystore-pas
+sword> -passout pass:<ssl-keystore-password>
          e. Strip the pass phrase so Python doesn't prompt for password
             while connecting to Hive. For example:
 openssl rsa -in keystore.pem -out hue_private_keystore.pem
@@ -51,7 +52,7 @@ validate=true
       </property>
 <property>
   <name>hive.server2.keystore.password</name>
-    <value>mapr123</value>
+    <value><ssl-keystore-password></value>
       <description>keystore password</description>
       </property>
           + On a secure cluster: Make sure that no custom authentication

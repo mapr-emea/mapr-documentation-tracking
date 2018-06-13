@@ -1,17 +1,19 @@
 Query with --query
 
-   When querying JSON documents with the find command, you can use the
-   --query option. With this option, you can specify keywords that
-   determine the documents and the fields from those documents that the
-   command returns.
+   When querying JSON documents with the find command, you can use OJAI
+   query syntax with the --query option. With this option, you can specify
+   keywords that determine the documents and the fields from those
+   documents that the command returns.
 
 Syntax
 
 find <table path> --query <keywords>
 
    Note: The find command does not allow --query to work in tandem with
-   other options such as --fields, --where, and --orderby. For example,
-   the following command does not return your desired results:
+   other options such as --fields, --where, and --orderby.
+
+   For example, the following command does not return your desired
+   results:
 find /tbl --f a --q {"$limit":2}
 
    In addition, repetition of keywords in the --query option is not
@@ -24,17 +26,19 @@ find /tbl --f a --q {"$limit":2}
 
 Keywords for the --query Option
 
-   The following keywords are supported by the --query option:
+   The --query option supports the following keywords:
    --query Keywords              Description
-   $select          Equivalent to the --f, --fields option
-   $where           Equivalent to the --c, --where option
-   $limit           Equivalent to the --limit option
-   $offset          Equivalent to the --offset option
-   $orderby         Equivalent to the --orderby option
+   [1]$select       Equivalent to the --f, --fields option
+   [2]$where        Equivalent to the --c, --where option
+   [3]$limit        Equivalent to the --limit option
+   [4]$offset       Equivalent to the --offset option
+   [5]$orderby      Equivalent to the --orderby option
+
+   For more details about these keywords, see [6]OJAI Query Syntax.
 
 Sample JSON Document
 
-   The following sample JSON document is used in examples in this section:
+   The examples in this topic use the following sample JSON document:
 {
     "_id": "id1",
     "a": {
@@ -59,16 +63,19 @@ find <table path> --q {"$select":"<fieldpath>"}
 // Multiple field path projection syntax
 find <table path> --q {"$select":["<fieldpath1>","<fieldpath2>","<fieldpath3>"]}
 
-   The following example shows single and multiple field path projections:
+   The following examples show single and multiple field path projections:
 // Single field path projection example
 find /tbl --q {"$select":"a.c.d"}
 
 // Multiple field path projection example
 find /tbl --q {"$select":["a.c.d","a.c.e","m"]}
 
+   See [7]OJAI Query Projection for more information about $select.
+
 $where Syntax and Example
 
-   When using the $where keyword, define the condition in JSON format.
+   When using the $where keyword, define the condition using [8]OJAI Query
+   Condition Syntax.
 find <table path> --q {"$where":<condition>}
 
    The following example performs a find operation with a projection and a
@@ -92,9 +99,6 @@ find /tbl --q {"$select":"a.c.e",
 (a.b.[0].boolean == false && (a.c.d != 5 || a.b[1].decimal > 1 || a.b[1].decimal
  < 10))
 
-   See [1]JSON Document Query Conditions Using OJAI Syntax for more
-   information about the syntax of query conditions.
-
 $limit Syntax and Example
 
    The $limit keyword sets the maximum number of documents to return. It
@@ -107,6 +111,8 @@ find <table path> --q {"$limit":<positive integer>}
 find /tbl --q {"$select":["a.c.e","m"],
                "$limit":10
               }
+
+   See [9]OJAI Query Limit for more information about $limit.
 
 $offset Syntax and Example
 
@@ -122,12 +128,14 @@ find /tbl --q {"$select":["a.c.e","m"],
                "$offset":5
               }
 
+   See [10]OJAI Query Offset for more information about $offset.
+
 $orderby Syntax and Examples
 
    The $orderby keyword sorts the result on the specified fields.
 
-   The following shows the syntax and an example of sorting a single field
-   in the default ascending order:
+   The following shows the syntax and example of sorting a single field in
+   the default ascending order:
 // Syntax for sorting a single field in the default ascending order
 find <table path> --q {"$orderby":"<field path>"}
 
@@ -161,6 +169,18 @@ find <table path> --q {"$orderby":[{"<field path1>":"<order>"},
 // and field path a.c.e in descending order
 find /tbl --q {"$orderby":["a.c.d",{"a.c.e":"desc"}]}
 
+   See [11]OJAI Query Order By for more information about $orderby.
+
 References
 
-   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-find-query.html#dbshell-find-query__section_q3y_ljx_c2b
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-find-query.html#dbshell-find-query__section_r3y_ljx_c2b
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-find-query.html#dbshell-find-query__section_s3y_ljx_c2b
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-find-query.html#dbshell-find-query__section_t3y_ljx_c2b
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-find-query.html#dbshell-find-query__section_u3y_ljx_c2b
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_k4z_hrg_b2b
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_r4z_hrg_b2b
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_t4z_hrg_b2b
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_q4z_hrg_b2b

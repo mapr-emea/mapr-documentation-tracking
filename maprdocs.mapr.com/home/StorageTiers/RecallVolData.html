@@ -1,0 +1,48 @@
+Recalling a Volume to MFS
+
+   When you:
+     * Read data offloaded to a remote target (or cold tier), data is
+       automatically recalled to MFS to allow the read to succeed.
+     * Modify data offloaded to an erasure coded volume (or warm tier) or
+       a remote target (or cold tier), data is automatically recalled to
+       MFS to allow the write to succeed.
+
+   The recalled data is automatically:
+     * Purged based on the expiration time period set at the volume level
+       for recalled data if there are no changes (for example, read
+       operation).
+     * Offloaded automatically based on the rule and the expiration time
+       period set at the volume level for recalled data if there are
+       changes (for example, overwrite operation).
+
+   See [1]Data Reads, Writes, and Recalls for more information. If the
+   recall fails, CLDB retries the operation after some time. See
+   [2]Retrying Failed Operation for more information.
+
+   You can manually recall all data in a volume using the MapR Control
+   System, CLI, and REST API.
+   Note: You can also recall individual files from the tier. See
+   [3]Recalling a File to MFS Using the CLI and REST API for more
+   information.
+
+Recalling Offloaded Volume Using the CLI and REST API
+
+     * [4]CLI
+     * [5]REST API
+
+   Run the following command to recall volume data:
+/opt/mapr/bin/maprcli volume recall -name <volName>
+
+   For more information, see [6]volume recall.
+   Send a request of type POST to URL. For example:
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/recall?name=volName' --user
+mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/DataReadwriteRecall.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RetryJob.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RecallFileData.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RecallVolData.html#div1entry1
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RecallVolData.html#div1entry2
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/volume-recall.html

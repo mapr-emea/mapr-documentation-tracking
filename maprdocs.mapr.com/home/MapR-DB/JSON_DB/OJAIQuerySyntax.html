@@ -1,0 +1,143 @@
+OJAI Query Syntax
+
+   OJAI defines a syntax for specifying queries on JSON documents.
+
+   An OJAI query consists of the following components:
+     * [1]Projection
+     * [2]Condition
+     * [3]Order by
+     * [4]Limit
+     * [5]Offset
+
+   You can specify some or all these components in a query, separating
+   each component with a comma.
+
+OJAI Query Projection
+
+   Syntax
+
+"$select":"fieldpath"
+
+"$select":["fieldpath1","fieldpath2", ... ]
+
+   Description
+          The projection is the list of field paths to select in your
+          query. You can specify a single field path or multiple. When
+          specifying multiple, use an array notation to list the field
+          paths.
+
+          See [6]JSON Document Field Paths for more information about the
+          syntax of different JSON document field paths.
+
+   Examples
+          Single field path:
+
+"$select":"a.c.d"
+
+          Multiple field paths:
+
+"$select":["a.c.d", "a.c.e", "m[0]"]
+
+OJAI Query Condition
+
+   Syntax
+
+"$where":OJAIQueryCondition
+
+   Description
+          The condition filters your query result. See [7]OJAI Query
+          Condition Syntax for more information about the syntax of an
+          OJAIQueryCondition.
+
+   Example
+          If you have the following condition:
+
+(a.b.[0].boolean == false && (a.c.d != 5 || a.b[1].decimal > 1 || a.b[1].decimal
+ < 10))
+
+          This is the OJAI JSON syntax for the condition:
+
+"$where":{
+    "$and":[
+        {"$eq":{"a.b[0].boolean":false}},
+        {"$or":[
+            {"$ne":{"a.c.d":5}},
+            {"$gt":{"a.b[1].decimal":1}},
+            {"$lt":{"a.b[1].decimal":10}}
+            ]
+        }
+    ]
+}
+
+OJAI Query Order By
+
+   Syntax
+
+"$orderby":"fieldpath"
+
+"$orderby":{"fieldpath":"order"}
+
+"$orderby":[fieldpath1,fieldpath2,...]
+
+"$orderby":[{"fieldpath1":"order"},{"fieldpath2":"order"},...]
+
+   Description
+          The order by specifies the field paths on which to sort your
+          query result. You can specify a single field path or multiple.
+          When specifying multiple, use an array notation to list the
+          field paths. For each field path, you can optionally specify an
+          order of either asc or desc. Both order keywords are case
+          insensitive. The default is asc. When specifying an order,
+          enclose the fieldpath and order with curly braces.
+
+   Examples
+          Order on a single field path in the default asc order:
+
+"$orderby":"a.c.e"
+
+          Order on a single field path in the desc order:
+
+"$orderby":{"a.c.e":"desc"}
+
+          Order on two field paths, where the second specifies a desc
+          order:
+
+"$orderby":["a.c.d",{"a.c.e":"desc"}]
+
+OJAI Query Limit
+
+   Syntax
+
+"$limit":positive-integer
+
+   Description
+          The number of documents to return from the query
+
+   Example
+          Return only ten documents:
+
+"$limit:10
+
+OJAI Query Offset
+
+   Syntax
+
+"$offset":positive-integer
+
+   Description
+          The number of documents to skip before returning documents
+
+   Examples
+          Skip past the first five documents:
+
+"$offset":5
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_k4z_hrg_b2b
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_m4z_hrg_b2b
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_q4z_hrg_b2b
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_r4z_hrg_b2b
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_t4z_hrg_b2b
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/IdentifyingJSONFields.html#IdentifyingJSONFields
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields

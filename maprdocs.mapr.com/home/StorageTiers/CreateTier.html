@@ -1,0 +1,96 @@
+Creating a Storage Tier
+
+   You can create a tier using the MapR Control System and the CLI.
+   Note: When you create a tier, MFS creates a volume, whose mount point
+   is /var/mapr/tier/mapr.internal.tier.<tiername>, for the tier. This
+   volume is visible and stores all the metadata tables and information on
+   all the jobs running on the tier. Do not modify, move, or remove this
+   volume.
+
+Creating a Warm Tier Using the MapR Control System
+
+   When you create a volume, you can create a warm tier and associate the
+   volume with that tier. See [1]Creating a Volume for more information.
+   You cannot create a warm tier separately using the MapR Control System.
+
+Creating a Cold Tier Using the MapR Control System
+
+   To create a cold tier:
+    1. Log in to MCS and go to the Remote Targets tab in the Data >
+       Volumespage.
+    2. Click Create Target to display the Create Remote Target window.
+    3. Specify a name for the tier in the Remote Target Name field.
+    4. Select a topology for the metadata volume associated with the tier
+       from the list of topologies in the Lookup Topology dropdown menu.
+       The tier volume stores all the metadata tables and information on
+       all the jobs running on the tier.
+    5. Specify the following properties.
+
+   Vendor The vendor from the Vendor dropdown list.
+
+   Note: For cold tiering, MapR supports the following vendors:
+          + AWS
+          + GCS
+          + HDS
+          + IBM
+          + Azure Blob
+
+   URL The URL to use to connect to the tier.
+   Bucket Name The name of the bucket on the tier. This cannot be modified
+   once associated with a tier. If the bucket does not already exist on
+   the tier, MapR will attempt to create the bucket.
+   Region The S3 region to create the bucket on. This cannot be modified
+   once configured (explicitly or using the default) and associated with a
+   tier. See [2]region for more information.
+    6. Enter the credentials for accessing the tier in the Access Key and
+       Secret Key fields.
+    7. Click Create Target to create the cold tier that you can associate
+       with a volume.
+
+Creating a Tier Using the CLI and the REST API
+
+     * [3]CLI
+     * [4]REST
+
+   Run the following command to create a tier:
+     * Cold tier:
+$maprcli tier create -name <tier_name> -type cold -url <tier_url> -credential <c
+redentials_file_path>
+       For using the -credential option, you must have the credential file
+       already set up as described in [5]Setting up a Credentials File for
+       Connecting to a Cold Tier Using the CLI or REST API. On the other
+       hand, if you do not have the file already set up, use the
+       -credential_str option as shown below:
+$maprcli tier create -name <tier_name> -type cold -url <tier_url> -credential_st
+r '<credential_string>'
+     * Warm tier with default values:
+$maprcli tier create -name <tier_name> -type ectier
+       Note: You can associate the same tier with multiple volumes with
+       different erasure coding scheme.
+
+   Send a request of type POST. For example:
+     * Cold Tier:
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/create?name=egColdTier&type=
+cold&url=s3.amazonaws.com&credential=credentials.txt' --user mapr:mapr
+{"timestamp":1525724933919,"timeofday":"2018-05-07 01:28:53.919 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created tier: 'egColdTi
+er'"]}
+     * Warm tier:
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/create?name=egWarmTier&type=
+ectier' --user mapr:mapr
+{"timestamp":1525725105206,"timeofday":"2018-05-07 01:31:45.206 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created tier: 'egWarmTi
+er'"]}
+       Note: You can associate the same tier with multiple volumes with
+       different erasure coding scheme.
+
+   For more information, see [6]tier create.
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ClusterAdministration/data/volumes/CreateVols.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/SetUpCredentialsFile.html#SetUpCredentialsFile__region
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/CreateTier.html#div1entry1
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/CreateTier.html#div1entry2
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/SetUpCredentialsFile.html
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/tier-create.html

@@ -15,22 +15,24 @@ Basic Procedure
 
    To enable security for the cluster, follow these steps in order:
     1. If the cluster is running, [2]shut it down.
-    2. Delete the ssl_keystore and ssl_truststore files on a machine where
-       wire-level security is not enabled because the configure.sh script
-       fails if you already have these files in the directory.
-       Note: The ssl_keystore and ssl_truststore files are generated
-       during installation of the Web server even if you did not enable
-       security.
+    2. Delete the ssl_keystore, ssl_truststore, ssl_truststore.p12, and
+       ssl_truststore.pem files on a machine where wire-level security is
+       not enabled because the configure.sh script fails if you already
+       have these files in the directory.
+       Note: The ssl_keystore, ssl_truststore, ssl_truststore.p12, and
+       ssl_truststore.pem files are generated during installation of the
+       Web server even if you did not enable security.
        For example, to delete the files, run the following commands:
 cd /opt/mapr/conf
-/bin/rm -f ssl_keystore ssl_truststore
+/bin/rm -f ssl_keystore ssl_truststore ssl_truststore.p12 ssl_truststore.pem
        If you are re-running the script due to an invocation error from a
        previous run, the cldb.key and maprserverticket files may also have
        been created. Delete these files because the script fails if you
        already have these files in the directory. For example, run the
        following command to delete these files:
 cd /opt/mapr/conf
-/bin/rm -f cldb.key maprserverticket ssl_keystore ssl_truststore
+/bin/rm -f cldb.key maprserverticket ssl_keystore ssl_truststore ssl_truststore.
+p12 ssl_truststore.pem
     3. Run the configure.sh script with the -secure -genkeys options on
        the first CLDB node in your cluster:
 /opt/mapr/server/configure.sh -secure -genkeys -Z <Zookeeper_node_list> -C <CLDB
@@ -40,20 +42,24 @@ _node_list> -N <cluster_name>
        specifies the cluster name.
        Important: You must run configure.sh -genkeys only once on one CLDB
        node, since the resulting files must be copied to other nodes.
-       This command generates four files in the /opt/mapr/conf directory:
+       This command generates six files in the /opt/mapr/conf directory:
           + cldb.key
           + maprserverticket
           + ssl_keystore
           + ssl_truststore
+          + ssl_truststore.p12
+          + ssl_truststore.pem
     4. Copy the cldb.key file to any node that has the CLDB or Zookeeper
        service installed.
-    5. Copy the maprserverticket, ssl_keystore, and ssl_truststore files
-       to the /opt/mapr/conf directory of every node in the cluster.
+    5. Copy the maprserverticket, ssl_keystore, ssl_truststore,
+       ssl_truststore.p12, and ssl_truststore.pem files to the
+       /opt/mapr/conf directory of every node in the cluster.
     6. Verify that the files from the previous step are owned by the user
        that runs cluster services. This user is mapr by default. Also, the
        maprserverticket and ssl_keystore files must have their UNIX
-       permission-mode bits set to 600, and the ssl_truststore file must
-       be readable to all users.
+       permission-mode bits set to 600, and the ssl_truststore,
+       ssl_truststore.p12, and ssl_truststore.pem files must be readable
+       to all users.
     7. Run configure.sh -secure on each existing node in the cluster using
        the same arguments as in Step 3 but without the -genkeys option.
 /opt/mapr/server/configure.sh -secure -Z <Zookeeper_node_list> -C <CLDB_node_lis
@@ -62,8 +68,8 @@ t> -N <cluster_name>
        enabled on the node where the command is run.
        Important: You must also do this on any nodes that you add to the
        cluster in the future.
-    8. Copy the ssl_truststore file to any client nodes outside the
-       cluster.
+    8. Copy the ssl_truststore, ssl_truststore.p12, and ssl_truststore.pem
+       files to any client nodes outside the cluster.
        Important: If you run configure.sh -secure on a node before you
        copy the necessary files to that node, the command fails.
     9. Log in as the mapr superuser using the [3]maprlogin command:

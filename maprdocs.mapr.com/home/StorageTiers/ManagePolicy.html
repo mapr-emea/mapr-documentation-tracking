@@ -1,0 +1,66 @@
+Managing Storage Policies
+
+   Data offload is driven by rules, which are configured per volume. Data
+   offload rule can be based on size of file, owner (u, g, or p) of the
+   file, and/or file modification timestamp. You can apply one rule per
+   volume.
+
+   When a rule is associated with a volume, the rule is first applied on
+   the files in the tiering-enabled volume. When applied on the files in
+   the tiering-enabled volume, the offload is triggered for all files in
+   the snapshot chain as well when the criteria in the rule is met. If the
+   file does not exist in the tiering-enabled volume, rule is applied on
+   the latest state of the file in the snapshot chain. If the file exists
+   in the tiering-enabled volume but has no latest state or if the file
+   was deleted in the tiering-enabled volume, offload does not happen.
+
+   Rules can be defined using a combination of the following expressions:
+   u Username or user ID, as they appear in /etc/passwd file, of a
+   specific user.
+
+   Usage: u:<username or user ID>
+   g Group name or group ID, as they appear in /etc/group file, of a
+   specific group.
+
+   Usage: u:<groupname or group ID>
+   p (Default) Specifies all files. Specifies that this operation is
+   applicable to all the files without restriction. This cannot be
+   combined with any other operator.
+   "" Indicates none of the files. Specifies that this operation cannot be
+   performed on any of the files.
+   m (mtime) Time (in seconds or days) since the files were last modified.
+   The number of seconds can be specified by appending s to value and the
+   number of days can be specified by appending d to the value.
+
+   Usage:
+     * "m:<value>s" — specifies mtime in seconds
+     * "m:<value>d" — specifies mtime in days
+
+   All files whose modification timestamp (mtime) exceeds the specified
+   amount of time are offloaded.
+   Note: If the system time on CLDB and file server nodes are different,
+   the mtime rule for offloading data may not work as intended.
+   s The size of the file in bytes, kilobytes, megabytes, or gigabytes.
+   The size of the file can be specified by appending one of the following
+   to the value: b for bytes, k for kilobytes, m for megabytes, or g for
+   gigabytes.
+
+   Usage
+     * "s:<value>b" — specifies filesize in bytes
+     * "s:<value>k" — specifies filesize in KB
+     * "s:<value>m" — specifies filesize in MB
+     * "s:<value>g" — specifies filesize in GB
+
+   All files whose size exceeds the specified size are offloaded.
+   & AND operation to combine multiple expressions as the criteria for the
+   rule.
+   | OR operation to indicate either of the expressions as the criteria
+   for the rule.
+   () Delimiters for subexpressions.
+
+   For volumes configured for erasure coding, a default storage policy,
+   default.ectier.rule (ID 1 and expression m:1d), is applied if one is
+   not specified.
+
+   You can create, associate, and remove rules using the MapR Control
+   System, the CLI, and REST API.

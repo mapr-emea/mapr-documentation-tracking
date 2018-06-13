@@ -1,0 +1,44 @@
+Recalling a File to MFS Using the CLI and REST API
+
+   You can recall individual files from a storage tier. When you recall a
+   file, the MAST Gateway fetches a copy of the data to the cluster. Based
+   on the expiration time setting on the volume, recalled data is
+   automatically:
+     * Offloaded again based on the storage policy (rules) if there are
+       changes to the recalled data.
+     * Purged when the compactor runs if there are no changes to the
+       recalled data.
+
+   See [1]Data Reads, Writes, and Recalls for more information.
+   Note: You can recall all data from the tier to the volume. See
+   [2]Recalling a Volume to MFS for more information.
+
+Recalling a File Manually Using the CLI
+
+   Run one of the following commands to recall a file:
+     *
+hadoop mfs -recall <pathToFile>
+       For more information, see [3]hadoop mfs.
+     *
+maprcli file recall -name <pathToFile>
+       For more information, see [4]file recall.
+
+   Note: For information on recalling files using (loopbacknfs or
+   FUSE-based) POSIX or NFS clients when maprcli or hadoop commands are
+   not available, see [5]Running Tiering Commands when maprcli and hadoop
+   Commands are not Available.
+
+Recalling a File Using the REST API
+
+   Send a request of type POST to the URL. For example, send a request
+   similar to the following:
+curl -k -X POST 'https://abc.sj.us/rest/file/recall?name=fileName' --user mapr:m
+apr
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/DataReadwriteRecall.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RecallVolData.html
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/hadoop-mfs.html
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/file-recall.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/StorageTiers/RunTierCommands-POSIXandNFSclients.html

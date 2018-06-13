@@ -1,0 +1,217 @@
+tier create
+
+   Creates a new tier.
+
+Syntax
+
+   CLI
+
+maprcli tier create
+       -name <tier_name>
+       -type cold|ectier
+       [ -url <tier_url> ]
+       [ -credential <credentials_file_path> ]
+       [ -tag <object_store_type> ]
+       [ -credential_str <tier_credentials> ]
+       [ -dbtopology <metadata_volume_path> ]
+       [ -cluster <cluster_name> ]
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host:port>/rest/tier/create?<parameters>
+
+Usage
+
+   To create a warm tier:
+maprcli tier create
+          [ -cluster <cluster_name> ]
+          -name <tier_name>
+          -type ectier
+          [ -dbtopology <path> ]
+
+   To create a cold tier:
+maprcli tier create
+          [ -cluster <cluster_name> ]
+          -name <tier_name>
+          -type cold -url <tier_URL>
+          -credential|credential_str <credential>
+          [ -dbtopology <path> ]
+          [ -tag <object_store_type> ]
+
+   Note: The -tag parameter is required for Azure.
+
+Parameters
+
+   Parameter Description
+   cluster The name of the cluster on which to run the command.
+   credential (For tier of type cold only) The path to the credentials
+   file to use to access the tier. The credentials file must already exist
+   on the node from where the tier is being created. The file must include
+   the following properties in JSON format:
+
+   bucketName
+          The name of the bucket on the tier. This cannot be modified
+          after it is associated with a tier. If the bucket does not
+          already exist on the tier, the command to create the tier will
+          attempt to create the bucket using the credentials in the
+          credentials file.
+
+          Note: For Azure, the bucket/container is created in the region
+          that is specified in the parent storage account.
+
+   region
+          The S3 region to create the bucket on. This cannot be modified
+          once configured (explicitly or using the default) and associated
+          with a tier. For:
+
+          + AWS, specify region information as defined here. On AWS, each
+            region can have a different URL. The URL must be provided with
+            the maprcli tier create command.
+            Note: Because bucket names are unique across regions, make
+            sure you specify the correct region for a given bucket in the
+            credentials file. For example, suppose a bucket called
+            myBucket3 in us-east-1; you cannot offload data to myBucket3
+            by specifying us-west-1 as the region in the credentials file.
+          + Minio, refer to the Configuration Guide for more information
+            on regions.
+          + HCP, this parameter does not have any effect.
+
+          Note: For Azure, if the region is specified in the file, the
+          value is ignored because the region information is retrieved
+          from the parent storage account.
+
+   accessKey
+   secretKey
+          The credentials for accessing the tier.
+
+   For example:
+{
+  "bucketName" : "defaultbucket3",
+  "region": "us-east-1",
+  "credentials" : {
+    "accessKey" : "CG956XVG8G2EO7R9E4H2",
+    "secretKey" : "5G1muM92e65mLJENaSAvOfSbURxyEtYl2MmAocGi"
+  }
+}
+
+   Note: Either this or -credential_str is required for a cold tier.
+   credential_str (For tier of type cold only) The credentials, access key
+   and secret key, bucket name, and region in JSON format. Either this or
+   -credential is required for a cold tier.
+   dbtopology The rack path to the volume where metadata is stored in DB
+   tables. The default value is /data.
+   name The name of the tier.
+   tag (For tier of type cold only) The object store to connect to. Value
+   can be one of the following:
+     * S3_GCS
+     * S3_HDS
+     * S3_IBM
+     * S3_AWS
+     * Azure_Blobs
+
+   The MAST Gateway uses this to determine the connector library (such as
+   libcurl, etc.) to use.
+   Note: You must specify this parameter to establish connection with
+   Azure.
+   type The type of tier to create. Value can be:
+     * cold — to offload to low-cost storage alternative on the cloud
+     * ectier — to offload to low-cost storage alternative on the MapR
+       cluster
+
+   url (For tier of type cold only) The tier access point. Value can be
+   one of the following:
+     * S3 — s3.amazonaws.com
+     * HCP (Hitachi Content Platform) — s3mapr.hcp.qa.lab
+
+   When specifying the URL (for S3 and HCP), use double quotes.
+
+Examples
+
+   Create a cold tier for offloading to S3:
+     * [1]CLI
+     * [2]REST
+
+# /opt/mapr/bin/maprcli tier create -name ksTestCold -type cold -url "s3.amazona
+ws.com" -credential credentials.txt -json
+{
+        "timestamp":1519669953410,
+        "timeofday":"2018-02-26 10:32:33.410 GMT-0800 AM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created tier: 'ksTestCold'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/create?name=ksTestCold&type=
+cold&url=s3.amazonaws.com&credential=/root/credentials.txt' --user mapr:mapr
+{"timestamp":1519679457859,"timeofday":"2018-02-26 01:10:57.859 GMT-0800 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created tier: 'ksTestCo
+ld'"]}
+
+   Create a EC tier for offloading to a erasure coded volume on the MapR
+   cluster:
+     * [3]CLI
+     * [4]REST
+
+# /opt/mapr/bin/maprcli tier create -name ksTestEC -type ectier -json
+{
+        "timestamp":1519664750448,
+        "timeofday":"2018-02-26 09:05:50.448 GMT-0800 AM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created tier: 'ksTestEC'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/create?name=ksTestEC&type=ec
+tier' --user mapr:mapr
+{"timestamp":1519679884411,"timeofday":"2018-02-26 01:18:04.411 GMT-0800 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created tier: 'ksTestEC
+'"]}
+
+   Create a cold tier by sending the credentials as a string:
+     * [5]CLI
+     * [6]REST
+
+# maprcli tier create -name testCold -type cold -url "s3.amazon.com" -credential
+_str '{"bucketName":"testbucket","credentials":{"accessKey":"ABCDEFGHIJKLM","sec
+retKey":"OPQRSTUVWXYZ"}}' -json
+{
+        "timestamp":1526406945863,
+        "timeofday":"2018-05-15 10:55:45.863 GMT-0700 AM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created tier: 'testCold'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/create?name=testCold&type=co
+ld&url=s3.amazon.com&credential_str=%7B%22bucketName%22%3A%22testbucket%22%2C%22
+credentials%22%3A%7B%22accessKey%22%3A%ABCDEFGHIJKL%22%2C%22secretKey%22%3A%22OP
+QRSTUVWXYZ%22%7D%7D' --user mapr:mapr
+{"timestamp":1526483636503,"timeofday":"2018-05-16 08:13:56.503 GMT-0700 AM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created tier: 'testCold
+'"]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/tier-create.html#div1entry1
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/tier-create.html#div1entry2
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/tier-create.html#div2entry1
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/tier-create.html#div2entry2
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/tier-create.html#div3entry1
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/tier-create.html#div3entry2
