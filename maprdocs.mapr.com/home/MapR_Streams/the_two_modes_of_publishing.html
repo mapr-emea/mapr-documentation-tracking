@@ -1,26 +1,53 @@
 Modes of Publishing
 
-   The producer client library batches messages into publish requests that
-   it sends to the MapR-ES server. By default, the client sends multiple
-   publish requests without waiting for acknowledgements from the MapR-ES
-   server. This behavior is determined by the producer configuration
-   parameter streams.parallel.flushers.per.partition, which defaults to
-   true.
+   Describes different modes of publishing.
 
-   With this behavior turned on, it is possible for messages to be
-   published to the partitions out of order due to the presence of
-   multiple network interface controllers, network errors, or retries.
+   When publishing a message, a producer sends a record to the producer
+   client library. The producer client library batches messages into
+   multiple publish requests which are sent to the MapR-ES server.
 
-   For example, suppose a producer is sending messages that are
-   specifically for Partition 1. The producer client library buffers the
-   messages and sends a batch to Partition 1. Meanwhile, the producer
-   keeps sending messages for Partition 1 and the client continues to
-   buffer them. The next time the producer client library has enough
-   messages for Partition 1, the client sends another batch, whether or
-   not the MapR-ES server has acknowledged the previous batch.
+At Least Once
 
-   If you always want messages to arrive to partitions in the order in
-   which they were sent, set the configuration parameter
-   streams.parallel.flushers.per.partition to false, which causes the
-   producer client library to wait for acknowledgements from the MapR-ES
-   server before sending subsequent publish requests.
+   The default message delivery semantics is "at-least-one". At-least-once
+   means that the message delivery guarantees that a message is published
+   at least once to the MapR-ES server. Messages are never lost but may be
+   redelivered.
+
+Server Acknowledgements
+
+   By default, publishing requests for messages are sent without waiting
+   for acknowledgement (ack) from the MapR-ES server.
+
+   The acknowledgement behavior is determined by the producer
+   configuration parameter streams.parallel.flushers.per.partition, which
+   defaults to true.
+
+   With an "at-least-once" message delivery, in some failure scenarios, a
+   message can be produced more than once for a single send call. A common
+   reason for message duplication is when a network error occurs, a client
+   may retry sending a message to a server node.If the network error
+   occurs after the message is processed and persisted by the server, it
+   can lead to duplicate messages in the system.
+
+   Publishing without Ack
+          When publishing without ack (default), it is possible for
+          messages to be published to the partitions out of order due to
+          the presence of multiple network interface controllers, network
+          errors, or retries.
+
+          For example, suppose a producer is sending messages that are
+          specifically for Partition 1. The producer client library
+          buffers the messages and sends a batch to Partition 1.
+          Meanwhile, the producer keeps sending messages for Partition 1
+          and the client continues to buffer them. The next time the
+          producer client library has enough messages for Partition 1, the
+          client sends another batch, whether or not the MapR-ES server
+          has acknowledged the previous batch.
+
+   Publishing with Ack
+          If you always want messages to arrive to partitions in the order
+          in which they were sent, set the configuration parameter
+          streams.parallel.flushers.per.partition to false. This causes
+          the producer client library to wait for ack (acknowledgements)
+          from the MapR-ES server before sending subsequent publish
+          requests.
