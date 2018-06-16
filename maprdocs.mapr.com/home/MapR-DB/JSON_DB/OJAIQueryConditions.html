@@ -1,15 +1,12 @@
 Query Conditions in OJAI Applications
 
-   There are two ways to specify a query condition in an OJAI application.
-   One way is to specify a query condition using an OJAI QueryCondition
-   object. After defining a QueryCondition, you pass it to the OJAI
-   Query.where() method to apply the condition. Another way is to pass an
-   OJAI query condition in a JSON format to the method. This section
-   describes the alternatives and contains code snippets showing the
-   difference between a QueryCondition object and a condition expressed in
-   a JSON format.
+   There are two ways to create a query condition in an OJAI application.
+   One way is to create an OJAI QueryCondition object and call methods in
+   the class to construct your query condition. Another way is to create
+   an OJAI query condition in a JSON format. This section describes the
+   two alternatives and contains code snippets showing each alternative.
 
-Using an OJAI QueryCondition
+Creating an OJAI QueryCondition
 
      * [1]Java
 
@@ -73,29 +70,14 @@ Using an OJAI QueryCondition
    QueryCondition API. It introduces you to the basics of the API. For the
    complete API, see the [3]QueryCondition interface.
 
-Using the Query.where Method
+Example: Creating a QueryCondition Object
 
-     * [4]Java
-
-   After specifying your QueryCondition object, pass it to the
-   Query.where(QueryCondition) method to apply the condition.
-
-   Alternatively, you can pass your condition, using [5]OJAI Query
-   Condition Syntax specified as a Java String, to Query.where().
-
-Examples: Using an OJAI QueryCondition Object vs an OJAI Query Condition in
-JSON Format
-
-     * [6]Java
-
-   The following Java code snippets show you how to define a
-   QueryCondition object vs a condition expressed in JSON, for the same
-   conditional expression:
-   Condition
+   The following shows how to define a QueryCondition object for this
+   query condition:
 (a.b.[0].boolean == false && (a.c.d != 5 || a.b[1].decimal > 1 || a.b[1].decimal
  < 10))
+     * [4]Java
 
-   OJAI QueryCondition Object OJAI Query Condition in JSON Format
 QueryCondition qc = connection.newCondition()
     .and()
         .is("a.b[0].boolean", Op.EQUAL, false)
@@ -107,6 +89,22 @@ QueryCondition qc = connection.newCondition()
     .close()
     .build();
 
+   Pass the QueryCondition object to the [5]Query.where method. See the
+   Java - OJAI QueryCondition Object example at [6]Querying with
+   Conditions for a complete Java code example.
+
+Creating a Query Condition in JSON Format
+
+   To create a query condition in a JSON format, use the [7]OJAI Query
+   Condition Syntax.
+
+   The following shows how to use the syntax to create this query
+   condition:
+(a.b.[0].boolean == false && (a.c.d != 5 || a.b[1].decimal > 1 || a.b[1].decimal
+ < 10))
+     * [8]Java
+
+   This is a Java String for the condition:
 String jc = new String(
     '{ \
         "$and":[ \
@@ -119,8 +117,9 @@ String jc = new String(
         ]} \
     )';
 
-   Application examples showing the two alternatives are available at
-   [7]Querying with Conditions.
+   Pass the string to the [9]Query.where method. See the Java - OJAI Query
+   Condition in JSON Format example at [10]Querying with Conditions for a
+   complete Java code example.
 
 References
 
@@ -128,6 +127,9 @@ References
    2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Supported-Regular-Expressions.html
    3. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/QueryCondition.html
    4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQueryConditions.html#div2entry1
-   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
-   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQueryConditions.html#div3entry1
-   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+   5. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQueryConditions.html#div3entry1
+   9. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#where-java.lang.String-
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b

@@ -1,74 +1,85 @@
 Managing JSON Documents
 
    This section describes how to perform CRUD operations (create, query,
-   update, and delete) on JSON documents in MapR-DB JSON tables.
+   update, and delete) on JSON documents in MapR-DB JSON tables using the
+   OJAI API.
+
+   You can also perform these operations using [1]MapR-DB Shell (JSON
+   Tables).
 
 Document
 
-   Use the methods in this interface to create JSON documents. You can
-   pass Document objects to methods in the DocumentStore interface to add,
-   replace, and delete documents from tables.
-   For a full list of methods, see the following OJAI interfaces:
-     * [1]Document
-     * [2]DocumentStore
+   You can use the Document interface to create JSON documents. See
+   [2]Creating JSON Documents in OJAI for a description of how to do this
+   as well as other alternatives.
 
-DocumentMutation
+   See the following for a list of supported methods in the class:
+     * [3]Java
 
-   To make changes to JSON documents, you must create a DocumentMutation
-   object. A DocumentMutation allows you to perform OJAI mutations.
-   [3]OJAI Mutation Syntax describes the types of mutations you can
-   perform and the syntax you use.
-
-   You can pass DocumentMutation objects to the
-   DocumentStore.checkAndMutate() method or the DocumentStore.update()
-   method to apply the changes to documents. For more information, see the
-   following OJAI interfaces:
-     * [4]DocumentMutation
-     * [5]DocumentStore
-
-   By default, the default maximum size of a JSON document is 32 MB. The
-   DocumentMutation class does not enforce this limit. MapR-DB enforces
-   the limit when you pass your DocumentMutation object to the
-   DocumentStore method. See [6]JSON Document Size for information about
-   how to increase this limit.
+   [4]Document
 
 DocumentStore
 
-   Use the methods in this interface to perform these tasks:
+   Once you have a Document object, you can pass it to the DocumentStore
+   interface and call methods to perform these tasks:
      * Delete documents from tables
      * Increment numeric values in documents
      * Insert documents into tables
-     * Query tables to find documents
-     * Replace documents
-     * Update documents with the changes specified in DocumentMutation
-       objects
+     * Replace documents in tables
 
-   You can pass Query objects to DocumentStore methods to run queries that
-   limit the documents and fields returned by queries. When specifying
-   query conditions, you can specify the conditions using QueryCondition
-   methods.
-   See the following OJAI interfaces for more information:
-     * [7]DocumentStore
-     * [8]Query
-     * [9]QueryCondition
+   See the following for a list of supported methods:
+     * [5]Java
 
-   For more information about how to run OJAI queries, see [10]Querying
-   with OJAI.
+   [6]DocumentStore
+
+   You can also use the DocumentStore interface to run queries. See
+   [7]Querying in OJAI Applications for details.
    Note: By default, OJAI implements non-buffered writes. If you desire
    buffered writes, use the ojai.mapr.documentstore.buffer-writes option
    and with the Document object. This option is available with the MapR
-   OJAI driver. See [11]Enabling Buffered Writes for more information.
+   OJAI driver. See [8]Enabling Buffered Writes for more information.
+
+DocumentMutation
+
+   To make changes to JSON documents, create a DocumentMutation object. A
+   DocumentMutation allows you to perform OJAI mutations. [9]Using OJAI
+   Mutation Syntax describes the types of mutations you can perform. See
+   [10]Examples: Updating JSON Documents for a sample program.
+     * [11]Java
+
+   To create a DocumentMutation object, call the methods in the
+   DocumentMutation class corresponding to the mutation operations you
+   want to perform. See [12]DocumentMutation for a list of available
+   methods.
+
+   Pass the DocumentMutation object to either the
+   [13]DocumentStore.checkAndMutate or [14]DocumentStore.update method to
+   apply the changes to the document. The first method accepts a
+   [15]QueryCondition parameter that must evaluate to true for the
+   mutation to be applied. Both methods have an _id parameter
+   corresponding to the document to be updated.
+
+   By default, the default maximum size of a JSON document is 32 MB. A
+   DocumentMutation does not enforce this limit. MapR-DB enforces the
+   limit when you pass your DocumentMutation object to the DocumentStore
+   method. See [16]JSON Document Size for information about how to
+   increase this limit.
 
 References
 
-   1. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/Document.html
-   2. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
-   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax
-   4. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentMutation.html
-   5. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
-   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/ojai_documents.html#ojai_documents__section_kfl_byf_pdb
-   7. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
-   8. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html
-   9. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/QueryCondition.html
-  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#querying_documents_with_maprdb_ojai_java_api_
-  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/ojai-nonBuffered-writes.html
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/mapr_dbshell.html#mapr_dbshell
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/creating_documents_with_maprdb_ojai_java_api_.html#creating_documents_with_maprdb_ojai_java_api_
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/crud-ojai-documents.html#div1entry1
+   4. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/Document.html
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/crud-ojai-documents.html#div2entry1
+   6. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#querying_documents_with_maprdb_ojai_java_api_
+   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/ojai-nonBuffered-writes.html
+   9. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax
+  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/update-document.html#reference_d41_2qy_41b
+  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/crud-ojai-documents.html#div3entry1
+  12. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentMutation.html
+  13. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#checkAndMutate-java.lang.String-org.ojai.store.QueryCondition-org.ojai.store.DocumentMutation-
+  14. https://info-dev.lab/apidocs/ojai/61/java/org/ojai/store/DocumentStore.html#update-java.lang.String-org.ojai.store.DocumentMutation-
+  15. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/QueryCondition.html
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/ojai_documents.html#ojai_documents__section_kfl_byf_pdb

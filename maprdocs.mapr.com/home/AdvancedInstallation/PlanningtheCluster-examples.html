@@ -1,9 +1,8 @@
 Example Cluster Designs
 
-   This section describes considerations for designing a MapR cluster for
-   maximum availability, fault-tolerance, and performance. The topic
-   includes example cluster designs for 6-node, 12-node, and 50-node
-   clusters.
+   This section describes designing a MapR cluster for maximum
+   availability, fault-tolerance, and performance. The topic includes
+   example cluster designs for 6-node, 12-node, and 50-node clusters.
 
 Design Priorities
 
@@ -16,9 +15,9 @@ Design Priorities
      * Supportability
      * Reliability
 
-   The following priorities and their related best practices can help you
-   plan a durable cluster that includes all or most of these cluster
-   attributes. The priorities are listed in order of importance:
+   The following priorities and related best practices can help you plan a
+   durable cluster that includes all or most of these cluster attributes.
+   The priorities are listed in order of importance:
      * [1]Priority 1 - Maximize Fault Tolerance
      * [2]Priority 2 - Minimize Resource Contention
      * [3]Priority 3 - Promote High Availability
@@ -29,47 +28,46 @@ Priority 1 - Maximize Fault Tolerance
 
    Follow these best practices to ensure that your MapR cluster can
    tolerate failures:
-     * Ensure an odd number of Zookeeper services. Zookeeper fault
-       tolerance depends on a [5]quorum of Zookeeper services being
-       available. At least three Zookeeper services are recommended. For a
-       higher level of fault tolerance, use five Zookeeper services. With
+     * Ensure an odd number of ZooKeeper services. ZooKeeper fault
+       tolerance depends on a [5]quorum of ZooKeeper services being
+       available. At least three ZooKeeper services are recommended. For a
+       higher level of fault tolerance, use five ZooKeeper services. With
        five zookeepers, two can be lost and quorum maintained.
      * For other services, it makes sense for them to be at least as
-       reliable as Zookeeper. Generally, this means at least two instances
-       of the service for three Zookeepers and three instances for five
-       Zookeepers.
-     * Include enough CLDBs to be as reliable as Zookeeper. Because CLDBs
+       reliable as ZooKeeper. Generally, this means at least two instances
+       of the service for three ZooKeepers and three instances for five
+       ZooKeepers.
+     * Include enough CLDBs to be as reliable as ZooKeeper. Because CLDBs
        use a [6]master-slave configuration, a MapR cluster can function
        with an odd or even number of CLDBs. The recommended minimum number
        of active CLDBs is two. To tolerate failures, more CLDBs are
        needed:
-          + If you have three Zookeepers, configure at least three CLDBs.
-          + If you have five Zookeepers, configure at least four CLDBs.
+          + If you have three ZooKeepers, configure at least three CLDBs.
+          + If you have five ZooKeepers, configure at least four CLDBs.
             With four CLDBs, the cluster can tolerate two CLDB failures
             and still provide optimal performance. Adding a fifth CLDB
             does not increase failure tolerance in this configuration.
      * Include enough Resource Manager processes to be as reliable as
-       Zookeeper. Only one Resource Manager is active at a time. For
-       example:
-          + If you have three Zookeepers, you need at least two Resource
+       ZooKeeper. Only one Resource Manager is active at a time:
+          + If you have three ZooKeepers, you need at least two Resource
             Managers.
-          + If you have five Zookeepers, you need at least three Resource
+          + If you have five ZooKeepers, you need at least three Resource
             Managers. Three Resource Managers can survive the loss of two
-            Zookeepers.
+            ZooKeepers.
      * For most MapR clusters, the recommended configuration is:
-          + 3 Zookeepers
-          + 3 CLDBs
-          + 2-3 Resource Managers
+          + Three ZooKeepers
+          + Three CLDBs
+          + Two or three Resource Managers
           + For larger clusters, increase the number of CLDBs or
-            Zookeepers if better performance or higher reliability is
-            needed. Table 1 shows the number of failures tolerated by
-            various combinations of Zookeeper, CLDB, and Resource Manager
+            ZooKeepers for better performance or higher reliability. Table
+            1 shows the number of failures tolerated by various
+            combinations of ZooKeeper, CLDB, and Resource Manager
             services.
 
    CAPTION: Table 1. Table 1: Fault Tolerance of Different
-   Zookeeper-CLDB-RM Combinations
+   ZooKeeper-CLDB-RM Combinations
 
-   Zookeepers CLDBs Resource Managers ZK/CLDB/RM Failures Tolerated
+   ZooKeepers CLDBs Resource Managers ZK/CLDB/RM Failures Tolerated
    3          2^1   2                 1
    3          3     2                 1
    5          4     3                 2
@@ -77,12 +75,12 @@ Priority 1 - Maximize Fault Tolerance
 
    ^1For optimal failure handling, the minimum number of CLDBs is three;
    hence, three or more CLDBs are recommended. With two CLDBs, the failure
-   of one will not result in an outage, but recovery can take longer than
+   of one does not result in an outage, but recovery can take longer than
    with three.
 
    ^2Using five CLDBs does not improve fault-tolerance significantly when
    compared with four CLDBs. But it can be convenient to have the same
-   number of CLDBs as Zookeepers.
+   number of CLDBs as ZooKeepers.
 
 Priority 2 - Minimize Resource Contention
 
@@ -97,14 +95,14 @@ Priority 2 - Minimize Resource Contention
        if possible.
      * To maximize availability, use three or more racks even for small
        clusters. Using two racks is not recommended. If a cluster has
-       three Zookeepers, using two racks means one of the racks will host
-       two Zookeepers. In this scenario, a loss of a rack having two
-       Zookeepers can jeopardize the cluster.
+       three ZooKeepers, using two racks means one of the racks will host
+       two ZooKeepers. In this scenario, a loss of a rack having two
+       ZooKeepers can jeopardize the cluster.
           + For services that are replicated, make sure the replicas are
             in different racks.
           + Put the Resource Manager and CLDB services on separate nodes,
             if possible.
-          + Put the Zookeeper and CLDB services on separate nodes, if
+          + Put the ZooKeeper and CLDB services on separate nodes, if
             possible.
      * Some administrators find it convenient to put web-oriented services
        together on nodes with lower IP addresses in a rack. This is not
@@ -118,7 +116,7 @@ Priority 2 - Minimize Resource Contention
 Priority 3 - Promote High Availability
 
    Whenever possible, configure high availability (HA) for all services,
-   not just for services that provide HA by default. The CLDB, Zookeeper,
+   not just for services that provide HA by default. The CLDB, ZooKeeper,
    Resource Manager, and Drill provide HA by default. Some services are
    inherently stateless. If possible, configure multiple instances of
    these services:
@@ -141,19 +139,19 @@ Nodes)
 
    Large clusters increase CLDB and Resource Manager workloads
    significantly. In clusters of 50 or more nodes:
-     * Use dedicated nodes for CLDB, Zookeeper, and Resource Manager.
+     * Use dedicated nodes for CLDB, ZooKeeper, and Resource Manager.
        Note: Dedicated nodes have the benefit of supporting fast fail-over
        for file-server operations.
      * If fast fail-over is not critical and you need to minimize hardware
-       costs, you may combine the CLDB and Zookeeper nodes. For example, a
+       costs, you may combine the CLDB and ZooKeeper nodes. For example, a
        large cluster might include 3 to 9 such combined nodes.
      * If necessary, review and adjust the hardware composition of CLDB,
-       Zookeeper, and Resource Manager nodes. Once you have chosen to use
+       ZooKeeper, and Resource Manager nodes. Once you have chosen to use
        dedicated nodes for these services, you might determine that they
        do not need to be identical to other cluster nodes. For example,
-       dedicated CLDB and Zookeeper nodes probably do not need as much
+       dedicated CLDB and ZooKeeper nodes probably do not need as much
        storage as other cluster nodes.
-     * Avoid configuring Drill on CLDB or Zookeeper nodes.
+     * Avoid configuring Drill on CLDB or ZooKeeper nodes.
 
 Example Clusters
 
@@ -170,10 +168,8 @@ Example 1: 6-Node Cluster
    a single rack is available, this example can work for small clusters.
    However, the recommended best practice for all clusters, regardless of
    size, is to use three or more racks, if possible.
-
    Example 1a. Core and Hadoop for 6-Node Cluster
    [example_layout_1a.png]
-
    Example 1b. Ecosystem Components for 6-Node Cluster
    [example_layout_1b.png]
 
@@ -187,10 +183,8 @@ Example 1: 6-Node Cluster
 Example 2: 12-Node Cluster
 
    Example 2 shows a 12-node cluster contained in three racks:
-
    Example 2a. Core and Hadoop for 12-Node Cluster
    [example_layout_2a.png]
-
    Example 2b. Ecosystem Components for 12-Node Cluster
    [example_layout_2b.png]
 
@@ -204,13 +198,10 @@ Example 2: 12-Node Cluster
 Example 3: 50-Node Cluster
 
    Examples 3 shows a 50-node cluster contained in five racks:
-
    Example 3a. Core and Hadoop for 50-Node Cluster (Racks 1-3)
    [example_layout_3a.png]
-
    Example 3b. Core and Hadoop for 50-Node Cluster (Racks 4-5)
    [example_layout_3b.png]
-
    Example 3c. Ecosystem Components for 50-Node Cluster (Racks 1-3)
    [example_layout_3c.png]
 
@@ -220,7 +211,6 @@ Example 3: 50-Node Cluster
    *Denotes a service that is lightweight and stateless. For greater
    performance, consider running these services on all nodes and adding a
    load balancer to distribute network traffic.
-
    Example 3d. Ecosystem Components for 50-Node Cluster (Racks 4-5)
    [example_layout_3d.png]
 
