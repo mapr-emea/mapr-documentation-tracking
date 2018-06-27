@@ -19,7 +19,7 @@ Elasticsearch Errors
           configure.sh:
 
           + Verify that there is enough disk space.
-          + Verify that filesystem where the index directory will be
+          + Verify that the filesystem where the index directory will be
             created is not read-only. See [1]Log Aggregation and Storage
             for more information on the index directory location.
           + If you included the -ESDB parameter, verify that the index
@@ -28,7 +28,7 @@ Elasticsearch Errors
             directory>.
 
    Failed to resolve hostname
-          Cause: The DNS is probably not setup correctly on this node.
+          Cause: The DNS is probably not set up correctly on this node.
           Solution: Contact your DNS administrator or verify that
           /etc/hosts and /etc/nssswitch.conf are configured correctly.
           /etc/hosts should list the host names if the DNS database is not
@@ -57,9 +57,9 @@ OpenTSDB Errors
 
    Failed to create TSDB tables - need to rerun configure.sh -R or run
           create_table.sh as $MAPR_USER
-          Cause: On a secure cluster, this issue usually displays when you
+          Cause: On a secure cluster, this issue usually occurs when you
           run configure.sh to configure the nodes to use MapR Monitoring
-          without first creating a MapR user tickets for the root user and
+          without first creating MapR user tickets for the root user and
           the $MAPR_USER.
           Solution: Complete one or all of the following steps:
 
@@ -85,7 +85,7 @@ Fluentd Errors
 
           + Verify that the CLDB services is running. If not, start Warden
             with the following command: service mapr-warden start.
-          + Verify that $MAPR_HOME/conf/clusterid file exist.
+          + Verify that the $MAPR_HOME/conf/clusterid file exists.
 
 Collectd Errors
 
@@ -98,7 +98,7 @@ Collectd Errors
 
           + Verify that the CLDB services is running. If not, start Warden
             with the following command: service mapr-warden start.
-          + Verify that $MAPR_HOME/conf/clusterid file exist.
+          + Verify that the $MAPR_HOME/conf/clusterid file exists.
 
 Grafana Errors
 
@@ -128,11 +128,11 @@ Grafana Errors
           + Verify that the filesystem containing /opt/mapr/grafana is
             mounted as read/write.
           + Verify that there is enough disk space.
-          + Re-install MapR Monitoring packages.
+          + Re-install the MapR Monitoring packages.
 
    Failed to configure ssl for grafana
           Cause: The sed utility failed to edit a port value in the
-          temporary configuration file. This may occur due to issues with
+          temporary configuration file. This can occur due to issues with
           filesystem permissions, disk space, or file corruption.
           Solution: Complete the following steps and then re-run
           configure.sh:
@@ -156,7 +156,7 @@ Grafana Errors
 
 Kibana Errors
 
-   Failed to configure elasticsearch server url
+   Failed to configure elasticsearch server URL
           Cause: There is not enough disk space, configure.sh was not run
           as the root user, or the filesystem containing /opt/mapr/kibana
           is mounted read-only.
@@ -168,7 +168,7 @@ Kibana Errors
           + Verify that the filesystem containing /opt/mapr/kibana is
             mounted as read/write.
 
-   Failed to configure ssl for kibana
+   Failed to configure ssl for Kibana
           Cause: There is not enough disk space or the root user does not
           have the required directory permissions to create the file in
           the /opt/mapr/kibana/kibana-<version>/config directory.
@@ -178,6 +178,21 @@ Kibana Errors
           + Verify that there is enough disk space.
           + Verify that the filesystem containing /opt/mapr/kibana is
             mounted as read/write.
+
+   Kibana logon unsuccessful because Searchguard "Service Unavailable"
+          Cause: On a slower server, Kibana logons sometimes do not
+          succeed because the Searchguard configuration containing the
+          user names and passwords has not finished loading. You might
+          notice an error like the following in the Elasticsearch
+          MapRMonitoring.log:
+
+[2018-06-30T07:47:15,062][ERROR][c.f.s.a.BackendRegistry  ] Not yet initialized
+(you may need to run sgadmin)
+
+          Solution: Try using the following command to restart
+          Elasticsearch:
+
+maprcli node services -name elasticsearch -action restart -nodes $(hostname -f)
 
 References
 
