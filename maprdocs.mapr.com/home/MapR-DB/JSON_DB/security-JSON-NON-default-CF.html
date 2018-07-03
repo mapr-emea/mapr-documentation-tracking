@@ -1,67 +1,102 @@
 Permissions on Non-default Column Families
 
    If a JSON document field is not in the MapR-DB JSON default column
-   family, the field that you want to perform operations on inherits
-   permissions from it's parent field must have the operation both
-   readperm and writeperm permissions are required.
+   family, you must have readperm and writeperm permissions to perform
+   read and write operations on the field. You either receive the
+   permissions from the column family, inherit them from the field's
+   parent field, or have the permissions from an explicit grant on the
+   field.
    Note: Non-default column families are an advanced feature of MapR-DB's
    native JSON support. For information about them, see [1]Managing Column
    Families.
 
-   The following diagram shows an JSON document where fields b and c are
-   in a column family cf1 that is defined at field b with the path a.b.
+   The following diagram shows a JSON document where fields b and c are in
+   a column family cf1 that is defined at field b with the path a.b.
    [read_write_permissions_2.png]
 
-You need read and write permissions on field c,
+Granting Read and Write Permissions on Field c
 
-   To perform both read and write operations on field c when it is in the
-   default column family, you must have both readperm and writeperm access
-   on field c.
+   To perform both read and write operations on field c, when it is in
+   column family cf1, you must have both readperm and writeperm access on
+   field c:
+     * If you have readperm and writeperm permissions on cf1, then you
+       have access to field c.
      * If you have readperm and writeperm permissions on field b, then you
        have access to field c. You do not need any further permissions.
        Field c inherits your readperm and writeperm permissions from field
        b.
-     * If you do not have readperm and writeperm permissions on field b:
-          + You must have traverseperm permission granted to you on field
-            b.
-          + You must have readperm and writeperm permission must be
-            explicitly granted to you on field c.
+     * If you have readperm and writeperm permissions on cf1 but either
+       field a or b denied you permissions:
+          + You must have traverseperm permission granted to you on the
+            field that denied you access (field a or b).
+          + You must have readperm and writeperm permissions explicitly
+            granted to you on field c.
+     * If you do not have readperm and writeperm permissions on cf1:
+          + You must have traverseperm permission granted to you on either
+            cf1 or field b.
+          + You must have readperm and writeperm permissions explicitly
+            granted to you on field c.
 
-   A maprcli table cf colperm set commands similar to the following can be
-   used to grant permissions:
+   The following are examples of commands that grant these permissions:
+maprcli table cf colperm set
+  -path <path to JSON table >
+  -cfname cf1
+  -name a.b
+  -traverseperm u:<user ID> | <existing ACE for this field>
+maprcli table cf colperm set
+  -path <path to JSON table >
+  -cfname cf1
+  -name a.b.c
+  -readperm u:<user ID> | <existing ACE for this field>
+  -writeperm u:<user ID> | <existing ACE for this field>
 maprcli table cf edit
-  -path <path to JSON table>
+  -path <path to JSON table >
   -cfname cf1
   -traverseperm u:<user ID> | <existing ACE for this field>
 maprcli table cf colperm set
-  -path <path to JSON table>
+  -path <path to JSON table >
   -cfname cf1
   -name a.b.c
   -readperm u:<user ID> | <existing ACE for this field>
   -writeperm u:<user ID> | <existing ACE for this field>
 
-You need read or write permissions on field c
+Granting Read or Write Permission on Field c
 
-   To perform either read or write operations on field c when it is in the
-   default column family, you must have the same permission (readperm or
-   writeperm) access on field c.
+   To perform either read or write operations on field c, when it is in
+   column family cf1, you must have either readperm or writeperm access on
+   field c:
+     * If you have the same permission (readperm or writeperm) on cf1,
+       then you have access to field c.
      * If you have the same permission (readperm or writeperm) on field b,
        then you have access to field c. You do not need any further
        permissions. Field c inherits your readperm or writeperm permission
        from field b.
+     * If you have the same permission (readperm or writeperm) on cf1 but
+       either field a or b denied you permission:
+          + You must have traverseperm permission granted to you on the
+            field that denied you access (field a or b).
+          + You must have readperm or writeperm permission explicitly
+            granted to you on field c.
      * If you do not have the same permission (readperm or writeperm) on
-       field b:
-          + You must have traverseperm permission granted to you on field
-            b.
-          + You must have the readperm or writeperm permission explicitly
+       cf1:
+          + You must have the traverseperm permission granted to you on
+            either cf1 or field b.
+          + You must have readperm or writeperm permission explicitly
             granted to you on field c.
 
-   Example commands to grant these permissions:
-maprcli table cf edit -path <path to JSON table> -cfname cf1
-              -traverseperm u:<user ID> | <existing ACE for this field>
-              maprcli table cf colperm set -path <path to JSON table> -cfname cf
-1
-              -name a.b.c -readperm u:<user ID> | <existing ACE for this field>
+   The following example grants traverseperm permission:
+maprcli table cf colperm set
+  -path <path to JSON table>
+  -cfname cf1
+  -name a.b
+  -traverseperm u:<user ID> | <existing ACE for this field>
+
+   The following example grants readperm permission:
+maprcli table cf colperm set
+  -path <path to JSON table>
+  -cfname cf1
+  -name a.b.c
+  -readperm u:<user ID> | <existing ACE for this field>
 
 References
 

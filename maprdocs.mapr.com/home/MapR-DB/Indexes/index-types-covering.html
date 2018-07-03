@@ -1,7 +1,9 @@
 Covering Indexes
 
    A covering index is an index that allows MapR-DB to process a query
-   using secondary indexes without reading the JSON table.
+   using secondary indexes without reading the JSON table. Using it makes
+   a query more efficient by avoiding the I/O overhead of fetching data
+   from the JSON table.
 
    If all fields referenced in a query are either indexed or included
    fields in a secondary index, then the secondary index is a covering
@@ -12,20 +14,19 @@ Covering Indexes
    indexed and included fields. MapR-DB stores included fields in the
    index, but they do not affect the index ordering.
 
-   A covering index makes a query more efficient by avoiding the I/O
-   overhead of fetching data from the JSON table. Note that each field
-   added to the index increases the storage requirement for the index. As
-   the storage size increases, the cost of reading the index also
-   increases. Likewise, for the cost of adding and updating documents.
-   Consider the impact on storage and updates when adding included fields
-   to an index.
+   While adding included fields to an index enables it to become a
+   covering index, note that each field you add to an index increases its
+   storage requirement. As the storage size increases, the cost of reading
+   the index also increases; likewise, for the cost of adding and updating
+   documents. Consider the impact on storage and updates when adding
+   included fields to an index.
 
-   In contrast to a covering index, a non-covering index is an index that
+   In contrast to a covering index, a noncovering index is an index that
    does not store all fields referenced by a query. In this case, lookups
    occur on the JSON table to retrieve the referenced fields that are not
    available in the index itself.
 
-   Whether an index is covering or non-covering depends on the query that
+   Whether an index is covering or noncovering depends on the query that
    uses the index. In the example at [1]Types of Secondary Indexes,
    zipCodeIdx is a covering index for the noted query. If the query also
    selects the Gender field, zipCodeIdx is no longer a covering index for

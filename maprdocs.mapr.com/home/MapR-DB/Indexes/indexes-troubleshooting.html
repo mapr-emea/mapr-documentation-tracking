@@ -29,19 +29,19 @@ Secondary Index Restrictions
 
    Type Restrictions
 
-          + Indexed fields must contain scalar types. Scalar types include
-            integer, character, boolean, string, and byte. See [8]Data
-            Types Supported for Secondary Indexes for the complete list of
-            types.
-          + Indexed fields cannot contain nested documents. An indexed
-            field can be a subfield of a nested document, provided the
-            subfield contains scalar types.
+          + Indexed fields must contain scalar types.
+            Scalar types include integer, character, boolean, string, and
+            byte. See [8]Data Types and Secondary Index Fields for the
+            complete list of types.
+          + Indexed fields cannot contain nested documents.
+            An indexed field can be a subfield of a nested document,
+            provided the subfield contains scalar types.
           + Indexed fields cannot contain arrays.
 
    Size Restrictions
 
-          + The maximum size of all indexed fields in an index is 32KB. If
-            the collective size exceeds 32KB, then an insert of the
+          + The maximum size of all indexed fields in an index is 32 KB.
+            If the collective size exceeds 32 KB, then an insert of the
             corresponding document results in an encoding error
             (INDEX_ROW_KEY_ENCODER_ERROR_ENCODING_IS_TOO_LONG).
           + The maximum number of indexes that you can create on a JSON
@@ -50,29 +50,30 @@ Secondary Index Restrictions
    Field Definition Restrictions
 
           + Indexed fields cannot be individual elements of an array.
-          + You can include a specific field once as an indexed field and
-            once as an included field, not both. This restriction does not
-            apply if you cast the field to different types. For example:
-               o You can create an index where the score field is an
+          + You can include a specific field only once as either an
+            indexed or included field, except if you cast the field to
+            different types.
+            For example:
+               o You can create an index in which the score field is an
                  indexed field cast as a double type, and score is also an
-                 included field. The included field retains the original
-                 data type of the score field.
+                 included field.
+                 The included field retains the original data type of the
+                 score field.
 maprcli table index add -path /castTable \
    -index castIdx1 \
    -indexedfields '$CAST(score@DOUBLE)' \
    -includedFields score
-               o You can create an index where the score field is an
+               o You can create an index in which the score field is an
                  indexed field, cast as a double type, and the score field
                  is also another indexed field, cast as a long type.
 maprcli table index add -path /castTable \
    -index castIdx2 \
    -indexedfields '$CAST(score@DOUBLE)','$CAST(score@LONG)'
           + You cannot use casts with included fields.
-          +
           + You cannot specify a field as either an indexed or included
             field if the field is also specified as a column family JSON
-            path name. For example, suppose you have the following JSON
-            table:
+            path name.
+            For example, suppose you have the following JSON table:
 {
      "_id" : "ID",
      "a" :
@@ -85,14 +86,14 @@ maprcli table index add -path /castTable \
                "e" : "value"
           }
 }
-            If you created a column family at field c in the JSON path
+            If you create a column family at field c in the JSON path
             a.b.c, you cannot define field a.b.c as either an indexed or
-            included field. You can define the fields a, a.b, a.b.d as
+            included field. You can define the fields a, a.b, and a.b.d as
             either indexed or included fields.
-          + You cannot specify an included field where the data in the
-            field spans more than one column family. In the following
-            example, the included field sl1.sl2 spans column families, cf2
-            and cf3:
+          + You cannot specify an included field in which the data in the
+            field spans more than one column family.
+            In the following example, the included field sl1.sl2 spans
+            column families, cf2 and cf3:
 maprcli table cf list -path /cftab
 compressionperm  readperm  traverseperm  jsonfamilypath   writeperm  minversions
   maxversions  compression  ttl         inmemory  cfname   memoryperm
@@ -122,15 +123,14 @@ e than one column family."
 
    Option Restrictions
 
-          + When creating an index, a splits option is not available.
-            Indexes are auto-split.
+          + Because indexes are automatically split, you cannot disable
+            splits when you create your index.
 
-   Index Usage Restrictions
+   Index Use Restrictions
 
           + Indexes optimize filter conditions if you compare indexed
             fields against scalar values, and the field and scalar value
-            have [9]Using Comparable JSON Document Data Types in
-            Comparisons and Sorts.
+            have [9]comparable types.
           + Indexes do not optimize non-existence filter conditions.
 
 References

@@ -1,23 +1,24 @@
 Simple Indexes
 
    A simple index is a secondary index that has only one indexed field and
-   zero or more included fields. If all fields referenced in a query are
-   either indexed or included fields in a simple index, then the index is
-   a covering index for that query.
+   zero or more included fields. Simple indexes enable you to optimize
+   queries that filter and sort on a single field. If all fields
+   referenced in a query are either indexed or included fields in a simple
+   index, then you can process the query by reading only the index.
 
 Sort Order
 
-   MapR-DB sorts simple indexes on the single key field. MapR-DB sorts the
-   key values in ascending order by default, unless you have specified a
-   descending order when creating the index. Sorting indexes benefits
-   queries with ORDER BY clauses by eliminating the need for a SORT
-   operator in the query plan.
+   MapR-DB sorts simple indexes on the single indexed field. MapR-DB sorts
+   the indexed field values in ascending order by default, although you
+   can specify a descending order when you create the index. Sorting
+   indexes benefits your ORDER BY queries because the index eliminates the
+   need for a SORT operator in the query plan.
 
 Simple Index Examples
 
-   The following examples demonstrate the [1]cli commands to create
-   various types of simple indexes. For these examples, assume you have a
-   MapR-DB JSON table with the following sample data:
+   The following demonstrate the [1]cli commands you can use to create
+   various types of simple indexes. For these examples, assume that you
+   have a MapR-DB JSON table with the following sample data:
 {
    "_id": "10000",
    "FullName": {
@@ -42,21 +43,21 @@ Simple Index Examples
    "DateOfBirth": "10/1/1985"
 }
 
-                             CLI Command                             Description
+   CLI Command Description
 maprcli table index add -path /people \
    -index emailIdx \
    -indexedfields Email
 
-     * Creates a simple index on the Email field with no included fields
-     * Allows you to filter on the Email field
+     * Creates a simple index on the Email field, with no included fields
+     * Enables you to filter on the Email field
 
 maprcli table index add -path /people \
    -index dobIdx \
    -indexedfields DateOfBirth \
    -includedfields FullName
 
-     * Creates a simple index with an included field,
-     * Allows you to filter on DateOfBirth and project on FullName
+     * Creates a simple index, with an included field
+     * Enables you to filter on DateOfBirth and project on FullName
        Note: You cannot use FullName as an indexed field because it
        contains nested documents. Doing so results in encoding errors when
        inserting documents into the index. See [2]Secondary Index Encoding
