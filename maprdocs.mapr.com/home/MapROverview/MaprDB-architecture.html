@@ -1,68 +1,83 @@
 Architecture
 
    MapR-DB is an enterprise-grade, high performance, NoSQL (“Not Only
-   SQL”) database management system. It is used to add real-time,
+   SQL”) database management system. You can use it to add realtime,
    operational analytics capabilities to big data applications. As a
    multi-model NoSQL database, it supports both JSON document models and
    wide column data models.
-   MapR-DB is implemented as a log-based database within the framework of
-   MapR-FS. As a log-based database, periodically, logged operations must
-   be written to disk. In MapR-DB, table regions (also called tablets) and
-   smaller structures within them are stored partially as b-trees which
-   together with write-ahead log (WAL) files comprise log-structured-merge
-   trees. Write-ahead logs for the smaller structures within regions are
-   periodically restructured by rolling merge operations on the b-trees.
-   Because MapR-DB performs these merges at small scales, applications
-   running against MapR-DB see no significant effects on latency while the
-   merges are taking place.
-   Note: Apache HBase also uses the term regions. Apache HBase is
-   deprecated.
 
 Why use MapR-DB?
 
-     * Integrated analytics with SQL: Integration with Drill for MapR
-       provides a low-latency distributed SQL-like query engine for
-       large-scale datasets, including structured and
-       semi-structured/nested data.
-     * Operational analytics: MapR-DB can be run in the same cluster as
+     * Integrated analytics with SQL: MapR-DB's integration with Drill for
+       MapR provides a low latency, distributed, SQL-like query engine for
+       large-scale datasets, including structured and semi-structured,
+       nested data.
+     * Operational analytics: MapR-DB can run in the same cluster as
        Apache™ Hadoop® and Apache Spark, letting you immediately analyze
-       or process live, interactive data. Data silos can also be
-       eliminated to speed the data-to-action cycle, while also enabling a
+       or process live, interactive data. This also enables you to
+       eliminate data silos to speed the data-to-action cycle, providing a
        more efficient data architecture.
      * Global distribution of applications: Application access to MapR-DB
        tables is distributable on a global scale.
-     * Flexible data model: MapR-DB can be used as both a document
-       database and a wide-column database. As a document database, JSON
-       documents are stored in MapR-DB JSON tables. As a wide-column
-       database, binary files are in stored MapR-DB binary tables.
+     * Flexible data model: You can use MapR-DB as both a document
+       database and a wide-column database. As a document database,
+       MapR-DB stores JSON documents in JSON tables. As a wide-column
+       database, it stores binary files in binary tables.
 
-How is MapR-DB related to MapR-FS?
+How is MapR-DB Related to MapR-FS?
 
-   MapR-DB tables are implemented directly in the MapR file system
-   (MapR-FS) where Mapr-DB tables (both binary and JSON tables) are
-   created in logical units called volumes.
+   MapR-DB implements tables within the framework of the MapR file system
+   (MapR-FS). Mapr-DB creates tables (both binary and JSON tables) in
+   logical units called volumes.
    [DB-tables-and-volumes.png]
 
-What Design Factors are Important?
+What are MapR-DB's Architectural Advantages?
+
+   MapR-DB's architecture has the following advantages:
+     * It reduces process overhead because it has no extra layers to pass
+       through when performing operations on data.
+       MapR-DB, like several other NoSQL databases, is a log-based
+       database. MapR-DB runs inside of the MapR-FS process, which enables
+       it to read from and write to disks directly. In contrast, other
+       NoSQL databases must communicate with a separate process to
+       performs disk reads and writes. The approach taken by MapR-DB
+       eliminates extra process hops, duplicate caching, and needless
+       abstractions, with the consequence of optimizing I/O operations on
+       your data.
+     * It minimizes compaction delays because it avoids I/O storms when it
+       merges logged operations with structures on disk.
+       As a log-based database, MapR-DB must write logged operations to
+       disk. MapR-DB stores table regions (also called tablets) and
+       smaller structures within them partially as b-trees. Together with
+       write-ahead logs (WAL), these b-trees comprise log-structured-merge
+       trees. Write-ahead logs for the smaller structures within regions
+       are periodically restructured by rolling merge operations on the
+       b-trees. Because MapR-DB performs these merges at small scales,
+       applications running against MapR-DB see no significant effects on
+       latency while the merges are taking place.
+       Note: Apache HBase also uses the term regions. MapR has deprecated
+       support for Apache HBase.
+
+What Design Factors are Important when Using MapR-DB?
 
      * Rowkey Optimization: The design of a table's rowkeys affects the
-       speed at which client applications can access data and the database
-       performance if hotspotting occurs. The better the design, the
-       faster the data access. See [1]Table Rowkey Design for more
+       speed at which client applications can access data. It also impacts
+       database performance if hotspotting occurs. The better the design,
+       the faster the data access. See [1]Table Rowkey Design for more
        information.
      * Column Family Optimization: Column families enable you to group
        related sets of data and restrict queries to a defined subset,
        leading to better performance. When you design a column family,
-       think about what kinds of queries are going to be used the most
-       often, and group your columns accordingly. See [2]Column Families
-       in JSON Tables and [3]Column Families in Binary Tables for more
+       think about what kinds of queries you are going to use most often,
+       and group your columns accordingly. See [2]Column Families in JSON
+       Tables and [3]Column Families in Binary Tables for more
        information.
      * Replication Implementation: The design of table replication (in
-       addition to the automatic replication that occures with table
+       addition to the automatic replication that occurs with table
        regions within a volume) depends on your desired outcome and the
        complexity of your environment. See [4]Table Replication for more
-       implementation.
-     * Security Implementation: Security can be implemented at many
+       information.
+     * Security Implementation: You can implement security at many
        different levels including for table replication, JSON documents,
        and general access. Determining what level and where is part of the
        architectural design. See [5]Security on JSON Tables, [6]Security
