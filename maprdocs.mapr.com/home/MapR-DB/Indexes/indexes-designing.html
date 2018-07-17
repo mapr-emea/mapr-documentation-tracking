@@ -1,250 +1,122 @@
 Designing Secondary Indexes
 
-   Describes how to design secondary indexes to provide the most benefit
-   to MapR-DB JSON queries.
+   It is important that you create secondary indexes that provide the most
+   benefit to your MapR-DB JSON queries. This topic describes a general
+   design approach that includes identifying query patterns, using common
+   query patterns involving filters and ordering to determine which
+   indexes to create, weighing the benefits of indexes against their
+   update and storage costs, and taking into consideration index
+   limitations.
 
-   To design your secondary indexes in relationship to your queries, it is
-   important that you understand the index feature, how to set up and use
-   indexing, the commands used to perform tasks, and how to query the data
-   through your application. The following cover these topics:
-     * [1]Secondary Index Concepts
-     * [2]Understanding the Secondary Index Workflow
+   The following diagram summarizes the general approach to designing your
+   indexes:
+   [1][USEMAP:DesigningIndexesNavigation.png]
 
-General Guidelines
+   Before designing your secondary indexes in relationship to your
+   queries, make sure you understand the index feature, how to set up and
+   use indexing, the commands used to perform tasks, and how to query the
+   data through your application. The following cover these topics:
+     * [2]Secondary Index Concepts
+     * [3]Understanding the Secondary Index Workflow
 
-   You should perform the following tasks as a general approach to
-   designing secondary indexes:
-     * Get a list of query patterns that are common in your application
-       and must be optimized.
-     * Select the fields that are filtered most often so your most common
-       query patterns can benefit.
-     * Select the ordering of indexed fields to match the ordering
-       direction in [3]ORDER BY queries.
-     * Select the order of indexed fields in a [4]composite indexes so the
-       index optimizes both [5]equality and [6]range conditions, as well
-       as [7]ORDER BY queries.
-     * Determine whether to add [8]included fields to indexes to avoid
-       having to read the JSON table.
+Identify Query Patterns
 
-   The following sections discuss these guidelines in more detail.
-   [9][USEMAP:DesigningIndexesNavigation.png]
+   Query patterns, such as queries with filter conditions and ORDER BY
+   clauses, indicate where indexes can improve performance. If a query
+   does not contain selective filters, the overhead of using an index may
+   cost more than a full table scan. You should also define your indexes
+   so a single index benefits either multiple queries or individual
+   queries that you run most often.
 
-Query Patterns
+   See [4]Selection and Execution of Secondary Indexes to understand how
+   MapR-DB chooses which secondary indexes to use and how they improve
+   performance.
 
-   Query patterns, such as queries with filter conditions, indicate where
-   indexes can improve performance. Correlate the query patterns against
-   [10]the type of queries that benefit from indexes and [11]the types of
-   indexes that MapR-DB supports. If a query does not contain
-   [12]selective filters, the overhead of using an index may cost more
-   than a full table scan. In general, define indexes on fields that you
-   frequently apply filter conditions against and potentially also order
-   on. See [13]Selection and Execution of Secondary Indexes for additional
-   insights into how MapR-DB uses secondary indexes.
+Determine Potential Indexes Based on Query Patterns
 
-Index Fields and Key Order
+   Based on your query patterns, the following table describes the types
+   and characteristics of indexes you might want to create:
+   Identified Query Pattern Potential Indexes to Create
+   Compares individual fields with selective filter conditions
 
-   The following table provides field and ordering guidelines to follow
-   when designing and creating indexes:
-   Consider                    Guidelines
-   Field values and data types
-     * Define indexes on fields that you compare against scalar values.
-       Verify that fields contain [14]supported data types.
+   Define single field indexes on the fields that you compare against.
 
-   Field use
-     * If you regularly issue queries against specific combinations of
-       fields, define [15]composite field indexes instead of [16]single
-       field indexes. See [17]Multi-Index Queries for additional guidance
-       on defining composite vs single field indexes.
-     * If you frequently access a subset of fields in a document, and you
-       do not filter or sort on all fields, add those fields as
-       [18]included fields in the index.
-     * If you filter on certain fields and sort on additional fields,
-       define [19]composite field indexes.
-     * If a field is a nested document and your query filters on a
-       subfield in the nested document, define the index key on the
-       subfield.
-     * If issuing Drill SQL queries with filter conditions that contain
-       CAST expressions, specify the [20]CAST function when defining the
-       index key.
+   Verify that the fields contain supported data types.
+   Filters against specific combinations of fields
 
-   Index key order
-     * Define the ordering of index keys to match the ordering direction
-       used in [21]ORDER BY queries. If the order of the index keys
-       matches the insertion order of documents, define [22]hashed
-       indexes.
-     * Define the order of the keys in your [23]composite field index so
-       fields filtered using equality conditions are the prefixes in the
-       index.
+   Define composite field indexes instead of single field indexes. Specify
+   the sequence of the index keys so fields that appear in equality
+   conditions are the prefixes in the keys.
 
-Throughput Considerations
+   See [5]Using Multiple Indexes to Optimize Query Conditions for
+   additional guidance on defining composite vs single field indexes.
+   Accesses a subset of fields in a document, but does not filter or sort
+   on these fields Add those fields as included fields in indexes.
+   Filters on a subfield in a nested document Define the index key on the
+   subfield.
+   Issues Drill SQL queries with filter conditions that contain CAST
+   expressions Specify the CAST function when defining the index key.
+   Sorts on fields Define the sequence and order direction of the index
+   keys to match the sequence and order direction of the fields your query
+   sorts. If the sort order of the index keys matches the insertion order
+   of documents, define hashed indexes.
+   Sorts on one set of fields and filters on another set using equality
+   conditions
 
-   When you design your indexes, keep in mind that each index impacts the
-   throughput performance of inserts and updates. The impact of indexes on
-   throughput increases with each additional index. MapR-DB must
-   synchronize indexes with their corresponding JSON table. The
-   asynchronous nature of MapR-DB index updates minimizes overhead, but
-   the index may be inconsistent relative to the JSON table.
+   Define a composite index so that fields using equality conditions are
+   the prefixes in the index keys, followed by the sort fields.
 
-   If your application cannot tolerate lag time between the update to the
-   JSON table and the update to the index, you should take that into
-   consideration when deciding whether to index specific fields. See
-   [24]Asynchronous Secondary Index Updates for details.
+Evaluate Tradeoffs and Limitations
 
-Storage Considerations
+   Synchronizing Indexes
 
-   Indexes increase your storage requirements. In particular, each field
-   you add to an index, whether it is an indexed or included field,
-   further increases the index size. As the size of the index increases,
-   the cost of reading the index also increases. Likewise, for the cost of
-   adding and updating documents.
+   When you design your indexes, remember that MapR-DB must synchronize
+   each index when you insert and update documents in the corresponding
+   JSON table. This impacts the throughput performance of inserts and
+   updates because MapR-DB must perform additional writes. The impact
+   increases with each additional index.
 
-   Consider the impact on storage when creating indexes and deciding on
-   the fields to add to the index.
+   MapR-DB performs the synchronization operation asynchronously, which
+   minimizes throughput overhead. The consequence is that an index may be
+   inconsistent relative to its JSON table. If your application cannot
+   tolerate lag time between the update to the JSON table and the update
+   to the index, you should take that into consideration when deciding
+   whether to index specific fields.
 
-Secondary Index Restrictions
+   See [6]Asynchronous Secondary Index Updates for more details about this
+   feature.
+   Index Storage Requirements
 
-   When designing your indexes, also keep in mind the following
-   restrictions.
+   Indexes increase your storage requirements. The storage size depends on
+   the number of indexed and included fields in the index and the size of
+   values stored in those fields. As the size of the index increases, the
+   cost of reading the index also increases.
 
-   Type Restrictions
+   Consider the storage costs when creating indexes and deciding on the
+   fields to add to the index.
+   Index Restrictions
 
-          + Indexed fields must contain scalar types.
-            Scalar types include integer, character, boolean, string, and
-            byte. See [25]Data Types and Secondary Index Fields for the
-            complete list of types.
-          + Indexed fields cannot contain nested documents.
-            An indexed field can be a subfield of a nested document,
-            provided the subfield contains scalar types.
-          + Indexed fields cannot contain arrays.
+   When designing your indexes, make sure MapR-DB indexes support the
+   functionality you need. For example, it may not be possible to create
+   an index on a particular field path.
 
-   Size Restrictions
-
-          + The maximum size of all indexed fields in an index is 32 KB.
-            If the collective size exceeds 32 KB, then an insert of the
-            corresponding document results in an encoding error
-            (INDEX_ROW_KEY_ENCODER_ERROR_ENCODING_IS_TOO_LONG).
-          + The maximum number of indexes that you can create on a JSON
-            table is 32.
-
-   Field Definition Restrictions
-
-          + Indexed fields cannot be individual elements of an array.
-          + You can include a specific field only once as either an
-            indexed or included field, except if you cast the field to
-            different types.
-            For example:
-               o You can create an index in which the score field is an
-                 indexed field cast as a double type, and score is also an
-                 included field.
-                 The included field retains the original data type of the
-                 score field.
-maprcli table index add -path /castTable \
-   -index castIdx1 \
-   -indexedfields '$CAST(score@DOUBLE)' \
-   -includedFields score
-               o You can create an index in which the score field is an
-                 indexed field, cast as a double type, and the score field
-                 is also another indexed field, cast as a long type.
-maprcli table index add -path /castTable \
-   -index castIdx2 \
-   -indexedfields '$CAST(score@DOUBLE)','$CAST(score@LONG)'
-          + You cannot use casts with included fields.
-          + You cannot specify a field as either an indexed or included
-            field if the field is also specified as a column family JSON
-            path name.
-            For example, suppose you have the following JSON table:
-{
-     "_id" : "ID",
-     "a" :
-          {
-               "b" :
-                    {
-                         "c" : "value",
-                         "d" : "value"
-                    },
-               "e" : "value"
-          }
-}
-            If you create a column family at field c in the JSON path
-            a.b.c, you cannot define field a.b.c as either an indexed or
-            included field. You can define the fields a, a.b, and a.b.d as
-            either indexed or included fields.
-          + You cannot specify an included field in which the data in the
-            field spans more than one column family.
-            In the following example, the included field sl1.sl2 spans
-            column families, cf2 and cf3:
-maprcli table cf list -path /cftab
-compressionperm  readperm  traverseperm  jsonfamilypath   writeperm  minversions
-  maxversions  compression  ttl         inmemory  cfname   memoryperm
-u:root           u:root    u:root                         u:root     0
-  1            lz4          2147483647  false     default  u:root
-u:root           u:root    u:root        sl1              u:root     0
-  1            lz4          2147483647  false     cf1      u:root
-u:root           u:root    u:root        sl1.sl2.sl3      u:root     0
-  1            lz4          2147483647  false     cf2      u:root
-u:root           u:root    u:root        sl1.sl2.sl3.sl4  u:root     0
-  1            lz4          2147483647  false     cf3      u:root
-
-maprcli table index add -path /cftab -index i1 -indexedfields sl1.sl2.sl3.sl4.l4
-a, sl1.l1a -includedfields sl1.sl2,sl1.sl2.sl3.sl4.sl5.l5b -json
-{
-        "timestamp":1507419777919,
-        "timeofday":"2017-10-07 04:42:57.919 GMT-0700 PM",
-        "status":"ERROR",
-        "errors":[
-                {
-                        "id":22,
-                        "desc":"Data for included field sl1.sl2 may not span mor
-e than one column family."
-                }
-         ]
-}
-
-   Option Restrictions
-
-          + Because indexes are automatically split, you cannot disable
-            splits when you create your index.
-
-   Index Use Restrictions
-
-          + Indexes optimize filter conditions if you compare indexed
-            fields against scalar values, and the field and scalar value
-            have [26]comparable types.
-          + Indexes do not optimize non-existence filter conditions.
+   See [7]Restrictions on Secondary Indexes for a complete list.
 
 References
 
-   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-learning-about.html#concept_u1l_rhn_p1b
-   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-deployment.html#indexes-implementation
-   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby-queries.html#reference_cfw_jwl_f1b
-   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz
-   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-equality-queries.html#reference_ug4_jbl_f1b
-   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-range-queries.html#reference_q5p_v1l_f1b
-   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby-queries.html#reference_cfw_jwl_f1b
-   8. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-types.html#indexes-types__section_ict_5fj_r1b
-   9. LYNXIMGMAP:file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#d933203e135
-  10. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-types.html#concept_u1y_r3n_p1b
-  11. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-types.html#indexes-types
-  12. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/OverviewIndexSelectionExecution.html#concept_pc2_4ws_p1b__dt_yv4_fqs_1bb
-  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/OverviewIndexSelectionExecution.html#concept_pc2_4ws_p1b
-  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes
-  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz
-  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-singleField-index.html#reference_llf_y1n_pz
-  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-multi-index-queries.html#concept_pbs_jk3_t1b
-  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-types.html#indexes-types__section_ict_5fj_r1b
-  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz
-  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-functional-index.html#concept_u1s_wll_f1b
-  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby-queries.html#reference_cfw_jwl_f1b
-  22. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/hashed-index.html#hashed-index
-  23. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz
-  24. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-consistency.html#indexes-consistency
-  25. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes
-  26. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/datatypes-comparable.html
+   1. LYNXIMGMAP:file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#d948192e48
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-learning-about.html#concept_u1l_rhn_p1b
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-deployment.html#indexes-implementation
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/OverviewIndexSelectionExecution.html#concept_pc2_4ws_p1b
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-multi-index-queries.html#concept_pbs_jk3_t1b
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-consistency.html#indexes-consistency
+   7. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-restrictions.html#concept_n3m_z4v_s1b
 
 [USEMAP]
-file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#d933203e135
+file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#d948192e48
    1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz__section_dy4_rtv_s1b TYPE="internal link"
    2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz__section_gnv_h5v_s1b TYPE="internal link"
-   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz__section_ggh_wvv_s1b TYPE="internal link"
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz__sectiondiv_jgk_3zh_l2b TYPE="internal link"
    4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz__section_ubr_wwv_s1b TYPE="internal link"
    5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz__section_rbm_241_x1b TYPE="internal link"
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/indexes-designing.html#topic_fzg_4hc_cz__section_ggh_wvv_s1b TYPE="internal link"

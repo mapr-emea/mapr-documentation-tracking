@@ -1,4 +1,4 @@
-Identifying and Resolving Secondary Index Encoding Errors
+Troubleshooting Secondary Index Encoding Errors
 
    This section describes how to locate secondary index encoding errors in
    log files, and then resolve them.
@@ -7,81 +7,79 @@ Identifying and Resolving Secondary Index Encoding Errors
    details.
 
    To troubleshoot secondary index encoding errors, follow these steps:
-    1. Determine the table that the error was raised on.
-       Perform a grep on the mfs.log-5 file on the name container of the
-       corresponding volume. This allows you to find all the JSON tables
-       for which the alarm was raised.
-       The following are sample traces from mfs.log when debug logging is
-       enabled for the DBRepl module.
-# grep -i NotifyBucketReplicaEncodingError /opt/mapr/logs/mfs.log-* | grep "21 1
-8"
-/opt/mapr/logs/mfs.log-6:2017-07-21 18:07:27,3101 DEBUG DBRepl db/repl/mgr.cc:92
-0 NotifyBucketReplicaEncodingError 2230.32.131320
-/opt/mapr/logs/mfs.log-7:2017-07-21 18:07:57,9350 DEBUG DBRepl db/repl/mgr.cc:92
-0 NotifyBucketReplicaEncodingError 2230.32.131320
-/opt/mapr/logs/mfs.log-8:2017-07-21 18:08:25,3275 DEBUG DBRepl db/repl/mgr.cc:92
-0 NotifyBucketReplicaEncodingError 2230.32.131320
-       The following is sample trace from mfs.log-5 that contains an
-       encoding error:
-/opt/mapr/logs/mfs.log-5:2017-07-21 01:48:49,0962 ERROR DBRepl db/repl/autosetup
-mgr.cc:617
-AutoSetupCopyTable hit encoding error for table 2205.32.131370, secondary index
-1.
+    1. Determine whether any table has index encoding alarms by using one
+       of the following two options:
+          + Run the following grep command, searching for the strings
+            index and encoding in the mfs.log-5 file:
+# grep -i "index.*encoding" /opt/mapr/logs/mfs.log-5
+2018-07-10 11:06:07,7042 INFO DB db/repl/araggregator.cc:524 Table 2050.43.26244
+0 hit index row-key encoding error
+2018-07-10 11:06:07,7042 INFO DB db/repl/araggregator.cc:914 Raising alarm VOLUM
+E_ALARM_TABLE_INDEX_ENCODING_ERROR for volume 195503497
+            The fid, 2050.43.262440, in the sample output indicates the
+            table corresponding to the alarm. If you are not sure which
+            table this corresponds to, you can convert the fid to a table
+            path by following the instructions at [2]Converting fid and
+            volid.
+          + Check for any table index encoding alarms in the MapR Control
+            System, as described at [3]Viewing Active Table Replication
+            Alarms.
+            The alarm details indicate the table corresponding to the
+            alarm.
     2. Find the index on the table from step 1 that is causing the error.
-       Run [2]dbshell indexscan with --mode set to err on each index to
+       Run [4]dbshell indexscan with --mode set to err on each index to
        see the index's error output. You need to run the command multiple
        times if a table has multiple indexes with errors.
        For example, if table1 has three secondary indexes and all three
-       secondary indexes have errors, you need to run indexscan three
-       times.
+       secondary indexes have errors, you must run indexscan three times:
 indexscan /table1 --indexname index1 --mode err
 indexscan /table1 --indexname index2 --mode err
 indexscan /table1 --indexname index3 --mode err
-       The following is an example of error output from running the
-       dbshell indexscan command:
+       The following example shows error output from running the dbshell
+       indexscan command:
 maprdb root:> indexscan /IndexEncodingErrorAlarmsTest1/tab1 --indexname idx1 --m
 ode err
 {"_id":"1","$ERROR":"Index field 3: MAPS_ARE_NOT_SUPPORTED"}
 {"_id":"10","$ERROR":"Index field 2: ARRAYS_ARE_NOT_SUPPORTED"}
 {"_id":"100","$ERROR":"Index field 1: INVALID_CAST"}
 {"_id":"1000","$ERROR":"Index field 4: MAPS_ARE_NOT_SUPPORTED"}
-    3. Address the errors identified in step 2.
-       The following are the types of encoding errors that can occur and
-       possible solutions to address them:
+    3. Address the identified errors by attempting the following suggested
+       resolutions:
 
    Error Suggested Resolutions
    KEY_TOO_LONG: The collective size of the index key is limited to less
-   than 32k
-          + Re-insert the row in the JSON table so the collective size of
-            the value of all the indexed fields is less than 32k.
-          + Re-design the secondary index so fields with large values are
+   than 32 KB.
+          + Reinsert the row in the JSON table so the collective size of
+            all the indexed fields is less than 32 KB.
+          + Redesign the secondary index so fields with large values are
             included fields instead of indexed fields.
           + Reduce the number of indexed fields in the secondary index.
 
-   ARRAYS_ARE_NOT_SUPPORTED: Arrays are not allowed in an indexed field
-          + Re-insert the row in the JSON table so the values of indexed
+   ARRAYS_ARE_NOT_SUPPORTED: Arrays are not allowed in an indexed field.
+          + Reinsert the row in the JSON table so the values of indexed
             fields are scalar values.
-          + Re-design the secondary index so the fields that have
-            non-scalar values are included fields instead of indexed
-            fields.
+          + Redesign the secondary index so the fields that have nonscalar
+            values are included fields instead of indexed fields.
 
-   MAPS_ARE_NOT_SUPPORTED: Maps are not allowed for indexed fields
-          + Re-insert the row in the JSON table so the values of indexed
+   MAPS_ARE_NOT_SUPPORTED: Maps are not allowed for indexed fields.
+          + Reinsert the row in the JSON table so the values of indexed
             fields are scalar values.
-          + Re-design the secondary index so the fields that have
-            non-scalar values are included fields instead of indexed
-            fields.
+          + Redesign the secondary index so the fields that have nonscalar
+            values are included fields instead of indexed fields.
 
    INVALID_CAST: An error was encountered applying the CAST function on an
-   indexed field
+   indexed field.
           + Verify that you have specified the correct types when using
             the CAST function with indexed fields.
-          + If the types are correct, re-insert the row in the JSON table
+          + If the types are correct, reinsert the row in the JSON table
             so the values of indexed fields can be cast to the specified
-            type. See [3]Using Casts in Secondary Indexes.
+            type.
+            See [5]Using Casts in Secondary Indexes.
 
 References
 
    1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/Index-Alarms.html#reference_lt2_zj4_gbb__section_afr_1m4_gbb
-   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-indexscan.html#dbshell-indexscan
-   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-functional-index.html
+   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/DevelopmentGuide/converting-fid-volid.html#converting-fid-volid
+   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/AdministratorGuide/Alarms-ViewTableAlarms-MCS.html#task_tst_gss_nz
+   4. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/ReferenceGuide/dbshell-indexscan.html#dbshell-indexscan
+   5. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-functional-index.html

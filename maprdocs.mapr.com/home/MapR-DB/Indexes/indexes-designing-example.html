@@ -1,12 +1,12 @@
 Example of Designing Secondary Indexes
 
    This example illustrates the concepts behind designing your secondary
-   indexes. The example only considers query patterns and does not account
-   for sizing, storage, and updates. Always weigh the benefits of indexes
-   against these other requirements.
+   indexes. Although this example focuses on query patterns and does not
+   account for sizing, storage, and updates, you should always weigh the
+   benefits of indexes against these other requirements.
 
-   Assume you have a MapR-DB JSON table with the following sample data
-   that contains customer information:
+   Assume that you have a MapR-DB JSON table with the following customer
+   data:
 {
    "_id": "10000",
    "FullName": {
@@ -31,13 +31,12 @@ Example of Designing Secondary Indexes
    "DateOfBirth": "10/1/1985"
 }
 
-   The following table contains a sample set of queries where the third
-   column in the table denotes the fields in the table that are candidates
-   for indexing:
+   The following table contains fields in the document that are candidates
+   for indexing based on the sample queries:
    Query # Query Candidate Fields for Indexing
 
    1
-   Find all customers who were born in the 1970’s.
+   Find all customers who were born in the 1970s.
      * DateOfBirth
 
    2
@@ -55,12 +54,12 @@ Example of Designing Secondary Indexes
      * FullName.FirstName
 
    4
-   Find the ids and emails of customers who live in a specific zip code
+   Find the ids and emails of customers who live in a specific zip code.
      * Address.Zip
 
    5
    Find customers who live in a specific set of states and have an account
-   balance less than some value
+   balance less than a specific value.
      * Address.State
      * AccountBalance
 
@@ -75,9 +74,9 @@ Example of Designing Secondary Indexes
    Simple index on DateOfBirth
 
    Optimizes the range condition on DateOfBirth in [1]query 1.
-   Note: When creating this index, there is no need to create a hashed
-   index. It is unlikely that the order of DateOfBirth correlates with the
-   insert order of new data.
+
+   You need not create a hashed index, because it is unlikely that the
+   order of DateOfBirth correlates with the insert order of new data.
    Simple index on AccountBalance, specified as a descending key
      * Optimizes the range condition on AccountBalance in [2]query 2
      * Descending order of key meets the ordering criteria in [3]query 2
@@ -101,7 +100,7 @@ Example of Designing Secondary Indexes
           + Id
           + Email
 
-     * Optimizes equality condition on Address.Zip in [8]query 4
+     * Optimizes the equality condition on Address.Zip in [8]query 4
      * Adding the included fields avoids reading the JSON table in
        [9]query 4
 

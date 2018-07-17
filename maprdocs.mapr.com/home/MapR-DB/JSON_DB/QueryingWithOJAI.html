@@ -1,27 +1,29 @@
 Querying in OJAI Applications
 
-   This section describes how to use the OJAI Query interface to query
-   documents in a MapR-DB JSON table. It introduces the features available
-   in the interface, and describes the basic flow for writing an OJAI
-   application. It also describes the permissions required to query
-   documents.
+   To query MapR-DB JSON tables in your OJAI applications, you use the
+   OJAI Query interface. The typical flow of your application involves
+   creating a connection, obtaining a handle to the MapR-DB JSON table you
+   want to query, constructing the query, performing the query, and then
+   processing the results. When running queries with comparisons and
+   sorts, you need to be aware of how different data types behave. You
+   also need to understand permission requirements and how this affects
+   filter conditions.
 
 Description
 
    The DocumentStore interface includes a Query interface. The Query
    interface allows you to programmatically build a query.
-     * [1]Java
 
    To construct an OJAI query, call the following methods in the Query
    interface:
-     * [2]Query.select
-     * [3]Query.where
-     * [4]Query.orderBy
-     * [5]Query.offset
-     * [6]Query.limit
+     * [1]Query.select
+     * [2]Query.where
+     * [3]Query.orderBy
+     * [4]Query.offset
+     * [5]Query.limit
 
    To run the query, pass the Query object to the
-   [7]DocumentStore.findQuery method.
+   [6]DocumentStore.findQuery method.
    Note: Beginning with MapR version 6.0, the MapR-DB Table interface is
    deprecated and replaced by the OJAI version 2.0 DocumentStore
    interface.
@@ -30,26 +32,26 @@ Basic Application Flow
 
    The following steps describe the basics in developing client
    applications that query MapR-DB JSON tables using the OJAI API.
-    1. Create a [8]Connection instance to your MapR cluster using the
-       [9]DriverManager class:
+    1. Create a [7]Connection instance to your MapR cluster using the
+       [8]DriverManager class:
 Connection connection = DriverManager.getConnection("ojai:mapr:");
        Note: Do not omit the ending colon in the connection string.
-    2. Obtain a [10]DocumentStore handle to a MapR-DB JSON table using the
+    2. Obtain a [9]DocumentStore handle to a MapR-DB JSON table using the
        connection object:
 DocumentStore store = connection.getStore(tablePath);
-    3. Create a [11]Query object using the connection object:
+    3. Create a [10]Query object using the connection object:
 Query query = connection.newQuery();
     4. Perform the query operation on the table:
 DocumentStream stream = store.findQuery(query);
     5. Process the results.
-       The following code snippet iterates through the [12]DocumentStream
+       The following code snippet iterates through the [11]DocumentStream
        and prints each document as a JSON string:
 for (final Document userDocument : stream) {
     // Print the OJAI Document
     System.out.println(userDocument.asJsonString());
 }
        To process individual fields within a document, use the
-       [13]DocumentReader interface. The following code snippet iterates
+       [12]DocumentReader interface. The following code snippet iterates
        through the fields in a document and prints the fields that are
        strings:
 Iterable it = stream.documentReaders();
@@ -68,23 +70,23 @@ stream.close();
 store.close;
 c.close();
 
-   See [14]Examples: Querying JSON Documents for more code examples.
+   See [13]Examples: Querying JSON Documents for complete code examples.
 
 Comparisons and Ordering in OJAI
 
    OJAI supports comparisons using the QueryCondition interface. For
-   information about how to use this interface, see [15]Query Conditions
+   information about how to use this interface, see [14]Query Conditions
    in OJAI Applications.
 
    When using the OJAI Query where and orderby, and comparing and sorting
    across different data types, there are subtleties you should take into
-   consideration. See [16]Using Comparable JSON Document Data Types in
-   Comparisons and Sorts and [17]Using Noncomparable JSON Document Data
+   consideration. See [15]Using Comparable JSON Document Data Types in
+   Comparisons and Sorts and [16]Using Noncomparable JSON Document Data
    Types in Comparisons and Sorts for more information.
 
    If you do not have a secondary index defined that can generate your
    query's specified orderby, then your query requires an explicit sort.
-   If you have installed the [18]OJAI Distributed Query Service, the
+   If you have installed the [17]OJAI Distributed Query Service, the
    service performs the sort. If you have not, the MapR client performs
    the sort, but restricts the amount of data it can sort. The default
    sort limit is 5000 documents. For example, if your query returns 10,000
@@ -107,17 +109,17 @@ query.setOption("ojai.mapr.query.max-client-sort-limit", 6000);
        specified limit. This avoids the error, but may result in
        unintended behavior if your application is not expecting a
        truncated result. You should take corrective action if necessary.
-       See [19]Querying with Order By for an example of how to set a query
+       See [18]Querying with Order By for an example of how to set a query
        limit.
 
 Permissions
 
    The following permissions are required to query documents:
      * The readAce permission on the volumes where the JSON tables that
-       contain the documents are located. See [20]Setting Whole Volume
+       contain the documents are located. See [19]Setting Whole Volume
        ACEs.
      * The readperm permission on the JSON table's column families
-       containing fields being queried. See [21]Enabling Table and Stream
+       containing fields being queried. See [20]Enabling Table and Stream
        Authorizations with ACEs.
 
    If the user does not have the readperm permission on a field, MapR-DB
@@ -133,30 +135,29 @@ Permissions
    The exception is the rowkey field. Access control on the rowkey is not
    available. Users can always select and filter on rowkey.
 
-   For information about setting permissions, see [22]Permission Types for
+   For information about setting permissions, see [21]Permission Types for
    Fields and Column Families in JSON Tables.
 
 References
 
-   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div1entry1
-   2. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-   3. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
-   4. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
-   5. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#offset-long-
-   6. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#limit-long-
-   7. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#findQuery-org.ojai.store.Query-
-   8. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Connection.html
-   9. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DriverManager.html
-  10. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
-  11. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html
-  12. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/DocumentStream.html
-  13. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/DocumentReader.html
-  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/APIexamples-querying-docs.html#APIexamples-querying-docs-withIndexes
-  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQueryConditions.html#OJAIQueryConditions
-  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/datatypes-comparable.html#datatypes-comparable
-  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/datatypes-nonComparable.html#datatypes-nonComparable
-  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
-  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b
-  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetEditVolumeDataACE.html
-  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/EnablingTableAuthorizations.html
-  22. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/granting_or_denying_access_to_fields_with_aces.html
+   1. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+   2. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+   3. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
+   4. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#offset-long-
+   5. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html#limit-long-
+   6. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#findQuery-org.ojai.store.Query-
+   7. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Connection.html
+   8. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DriverManager.html
+   9. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentStore.html
+  10. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/Query.html
+  11. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/DocumentStream.html
+  12. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/DocumentReader.html
+  13. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/APIexamples-querying-docs.html#APIexamples-querying-docs-withIndexes
+  14. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/OJAIQueryConditions.html#OJAIQueryConditions
+  15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/datatypes-comparable.html#datatypes-comparable
+  16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/datatypes-nonComparable.html#datatypes-nonComparable
+  17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
+  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b
+  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetEditVolumeDataACE.html
+  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/EnablingTableAuthorizations.html
+  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/granting_or_denying_access_to_fields_with_aces.html

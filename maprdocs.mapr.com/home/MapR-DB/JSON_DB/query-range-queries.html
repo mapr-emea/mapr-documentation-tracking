@@ -1,8 +1,10 @@
-Range Queries
+Using Indexes to Optimize Range Conditions
 
-   Indexes can improve the performance of queries with range conditions.
-   They can appear in combination with equality conditions when the most
-   significant index keys have equality conditions.
+   Indexes can improve the performance of queries that have range
+   conditions. The range conditions can appear in combination with
+   equality conditions when the most significant index keys have equality
+   conditions. You can define indexes that optimize range conditions on
+   scalar data fields.
 
    The following range condition operators benefit from indexes:
      * Less than (or equal to)
@@ -10,14 +12,8 @@ Range Queries
      * Pattern matching operator LIKE, provided the pattern in the
        condition does not start with a wildcard character
 
-   Note: In Drill, the LIKE operator only works on fields that have
-   varchar data types. To use the LIKE operator in Drill queries, use the
-   [1]CAST function to explicitly cast fields to varchar. To use indexes
-   for such queries, create indexes on the cast expressions, as explained
-   in [2]Using Casts in Secondary Indexes.
-
-   The examples in this topic assume you have a MapR-DB JSON table with
-   documents in the following format:
+   Assume you have a MapR-DB JSON table with documents in the following
+   format:
 {
    "_id": "10000",
    "FullName": {
@@ -42,11 +38,14 @@ Range Queries
    "DateOfBirth": "10/1/1985"
 }
 
+   The examples in the following sections reference this sample JSON
+   document.
+
 Indexes on Scalar Data Fields
 
-   The following table provides examples where MapR-DB can and cannot use
-   the index with range conditions on scalar data. Assume that a
-   [3]composite index exists on the Address.State and Address.City fields.
+   The following table provides examples of when MapR-DB can and cannot
+   use the index with range conditions on scalar data. Assume that a
+   [1]composite index exists on the Address.State and Address.City fields.
    To use both indexed fields in the composite index, you must have an
    equality condition on Address.State.
    Filter Condition How MapR-DB Uses the Index
@@ -93,17 +92,17 @@ Indexes on Scalar Data Fields
 }
 
    Reads from the index starting at the condition Address.State > "C"
-   through the end of the index. Although Address.City is part of the
-   index key, MapR-DB does not use Address.City > "Oak" when initiating
-   the index search. Applies that filter while reading the index.
+   through the end of the index.
+
+   Although Address.City is part of the index key, MapR-DB does not use
+   Address.City > "Oak" when initiating the index search. Applies that
+   filter while reading the index.
 {"$le":{"Address.City":"Oak"}}
 
-   Even if the query references the field Address.State elsewhere in the
-   query, MapR-DB cannot use the index because there is no equality
-   condition on the prefix key of the index, Address.State.
+   Even if the query references the field Address.State, MapR-DB cannot
+   use the index unless there is also an equality condition on the prefix
+   key of the index, Address.State.
 
 References
 
-   1. https://drill.apache.org/docs/data-type-conversion/
-   2. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-functional-index.html#concept_u1s_wll_f1b
-   3. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz
+   1. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz

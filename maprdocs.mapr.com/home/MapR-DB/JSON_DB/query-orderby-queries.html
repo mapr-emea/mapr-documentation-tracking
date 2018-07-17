@@ -1,22 +1,25 @@
-ORDER BY Queries
+Using Indexes to Optimize ORDER BY Queries
 
-   Using indexes can help you improve the performance of queries with an
-   ORDER BY clause. This includes ORDER BY clauses with either ascending
-   or descending sorts, as well as more than one ordering field.
+   Using indexes can help you improve the performance of queries that have
+   an ORDER BY clause. This includes ORDER BY clauses with either
+   ascending or descending sorts, as well as more than one ordering field.
+   The same index can optimize both filter conditions and the ORDER BY
+   clause.
 
-   To use the index for an ORDER BY, the index's key list order and sort
-   order must match the orderings specified in the query. If the index’s
-   keys also match filter conditions in the query, using the index also
-   reduces the amount data read from the index.
+   To use the index for an ORDER BY query, the index's key list order and
+   sort order must match the orderings specified in the query. If the
+   index’s keys also match filter conditions in the query, using the index
+   also reduces the amount of data read from the index.
 
 Index Key List Order and Sort Order Examples
 
    The following table provides examples of when MapR-DB can and cannot
    use an index for ordering, based on the index key list ordering and
-   sort ordering specified. Assume a table exists with a [1]composite
-   index on fields, Address.State and FullName.LastName. You have defined
-   both keys in ascending order. Assume the query has an ORDER BY on the
-   fields Address.State and FullName.LastName, both in ascending order:
+   sort ordering specified. Assume that you have a table that has a
+   [1]composite index on fields Address.State and FullName.LastName. You
+   have defined both keys in ascending order. Further assume that the
+   query has an ORDER BY on the fields Address.State and
+   FullName.LastName, both in ascending order:
      Ordering in Query   Use of Index for Ordering
    Address.State:ASC
 
@@ -44,8 +47,8 @@ Address.State:ASC
 
 Filtering and ORDER BY Query Examples
 
-   The examples in this section assume that you have a [2]composite index
-   defined with the following two indexed fields:
+   Assume that you have a [2]composite index defined with the following
+   two indexed fields:
      * Address.State:ASC
      * FullName.LastName:ASC
 
@@ -112,29 +115,28 @@ Partial Sorts with Non-Covering Indexes
    One consequence of this index update lag is the impact on queries that
    use [4]non-covering indexes to provide the ordering of a query. Because
    the index is not fully synchronized with its parent JSON data, data
-   read through the index may be out-of-date.
+   read through the index might be out of date.
 
-   Here is an example that illustrates this behavior.
-    1. Suppose you have a query with the following criteria:
+   The following example illustrates this behavior.
+     * Suppose you have a query with the following criteria:
           + Selects docField
           + Filter condition where docField >= 5
           + Order by on docField
-    2. You have an index where docField is an indexed field. The index
-       optimizes both the filter condition and order by. The query also
-       selects other fields, so the index is a non-covering index for the
-       query.
-    3. When reading through the index, MapR-DB reads a document where
-       docField's value is 9. The data for that field in the JSON table is
-       also 9. The data is consistent.
-    4. The next entry in the index has docField set to 10. This value is
-       in the proper sort order relative to the previous value of 9. But,
+     * You have an index where docField is an indexed field. The index
+       optimizes both the filter condition and order by clause. The query
+       also selects other fields, so the index is a non-covering index for
+       the query.
+     * When reading through the index, MapR-DB reads a document in which
+       the docField value is 9. The data for that field in the JSON table
+       is also 9. The data is consistent.
+     * The next entry in the index has docField set to 10. This value is
+       in the proper sort order relative to the previous value of 9, but
        the data in the JSON table has changed from 10 to 6. The update is
        not yet reflected in the index.
-    5. MapR-DB returns the value 6 (not 10), which is out of order,
+     * MapR-DB returns the value 6 (not 10), which is out of order,
        relative to data previously read from the index.
 
-   The following table and diagram illustrate the difference in sort
-   order, depending on the state of updates, for this example:
+   The following table and diagram illustrates this example:
              Update State            Query Result in docField Sort Order
    Before update                     5, …, 9, 10
    JSON table updated, but not index 5, …, 9, 6

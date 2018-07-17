@@ -26,16 +26,18 @@ Manually Securing Kafka REST Only
 
    If you have an unsecure MapR cluster, and you want to secure Kafka
    REST, do the following:
-    1. Export the server and client certificates.
-cd /opt/mapr/conf/
-            keytool -v -exportcert -alias cyber.mapr.cluster -keystore /opt/mapr
-/conf/ssl_truststore -rfc -file server.cert
+    1. Obtain the server and client certificates.
+       The certificates are obtain by using the keytool:
+cd /opt/mapr/conf/ keytool
+              -v -exportcert -alias cyber.mapr.cluster -keystore /opt/mapr/conf/
+ssl_truststore -rfc -file server.cert
     2. Add any necessary property configurations to the
        kafka-rest.properties configuration file. For example:
 listeners=http://0.0.0.0:8082,https://0.0.0.0:8085
-            ssl.keystore.location=/opt/mapr/conf/ssl_keystore
-            ssl.keystore.password=<ssl-keystore-password>
-            ssl.key.password=<ssl-keystore-password>
+ssl.keystore.location=/opt/mapr/conf/ssl_keystore
+ssl.keystore.password=<ssl-keystore-password>
+ssl.key.password=<ssl-keystore-password>
+
     3. Restart Kafka REST.
 maprcli node services -name kafka-rest -action restart -nodes <space delimited l
 ist of nodes>

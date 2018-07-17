@@ -1,8 +1,8 @@
-Equality Queries
+Using Indexes to Optimize Equality Conditions
 
-   Using indexes can help you improve the performance of queries with
-   equality conditions. This includes the IN operator. The equality
-   conditions can appear in combination with range conditions.
+   Using indexes can help you improve the performance of queries that have
+   equality conditions. You can define indexes that optimize equalify
+   conditions on scalar data fields.
 
    If the index has a single key, the condition limits the index search to
    only the keys matching the scalar value. If the index has more than one
@@ -11,8 +11,8 @@ Equality Queries
    a subset of fields and the most significant keys have equality
    conditions, MapR-DB limits the search to those scalar values.
 
-   The examples in this topic assume you have a MapR-DB JSON table with
-   documents in the following format:
+   Assume that you have a MapR-DB JSON table with documents in the
+   following format:
 {
    "_id": "10000",
    "FullName": {
@@ -36,6 +36,9 @@ Equality Queries
    "Hobbies": ["Baseball", "Cooking", "Reading"],
    "DateOfBirth": "10/1/1985"
 }
+
+   The examples in the following sections reference this sample JSON
+   document.
 
 Indexes on Scalar Data Fields
 
@@ -74,9 +77,9 @@ Indexes on Scalar Data Fields
 
 {"$eq":{"Address.City":"Oakland"}}
 
-   Even if the query references the field Address.State elsewhere in the
-   query, MapR-DB cannot use the index because there is no equality
-   condition on the leading key of the index, Address.State.
+   Even if the query references the field Address.State, MapR-DB cannot
+   use the index unless there is also an equality condition on the leading
+   key of the index, Address.State.
 {"$in":{"Address.State":["CA","NY","MA"]}}
 
    Performs three prefix lookups, one for each of the values in the IN
