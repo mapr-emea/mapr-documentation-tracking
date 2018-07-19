@@ -1,0 +1,105 @@
+MapR Data Fabric for Kubernetes Release 1.0.2
+
+   These notes describe version 1.0.2 of the MapR Data Fabric for
+   Kubernetes.
+
+   You may also be interested in the [1]Kubernetes Version 1.9 Release
+   Notes.
+   Version 1.0.2
+   Release Date July 2018
+   MapR Version Interoperability Compatible with MapR 5.2.2 or later.
+   Note: Version 1.0.2 does not support the coexistence of MapR and
+   Kubernetes software on the same nodes. If your installation requires
+   MapR and Kubernetes software to coexist on the same nodes, you must use
+   version 1.0.1 of the MapR Data Fabric for Kubernetes with MapR 6.0.1 or
+   later.
+   Kubernetes Compatibility Kubernetes 1.9
+   Note: Kubernetes alpha features are not supported.
+   MapR Software Downloads MapR installation (.yaml) files are located
+   here: [2]http://package.mapr.com/tools/KubernetesDataFabric
+   Source on GitHub This repository contains Docker images, installation
+   files, and examples: [3]https://github.com/mapr/KubernetesDataFabric
+   Docker Hub Docker containers for the MapR installation files are
+   located here:
+     * [4]https://hub.docker.com/r/maprtech/kdf-provisioner/
+     * [5]https://hub.docker.com/r/maprtech/kdf-plugin/
+
+   Documentation [6]MapR Data Fabric for Kubernetes Overview
+   Related Resources [7]https://mapr.com/solutions/data-fabric/kubernetes/
+
+New in This Release
+
+   Version 1.0.2 of the MapR Data Fabric for Kubernetes can only be used
+   on cluster nodes that are installed with MapR software (MapR 5.2.2 or
+   later). Version 1.0.2 cannot be used on cluster nodes having both MapR
+   and Kubernetes software.
+
+   This release of the MapR Data Fabric for Kubernetes includes a set of
+   Docker containers and their respective .yaml configuration files that
+   can be installed onto a Kubernetes cluster. Once installed, these
+   containers provide a Kubernetes FlexVolume Driver for MapR-FS and a
+   Kubernetes Dynamic Volume Provisioner that permit static and dynamic
+   provisioning of MapR storage from Kubernetes.
+
+Patches
+
+   None.
+
+Known Issues and Limitations
+
+   Note these limitations:
+     * Installations that require MapR and Kubernetes software to coexist
+       on the same nodes must use version 1.0.1 of the MapR Data Fabric
+       for Kubernetes with MapR 6.0.1 or later. Version 1.0.2 does not
+       support coexistence.
+     * All nodes in the Kubernetes cluster must use the same Linux OS.
+       Configuration files are available to support these Linux
+       distributions:
+          + CentOS
+          + RedHat (use CentOS configuration file)
+          + SSE (use CentOS configuration file)
+          + Ubuntu
+     * Docker for Mac with Kubernetes is not supported as a development
+       platform for containers used with the MapR Data Fabric for
+       Kubernetes.
+     * Volume plug-in files are supported for:
+          + CentOS
+          + Ubuntu
+          + Microsoft Azure AKS
+          + Red Hat OpenShift**
+          + Google Kubernetes Engine (GKE)
+     * Amazon EKS is not supported.
+     * The Basic POSIX client package is included by default when you
+       install the MapR Data Fabric for Kubernetes. The Platinum POSIX
+       client can be enabled by specifying a parameter in the Pod spec.
+       Only the POSIX client is supported. NFSv3 is not supported.
+
+   **OpenShift Origin is supported because it supports Kubernetes 1.9. The
+   OpenShift Container Platform (formerly known as OpenShift Enterprise)
+   can be used only if it supports Kubernetes 1.9.
+
+Resolved Issues
+
+   Issue Description
+   K8S-139 Version 1.0.2 includes a fix for UID/GID handling in secure,
+   non-impersonated environments. Before Version 1.0.2, if the UID/GID of
+   the ticket was different from the UID/GID of the container, write
+   operations could fail. With this fix, if the UID/GID of the ticket is
+   different from the UID/GID of the container, all operations are
+   performed using the UID/GID of the ticket.
+   K8S-164 In version 1.0.1, SELinux relabeling on the pod-container
+   volume mounts caused an issue with the flexvolume-mounted file system.
+   (SELinux relabeling is enabled by default for the volume plug-in in
+   version 1.0.1.) In version 1.0.2, the volume plug-in resolves the issue
+   by opting out of SELinux relabeling, reporting selinux Relabel:false in
+   its init call.
+
+References
+
+   1. https://kubernetes.io/docs/imported/release/notes/
+   2. http://package.mapr.com/tools/KubernetesDataFabric
+   3. https://github.com/mapr/KubernetesDataFabric
+   4. https://hub.docker.com/r/maprtech/kdf-provisioner/
+   5. https://hub.docker.com/r/maprtech/kdf-plugin/
+   6. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/PersistentStorage/kdf_overview.html#concept_ogr_sxc_qcb
+   7. https://mapr.com/solutions/data-fabric/kubernetes/

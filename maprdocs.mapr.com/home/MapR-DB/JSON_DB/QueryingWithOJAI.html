@@ -97,11 +97,25 @@ Comparisons and Ordering in OJAI
 
    You can avoid errors due to the client sort limitation by adhering to
    the following guidelines:
-     * If you are using the Java OJAI API and know the largest possible
-       query result size when your queries specify an order by, you can
-       increase the client's sort limit to that maximum size by modifying
-       the ojai.mapr.query.max-client-sort-limit parameter:
+     * If you know the largest possible query result size when your
+       queries specify an order by, you can increase your client's sort
+       limit to that maximum size. The manner in which you increase this
+       limit depends on the client you are using:
+          + [18]Java OJAI
+          + [19]MapR-DB JSON REST API
+       Increase the ojai.mapr.query.max-client-sort-limit parameter:
 query.setOption("ojai.mapr.query.max-client-sort-limit", 6000);
+       Update the following parameter in the file
+       /opt/mapr/data-access-gateway/conf/ojai-config.json:
+{
+    "ojai": {
+        "mapr": {
+            "query": {
+                "max-client-sort-limit": 6000
+            }
+        }
+    }
+}
      * If you do not know the largest possible query result size or are
        not using the Java OJAI API, specify a limit in your queries. If
        your query result size exceeds that limit, the client sorts the
@@ -109,17 +123,17 @@ query.setOption("ojai.mapr.query.max-client-sort-limit", 6000);
        specified limit. This avoids the error, but may result in
        unintended behavior if your application is not expecting a
        truncated result. You should take corrective action if necessary.
-       See [18]Querying with Order By for an example of how to set a query
+       See [20]Querying with Order By for an example of how to set a query
        limit.
 
 Permissions
 
    The following permissions are required to query documents:
      * The readAce permission on the volumes where the JSON tables that
-       contain the documents are located. See [19]Setting Whole Volume
+       contain the documents are located. See [21]Setting Whole Volume
        ACEs.
      * The readperm permission on the JSON table's column families
-       containing fields being queried. See [20]Enabling Table and Stream
+       containing fields being queried. See [22]Enabling Table and Stream
        Authorizations with ACEs.
 
    If the user does not have the readperm permission on a field, MapR-DB
@@ -135,7 +149,7 @@ Permissions
    The exception is the rowkey field. Access control on the rowkey is not
    available. Users can always select and filter on rowkey.
 
-   For information about setting permissions, see [21]Permission Types for
+   For information about setting permissions, see [23]Permission Types for
    Fields and Column Families in JSON Tables.
 
 References
@@ -157,7 +171,9 @@ References
   15. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/datatypes-comparable.html#datatypes-comparable
   16. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/datatypes-nonComparable.html#datatypes-nonComparable
   17. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
-  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b
-  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetEditVolumeDataACE.html
-  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/EnablingTableAuthorizations.html
-  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/granting_or_denying_access_to_fields_with_aces.html
+  18. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div1entry1
+  19. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div1entry2
+  20. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b
+  21. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/SetEditVolumeDataACE.html
+  22. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/SecurityGuide/EnablingTableAuthorizations.html
+  23. file://localhost/root/docsync/tmp/maprdocs.mapr.com/home/MapR-DB/JSON_DB/granting_or_denying_access_to_fields_with_aces.html

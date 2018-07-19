@@ -27,43 +27,43 @@ Swap:             2           0           2
     1. Stop the service by issuing the command service numad stop.
     2. Set the numad service not to start on reboot: chkconfig numad off
 
-   MapR does not recommend using overcommit because it may lead to the
-   kernel memory manager killing processes to free memory, resulting in
-   killed MapR processes and system instability. Set vm.overcommit_memory
-   to 0:
+   Using overcommit is not recommended because it can lead to the kernel
+   memory manager stopping processes to free memory, resulting in stopped
+   MapR processes and system instability. Set vm.overcommit_memory to 0:
     1. Edit the file /etc/sysctl.conf and add the following line:
        vm.overcommit_memory=0
     2. Save the file and run: sysctl -p
 
-   Note: You can try MapR out on non-production equipment, but under the
+   Note: You can try MapR on non-production equipment, but under the
    demands of a production environment, memory needs to be balanced
-   against disks, network and CPU.
+   against disks, network, and CPU.
 
 Storage
 
-   MapR manages raw, unformatted devices directly to optimize performance
-   and offer high availability. For data nodes, allocate at least 3
-   unmounted physical drives or partitions for MapR storage. MapR uses
-   disk spindles in parallel for faster read/write bandwidth and therefore
-   groups disks into sets of three.
-   Warning: MapR requires a minimum of one disk or partition for MapR
-   data. However, file contention for a shared disk decreases performance.
-   In a typical production environment, multiple physical disks on each
-   node are dedicated to the distributed file system, which results in
-   much better performance.
+   MapR software manages raw, unformatted devices directly to optimize
+   performance and offer high availability. For data nodes, allocate at
+   least 3 unmounted physical drives or partitions for MapR storage. MapR
+   software uses disk spindles in parallel for faster read/write bandwidth
+   and therefore groups disks into sets of three.
+
+   Minimum Disk Allocation: MapR software requires a minimum of one disk
+   or partition for MapR data. However, file contention for a shared disk
+   decreases performance. In a typical production environment, multiple
+   physical disks on each node are dedicated to the distributed file
+   system, which results in much better performance.
 
 Drive Configuration
 
    Do not use RAID or Logical Volume Management with disks that will be
-   added to MapR. While MapR supports these technologies, using them
-   incurs additional setup overhead and can affect your cluster's
-   performance. Due to the possible formatting requirements that are
-   associated with changes to the drive settings, configure the drive
+   added to a MapR node. While MapR software supports these technologies,
+   using them incurs additional setup overhead and can affect your
+   cluster's performance. Due to the possible formatting requirements that
+   are associated with changes to the drive settings, configure the drive
    settings prior to installing MapR.
 
    If you have a RAID controller, configure it to run in HBA mode. For LSI
    MegaRAID controllers that do not support HBA, configure the following
-   drive group settings for optimal performance:
+   drive-group settings for optimal performance:
    Property (The actual name depends on the version) Recommended Setting
    RAID Level RAID0
    Stripe Size >=256K
@@ -72,9 +72,9 @@ Drive Configuration
    Write Policy Write-Through
    Disk Cache Policy or Drive Cache Disabled
    Note: Enabling the Disk Cache policy can improve performance. However,
-   MapR does not recommend enabling the Disk Cache policy because it
-   increases the risk of data loss if the node loses power before the disk
-   cache is committed to disk.
+   enabling the Disk Cache policy is not recommended because it increases
+   the risk of data loss if the node loses power before the disk cache is
+   committed to disk.
 
 Minimum Disk Space
 
@@ -122,6 +122,6 @@ cat /proc/sys/vm/swappiness
    To change the value:
 sudo sysctl vm.swappiness=1
 
-   Note: The value for vm.swappiness can revert to a system default
-   setting if you reboot the node. In this scenario, you might need to
-   check and reset the value.
+   Note: The value of vm.swappiness can revert to a system default setting
+   if you reboot the node. After rebooting, you might need to check and
+   reset the value.
