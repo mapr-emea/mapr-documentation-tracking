@@ -27,19 +27,29 @@ The MAPR_WEBSERVER_KERBEROS Stanza
    set the value for yourhost manually, but be aware that you must set the
    principal in the mapr.keytab file to match this value.
 
-The jPam_login Stanza
+The jpamLogin Stanza
 
    The MapR cluster uses this stanza to verify user ID and password
    authentication to all the servers on the cluster. You can modify this
    stanza to alter the PAM configuration used by the cluster. The
    net.sf.jpam.jaas.JpamLoginModule module is sufficient for this stanza.
-   There are three values for the service_name parameter, and the module
-   statement is repeated for each service.
-   Attribute Default Value Description
+   There are three provided default services. The order of the serviceName
+   in the stanza (at cluster startup) determines which PAM configuration
+   file to use. If a failure occurs with a configuration, MapR ignores the
+   error and proceeds with the next entry.
+   Attribute Provided Default Values Description
 
    serviceName
-   "sudo", "sshd", and "mapr-admin" The PAM configurations to use for
-   validating passwords.
+     * sudo
+     * sshd
+     * mapr-admin
+
+   The PAM configurations to use for validating passwords, shown in their
+   order of use.
+
+   The configuration files are typically in /etc/pam.d.
+
+Other Stanzas
 
    The Server, Client, Server_simple, Client_simple, and hadoop_maprsasl
    stanzas control important aspects of your cluster's stability. Consult
