@@ -1,0 +1,188 @@
+MapR Connector Import and Export Options
+
+Import Options
+
+   Import Option Description
+   --as-avrodatafile, --as-textfile The format of a to-be-imported data
+   file in MapR-FS. An 'hcat' or 'hive' job type supports 'rcfile',
+   'orcfile' and 'textfile' file formats. To set the file format, you need
+   to use the -D command line option. For example:
+sqoop import -D tdch.fileformat="orcfile" --connect jdbc:teradata://<hosname>/da
+tabase=test --connection-manager org.apache.connectors.td.TeradataManager …
+
+   Note: If import to MapR-FS in Avro format fails, include
+   -Dmapreduce.job.user.classpath.first parameter=true in your command.
+sqoop import  --connect jdbc:teradata://<hostname>/database=test --connection-ma
+nager org.apache.connectors.td.TeradataManager --as-avrodatafile ...
+
+   --target-dir Mapr-FS destination directory.
+   --num-mappers The number of mappers for the import job. The default
+   value is 4.
+   --query The SQL query to select data from a Teradata database. This
+   option works only with the textfile and avrofile formats.
+   --table The name of the source table in a Teradata system from which
+   the data is imported.
+   --columns The names of columns to import from the source table in a
+   Teradata system, in comma-separated format. For example:
+sqoop import  --connect jdbc:teradata://<hostname>/database=test --connection-ma
+nager org.apache.connectors.td.TeradataManager --username test --password test -
+-table test  --columns id,name
+
+   --hive-table The name of the target table in Hive or HCatalog.
+   --fields-terminated-by The field separator to use with the imported
+   files. This parameter is only applicable with the textfile file format.
+   The default value is \t.
+   --split-by The column of the table used to split work units.
+   --map-column-hive Override mapping from SQL to Hive type for configured
+   columns.
+   --where WHERE clause to use during import.
+   --staging-table[1]^1
+
+   The table for staging data before insertion into the destination table.
+   Only applicable when using input-method split.by.partition
+   --num-partitions-for-staging-table[2]^1 The number of partitions to
+   create when auto-creating the staging table. Only applicable when using
+   input-method split.by.partition.
+   --staging-database[3]^1 The database for creating the staging table.
+   Only applicable when using input-method split.by.partition.
+   --staging-force[4]^1 Option to force the connector to create a staging
+   table, if supported. Only applicable when using input-method
+   split.by.partition.
+   --input-method[5]^1 The input method to use to transfer data from
+   Teradata.
+   Supported values:
+     * split.by.amp
+     * split.by.value
+     * split.by,partition
+     * split.by.hash
+
+   --batch-size[6]^1 The number of row processed per batch.
+   --access-lock[7]^1 Option to apply access lock on the database.
+   --query-band[8]^1 The arbitrary query bands to be set for all queries
+   the connector runs. Specify the query bands using a semicolon-separated
+   key=value format.
+   --skip-xviews[9]^1 Option to switch to the non-X version of system
+   views to obtain metadata.
+   --date-format[10]^1 Custom format for date columns.
+   --time-format[11]^1 Custom format for time columns.
+   --timestamp-format[12]^1 Custom format for timestamp columns.
+   Use the -D command line option to set the file format. For example:
+-D tdch.fileformat="fileformat"
+
+   The following Sqoop import options are unsupported:
+     * --append
+     * --compression-codec
+     * --direct
+     * --direct-split-size
+     * --compress, -z
+     * --check-column
+     * --incremental
+     * --last-value
+     * --mysql-delimiters
+     * --optionally-enclosed-by
+     * --hive-delims-replacement
+     * --hive-drop-import-delims
+     * --hive-partition-key
+     * --hive-partition-value
+     * --column-family
+     * --hbase-create-table
+     * --hbase-row-key
+     * --hbase-table
+     * --map-column-java
+     * --fetch-size
+     * --as-sequencefile
+
+Export Options
+
+   Export Option Description
+   --table The name of the target table in a Teradata system.
+   --export-dir The directory of to-be-exported source files in MapR-FS.
+   --num-mappers The number of mappers for the export job. The default
+   value is 4.
+   --columns The names of fields to export to the target table in a
+   Teradata system, in comma-separated format. For export from MapR-FS,
+   you can only use this option with the avrofile format.
+   --staging-table The table in which data will be staged before being
+   inserted into the destination table.
+   --keep-staging-table[13]^1 Option specifying that the connector retain
+   the staging table after failures.
+   --staging-database[14]^1 The database for creating the staging table.
+   --staging-force[15]^1 Option to force the connector to create a staging
+   table, if supported.
+   --output-method[16]^1 The output method to use to transfer data to
+   Teradata.
+   Supported values:
+     * batch.insert
+     * internal.fastload
+
+   --query-band[17]^1 The arbitrary query bands to be set for all queries
+   that the connector runs. Specify the query bands using a
+   semicolon-separated key=value format.
+   --error-table[18]^1 Prefix name for error tables. Only applicable when
+   using output-method internal.fastload.
+   --error-database[19]^1 Override for the default error database name.
+   Only applicable when using output-method internal.fastload.
+   --fastload-socket-hostname[20]^1 Hostname or IP address of the host on
+   which Sqoop runs. If not set, the connector auto-detects the host. Only
+   applicable when using output-method internal.fastload.
+   --fastload-socket-port[21]^1 The host port that fastload tasks use to
+   synchronize state. Only applicable when using output-method
+   internal.fastload.
+   --fastload-socket-timeout[22]^1 The timeout value the server socket
+   uses for fastload task connections. Only applicable for output-method
+   internal.fastload.
+   --skip-xviews[23]^1 Option to switch to the non-X version of system
+   views to obtain metadata.
+   --date-format[24]^1 Custom format for date columns.
+   --time-format[25]^1 Custom format for time columns.
+   --timestamp-format[26]^1 Custom format for timestamp columns.
+   Use the -D command line option to set the file format. For example:
+-D tdch.fileformat="fileformat"
+
+   Supported export file format values are:
+     * textfile (default format)
+     * avrofile
+     * orcfile
+     * refile
+
+   The following Sqoop export options are unsupported:
+     * --batch
+     * --clear-staging-table
+     * --direct
+     * --update-key
+     * --update-mode
+     * --input-lines-terminated-by
+     * --input-optionally-enclosed-by
+     * --map-column-java
+     * --as-sequencefile
+
+   ^1 Only available starting in Sqoop-1.4.6-1707.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  23. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707
+  26. file://localhost/root/docsync/tmp/mapr.com/docs/home/Sqoop/SqoopTDCHImportExportOptions.html#reference_psn_2gf_dy__fn-1.4.6-1707

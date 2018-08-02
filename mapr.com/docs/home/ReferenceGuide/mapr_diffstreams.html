@@ -1,0 +1,89 @@
+mapr diffstreams
+
+   This utility compares the message IDs, metadata, and data in two MapR
+   streams. Then, generates two directories that contain sequence files
+   that you can use to merge the rows from the two MapR streams.
+
+   Sequence files are binary flat files. You can learn more about them
+   [1]here. To convert a sequence file into a format that you can read,
+   use the [2]MapR-DB JSON FormatResult utility.
+
+   This utility considers both the source stream and the destination
+   stream to be a master stream. Therefore, it generates two directories
+   with sequence files. These sequence files contain the puts required to
+   update each stream so that it contains a superset of the rows defined
+   in both tables at the time at which the utility was run.
+   This utility generates both of the following output directories in the
+   output directory that you specify:
+
+   opsForDst
+          A directory containing sequence files that correspond to each
+          put and delete required to make the destination stream identical
+          to the source stream.
+
+   opsForSrc
+          A directory containing sequence files that correspond to each
+          put and delete required to make the source stream identical to
+          the destination stream.
+
+Required Permissions
+
+   To use this utility, you must have the following permissions:
+     * The permission readAce on the volumes where the tables are located.
+     * On the source stream: either consumeperm or copyperm.
+     * On the destination stream: either consumeperm or copyperm.
+
+   For information about how to set permissions on volumes, see [3]Setting
+   Whole Volume ACEs.
+
+   For information about how to set permissions on streams, see
+   [4]Enabling Table and Stream Authorizations with ACEs.
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+mapr diffstreams
+-src <srcStream>
+-dst <dstStream>
+-outdir <output directory>
+[-first_exit] Exit when first difference is found
+[-mapreduce true/false default:false]
+[-numthreads <nthreads> default:16]
+
+Parameters
+
+   Parameter Description
+   src The path of the first stream to include in the comparison.
+   dst The path of the second stream to include in the comparison.
+   outdir The path to a directory in which to place the generated sequence
+   files. The utility creates the specified directory. If the specified
+   directory already exists, the command fails.
+   first_exit
+
+   By default, the utility compares all the data in the specified streams.
+   Use this parameter if you want to exit after the first difference is
+   identified between the streams. The parameter takes no value.
+   mapreduce
+
+   A Boolean value that specifies whether or not to use a MapReduce
+   program to perform the comparison. The default, preferred method is to
+   use a MapReduce program (true).
+
+   When this parameter is set to false, a client process uses multiple
+   threads.
+
+   The MapReduce program runs as a MapReduce version 2 application based
+   on the MapReduce mode that is configured on this node.
+   numthreads When -mapreduce is false, this parameter specifies the
+   number of threads allocated to perform the comparison. The default is
+   16. If additional CPU resources are available, you might want to
+   increase the number of thread to achieve better performance.
+
+References
+
+   1. http://wiki.apache.org/hadoop/SequenceFile
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_formatresult.html#mapr_formatresult
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html

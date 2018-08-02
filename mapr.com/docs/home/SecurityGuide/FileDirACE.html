@@ -1,0 +1,80 @@
+Managing File and Directory ACEs
+
+   File ACE allows you to define access (whitelist and blacklist) to files
+   and directories for a combination of users, groups, and roles. If ACEs
+   are not set, POSIX mode bits for the file or directory are used to
+   grant or deny access to the file or directory.
+
+   When you set ACEs, MapR sets or resets the corresponding POSIX mode
+   bits to match the permissions granted through ACEs. For more
+   information, see [1]Setting/Modifying File and Directory ACEs.
+     * If both ACEs and POSIX mode bits are set, access is granted if
+       access is allowed through ACEs or POSIX mode bits.
+     * If ACEs are not set, POSIX mode bits are used to grant access.
+     * If neither ACEs nor POSIX mode bits are set, access is denied.
+
+   The owner of the file or directory (and mapr and root users) can set,
+   modify, and remove ACEs for that file or directory using [2]hadoop mfs
+   commands.
+
+File ACEs
+
+   You can set and modify permissions to read, write, and execute files
+   using the [3]hadoop mfs command or the [4]Java API. Specifically, the
+   following access types are supported.
+           Access Type           Description
+   Command-Line Java API (Enum)
+   -readfile    READFILE       Read a file.
+   -writefile   WRITEFILE      Write to a file.
+   -executefile EXECUTEFILE    Execute a file.
+
+   For more information, see [5]hadoop mfs and [6]Java API.
+
+Directory ACEs
+
+   You can set the same ACEs on directories as for files. In addition,
+   directory ACEs support permissions to list, add child, delete child,
+   and lookup directories using [7]hadoop mfs command. Specifically, the
+   following access types are supported.
+   Access Type Description
+   Command-Line Java API (Enum)
+   -readfile READFILE Read a file.
+   -writefile WRITEFILE Write to a file.
+   -executefile EXECUTEFILE Execute a file.
+   -readdir READDIR List the contents of a directory. This access is
+   required to write and/or execute files in the directory.
+   -lookupdir LOOKUPDIR Lookup a file in a directory. This access is
+   required to find, read, write, and/or execute files in the directory.
+   -addchild ADDCHILD Add a file or subdirectory.
+   -deletechild DELETECHILD Delete a file or subdirectory.
+
+   Although you can set both file and directory ACEs on directories, only
+   the directory ACEs are used for determining access to the directory.
+   The file ACE on the directory is used as the default ACE setting for
+   new files under that directory.
+
+   By default, when you set ACEs on a parent directory:
+     * Permissions for existing files and subdirectories under that parent
+       remain unchanged.
+     * New files under that parent inherit the file ACEs and corresponding
+       POSIX mode bits of the parent directory, if available. Otherwise,
+       new files get the default ACE, the empty string (""), which
+       indicates that no one has permissions to read, write, or execute
+       the file and POSIX mode bits are set on the file in the traditional
+       way.
+     * New subdirectories under the parent inherit both the directory and
+       file ACEs and corresponding POSIX mode bits from the parent
+       directory.
+
+   Note: When accessing files and directories, the ACEs on files have no
+   effect on accessing the parent directory.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditFileDirACE.html#concept_ayp_ch1_f5
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. http://maprdocs.mapr.com/apidocs/fileace_javadocs/
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   6. http://maprdocs.mapr.com/apidocs/fileace_javadocs/
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

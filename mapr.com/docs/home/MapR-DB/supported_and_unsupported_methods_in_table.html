@@ -1,0 +1,112 @@
+Table Method Support
+
+   This table indicates which methods MapR-DB supports in the HBase
+   interface Table.
+
+   The following HBase methods are supported with MapR-DB tables, except
+   where noted. For full details about this interface, see [1]Interface
+   Table in the Client package.
+   Method Name Modifier and Type Description Supported?
+   append(Append append) Result Appends values to one or more columns
+   within a single row. Yes
+   batch(List<? extends Row> actions) Object[] A batch call on Deletes,
+   Gets, Puts, Increments, Appends and RowMutations. Deprecated
+   batch(List<? extends Row> actions, Object[] results) void Method that
+   does a batch call on Deletes, Gets, Puts, Increments and Appends. Yes
+   batchCallback(List<? extends Row> actions,
+   org.apache.hadoop.hbase.client.coprocessor.Batch.Callback<R> callback)
+   Object[] Method that does a batch call on Deletes, Gets, Puts,
+   Increments and Appends with a callback. Yes[2]^1
+   batchCallback(List<? extends Row> actions, Object[] results,
+   org.apache.hadoop.hbase.client.coprocessor.Batch.Callback<R> callback)
+   <R> void Same as batch(List, Object[]), but with a callback. MapR-DB
+   ignores the callback. Yes[3]^1
+   batchCoprocessorService(com.google.protobuf.Descriptors.MethodDescripto
+   r methodDescriptor, com.google.protobuf.Message request, byte[]
+   startKey, byte[] endKey, R responsePrototype,
+   org.apache.hadoop.hbase.client.coprocessor.Batch.Callback<R> callback)
+   <R extends com.google.protobuf.Message> void Creates an instance of the
+   given Service subclass for each table region spanning the range from
+   the startKey row to endKey row (inclusive), all the invocations to the
+   same region server will be batched into one call. No
+   batchCoprocessorService(com.google.protobuf.Descriptors.MethodDescripto
+   r methodDescriptor, com.google.protobuf.Message request, byte[]
+   startKey, byte[] endKey, R responsePrototype) <R extends
+   com.google.protobuf.Message> Map<byte[],R> No
+   checkAndDelete(byte[] row, byte[] family, byte[] qualifier, byte[]
+   value, Delete delete) boolean Atomically checks if a
+   row/family/qualifier value matches the expected value. Yes
+   checkAndDelete(byte[] row, byte[] family, byte[] qualifier,
+   CompareFilter.CompareOp compareOp, byte[] value, Delete delete) boolean
+   Yes
+   checkAndMutate(byte[] row, byte[] family, byte[] qualifier,
+   CompareFilter.CompareOp compareOp, byte[] value, RowMutations mutation)
+   boolean Yes
+   checkAndPut(byte[] row, byte[] family, byte[] qualifier, byte[] value,
+   Put put) boolean Yes
+   checkAndPut(byte[] row, byte[] family, byte[] qualifier,
+   CompareFilter.CompareOp compareOp, byte[] value, Put put) boolean Yes
+   close() void Releases any resources held or pending changes in internal
+   buffers. Yes
+   coprocessorService(byte[] row) CoprocessorRpcChannel Creates and
+   returns a RpcChannel instance connected to the table region containing
+   the specified row. No
+   coprocessorService(Class<T> service, byte[] startKey, byte[] endKey,
+   org.apache.hadoop.hbase.client.coprocessor.Batch.Call<T,R> callable,
+   org.apache.hadoop.hbase.client.coprocessor.Batch.Callback<R> callback)
+   <T extends com.google.protobuf.Service,R> void Creates an instance of
+   the given Service subclass for each table region spanning the range
+   from the startKey row to endKey row (inclusive), and invokes the passed
+   Batch.Call.call(T) method with each Service instance. No
+   coprocessorService(Class<T> service, byte[] startKey, byte[] endKey,
+   org.apache.hadoop.hbase.client.coprocessor.Batch.Call<T,R> callable) <T
+   extends com.google.protobuf.Service,R> Map<byte[],R> No
+   delete(Delete delete) void Deletes the specified cells/row. Yes
+   delete(List<Delete> deletes) void Deletes the specified cells/rows in
+   bulk. Yes
+   exists(Get get) boolean Test for the existence of columns in the table,
+   as specified by the Get. Yes
+   existsAll(List<Get> gets) boolean[] Test for the existence of columns
+   in the table, as specified by the Gets, in batch. Yes
+   get(Get get) Result Extracts certain cells from a given row. Yes
+   get(List<Get> gets) Result[] Extracts certain cells from the given
+   rows, in batch. Yes
+   getConfiguration() org.apache.hadoop.conf.Configuration Returns the
+   Configuration object used by this instance. Yes
+   getName() TableName Gets the fully qualified table name instance of
+   this table. Yes
+   getScanner(byte[] family, byte[] qualifier) ResultScanner Gets a
+   scanner on the current table for the given family and qualifier. Yes
+   getScanner(byte[] family) ResultScanner Gets a scanner on the current
+   table for the given family. Yes
+   getScanner(Scan scan) ResultScanner Returns a scanner on the current
+   table as specified by the Scan object. Yes
+   getTableDescriptor() HTableDescriptor Gets the table descriptor for
+   this table. Yes
+   getWriteBufferSize() long Returns the maximum size in bytes of the
+   write buffer for this HTable. No
+   increment(Increment increment) Result Increments one or more columns
+   within a single row. Yes
+   incrementColumnValue(byte[] row, byte[] family, byte[] qualifier, long
+   amount, Durability durability) long Atomically increments a column
+   value. Yes[4]^2
+   incrementColumnValue(byte[] row, byte[] family, byte[] qualifier, long
+   amount) long See incrementColumnValue(byte[], byte[], byte[], long,
+   Durability). Yes
+   mutateRow(RowMutations rm) void Performs multiple mutations atomically
+   on a single row. Yes
+   put(List<Put> puts) void Puts some data in the table, in batch. Yes
+   put(Put put) void Puts some data in the table. Yes
+   setWriteBufferSize(long writeBufferSize) void Sets the size of the
+   buffer in bytes. No
+   ^1 Not fully supported. When used with MapR-DB, the callback is
+   ignored.
+   ^2 Not fully supported. When used with MapR-DB, the durability is
+   ignored.
+
+References
+
+   1. https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/client/Table.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/supported_and_unsupported_methods_in_table.html#supported_and_unsupported_methods_in_table__reuse-fn1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/supported_and_unsupported_methods_in_table.html#supported_and_unsupported_methods_in_table__reuse-fn1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/supported_and_unsupported_methods_in_table.html#supported_and_unsupported_methods_in_table__reuse-fn2

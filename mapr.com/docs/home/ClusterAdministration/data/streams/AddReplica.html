@@ -1,0 +1,131 @@
+Adding Stream Replicas
+
+   You can create stream replicas using MCS and the CLI. When you add a
+   replica using the MCS, you can also set up and start replication
+   between a source and replica stream.
+   Before creating a replica:
+    1. Review the following:
+          + [1]Modes of Stream Replication
+          + [2]Security for Stream Replication
+          + [3]Preparing Clusters for Stream Replication
+
+   Note:
+     * You must replicate all of the topics that are in a stream. You
+       cannot select only a subset of topics to replicate.
+     * The maximum number of replicas that a stream can replicate to is
+       64.
+     * The maximum number of upstream sources that a replica can accept
+       data from is 64.
+     * In
+          + Multi-master replication, names of topics must be unique on
+            all streams. Messages are assigned sequential offsets. The
+            offsets for messages in a topic in one copy could conflict
+            with the offsets for messages in the other copy. As a result,
+            messages could be lost.
+          + Many-to-one replication, topics with the same name should not
+            be replicated to an aggregate replica.
+
+Adding a Replica Using the MapR Control System
+
+   To add a replica using MCS:
+    1. Log in to MCS and go to the Replication tab in the [4]stream
+       information page.
+    2. Click Add Replica.
+       The Add Replica page displays.
+    3. Specify the following settings.
+
+   Path to Source Stream The path and name of the stream that you want to
+   create a replica for.
+   Destination Cluster The destination cluster for the replica, where
+   gateways are configured to allow source cluster to send updates.
+   Path to Replica The path and name of the replica stream.
+   Replication State Specify whether or not to start replication by
+   choosing one of the following:
+          + Automatic Setup — Creates the stream on the destination
+            cluster, registers the stream on the destination cluster as a
+            replica, adds the current stream as an upstream source, copies
+            the content of the current stream into the replica, and starts
+            replication. In this case, the replica stream starts empty and
+            accumulates messages over time.
+          + Pause Replication — Creates the stream on the destination
+            cluster, registers the stream on the destination cluster as a
+            replica, adds the current stream as an upstream source, but
+            prevents replication from immediately starting after. Pausing
+            replica like this allows you to load the data into the replica
+            from the current stream, after which you can restart
+            replication.
+
+   Note: If you are interested only in the messages that are published to
+   the source stream after replication starts, then you do not need to
+   pause replication initially. However, if you want the full set of
+   messages from the source stream that have not yet been purged or marked
+   for deletion, then pause replication initially.
+   Multi-Master Setup (Available only with Automatic Setup) Multi-master
+   topology, in which there are two master-slave relationships, with each
+   stream playing both the role of a master and a slave. Client
+   applications update both streams and each stream replicates updates to
+   the other.
+
+   If this is not selected, stream replication will be basic master-slave
+   topology. In this topology, you replicate in one direction.
+   See [5]Stream Replication for more information.
+    4. Select values for the following optional settings.
+
+   Throttle Specifies whether (Yes) or not (No) to throttle replication
+   operations. Throttle the replication stream to minimize the impact of
+   the replication process on incoming operations during periods of heavy
+   load. By default, throttling is disabled.
+
+   Throttling has two effects, both of which allow MapR-ES to use more
+   system resources to process new messages:
+          + Throttling slows down the rate at which changes to a stream
+            are replicated.
+          + Throttling slows down the rate at which messages to be
+            replicated are read from disk.
+
+   Replicate Synchronously Specifies whether replication is synchronous
+   (Yes) or asynchronous (No). The default value is asynchronous
+   replication.
+   Encrypt On Wire Specifies whether (Yes) or not (No) to enable on-wire
+   encryption. By default, this is disabled (No). If you enable on-wire
+   encryption, the local cluster and any other cluster that is part of the
+   replication process must be enabled for security.
+   Compress On Wire Specifies the type of compression to use when
+   replicating messages.
+    5. Click Add Replica to create the replica.
+
+Adding a Replica Using the CLI or REST API
+
+   The basic command to create a replica is:
+maprcli stream replica add -path <stream path> -replica <remote stream path>
+
+   To run this command, your user ID must have the following permissions
+   on the:
+     * Source cluster:
+          + [6]readAce and [7]writeAce on the volume
+          + [8]lookupdir on directories in the path
+          + adminperm and copyperm permissions on the source stream
+     * Target cluster:
+          + [9]readAce and [10]writeAce on the volume
+          + [11]lookupdir on directories in the path
+
+   For complete reference, see [12]stream replica add.
+   Note: You also have the option to set up replication with maprcli table
+   replica autosetup which will set up and start replication. For more
+   information, see [13]Setting Up Stream Replication Using the CLI.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/modes_of_replication.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/security_for_replication_of_streams.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/configuring_for_repl_between_streams.html#configuring_for_repl_between_streams
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/streams/ViewDetail.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/replicating_streams.html#replicating_streams
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_replica_add.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/streams/SettingUpStreamReplication.html#task_cd3_wrc_m1b

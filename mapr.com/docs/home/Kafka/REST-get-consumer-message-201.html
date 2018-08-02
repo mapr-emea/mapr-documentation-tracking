@@ -1,0 +1,65 @@
+Kafka REST 2.0.1: GET /consumers/{group: string}/instances/{instance:
+string}/topics/{topic: string}
+
+   Consumes messages by a specific consumer from a topic .
+
+Description
+
+   Depending on the configuration, the type of information retrieved has
+   different behavior. See the streams.default.stream parameter in
+   [1]Kafka REST 2.0.1: Configuration Parameters.
+
+   CAPTION: Table 1. Parameters
+
+   Parameters Defined Response
+   streams.default.stream is defined
+
+   Consumes messages by a specific consumer from a MapR-ES topic if the
+   consumer has not been subscribed for other topic yet. The user could
+   pass fully qualified topic name or not. If a fully qualified topic name
+   is not used, messages are consumed from the topic in the default stream
+   path.
+   streams.default.stream is not defined Consumes messages by a specific
+   consumer from a MapR-ES topic if the consumer has not been subscribed
+   to another topic. The fully qualified topic name must pass the fully
+   qualified topic name that contains the stream path.
+   Note: The first time a consumer reads from a topic, it subscribes for
+   that topic and that consumer cannot be used to read from other topics.
+
+   CAPTION: Table 2. Parameters
+
+       Parameters                  Description
+   group_name (string) The name of the consumer group.
+   instance (string)   The ID of the consumer instance.
+   topic_name (string) The topic to consume messages from.
+
+Syntax
+
+http://<host>:8082/topics/<group_name>/instances/<instance_id>/topics/<topic_nam
+e>
+
+Request Example
+
+curl -X GET -H "Accept: application/vnd.kafka.binary.v1+json"
+http://localhost:8082/consumers/grouptest/instances/user/topics/testtopic1
+
+Response Example
+
+[
+  {
+    "key":"a2v5",
+    "value":"Y29uZmx1ZW50",
+    "topic":"/streaming_data/stream:testtopic1",
+    "partition":0,"offset":1
+  },
+  {
+    "key":"a2v5",
+    "value":"Y29uZmx1ZW50",
+    "topic":"/streaming_data/stream:testtopic1",
+    "partition":0,"offset":2
+  }
+]
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/REST-config-parameters-201.html

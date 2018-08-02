@@ -1,0 +1,100 @@
+volume snapshot list
+
+   Displays info about a set of snapshots.
+
+   You can specify the snapshots by volumes or paths, or by specifying a
+   filter to select volumes with certain characteristics.
+
+Syntax
+
+   CLI
+
+maprcli volume snapshot list
+    [ -cluster <cluster name> ]
+    [ -columns <fields> ]
+    ( -filter <filter> ]
+    [ -path <volume path list> ]
+    [ -volume <volume list> ]
+    [ -limit <rows> ]
+    [ -output (terse|verbose) ]
+    [ -start <offset> ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host>:<port>/rest/volume/snapshot/list[?<parameters>]
+
+Parameters
+
+   Either volume or path can be used if you wish the specify the
+   snapshots. In addition, filter can be used with volume and path, or
+   independently.
+   Parameter Description
+   cluster The cluster on which to run the command.
+   columns A comma-separated list of fields to return in the query. See
+   the Fields table below. Default: none
+   filter A filter specifying snapshots to list. See [1]Filters for more
+   information.
+   limit The number of rows to return, beginning at start. Default:
+   2147483647
+   output Specifies whether the output should be terse or verbose.
+   Default: verbose
+   path A comma-separated list of paths for which to list snapshots.
+   start The offset from the starting row. Default: 0
+   volume A comma-separated list of volumes for which to list snapshots.
+
+Fields
+
+   The following table lists the fields used in the columns parameter, and
+   returned as output.
+   Field Name Short Name Description
+   snapshotid id Unique snapshot ID.
+   snapshotname n Snapshot name.
+   volumeid vid ID of the volume associated with the snapshot.
+   volumename vn Name of the volume associated with the snapshot.
+   volumepath vp Path to the volume associated with the snapshot.
+   ownername on Owner (user or group) associated with the volume.
+   ownertype ot Owner type for the owner of the volume:
+     * 0=user
+     * 1=group
+
+   cumulativeReclaimSizeMB cs Disk space used for the snapshot, in MB.
+   creationtime ct Snapshot creation time. Date time string (verbose
+   output) or milliseconds since 1970 (terse output).
+   expirytime et Snapshot expiration time. Date time string (verbose
+   output), or milliseconds since 1970 (terse output); 0 = never expires.
+   volumeSnapshotAces N/A ACE Permissions for read and write on the volume
+   snapshot.
+
+Output
+
+   This sample output is based on using the following code to create a
+   snapshot called uservolume for the volume named users.
+maprcli volume snapshot create -snapshotname uservolsnap -volume users
+
+   Sample Output
+# maprcli volume snapshot list
+cumulativeReclaimSizeMB  creationtime                  ownername  snapshotid  vo
+lumeSnapshotAces  snapshotname  volumeid  volumename  ownertype  volumepath
+0                        Wed Nov 02 14:43:11 PDT 2016  mapr       256000049   ..
+.                 uservolsnap   7598647   users       1          /user
+
+   Note: Only the cumulative snapshot size is available. Individual
+   snapshot sizes are not available.
+
+Examples
+
+   List all snapshots:
+     * [2]CLI
+     * [3]REST
+
+maprcli volume snapshot list
+
+https://abc.sj.us:8443/rest/volume/snapshot/list
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-snapshot-list.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-snapshot-list.html#div1entry2

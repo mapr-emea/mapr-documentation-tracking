@@ -1,0 +1,111 @@
+Installing Myriad
+
+   Describes Myriad requirements and installation.
+
+   The following table specifies the Myriad installation requirements.
+
+   CAPTION: Table 1. Myriad Installation Requirements
+
+          Requirement        Description
+   Operating Systems
+     * RedHat/CentOS 6.2, 6.6, and 7.0
+     * Ubuntu 14.04
+
+   Myriad Requirements
+     * JDK 7 or 8
+
+   MapR Minimum Requirements
+     * MapR Core
+     * MapR Zookeeper
+     * MapR CLDB
+     * MapR FileServer
+     * MapR Webserver
+
+   The following table specifies the ports used by Myriad.
+
+   CAPTION: Table 2. Ports Used
+
+   Application Port
+   Mesos Master UI http://<hostname>:5050
+   Marathon UI http://<hostname>:8080
+   Myriad UI http://<hostname>:8192
+   Note: The Myriad UI is available once a Resource Manager is launched.
+   Note: If your environment has both Marathon and Spark installed on the
+   same node, a conflict occurs because the default port for both is 8080.
+   To resolve this conflict, change the port for one of the applications.
+
+   The Myriad installation is a manual installation where Apache Mesos is
+   installed before MapR Myriad.
+    1. Download and build Mesos and (optionally) Marathon. See
+       [1]http://mesos.apache.org/getting-started/ for Mesos and
+       [2]https://mesosphere.github.io/marathon/docs/ for Marathon.
+       Important: Install Apache Mesos on all node where resources will be
+       shared. In addition, at least one (1) node should be running both
+       Master and Slave and one (1) node running only Slaves.
+    2. Download and deploy MapR Myriad.
+         a. Download the Myriad 0.2 tarball. See [3]Myriad 0.2-1710
+            Release Notes for more information.
+         b. Extract Myriad from the tarball.
+tar -zxf mapr-myriad-0.2.tar.gz
+         c. Deploy Myriad and configuration files.
+mkdir -p /opt/mapr/hadoop/hadoop-{HADOOP_VERSION}/share/hadoop/myriad/lib
+ln -sf {PROJECT_HOME}/libs/* {HADOOP_HOME}/share/hadoop/myriad/lib
+ln -sf {PROJECT_HOME}/conf/* {HADOOP_HOME}/etc/hadoop/
+    3. On the Mesos master node, install (as a minimum) Apache Mesos and
+       the following MapR packages:
+mapr-core
+mapr-fileserver
+mapr-cldb
+mapr-webserver
+
+        On RedHat / CentOS
+
+yum -nogpgcheck install <package> <package>  ...
+
+        On Ubuntu
+
+apt-get install  <package> <package> ...
+
+    4. Install MapR Zookeeper on its master node:
+       The MapR mapr-zookeeper package can be installed on any node that
+       is designated as its master. For example, on the Mesos master node:
+mapr-zookeeper
+    5. (optional) Install Mesos-DNS on its master node:
+       Mesos-DNS can be installed on any node that is designated as its
+       master. For example, on the Mesos master node. See
+       [4]https://mesosphere.github.io/mesos-dns/docs/
+    6. On the Mesos slave nodes, install (as a minimum) Apache Mesos and
+       the following MapR packages.
+mapr-core
+mapr-fileserver
+
+Small Cluster Installation
+
+   The following example shows an installation on a CentOS6 operating
+   system, a three (3) node cluster where one node is the master node for
+   Mesos, Mesos-DNS, MaprR CLDB, and MapR Zookeeper, and two nodes are
+   Mesos slave nodes.
+
+   Download and build Mesos on all nodes.
+
+   Unpack and install Myriad from the tarball.
+
+   On the master node, install (as a minimum) Apache Mesos and the
+   following MapR packages:
+yum -nogpgcheck install
+mapr-core mapr-fileserver mapr-zookeeper mapr-cldb mapr-webserver
+
+   On the two Mesos slave nodes, install (as a minimum) Apache Mesos and
+   the following MapR packages:
+yum -nogpgcheck install
+mapr-core mapr-fileserver
+
+   See [5]Configure Myriad.
+
+References
+
+   1. http://mesos.apache.org/getting-started/
+   2. https://mesosphere.github.io/marathon/docs/
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/MyriadRN-0.2.html
+   4. https://mesosphere.github.io/mesos-dns/docs/
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Myriad/configureMyriad.html

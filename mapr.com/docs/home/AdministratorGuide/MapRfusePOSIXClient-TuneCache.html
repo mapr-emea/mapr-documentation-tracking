@@ -1,0 +1,156 @@
+Tuning the Cache for FUSE-Based POSIX Client
+
+   The FUSE kernel and the FUSE userspace process caches both data and
+   metadata. When an application performs a read of a file using the
+   FUSE-based POSIX client, data is generally returned from the local FUSE
+   kernel cache if that portion of the file resides in cache from a
+   previous read or write operation. However, if the file has been
+   modified on the MapR cluster by a different client, the data in the
+   local kernel cache may be stale. The illustration below shows the
+   layers of cache — FUSE kernel cache (referred to as kCache), the FUSE
+   userspace cache (referred to as uCache), MFS cache (referred to as
+   mfsCache) — and the sections below describe how these affect reads and
+   writes and how the FUSE attributes can be used to tune the caching
+   behavior.
+   [posix-client-cache.png]
+
+Inode Attribute Cache
+
+   Inode attributes are cached in the FUSE kernel cache (kCache) and in
+   the userspace cache (uCache). When the same file is accessed from
+   multiple FUSE clients, writes on the file through one mountpoint may
+   not be seen by other applications performing a read on the file
+   (through a different client). The inode attributes are cached in the
+   kernel because of which another application modifying the file might
+   not see the updates instantly. For example, the inode attributes, such
+   as size, modification timestamp (mtime), etc. of the file, in the
+   kCache and uCache on Node A might be stale if the file is being
+   modified concurrently by an application on Node B.
+     * [1]Tuning the attribute timeout in kCache
+     * [2]Tuning the attribute timeout in uCache
+
+   The FUSE kernel refreshes inode attributes from the userspace FUSE
+   process once every 3 seconds by default. This can be tuned through the
+   fuse.attr.timeout parameter in the fuse.conf file. The
+   fuse.attr.timeout parameter specifies the interval of time at which to
+   refresh the inode attributes in kernel and can be used to minimize the
+   amount of time it takes to refresh the cache. Even if fuse.attr.timeout
+   is set to 0, Node A might still not see the latest writes from Node B
+   because there is cached metadata in the userspace FUSE process on Node
+   A; metadata can be served from the uCache and the application might not
+   see current updates for attributes like size. To see the latest changes
+   on a file, see [3]Tuning the attribute timeout in uCache.
+   The userspace FUSE process caches both data and metadata and refreshes
+   the inode attributes from the MFS once every 3 seconds; this is not
+   tunable. Even if the fuse.attr.timeout is set to 0, because there is
+   cached data and metadata in the userspace FUSE process (uCache), stale
+   data or metadata can be served from the userspace FUSE process, which
+   only refreshes inode attributes every 3 seconds. However, the userspace
+   FUSE process updates the inode attributes every time a file is opened.
+   To see the latest changes on a file, applications, especially readers
+   on a file, that require to see updates on the file within 3 seconds can
+   close and open the file to refresh the attributes and see instant
+   updates.
+
+Readdir Cache
+
+   Directory entries (files within a directory) are not cached in the
+   uCache, but are cached in the kCache. The kCache can be stale on Node A
+   if there are files being created in the directory by an application
+   from the mountpoint on Node B. That is, a user listing directory
+   entries on Node A for a directory (using a command like ls) might not
+   see the files that were just created from Node B.
+
+   Tuning the entry timeout in kCache
+          The fuse.entry.timeout parameter specifies the interval of time
+          at which to refresh the readdir (or lookup) cache in the kernel
+          (kCache). The default value is 3 seconds and this can be
+          configured in the fuse.conf file.
+
+Data Cache
+
+   By default:
+     * Reads are buffered both in the kCache and the uCache.
+     * Writes are not buffered in the kCache, but are buffered in the
+       uCache.
+
+   Application trying to read a file on Node A might not see the latest
+   updates to the file (written from node B) for the following reasons:
+     * Reads on Node A might have been served either from the kCache or
+       the uCache of Node A.
+       See [4]Tuning the cache for reads for information on invalidating
+       the cache.
+     * The writes might have been buffered in the uCache of Node B.
+       See [5]Tuning the cache for writes for information on disabling
+       buffering at a file level or altogether.
+
+   Tuning the cache for reads
+
+          + [6]Tuning the kCache
+          + [7]Tuning the uCache
+
+          The fuse.auto.inval.data parameter specifies whether or not to
+          automatically invalidate the kCache for any data change, which
+          causes mtime change, on the files. If enabled, any mtime update
+          on the file automatically invalidates the page cache of the
+          file. The mtime is an inode attribute; for information on
+          refreshing the cache for inode attributes, see Inode Attributes.
+
+          Every read cache page is valid for 3 seconds. After 3 seconds,
+          the read cache page is dropped from uCache. This is not tunable.
+
+   Tuning the cache for writes
+
+          + [8]Tuning the kCache
+          + [9]Tuning the uCache
+
+          The fuse.writeback.cache parameter specifies whether to buffer
+          writes in the kernel or to perform a write through. If enabled,
+          the writes are buffered in the kernel. If disabled, writes are
+          not buffered in the kernel and are directly sent to the FUSE
+          process.
+
+          By default, writeback caching is disabled; that is, the kernel
+          sends all writes to FUSE process directly. If an application
+          does small writes, then the FUSE process might run out of CPU
+          because of the overhead involved in small writes. To mitigate
+          this, the FUSE kernel can be configured to enable caching in the
+          kernel using the fuse.writeback.cache attribute. However, this
+          can be enabled only on kernels running version >= 3.15.
+
+          The fuse.flush.inline attribute can be used to disable data
+          buffering in the uCache. By default, the userspace FUSE process
+          caches the writes locally. This parameter specifies whether to
+          cache writes (for up to 3 seconds or 64KB in size) or write
+          directly to server. This can be disabled at both the file and
+          FUSE process levels.
+
+          If the application does buffering before writing to filesystem,
+          to avoid redundant buffering, you can disable buffering at the
+          FUSE level by setting the fuse.flush.inline parameter value to 1
+          in the fuse.conf file. Caching can be disabled at a file-level
+          by opening the file in O_DIRECT mode.
+
+   Note: An application that needs to directly write to fileserver before
+   acknowledging (such as when writing to a sensitive file) has to disable
+   the fuse.writeback.cache parameter, enable the fuse.flush.inline
+   parameter, and set disk.flush attribute on the directory or file to
+   achieve the desired behaviour. The disk.flush attribute can be set by
+   running the hadoop mfs command with the setdiskflushon property. If
+   enabled (on), MFS acknowledges to client only after flushing writes to
+   disk on all replicas and if disabled (off), MFS acknowledges to client
+   before flushing writes in the buffer cache. By default, this is
+   disabled. Note that there might be significant impact on the
+   performance when you set disk.flush attribute.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#MapRfusePOSIXClient-TuneCache__tune-attr-timeout-ucache
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#MapRfusePOSIXClient-TuneCache__tune-cache-read
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#MapRfusePOSIXClient-TuneCache__tune-cache-write
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div2entry1
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div2entry2
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div3entry1
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div3entry2

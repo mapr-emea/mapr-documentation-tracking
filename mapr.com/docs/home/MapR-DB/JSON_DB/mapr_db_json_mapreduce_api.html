@@ -1,0 +1,183 @@
+MapR-DB JSON MapReduce API
+
+   This API library extends the Apache Hadoop MapReduce framework, so that
+   you can write your own MapReduce applications to write data from one
+   JSON table to another.
+
+Prerequisites to using this API Library
+
+     * Ensure that you have a firm grasp of MapReduce concepts and
+       experience writing MapReduce applications.
+     * Before running a MapReduce application that uses this API, ensure
+       that the destination JSON table or tables already exist and that
+       any column families other than the default are already created on
+       the destination tables.
+
+Classes
+
+   The following table summarizes the information that is in the
+   [1]MapR-DB JSON MapReduce API Library Javadoc, which you can refer to
+   for complete details of the classes.
+   Category Class Description
+   Utility MapRDBMapReduceUtil Simplifies the use of the API for most use
+   cases.
+   Input formatters TableInputFormat Describes how to read documents from
+   MapR-DB JSON tables.
+   Record reader TableRecordReader Reads documents (records) from MapR-DB
+   JSON tables.
+   TableRecordReaderImpl Iterates over MapR-DB JSON table data. Returns
+   key-value pair as ByteBufWritableComparable and Document respectively.
+   Record writers BulkLoadRecordWriter Bulk loads documents into MapR-DB
+   JSON tables.
+   TableMutationRecordWriter Modifies documents that are in MapR-DB JSON
+   tables.
+   TableRecordWriter Writes documents to MapR-DB JSON tables.
+   Output formatters BulkLoadOutputFormat Describes how to bulk load
+   documents into MapR-DB JSON tables.
+   TableOutputFormat Describes how to write documents to MapR-DB JSON
+   tables.
+   TableMutationOutputFormat Writes DocumentMutation from the MapReduce
+   phase to JSON tables . The key is of type Value and the value is a
+   DocumentMutation.
+   Serializers DocumentSerialization Defines the serializer and
+   deserializer for passing data from Document objects between map and
+   reduce phases.
+   DBDocumentSerialization Converts a JSON document from MapR-DB format to
+   binary SequenceFile format.
+   ValueSerialization Serializes a JSON key and passes it between
+   MapReduce phases.
+   Partitioner TablePartitioner Specifies how to partition data from the
+   source JSON table.
+   TotalOrderPartitioner<K,V> Globally sorts data according to row key and
+   then partitions the sorted data. This class is useful when the
+   destination table has been pre-split into two or more tablets.
+
+Using MapRDBMapReduceUtil to Set Default Values in Configurations and Jobs
+
+   The centerpiece of this API is the MapRDBMapReduceUtil class, which you
+   can use in the createSubmittableJob() method of your applications to
+   perform these actions:
+     * Set default values in the configuration for a MapReduce application
+       and set the input and output format classes.
+     * Set default types for output keys and values.
+     * Configure a TotalOrderPartitioner and return the number of reduce
+       tasks to use for a job.
+
+   To set default values in the configuration for a MapReduce application
+   and set the input and output format classes, use the following methods:
+configureTableInputFormat(org.apache.hadoop.mapreduce.Job job, String srcTable)
+
+   The configureTableInputFormat method performs the following actions:
+     * Set the serialization class for [2]Document and [3]Value objects.
+       These interfaces are part of the OJAI (Open JSON Application
+       Interface) API.
+     * Set the field INPUT_TABLE in [4]TableInputFormat to the path and
+       name of the source table, and pass this value to the configuration
+       for the MapReduce application.
+     * Set the input format class for the job to [5]TableInputFormat.
+
+configureTableOutputFormat(org.apache.hadoop.mapreduce.Job job, String destTable
+)
+
+   The configureTableOutputFormat method performs the following actions:
+     * Set the field OUTPUT_TABLE in [6]TableOutputFormat to the path and
+       name of the destination table, and pass this value to the
+       configuration for the MapReduce applications.
+     * Set the output format class for the job to [7]TableOutputFormat.
+
+   If you want to set values for other fields in TableInputFormat or
+   TableOutputFormat, or write your own logic for them, you can pass field
+   values to configurations and specify these classes for jobs as you
+   would in common MapReduce applications.
+   To set default types for output keys and values, use the following
+   methods:
+setMapOutputKeyValueClass(org.apache.hadoop.mapreduce.Job job)
+setOutputKeyValueClass(org.apache.hadoop.mapreduce.Job job)
+
+   Note: You can also set types for output keys and values from the map
+   phase, if those types will differ from the final output types.
+
+   To configure TotalOrderPartitioner and return the number of reduce
+   tasks to use for a job, you can use a code line similar to the
+   following in your application's method for creating a job:
+int numReduceTasks = MapRDBMapReduceUtil.setPartitioner(org.apache.hadoop.mapred
+uce.Jobjob, String destPath);
+
+   The setPartitioner() method finds out whether a table has been
+   pre-split into two or more tablets, counts the number of tablets,
+   writes the number to a partitioner file, and sends that file to an
+   instance of TotalOrderPartitioner. This line also returns the number of
+   tablets to numReduceTasks. Your code can then use that variable to set
+   the number of reducers, like the following:
+job.setNumReduceTasks(numReduceTasks);
+
+   Note: The sample application gives an example of how to use
+   MapRDBMapReduceUtil.
+
+Mutating Rows in Destination Tables
+
+   Use the TableMutationRecordWriter class when you need to mutate rows.
+
+   For example, suppose that you are tracking the number of users who are
+   performing various actions on your retail website. To do this, at
+   intervals you run your MapReduce application and save the results in
+   JSON documents in MapR-DB. Suppose that you count the number of users
+   who went through the order process but abandoned their orders. After
+   every run of the application, you want to update an JSON document by
+   adding the current count to the total count and by updating a field
+   that tracks the date and time that the MapReduce application was last
+   run.
+
+   You could do that by setting values in a DocumentMutation object (see
+   the [8]OJAI (Open JSON Application Interface) Javadoc. You would then
+   serialize that and write it to the table with
+   TableMutationRecordWriter.
+
+Compiling and Running Applications
+
+   You can compile applications that use the MapR-DB Java API by using the
+   required JAR file from the MapR installation. Run applications with the
+   mapr command.
+   To compile an application, use the following command:
+javac -cp 'mapr classpath' <Application jars>
+
+   To launch an application, use the following command
+mapr <Main class jar> <commandline arguments>
+
+   Note: If you want to add JAR files to the classpath that the mapr
+   command uses, add them with the environment variable MAPR_CLASSPATH.
+   For example:
+export MAPR_CLASSPATH=/home/apps/awesome-1.0.jar
+          mapr com.company.MyAwesomeApp
+
+   Important: Turn off speculative execution
+
+   Speculative execution of MapReduce tasks is on by default. For custom
+   applications that load MapR-DB tables, it is recommended to turn
+   speculative execution off. When it is on, the tasks that import data
+   might run multiple times. Multiple tasks for an incremental bulkload
+   could insert one or more versions of a record into a table. Multiple
+   tasks for a full bulkload could cause loss of data if the source data
+   continues to be updated during the load.
+
+   If your custom MapReduce application uses
+   MapRDBMapReduceUtil.configureTableOutputFormat(), you do not have to
+   turn off speculative execution manually. This method turns it off
+   automatically.
+   Turn off speculative execution by using either of these methods:
+     * Set the following MapReduce version 2 parameter to false:
+       mapreduce.map.speculative
+     * Include the following line in the method in your application that
+       sets parameters for jobs:
+job.setSpeculativeExecution(false);
+
+References
+
+   1. http://maprdocs.mapr.com/apidocs/60/maprdb-json-mapreduce
+   2. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/Document.html
+   3. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/Value.html
+   4. http://maprdocs.mapr.com/apidocs/60/maprdb-json-mapreduce/com/mapr/db/mapreduce/TableInputFormat.html
+   5. http://maprdocs.mapr.com/apidocs/60/maprdb-json-mapreduce/com/mapr/db/mapreduce/TableInputFormat.html
+   6. http://maprdocs.mapr.com/apidocs/60/maprdb-json-mapreduce/com/mapr/db/mapreduce/TableOutputFormat.html
+   7. http://maprdocs.mapr.com/apidocs/60/maprdb-json-mapreduce/com/mapr/db/mapreduce/TableOutputFormat.html
+   8. https://maprdocs.mapr.com/apidocs/60/OJAI/org/ojai/store/DocumentMutation.html

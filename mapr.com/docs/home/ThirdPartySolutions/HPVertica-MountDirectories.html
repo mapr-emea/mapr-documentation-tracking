@@ -1,0 +1,26 @@
+Mount MapR Directories for HP Vertica
+
+   On every node that will be running HP Vertica:
+    1. As the root user, create a Linux mount point for the HP Vertica
+       volumes, as shown in the example below:
+mkdir /vertica
+chown dbadmin:verticadba /vertica
+    2. As the MapR administrative user, add the mount specification to
+       mapr_fstab on each node. Adding this specification automatically
+       mounts the node specific directory for the HP Vertica volumes when
+       you start the MapR NFS gateway:
+echo localhost:/mapr/<clustername>/vertica/$(hostname -f) /vertica nolock,hard >
+> /opt/mapr/conf/mapr_fstab
+       Warning: If it is not changed at configuration time, the default
+       MapR cluster name is my.cluster.com. You can determine the MapR
+       cluster name using the maprcli command:
+maprcli dashboard info -json | grep name
+    3. As the root user, mount the new HP Vertica volumes specified in
+       mapr_fstab.
+mount localhost:/mapr/<clustername>/vertica/$(hostname -f) /vertica
+    4. As the root user, confirm successful mounting on every node. You
+       will see a /vertica mount specific for the server on which this
+       command is run:
+mount | grep mapr
+       Note: Do not continue with creation of the HP Vertica database
+       unless these directories exist.

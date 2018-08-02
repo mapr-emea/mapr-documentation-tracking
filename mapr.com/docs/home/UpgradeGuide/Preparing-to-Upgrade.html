@@ -1,0 +1,248 @@
+Preparing to Upgrade MapR Core
+
+   Complete these pre-upgrade steps for MapR Core.
+
+   After you have planned your upgrade process, prepare the cluster for
+   upgrade while your existing cluster is fully operational. Prepare to
+   upgrade as described in this section to minimize downtime and eliminate
+   unnecessary risk. Design and run health tests and back up critical
+   data. Performing these tasks during upgrading reduces the number of
+   times you have to touch each node, but increases down-time during
+   upgrade. Upgrade a test cluster before upgrading your production
+   cluster.
+
+   Complete these pre-upgrade steps:
+
+1. Verify System Requirements for All Nodes
+
+   Verify that all nodes meet the following minimum requirements for the
+   new version of MapR software:
+     * Software dependencies. Package dependencies in the MapR
+       distribution can change from version to version. If the new version
+       of MapR has dependencies that were not present in the older
+       version, you must address them on all nodes before upgrading MapR
+       software. Installing dependency packages can be done while the
+       cluster is operational. See [1]Packages and Dependencies for MapR
+       Software. If you are using a package manager, you can specify a
+       repository that contains the dependency package(s), and allow the
+       package manager to automatically install them when you upgrade the
+       MapR packages. If you are installing from package files, you must
+       pre-install dependencies on all nodes manually.
+     * Hardware requirements. The newer version of packages might have
+       greater hardware requirements. [2]Hardware requirements must be met
+       before upgrading.
+     * OS requirements. MapR OS requirements do not change frequently. If
+       the OS on a node doesn’t meet the requirements for the newer
+       version of MapR, plan to decommission the node and re-deploy it
+       with an updated OS after the upgrade.
+     * Certificate requirements. Recent versions of [3]Safari and
+       [4]Chrome web browsers have removed support for older certificate
+       cipher algorithms, including those used by some versions of MapR.
+       For more information on resolving this issue, see [5]Unable to
+       Establish a Secure Connection.
+
+2. Design Health Checks
+
+   Plan what kind of test jobs and scripts you will use to verify cluster
+   health as part of the upgrade process. You will verify cluster health
+   several times before, during, and after upgrade to ensure success at
+   every step, and to isolate issues whenever they occur. Create both
+   simple tests to verify that cluster services start and respond, as well
+   as non-trivial tests that verify workload-specific aspects of your
+   cluster.
+
+   Design Simple Tests
+
+   Here are a few examples of simple tests you can design to check node
+   health:
+     * Use maprcli commands to see if any alerts exist and to verify that
+       services are running as expected. For example:
+# maprcli node list -columns svc
+              service                                                     hostna
+me  ip
+              nodemanager,cldb,fileserver,hoststats                       centos
+55  10.10.82.55
+              nodemanager,fileserver,hoststats                            centos
+56  10.10.82.56
+              fileserver,nodemanager,hoststats                            centos
+57  10.10.82.57
+              fileserver,nodemanager,webserver,hoststats                  centos
+58  10.10.82.58
+              ...lines deleted...
+              # maprcli alarm list
+              alarm state  description
+                                                entity    alarm name
+                 alarm statechange time
+              1            One or more licenses is about to expire within 25 day
+s                                               CLUSTER   CLUSTER_ALARM_LICENSE_
+NEAR_EXPIRATION  1366142919009
+              1            Can not determine if service: nfs is running. Check l
+ogs at: /opt/mapr/logs/nfsserver.log            centos58  NODE_ALARM_SERVICE_NFS
+_DOWN            1366194786905
+       In this example you can see that an alarm is raised indicating that
+       MapR is expecting an NFS server to be running on node centos58, and
+       the node list of running services confirms that the nfs service is
+       not running on this node.
+     * Batch create a set of test files.
+     * Submit a MapReduce application.
+     * Run simple checks on installed Hadoop ecosystem components. For
+       example, run a Hive query.
+
+   Design Non-trivial Tests
+   Appropriate non-trivial tests will be specific to your particular
+   cluster’s workload. You may have to work with users to define an
+   appropriate set of tests. Run tests on the existing cluster to
+   calibrate expectations for “healthy” task and job durations. On future
+   iterations of the tests, inspect results for deviations. Some examples:
+     * Run performance benchmarks relevant to the cluster’s typical
+       workload.
+     * Run a suite of common jobs. Inspect for correct results and
+       deviation from expected completion times.
+     * Test correct inter-operation of all components in the Hadoop stack
+       and third-party tools.
+     * Confirm the integrity of critical data stored on cluster.
+
+3. Verify Cluster Health
+
+   Run the test you designed in step 2 to verify the cluster health prior
+   to upgrade.
+     * Run the suite of simple tests to verify that basic features of the
+       MapR core are functioning correctly, and that any alarms are known
+       and accounted for.
+     * Run the suite of non-trivial tests to verify that the cluster is
+       running as expected for typical workload, including integration
+       with Hadoop ecosystem components and third-party tools.
+
+   Proceed with the upgrade only if the cluster is in an expected, healthy
+   state.
+
+4. Back Up Critical Data
+
+   Data in the MapR cluster persists across upgrades from version to
+   version. However, as a precaution you might want to back up critical
+   data before upgrading. If you deem it practical and necessary, you can
+   do any of the following:
+     * Copy data out of the cluster using distcp to a separate, non-Hadoop
+       datastore.
+     * Mirror critical volume(s) into a separate MapR cluster, creating a
+       read-only copy of the data which can be accessed via the other
+       cluster.
+
+   When services for the new version are activated, MapR-FS will update
+   data on disk automatically. The migration is transparent to users and
+   administrators. Once the cluster is active with the new version, you
+   cannot roll back.
+
+5. Run Your Upgrade Plan on a Test Cluster
+
+   Before executing your upgrade plan on the production cluster, perform a
+   complete dry run on a test cluster. You can perform the dry run on a
+   smaller cluster than the production cluster, but make the dry run as
+   similar to the real-world circumstances as possible. For example,
+   install all Hadoop ecosystem components that are in use in production,
+   and replicate data and jobs from the production cluster on the test
+   cluster. The goals for the dry run are:
+     * Eliminate surprises. Get familiar with all upgrade operations you
+       will perform as you upgrade the production cluster.
+     * Uncover any upgrade-related issues as early as possible so you can
+       accommodate them in your upgrade plan. Look for issues in the
+       upgrade process itself, as well as operational and integration
+       issues that could arise after the upgrade.
+
+6. Pause Cross-Cluster Operations
+
+   Complete the steps for each cross-cluster feature used by this cluster:
+     * Volume Mirroring. If volumes from another cluster are mirrored on
+       this cluster, use one of the following options to stop the
+       mirroring of volumes on this cluster:
+
+   Using the MCS See [6]Stopping the Mirror.
+   Using a maprcli command Run the maprcli volume mirror stop command on
+   this cluster. See [7]volume mirror stop.
+     * Table Replication. If source tables on this cluster are replicated
+       to tables on another cluster, pause the replication of tables on
+       this cluster. Use one of the following options for each source
+       table on this cluster:
+
+   Using the MCS
+         1. Log in to MCS and go to the source [8]table information page.
+         2. On the Replications tab associated with the source table,
+            select each replica and then click Actions > Pause Replication
+            > .
+
+   Using a maprcli command Run the maprcli table replica pause command.
+   See [9]table replica pause.
+
+   Note: Once you have completed the MapR Core upgade and the
+   [10]Post-Upgrade Steps for MapR Core, you can resume cross-cluster
+   operations.
+
+7. Backup Configuration Files
+
+   If you are upgrading the MapR FUSE-based POSIX client on Ubuntu, create
+   a backup copy of your custom settings in the the fuse.conf file in
+   /opt/mapr/conf directory. If you do not create a backup copy, you may
+   lose your custom settings for the POSIX client because the new
+   fuse.conf file with default settings will overwrite your current
+   fuse.conf file with custom settings. If you are upgrading the MapR
+   FUSE-based POSIX client on other supported operating systems, during
+   upgrade, MapR automatically sets up the fuse.conf.backup file in
+   addition to the new fuse.conf file in the /opt/mapr/conf directory.
+
+8. Migrate from MapReduce Version 1
+
+   MapReduce version 1 (MRv1) is deprecated for MapR 6.0 or later. If you
+   were previously using MRv1, you must prepare your cluster to run
+   MapReduce version 2 (MRv2) applications before upgrading to MapR 6.0 or
+   later:
+     * Ensure that the MapReduce mode on your cluster is set to yarn. MRv2
+       is an application that runs on top of YARN.
+     * Uninstall all packages associated with MRv1.
+
+   For more information on how to prepare your cluster to run MRv2
+   applications, see [11]Migrating from MapReduce Version 1 to MapReduce
+   Version 2.
+
+9. Migrate from Apache HBase
+
+   Apache HBase is deprecated for MapR 6.0 or later. If you were
+   previously using Apache HBase tables, prepare your cluster to use
+   MapR-DB binary tables:
+     * Run the following command on all nodes that contain HBase or
+       AsyncHBase to ensure that your nodes are configured to connect to
+       MapR-DB binary tables instead of Apache HBase tables:
+configure.sh -R -defaultdb maprdb
+       This command also configures AsyncHBase to access MapR-DB binary
+       tables instead of Apache HBase tables.
+     * If you would like to migrate data from Apache HBase tables to
+       MapR-DB binary tables, you must do so before upgrading to MapR 6.0
+       or later. For more information on how to migrate your data, see
+       [12]Migrating between Apache HBase and MapR-DB Binary Tables.
+
+10. Prepare to Upgrade the Expansion Pack
+
+   Complete the pre-upgrade steps in [13]Preparing to Upgrade the
+   Expansion Pack. Then return to this section.
+
+What's Next
+
+   Go to [14]Upgrading MapR Core with the MapR Installer or [15]Upgrading
+   MapR Core Without the MapR Installer.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_packages_and_deps_60.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/PreparingEachNode.html#PreparingEachNode
+   3. http://support.apple.com/en-us/HT203107
+   4. http://www.zdnet.com/google-advances-ssl-with-new-chrome-versions-7000035966/
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_browser_connection.html#c_browser_connection
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/MirrorVols-MirrorStop.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-mirror-stop.html#volumemirrorstop
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ViewTableDetails.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-pause.html#tablereplicapause
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PostUpgradeCore.html#PostUpgradeCore
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/MRv1_migration.html#MRv1_migration
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/MigratingBetweenApacheHBaseandMapRDB.html#MigratingBetweenApacheHBaseandMapRDB
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PerformInstallerPreupgrade.html#PreupgradeMapRInstaller
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingWithInstaller.html#upgradingwithmaprinstaller
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingWithoutInstaller.html#upgradingwithoutmaprinstaller

@@ -1,0 +1,91 @@
+Configuring SPNEGO on MapR
+
+   MapR uses the Simple and Protected GSSAPI Negotiation Mechanism
+   (SPNEGO) to secure several Web UIs in a secure cluster, as well as the
+   REST calls to the MapR Control System (MCS).
+
+Configuring SPNEGO for the Web Server Nodes on Secure Clusters
+
+   The following procedure configures SPNEGO support for the apiserver
+   nodes on your secure cluster.
+    1. Generate a Kerberos principal with the user name HTTP, of the form
+       HTTP/<webserver name> on each node in the secure cluster that will
+       receive inbound SPNEGO traffic.
+       Use the fully qualified domain name (FQDN) as the name in the
+       principal. Although you could also use a short name or the IP
+       address for the principal name, using the FQDN keeps the name
+       consistent with principal names that configure.sh generates and
+       includes in the mapr.login.conf file.
+       Whatever you use as the principal name is what users will have to
+       match exactly in a browser to access the web pages that are
+       protected.
+       Note: Several services and components in a MapR cluster handle
+       SPNEGO traffic, including the MCS. You can name the keytab file
+       mapr.keytab if that file does not already exist. If the mapr.keytab
+       file already exists, generate the new principal to a different file
+       name and merge it to the mapr.keytab file using the ktutil tool.
+       For example:
+kadmin
+ : addprinc -randkey HTTP/<webserver name>
+ : ktadd -k /opt/mapr/conf/mapr.keytab HTTP/<webserver name>
+    2. Verify that the /opt/mapr/conf/mapr.login.conf file lists the
+       correct principal in the MAPR_WEBSERVER_KERBEROS section.
+       To enable SPNEGO for MCS Web UI or for MCS REST calls, on all nodes
+       with the webserver role, add the following line to the
+       /opt/mapr/apiserver/conf/properties.cfg file. For example:
+mapr.rest.auth.methods=kerberos,basic
+       Important: The mapr.rest.auth.methods=kerberos,basic option, which
+       is shown above, is valid only on a secure cluster. If a cluster is
+       not secure, only basic authentication (WWW-Authenticate: Basic) is
+       available to clients.
+    3. Restart the MCS for the changes to take effect.
+
+Testing SPNEGO With curl
+
+   This example tests that the MCS is using GSS for REST calls made with
+   curl.
+   Use the following command to verify that your version of curl supports
+   SPNEGO. Under the Features header, output of the command should show
+   either GSS-Negotiate or SPNEGO. For example:
+# curl --versioncurl 7.22.0 (x86_64-pc-linux-gnu) libcurl/7.22.0
+OpenSSL/1.0.1 zlib/1.2.3.4 libidn/1.23 librtmp/2.3Protocols:
+dict file ftp ftps gopher http https imap imaps ldap pop3 pop3s rtmp rtsp smtp s
+mtps telnet tftp
+Features: GSS-Negotiate IDN IPv6 Largefile NTLM NTLM_WB SSL libz TLS-SRP
+
+   Verify that you have a valid Kerberos ticket-granting-ticket (TGT) with
+   the kinit -p <user> command,. Then, test curl with the following
+   command:
+curl --negotiate -u : -b ~/cookiejar.txt -c ~/cookiejar.txt
+https://<web server node>:8443/rest/<API call> -k -v
+
+   This command returns HTTP/1.1 200 OK when curl is working correctly
+   with SPNEGO.
+
+Configuring Browsers for SPNEGO
+
+   Use the following processes to configure browsers for SPNEGO
+   connections.
+
+   Firefox
+   The process below configures your Firefox browser for SPNEGO
+   connections.
+   Note: These instructions are specific for Firefox version 40.0.3xj. The
+   details may differ slightly if you are using a different version.
+    1. Open the Firefox configuration page by navigating to the address
+       about:config.
+    2. In the Search text field, enter network.negotiate-auth.trusted-uris
+       to bring up that property.
+    3. Right-click on network.negotiate-auth.trusted-uris and select
+       Modify to edit the property and enter the hostnames of the web
+       server nodes in your cluster as a comma-separated list.
+    4. Click OK.
+
+   Chromium on Ubuntu
+   To configure the Chromium browser on Ubuntu for SPNEGO, edit the
+   /etc/chromium-browser/default file and add the following property:
+CHROMIUM_FLAGS="--user-data-dir --auth-server-whitelist=<web server host names>"
+
+   The --user-data-dir flag enables the root user to launch the browser.
+   The --auth-server-whitelist flag specifies the web servers that support
+   SPNEGO authentication.

@@ -1,0 +1,82 @@
+Compiling and Running MapR-DB Binary Applications
+
+   For applications that use the MapR-DB Java API for binary tables, use
+   Maven to compile and determine the application's dependencies. Then,
+   when you run the application, specify those dependencies in the
+   application's classpath.
+
+Compile and Determine Dependencies
+
+    1. Add MapR's maven repository to the list of repositories in your
+       application's pom.xml, if it is not there already:
+<repository>
+      <id>mapr-releases</id>
+      <url>http://repository.mapr.com/maven/</url>
+      <snapshots><enabled>true</enabled></snapshots>
+      <releases><enabled>true</enabled></releases>
+</repository>
+    2. Add a dependency to the HBase client project:
+<dependencies>
+<dependency>
+  <groupId>org.apache.hbase</groupId>
+  <artifactId>hbase-client</artifactId>
+  <version><version selected from the repository></version>
+</dependency>
+<dependencies>
+
+       Note:
+          + The hbase-client version mentioned above is an example. The
+            actual version that your application requires is based on the
+            current MEP and MapR version that you are running.The file
+            versions are listed in the following location:
+            [1]http://repository.mapr.com/nexus/content/groups/mapr-public
+            /org/apache/hbase/hbase-client/ Ensure that the version tags
+            include reference to m7-<maprversion>. Otherwise, your
+            applications will not be able to access MapR-DB binary tables.
+          + If your application uses both the MapR-DB JSON and MapR-DB
+            Binary APIs, you may encounter a conflict in the netty library
+            used by each API. To avoid this, exclude the netty library
+            from your hbase-client dependency as follows:
+<dependency>
+   <groupId>org.apache.hbase</groupId>
+   <artifactId>hbase-client</artifactId>
+   <version><version selected from the repository></version>
+   <exclusions>
+     <exclusion>
+        <artifactId>netty-all</artifactId>
+           <groupId>io.netty</groupId>
+     </exclusion>
+   </exclusions>
+</dependency>
+    3. Use Maven to compile the application and resolve dependencies. For
+       example, you can run mvn clean package.
+
+Running Applications
+
+   When you develop a Java application, you can use a dependency
+   management tool such as Maven to compile your application. However, it
+   is recommended that do the following instead:
+    1. Compile the Java application without including dependencies
+    2. Specify the required classpath when you submit the application to
+       the cluster
+
+   If you choose to bundle the JAR file, and there is a mismatch between
+   the bundled JAR file and the version that your MapR cluster expects,
+   this can result in failures. The failures differ depending on the
+   version of MapR you are using. For more information, see [2]Using the
+   MapR-FS JAR to Connect to the Cluster.
+
+   If the cluster is secure, the node must also have a mapr ticket
+   configured for the user that runs the application.
+   You can use the following command to launch MapR-DB binary
+   applications:
+java -cp <classpath>:. -Djava.library.path=/opt/mapr/lib <main class JAR> <comma
+nd line arguments>
+
+   Note: The classpath should include items that are part of the 'hbase
+   classpath' script plus any other required dependencies.
+
+References
+
+   1. http://repository.mapr.com/nexus/content/groups/mapr-public/org/apache/hbase/hbase-client/
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/IncludeMFSjar.html#IncludeMFSjar

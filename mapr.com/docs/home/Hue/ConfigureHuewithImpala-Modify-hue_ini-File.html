@@ -1,0 +1,30 @@
+Modifying the hue.ini File
+
+   To configure Hue to work with Impala, change the values of the
+   following parameters in the impala section of the hue.ini file:
+   Parameter Default Value Description
+   server_host localhost The hostname or IP address of the Impala server
+   server_port 21050 The port of the Impalad server
+   impersonation_enabled False Turns the impersonation mechanism on or off
+   when talking to Impala
+    1. If server_host is not localhost, change the hostname (and remove
+       the ## characters to uncomment the line).
+## server_host=<hostname>
+    2. If you are not using the default server port (21050), change the
+       server_port setting to the port you are using (and remove the ##
+       characters to uncomment the line).
+## server_port=<port_number>
+    3. Enable impersonation in Impala so the user mapr can impersonate any
+       Linux PAM user on the cluster:
+         a. Edit the /opt/mapr/impala/impala-<version>/conf/env.sh file,
+            and add the following property to the section
+            IMPALA_SERVER_ARGS=*/:
+authorized_proxy_user_config=mapr=*"
+         b. Restart Impala.
+sudo maprcli node services -name impalaserver -action restart -nodes <ip_address
+>
+    4. Enable impersonation for Impala in the hue.ini file by setting
+       impersonation_enabled to true (and remove the ## characters to
+       uncomment the line).
+## impersonation_enabled=true
+    5. Restart Hue so the changes will take effect.

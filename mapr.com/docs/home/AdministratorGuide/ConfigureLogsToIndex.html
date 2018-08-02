@@ -1,0 +1,52 @@
+Configure Which Logs to Index
+
+   Edit the fluentd.conf file
+   (/opt/mapr/fluentd/fluentd-<version>/etc/fluentd/fluentd.conf) to
+   enable or disable the indexing of a specific log.
+
+   The fluentd.conf file includes a source parameter for each log file
+   that it indexes.
+    1. To disable the indexing of a log, comment all lines for the
+       associated source parameter.
+    2. To enable the indexing of a log, for example syslogs, uncomment the
+       lines for the associated source parameter.
+    3. Restart fluentd on each node in the cluster which is impacted by
+       changes to the index configuration. For example, if you disable the
+       indexing of Kibana logs, restart fluentd on the node that runs
+       Kibana.
+maprcli node services -name fluentd -nodes <space separated list of hostname/IPa
+ddresses> -action restart
+
+   For example, in this excerpt of the fluentd.conf file, NodeManager
+   error logs are disabled and ResourceManager logs are enabled:
+# yarn nodemanager log
+# <source>
+#  @type tail
+#  @id yarn_nodemanager_input
+#  format multiline
+#  format_firstline /\d{4}-\d{1,2}-\d{1,2}/
+#  format1 /^(?<my_event_time>[^ ]* [^ ]*) (?<level>[^ ]*) (?<class>[^:]*): (?<m
+essage>.*)$/
+#  time_key my_event_time
+#  keep_time_key true
+#  path /opt/mapr/hadoop/hadoop-*/logs/yarn-*-nodemanager-*.log
+#  tag nodemanager
+#  pos_file /opt/mapr/fluentd/fluentd-0.14.00/var/log/fluentd/tmp/nodemanager.po
+s
+# </source>
+
+# yarn resourcemanager log
+<source>
+  @type tail
+  @id yarn_resourcemanager_input
+  format multiline
+  format_firstline /\d{4}-\d{1,2}-\d{1,2}/
+  format1 /^(?<my_event_time>[^ ]* [^ ]*) (?<level>[^ ]*) (?<class>[^:]*): (?<me
+ssage>.*)$/
+  time_key my_event_time
+  keep_time_key true
+  path /opt/mapr/hadoop/hadoop-*/logs/yarn-*-resourcemanager-*.log
+  tag resourcemanager
+  pos_file /opt/mapr/fluentd/fluentd-0.14.00/var/log/fluentd/tmp/resourcemanager
+.pos
+</source>

@@ -1,0 +1,121 @@
+table cf list
+
+   Lists a MapR table's column families.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce on the volume
+     * [2]lookupdir on directories in the path
+     * adminaccessperm on the table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table cf list
+  -path <path>
+  [ -cfname <name> ]
+
+   REST
+
+curl -k -X GET \
+  'http[s]://<host>:<port>/rest/table/cf/list?path=<path>&cfname=<name>'
+  -u <username>:<password>
+
+Parameters
+
+   Parameter
+
+   Description
+   path
+
+   The path to the table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under volume1 which has
+       a mount point at /volume1, specify the following path:
+       /volume1/test
+
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named test under volume1
+       in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customer
+
+   cfname
+
+   The name of the column family to edit.
+
+Output Fields
+
+   Verbose Field Name
+
+   Terse Field Name
+
+   Field Value
+
+   inmemory
+
+   inmem
+
+   Whether or not this column value resides in memory
+
+   cfname
+
+   n
+
+   The column family name
+
+   maxversions
+
+   vmax
+
+   Maximum number of versions for this column family
+
+   minversions
+
+   vmin
+
+   Minimum number of versions for this column family
+
+   compression
+
+   comp
+
+   Compression scheme used for this column family
+
+   ttl
+
+   ttl
+
+   Time to live for this column family
+
+Example
+
+   This example lists all column families for the table newtable.
+
+   CLI
+
+maprcli table cf list -path /my.cluster.com/volume1/newtable
+
+   REST
+
+curl -k -X GET \
+  'https://r1n1.sj.us:8443/rest/table/cf/list?path=%2Fmy.cluster.com%2Fvolume1%2
+Fnewtable' \
+  -u mapr:mapr
+
+   Example Output
+[user@node]# maprcli table cf list -path /mapr/default/user/user/newtable
+comp  inmem  vmax  n           ttl         vmin
+lz4   false  3     dine        2147483647  0
+lz4   false  3     nahashchid  2147483647  0
+lz4   false  3     wollachee   2147483647  0
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

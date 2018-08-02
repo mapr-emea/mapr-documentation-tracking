@@ -1,0 +1,169 @@
+Getting Started with CDC
+
+   This topic describes an end-to-end flow of how to establish and use
+   Change Data Capture (CDC). It assumes that a new table and dataset will
+   be created, although an existing table with data can also be used.
+
+End-to-End Workflow
+
+   To use the Change Data Capture (CDC) feature, the following diagram
+   shows an end-to-end workflow.
+   Note: Steps 2 and 3 are interchangable. You may decide to start the
+   consumer application for CDC changed data records before performing
+   CRUD operations on the table.
+   [1][USEMAP:cdc-workflow.png]
+    1. Setup the CDC environment.
+         a. If you are propagating changed data from a source table on a
+            source cluster to a destination stream topic on a remote
+            destination cluster, a gateway must be setup. Gateways are
+            setup by installing the gateway on the destination cluster and
+            specifying the gateway node(s) on the source cluster. See
+            [2]Administering MapR Gateways and [3]Configuring Gateways for
+            Table and Stream Replication.
+         b. If you have a secure cluster, secure configuration must be
+            setup. See [4]Configuring Secure Clusters for Cross-Cluster
+            Mirroring and Replication.
+         c. Establish a MapR-DB table (JSON or binary) with data. You can
+            create a new table and add data or use an existing table with
+            data. See [5]maprcli table create for creating a new table or
+            use the MCS. If you are using an existing table with data,
+            skip to the next step.
+         d. Create a MapR-ES stream for the propagated changed data
+            records using the maprcli stream create -ischangelog
+            parameter. See [6]maprcli stream create or use the MCS.
+         e. Create a MapR-ES stream topic for the changed data records.
+            You can use the [7]maprcli stream topic create command, the
+            [8]maprcli table changelog add command (this command creates a
+            changelog relationsip between the source table and the
+            destination stream topic), or the MCS when creating either a
+            stream topic or a table changelog.
+         f. Create a changelog relationship between the source table and
+            the destination stream topic with the [9]maprcli table
+            changelog add command or use the MCS. By creating a changelog
+            relationship, you are creating an environment that propagates
+            changed data records from a source table to a MapR-ES topic.
+            Note: Propagation of existing table data is enabled by
+            default. If you do not want to propagate existing source table
+            data, set the -propagateexistingdata parameter to false. The
+            default is true.
+            Note: Propagation is enabled as soon as the table changelog
+            relationship is added. If you do not want propagation to
+            begin, set the -pause parameter to true. The change data
+            records are stored in a bucket until you resume the changelog
+            relationship; at this point, the stored change data records
+            are propagated to the stream topic. See [10]table changelog
+            resume for more information.
+         g. Verify that the changelog exists. See [11]table changelog list
+            for information about your changelogs.
+    2. Perform CRUD operations (inserts, updates, and deletes) on the
+       source table. The following utility and application can be used:
+          + [12]mapr dbshell for MapR-DB JSON documents
+          + [13]hbshell for MapR-DB binary data
+          + [14]Java applications for MapR-DB JSON
+          + [15]C or Java applications for MapR-DB binary data
+    3. Write a consumer with the Apache Kafka and OJAI API libraries that
+       subscribes to the topic and consumes the change data records. There
+       are multiple interfaces that are used for writing a CDC consumer.
+       See [16]Consuming CDC Records for a list of interfaces. See
+       [17]Building Consumers for CDC for an example.
+
+Use Cases
+
+   CAPTION: Table 1.
+
+   Scenario Setup Task Notes
+   You want a CDC stream topic to contain all of the table data as changed
+   data records. You would setup CDC in the following manner before
+   performing operations on the source table and consuming the change data
+   records.
+    1. Create an empty source table.
+    2. Create the changelog stream.
+    3. Create the changelog stream topic.
+    4. Add the table changelog relationship. In this case, it doesn't
+       matter if the -propagateexistingdata is set to true or false
+       because you're starting with an empty source table.
+    5. Verify that the changelog exists and that replicaState is
+       REPLICA_STATE_REPLICATING. See [18]table changelog list for more
+       information.
+
+   In this case, all table data is propagated to the stream topic as
+   change data records and the operation type is identified on each
+   individual data record.
+   You want a CDC stream topic to contain all of the existing table data
+   and changed data records. You would setup CDC in the following manner
+   before performing operations on the source table and consuming the
+   change data records.
+    1. Create a source table and add data, or alternatively, use an
+       existing table that contains data.
+    2. Create the changelog stream.
+    3. Create the changelog stream topic.
+    4. Add the table changelog relationship. Be sure that the
+       -propagateexistingdata parameter is set to true. If you are using
+       the command line to add the changelog, then this parameter does not
+       need to be specified because the default is true.
+    5. Verify that the changelog exists and no error is reported in the
+       changelog list. When all the existing data in the table is
+       delivered to the changelog, the replicaState becomes
+       REPLICA_STATE_REPLICATING. See [19]table changelog list for more
+       information.
+
+   In this case, the existing table data is propagated to the stream topic
+   and that data's operation type is identified as a SET operation.
+   Subsequently, operations on the source table are propagated as changed
+   data records and the operation type is identified on each individual
+   data record.
+
+   You can consume data at any time, however, there may be a delay before
+   all of the existing table data is completely propagated, expecially if
+   you have a large dataset. Be sure to check the
+   copyTableCompletionPercentage field.
+   You want a CDC stream topic to not contain any original table data and
+   to capture only subsequent changed data records You would setup CDC in
+   the following manner before performing operations on the source table
+   and consuming the change data records.
+    1. Create a source table and add data, or alternatively, use an
+       existing table that contains data.
+    2. Create the changelog stream.
+    3. Create the changelog stream topic.
+    4. Add the table changelog relationship. Be sure that the
+       -propagateexistingdata parameter is set to false.
+    5. All new data operations applied to a source table after the
+       replicaState becomes REPLICA_STATE_REPLICATING is not treated as
+       original data and is delivered to the changelog. See [20]table
+       changelog list for more information.
+
+   In this case, the existing table data is not propagated to the stream
+   topic and the operation type is identified on each individual data
+   record.
+
+References
+
+   1. LYNXIMGMAP:file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/DB-ChangeData/getting-started-cdc.html#d936977e56
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/MapRGateways.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-create.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_create.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-changelog-add.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-changelog-add.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-changelog-resume.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-changelog-list.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_dbshell.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/HBaseShellforMapR-DB.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/develop-apps-jsonDB.html
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/developing_client_applications_that_access_binary_tables.html
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/api-changedData.html
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/cdc-build-app.html
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-changelog-list.html
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-changelog-list.html
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-changelog-list.html
+
+[USEMAP]
+file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/DB-ChangeData/getting-started-cdc.html#d936977e56
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/DB-ChangeData/setting-up-CDC.html#setup-cdc
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_dbshell.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/develop-apps-jsonDB.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/HBaseShellforMapR-DB.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/developing_client_applications_that_access_binary_tables.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/api-changedData.html

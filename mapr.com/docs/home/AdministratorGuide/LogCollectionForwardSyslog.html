@@ -1,0 +1,60 @@
+Forward Logs to Syslog Server
+
+   You can configure fluentd to send logs to a syslog server in addition
+   to Elasticsearch. This topic provides instructions for configuring
+   fluentd to send logs to syslog compatible collectors. However, it only
+   provides guidelines for the syslog configuration as syslog parameters
+   differ by version. Knowledge of how to configure a syslog compatible
+   collector is required to complete this configuration.
+
+   Complete the following steps:
+    1. Configure fluentd to send logs to the syslog server.
+    2. Configure syslog server to accept logs from fluentd.
+
+Step 1: Configure fluentd to send logs to the syslog server
+
+   Complete the following steps on each fluentd node.
+    1. Open the fluentd.conf file
+       (/opt/mapr/fluentd/fluentd-<version>/etc/fluentd/fluentd.conf).
+    2. Remove the # to uncomment the following store section:
+ # <store>
+# @type remote_syslog
+# host 10.10.100.92
+# port 51400
+# severity debug
+# tag fluentd
+# </store>
+    3. Update the host parameter to the hostname/IP address of the
+       receiving syslog server.
+    4. Update the port parameter to match the port that the receiving
+       syslog server is expecting remote logging information on.
+    5. Restart the fluentd service:
+maprcli node services -name fluentd -nodes <space separated list of hostname/IPa
+ddresses> -action restart
+       Note: You can run this command after completing the steps on a node
+       or run this command with a list of nodes once you have configured
+       each fluentd node.
+
+Step 2: Configure syslog to accept logs from fluentd
+
+   In general, you need to perform the following steps on the syslog
+   collection server:
+     * Configure syslogd to listen for logs outside of the syslog node.
+     * Set up rules for how syslog handles the logs once it receives it.
+
+    1. In /etc/rsyslog.d/listen.conf, comment out the following parameter:
+$SystemLogSocketName /run/systemd/journal/syslog
+    2. In /etc/rsyslog.conf, uncomment the following properties:
+#$ModLoad imudp
+#$UDPServerRun 514
+
+    3. In /etc/rsyslog.conf, update the UDPServerRun to a value above 1000
+       that matches the port you configured in fluentd.conf. For example:
+       Set UDPServerRun to 51400
+    4. In /etc/rsyslog.conf, configure rules for handling logs. For
+       example, add the following before the RULES section to route
+       messages from the fluentd node to a log file named qa-node91.log.
+if $fromhost-ip == '10.10.100.91' then /var/log/qa-node91.log
+& ~
+       Note: In this example, the IP address must match the IP address of
+       the fluentd node.

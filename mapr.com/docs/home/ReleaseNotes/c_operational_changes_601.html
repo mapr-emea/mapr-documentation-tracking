@@ -1,0 +1,74 @@
+Operational Changes (MapR 6.0.1)
+
+   Note the following functional changes to existing commands in Version
+   6.0.1.
+
+MapR Installer
+
+   Unlike earlier MapR Installer versions, MapR Installer 1.9 requires
+   some new user ID and password information information for installing
+   Grafana and ElasticSearch/Kibana:
+     * When installing a secure cluster using the MapR Installer web-based
+       interface:
+          + The installer does not request a user ID or password for
+            Grafana because the installer uses the cluster admin
+            authentication information (requested separately) for security
+            with Grafana.
+          + The installer requires you to supply the Elasticsearch/Kibana
+            password. Enter the password for the admin user ID.
+     * When installing a nonsecure cluster using the MapR Installer
+       web-based interface:
+          + The installer requires you to provide the Grafana password.
+            Enter the password for the admin user.
+          + No Elasticsearch/Kibana user ID or password is required.
+
+MapR-FS
+
+   The -cid option is not supported with mrdirectorystats utility.
+   Instead, use -c to specify the container ID. See [1]mrdirectorystats
+   for more information.
+
+MapR-DB
+
+   Starting in the MapR 6.0.1 release, you do not have to enable a
+   separate query service to use secondary indexes. The Operational
+   Applications with MapR-DB template installs and configures the
+   replication gateways needed to update secondary indexes in MapR-DB JSON
+   and includes the components needed to run OJAI queries.
+
+   However, you must enable the OJAI Distributed Query Service to use the
+   following features:
+     * Advanced secondary index selection
+     * Sorts on large data sets
+     * Parallel query execution
+
+   For complete information, see [2]Preparing Clusters for Querying using
+   Secondary Indexes on JSON Tables
+
+MapR-ES
+
+   As of MapR 6.0.1, along with support of Apache Kafka 1.0, the
+   java.util.Collection interface is being used. This impacts applications
+   using certain APIs. See the Backward Compatibility section in
+   [3]MapR-ES Java API Library for detailed information.
+
+   For MapR-ES Java applications, the behavior has changed for
+   max.partition.fetch.bytes. If the first record batch in the first
+   non-empty partition of the fetch is larger than this configuration, the
+   record batch is still returned to ensure that the consumer can make
+   progress. See [4]Configuration Parameters for more information.
+
+   For MapR-ES Java applications, the fs.mapr.rpc.timeout parameter is
+   valid for MapR 6.0.0, but has been replaced with streams.rpc.timeout.ms
+   in MapR 6.0.1.
+
+   For MapR-ES Java applications, the streams.rpc.timeout.ms parameter
+   replaces the following Apache Kafka parameters: request.timeout.ms,
+   reconnect.backoff.ms, and retry.backoff.ms.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mrdirectorystats.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/admin-prepCluster-for-indexingTables.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/streams-java-api.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/configuration-parameters.html

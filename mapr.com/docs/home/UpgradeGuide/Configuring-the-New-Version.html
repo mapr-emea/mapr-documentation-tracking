@@ -1,0 +1,145 @@
+Step 4: Enable New Features
+
+   After upgrading MapR Core without the MapR Installer (using a manual
+   offline or rolling upgrade method), enable the new features.
+
+   This task is applicable to all manual upgrade methods: offline,
+   rolling, and manual rolling upgrades. After a successful manual
+   upgrade, administrators have the option to enable new features that are
+   not enabled by default.
+
+   Based on the version that you upgraded from, the following features can
+   be enabled. Once your features are enabled, run simple and non-trivial
+   health checks to verify cluster health. These features are
+   automatically enabled with a fresh install.
+   Important: All nodes in your cluster must be upgraded before enabling
+   new features. Do NOT enable new features if your MapR 6.0 or later
+   cluster is configured with MEP 3.0.x. For MapR 6.0 or later, all nodes
+   must be upgraded to MEP 4.0 or later before you enable MapR 6.0 or
+   later features. MEP 3.0.x is supported only for upgrade purposes. See
+   [1]MEP Support by MapR Core Version.
+
+Enable Feature Command
+
+   Features are enabled using the maprcli cluster feature enable command.
+   A list of the features are obtained using the maprcli cluster feature
+   list command. See [2]maprcli cluster commands for more information.
+   Attention: It is strongly recommended that all of the features be
+   enabled: maprcli cluster feature enable -all.
+   Note: The maprcli config save command is no longer available for
+   enabling features.
+
+   Once your features are enabled, run simple and non-trivial health
+   checks to verify cluster health. These features are automatically
+   enabled with a fresh install.
+
+Feature Summary
+
+   Feature Feature Name Version Available Description
+   Name container threshold mfs.feature.name.container.size.control As of
+   6.0.1 Enables support for setting a limit on the size of data stored in
+   the name container for a volume.
+   Persist writes to disk mfs.feature.disk.flush As of 6.0.1 Enables
+   flushing writes to disk before acknowledging the client if the
+   attribute is set on files and/or directories.
+   External IPs for CLDB cldb.feature.external.ip As of 6.0 Enables
+   support for external IP addresses and port forwarding. Set the
+   environment variables (as described [3]here) before enabling this
+   feature. After enabling this feature, perform a CLDB failover to allow
+   MFS to re-register.
+   Enforce guaranteed minimum replication
+   mfs.feature.enforce.min.replication As of 6.0 Enables support for
+   enforcing minimum number of replicas for (read-write) volumes during
+   write operations.
+   Note: Do not enable this feature before upgrading all the nodes in the
+   cluster. If you enable this feature before upgrading all the nodes, MFS
+   will shut down on the nodes that have not yet been upgraded.
+   CLDB snapshot improvements mfs.feature.snapshotdb.lite As of 6.0 After
+   enabling this feature, do a [4]CLDB failover to avail of the
+   significant performance improvements for snapshot create and delete
+   operations.
+   Directcopy for Autosetup Replication, Change Data Capture and Secondary
+   Index features. mfs.feature.db.streams.v6.support As of 6.0 Enables the
+   following:
+     * MapR-DB tables and MapR-ES to use the directcopy option with the
+       autosetup replication feature.
+     * MapR-DB table Change Data Capture (CDC) feature.
+     * MapR-DB Secondary Index feature.
+
+   Container identity reuse cldb.feature.cid.reuse As of 5.2.1 Support for
+   container identity reuse.
+   Streams connect support mfs.feature.streams.connect.support As of 5.2.1
+   Enables support for Kafka Connect in the distributed mode.
+   Fast inode scan for mirroring mfs.feature.fastinodescan.support As of
+   5.2.1 Enables fast mirroring when there are large numbers of files with
+   few changes.
+   Hardlinks mfs.feature.hardlinks.support As of 5.2 Enables support for
+   retrieving hard links on files.
+   Extended Attributes mfs.feature.fileace.support As of 5.2 Enables
+   support for adding, retrieving, and removing extended attributes on
+   files and directories.
+   MapR-ES and MapR-DB as a document database mfs.feature.db.json.support
+   As of 5.1 Enables the use of [5]MapR Streams and [6]MapR-DB as a
+   Document Database.
+   Access Control Expressions for MapR-FS mfs.feature.fileace.support As
+   of 5.1 Enables the setting of Access Control Expressions on filesystem
+   and whole volume data.
+   MapR Auditing mfs.feature.audit.support As of 5.0 Logs audit records of
+   cluster-administration operations and operations on directories, files,
+   and tables.
+   MapR Volume Upgrade mfs.feature.volume.upgrade,
+   mfs.feature.rwmirror.support As of 5.0 Enables support for promotable
+   mirrors on both old-format and new-format volumes.
+   MapR-DB Table Replication mfs.feature.db.repl.support As of 4.1 Enables
+   support for MapR-DB table replication.
+   Promotable Mirror Volumes mfs.feature.rwmirror.support As of 4.0.2
+   Enables support for promotable mirror volumes.
+   Reduce On-Disk Container Size cldb.reduce.container.size As of 4.0.2
+   Reduces the space required on-disk for each container. The reduction of
+   the on-disk container size takes effect after the CLDB service restarts
+   or fails over.
+   Note: After enabling this feature on a cluster with more than a million
+   containers, it may take some time for the initial failover to complete
+   because the CLDB will re-write container location tables and storage
+   pool container map tables. However, this delay will not reoccur with
+   any subsequent failovers.
+   Bulk loading of Data to MapR-DB Tables mfs.feature.db.bulkload.support
+   As of 3.1.1 Enables support for bulk loading of data to MapR-DB tables.
+   Used when upgrade from MapR version 3.1 or earlier.
+   Access Control Expressions and Table Region Merges
+   mfs.feature.db.ace.support, mfs.feature.db.regionmerge.support,
+   mfs.feature.filecipherbit.support As of 3.1
+
+   The following features enable support for [7]Managing Access Control
+   Expressions (ACEs) and [8]table region merge. Used when upgrading from
+   MapR version 3.0.x.
+mfs.feature.db.ace.support
+mfs.feature.db.regionmerge.support
+
+   These features are automatically enabled with a fresh install or when
+   you upgrade from a version earlier than 3.0.x.
+   Important: After enabling ACEs for MapR tables, table access is
+   enforced by table ACEs instead of the file system. As a result, all
+   newly created tables are owned by root and have their mode bits set to
+   777.
+
+   The following feature enables encryption of network traffic to or from
+   a file, directory, or MapR-DB table with the following feature. This
+   feature is enabled after [9]security features are enabled on your
+   cluster.
+mfs.feature.filecipherbit.support
+
+   Warning: Clusters with active security features will experience job
+   failure until this configuration value is set.
+
+References
+
+   1. https://maprdocs.mapr.com/home/InteropMatrix/r_mep_support_core_version.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingEnvVariables.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/CLDB-Failover.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/mapr_streams.html#streams
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/MaprDB-overview-json.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ACEs.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-region-merge.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html

@@ -1,0 +1,68 @@
+Loading Data from MapR-DB as an Apache Spark DataFrame
+
+   To load data from a MapR-DB JSON table into an Apache Spark DataFrame,
+   invoke the following API:
+     * [1]Scala
+     * [2]Java
+     * [3]Python
+
+   For loading as a DataFrame, apply the following method on a
+   SparkSession object:
+def loadFromMapRDB[T](tableName: String,
+              schema: StructType): DataFrame
+
+import com.mapr.db.spark.sql._
+
+val df = sparkSession.loadFromMapRDB[T]("/tmp/user_profiles"): DataFrame
+
+   For loading as a DataFrame (Datasets of Row), apply the following
+   method on a MapRDBJavaSession object:
+def loadFromMapRDB(tableName: String, schema: StructType, sampleSize: Double):Da
+taFrame
+
+import com.mapr.db.spark.sql.api.java.MapRDBJavaSession;
+import org.apache.spark.sql.SparkSession;
+
+MapRDBJavaSession maprSession = new MapRDBJavaSession(spark);
+maprSession.loadFromMapRDB("/tmp/user_profiles");
+
+   Note: Java supports only DataSets of Row (Dataset<Row>).
+   For loading as a DataFrame, apply the following method on a
+   SparkSession object:
+loadFromMapRDB(table_name, schema, sample_size)
+
+from pyspark.sql import SparkSession
+
+df = spark.loadFromMapRDB("/tmp/user_profiles")
+
+   Note: PySpark supports only DataFrames (Dataset<Row>).
+   Note: The only required parameter to the methods is tableName. All the
+   others are optional.
+   This creates a DataFrame object corresponding to the MapR-DB table
+   specified by the tableName parameter.
+
+   Both DataFrames and MapR-DB tables work with structured data.
+   DataFrames need a fixed schema, whereas MapR-DB allows for a flexible
+   schema. When loading data into a DataFrame, you can map your data to a
+   schema by specifying the schema parameter in the loadFromMapRDB call.
+   You can also provide an application class as the type [T] parameter in
+   the call. These two approaches are the preferred methods for loading
+   data into DataFrames.
+
+   For data exploration use cases, you might not know the schema of your
+   MapR-DB table. For those situations, the MapR-DB OJAI connector for
+   Apache Spark can infer the schema by sampling data from the table.
+
+   Whenever possible, the MapR-DB OJAI Connector for Apache Spark
+   [4]pushes projections and filters for better performance. This allows
+   MapR-DB to project and filter data before returning it to your client
+   application.
+
+   The following subtopics describe these techniques.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/LoadDataFromMapRDBasDataFrame.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/LoadDataFromMapRDBasDataFrame.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/LoadDataFromMapRDBasDataFrame.html#div1entry3
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/ProjectionFilterPushdownDataFramesDatasets.html#concept_pn5_qqp_2bb

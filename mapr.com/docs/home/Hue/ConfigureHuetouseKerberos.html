@@ -1,0 +1,173 @@
+Configure Hue to use Kerberos
+
+Creating a Kerberos Principal
+
+   Set up the Kerberos principal and keytab file .
+
+Using Kerberos Tickets for Hue
+
+   Using the keytab and principal you created in the previous step,
+   complete the following steps:
+    1. Extract the Kerberos ticket from the keytab file.
+    2. Optionally, enable the Kerberos ticket renewer.
+
+Extracting the Kerberos Ticket from the keytab File
+
+   To extract the ticket from the keytab file, run the following command
+   (substitute your host and realm for perfnode181.perf.lab@dev-maprtech):
+kinit -k -t /opt/mapr/conf/mapr.keytab -c /tmp/hue_krb5_ccache mapr/perfnode181.
+perf.lab@dev-maprtech
+
+   This command extracts the ticket from mapr.keytab and copies it to the
+   path to the Kerberos ticket file used by Hue.
+
+Enabling the Kerberos Ticket Renewer
+
+   Kerberos tickets have a default expiration time of 7 days. If you plan
+   to use the Hue Kerberos ticket renewer in your cluster, enable this
+   functionality by making changes to these two files:
+     * kdc.conf (add the max_renewable_life parameter)
+     * krb5.conf (add the renew_lifetime parameter)
+
+Modifying the hue.ini File
+
+   In the kerberos section of the hue.ini file, make the following
+   changes:
+    1. Supply the path to Hue's kerberos keytab file.
+    2. Supply the kerberos principal name for Hue.
+    3. Supply the path to kinit.
+    4. Complete the following steps in the [[yarn_clusters]] [[[default]]]
+       section:
+          + If you are using a certificate signed by the CA (Certificate
+            Authority), set the ssl_cert_ca_verify value to True.
+          + If you are using a self-signed certificate or no certificate,
+            leave the value set to False.
+    5. For Hue with secure Hive: In the beeswax section, make sure that
+       the hive_conf_dir property points to a directory containing a valid
+       hive-site.xml file (either the original or a synced copy).
+    6. For Hue with secure Hive: Provide the fully-qualified domain name
+       (FQDN) for the hive_server_host.
+       Note: For Hue to work with HiveServer2 with security enabled, you
+       must provide the fully-qualified domain name (FQDN) for the
+       hive_server_host. This must match the FQDN of the hue_principal
+       property.
+    7. Optional: To enable SSL encryption, see [1]Enable SSL Encryption
+       Between Hue and Hive.
+    8. For Oozie only: Set the oozie_url parameter in the liboozie
+       section.
+       Note: For Hue to work with Oozie with security enabled, you must
+       provide the URL where the Oozie service is running by setting the
+       oozie_url parameter in the liboozie section.
+
+   The changes are summarized in the following hue.ini files, which you
+   can use as a template:
+[desktop]
+  [[kerberos]]
+    # Path to Hue's Kerberos keytab file
+    hue_keytab=/opt/mapr/conf/mapr.keytab
+
+    # Kerberos principal name for Hue
+    # hue_principal=mapr/<hostname>@<realm>
+    # Substitute your hostname and realm in the example below
+    hue_principal=mapr/perfnode181.perf.lab@dev-maprtech
+
+    # Path to kinit
+    # Note that the actual path depends on which Linux OS you are using
+    kinit_path=/usr/bin/kinit
+
+[beeswax]
+  # If Kerberos security is enabled, use fully-qualified domain name
+  # (FQDN)
+  hive_server_host=<FQDN of Hive Server>
+  # Hive configuration directory, where hive-site.xml is located.
+  hive_conf_dir=/opt/mapr/hive/hive-<version>/conf
+  # Change this if your Hive is secured
+  security_enabled=true
+  # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+  mechanism=GSSAPI
+
+[impala]
+  # Kerberos principal
+  impala_principal=mapr/perfnode181.perf.lab@dev-maprtech
+
+[hadoop]
+  ...
+  [[yarn_clusters]]
+    [[[default]]]
+      # Enter the host on which you are running the ResourceManager
+      ## resourcemanager_host=localhost
+
+      # The port where the ResourceManager IPC listens on
+      ## resourcemanager_port=8032
+
+      # Whether to submit jobs to this cluster
+      submit_to=true
+
+      # Change this if your YARN cluster is secured
+      security_enabled=true
+
+      # URL of the ResourceManager API
+      ## resourcemanager_api_url=https://localhost:8090
+
+      # URL of the ProxyServer API
+      ## proxy_api_url=https://localhost:8090
+
+      # URL of the HistoryServer API
+      history_server_api_url=https://localhost:19890
+
+      # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+      mechanism=GSSAPI
+
+      # In secure mode (HTTPS), if SSL certificates from Resource Manager's
+      # Rest Server have to be verified against certificate authority
+      ssl_cert_ca_verify=False
+
+[liboozie]
+  # The URL where the Oozie service runs on. This is required in order for
+  # users to submit jobs.
+  oozie_url=http://perfnode181.perf.lab:<oozie_port_number>/oozie
+
+  # Requires FQDN in oozie_url if enabled
+  security_enabled=true
+  # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+  mechanism=GSSAPI
+
+[hbase]
+  # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+  mechanism=GSSAPI
+
+   Note: The security_enabled and mechanism properties are automatically
+   configured based on cluster configuration. Therefore, you do not need
+   to configure values. The [2]<oozie_port_number> depends on whether your
+   cluster is secure.
+
+Modifying the core-site.xml File
+
+   In the core-site.xml file, provide the shortname for the Kerberos
+   principal as shown. In addition, verify that you configured the
+   proxyuser during configuration. See [3]Configure Hue for details.
+<!-- Hue security configuration -->
+<property>
+  <name>hue.kerberos.principal.shortname</name>
+  <value>mapr</value>
+</property>
+<property>
+  <name>hadoop.proxyuser.mapr.groups</name>
+  <value>*</value> <!-- A group that all users of Hue belong to, or the wildcard
+ value "*" -->
+</property>
+<property>
+  <name>hadoop.proxyuser.mapr.hosts</name>
+  <value><hue_server_FQDN></value>
+</property>
+
+Restarting Warden and Hue
+
+   After you make all the changes to the files listed above, restart
+   Warden and Hue so the changes will take effect.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/EnableSSLEncryption-HueAndHive.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallOozie.html#InstallOozie__step_djg_dp4_qbb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/EnableUserImpersonation-Hue.html

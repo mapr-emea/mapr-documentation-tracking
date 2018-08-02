@@ -1,0 +1,52 @@
+Saving an Apache Spark DStream to a MapR-DB JSON Table
+
+   The MapR-DB OJAI Connector for Apache Spark enables you to use MapR-DB
+   as a sink for Apache Spark DStreams.
+   Note: Saving of Apache Spark DStream to MapR-DB JSON table is currently
+   only supported in Scala.
+   [OJAIConnectorStreaming.png]
+
+   The following API saves a DStream[OJAIDocument] object to a MapR-DB
+   table:
+     * [1]Scala
+
+def saveToMapRDB(tablename: String, createTable: Boolean,
+          bulkInsert: Boolean, idFieldPath: String): Unit
+
+   The parameters are as follows:
+   Parameter Default Description
+   tableName Not applicable The name of the MapR-DB table to which you are
+   saving the DStream.
+   createTable false Creates the table before saving the DStream. Note
+   that if the table already exists and createTable is set to true, the
+   API throws an exception.
+   idFieldPath _id Specifies the key to be used for the DStream.
+   bulkInsert false Loads a group of streams simultaneously. bulkInsert is
+   similar to a bulk load in MapReduce.
+   Note: The only required parameter for this function is tableName. All
+   the others are optional.
+   The following example creates a DStream object, converts it to a
+   DStream[OJAIDocument] object, and then stores it in MapR-DB:
+     * [2]Scala
+
+val clicksStream: DStream[String] = createKafkaStream(…)
+clicksStream.map(MapRDBSpark.newDocument()).saveToMapRDB("/clicks", createTable=
+true)
+
+   Note: You must use the map(MapRDBSpark.newDocument()) API to convert
+   the DStream object to a DStream[OJAIDocument] object.
+   If clicksStream is a DStream of Strings, it can be saved to MapR-DB
+   using the saveToMapRDB API:
+     * [3]Scala
+
+clicksStream.map(MapRDBSpark.newDocument(_)).saveToMapRDB("/clicks", createTable
+ = true);
+
+   Note: To use the saveToMapRDB API, you need to transform the DStream
+   object to a DStream[OJAIDocument] by using the Apache Spark Map API.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SavingDStreamMapRDB.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SavingDStreamMapRDB.html#div2entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SavingDStreamMapRDB.html#div3entry1

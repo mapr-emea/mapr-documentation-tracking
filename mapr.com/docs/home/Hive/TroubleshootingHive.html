@@ -1,0 +1,82 @@
+Troubleshooting Hive
+
+   This section includes Hive troubleshooting tips related to [1]WebHCat.
+
+WebHCat
+
+   Secure WebHCat operations depend on the Hive metastore having Kerberos
+   enabled. If Kerberos is not enabled for the Hive metastore, null
+   pointer exceptions similar to the following will appear:
+2013-10-06 20:38:55,198 ERROR metastore.RetryingHMSHandler (RetryingHMSHandler.j
+ava:invoke(134)) - MetaException(message:java.lang.NullPointerException)
+       at org.apache.hadoop.hive.metastore.HiveMetaStore$HMSHandler.get_delegati
+on_token(HiveMetaStore.java:3972)
+       at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+       at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.j
+ava:39)
+       at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccess
+orImpl.java:25)
+       at java.lang.reflect.Method.invoke(Method.java:597)
+       at org.apache.hadoop.hive.metastore.RetryingHMSHandler.invoke(RetryingHMS
+Handler.java:102)
+       at com.sun.proxy.$Proxy5.get_delegation_token(Unknown Source)
+       at org.apache.hadoop.hive.metastore.api.ThriftHiveMetastore$Processor$get
+_delegation_token.getResult(ThriftHiveMetastore.java:8063)
+       at org.apache.hadoop.hive.metastore.api.ThriftHiveMetastore$Processor$get
+_delegation_token.getResult(ThriftHiveMetastore.java:8047)
+       at org.apache.thrift.ProcessFunction.process(ProcessFunction.java:39)
+       at org.apache.thrift.TBaseProcessor.process(TBaseProcessor.java:39)
+       at org.apache.hadoop.hive.metastore.TSetIpAddressProcessor.process(TSetIp
+AddressProcessor.java:48)
+       at org.apache.thrift.server.TThreadPoolServer$WorkerProcess.run(TThreadPo
+olServer.java:206)
+       at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecu
+tor.java:895)
+       at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.
+java:918)
+
+   This section includes Hive troubleshooting tips related to [2]WebHCat.
+
+Hive in an Azure Cluster
+
+   When Hive services are installed on an Azure cluster, it is possible
+   that the services will not start because Azure assigns too long (over
+   64 symbols) host names. Perform following steps to fix this issue:
+   Note: This issue is fixed on MapR core 6.0.1 starting from build
+   20180320175756.GA-1.x86_64.
+    1. Edit the /etc/hosts file:
+nano /etc/hosts
+       This is an example of a /etc/hosts file for an Azure cluster:
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+172.24.8.4 anaikregtestc73522602-cluster-com-mapr-vm0.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm0
+172.24.8.5 anaikregtestc73522602-cluster-com-mapr-vm1.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm1
+172.24.8.6 anaikregtestc73522602-cluster-com-mapr-vm2.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm2
+172.24.8.7 anaikregtestc73522602-cluster-com-mapr-vm3.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm3
+172.24.8.8 anaikregtestc73522602-cluster-com-mapr-vm4.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm4
+    2. Add a short alias for each node:
+       Note: You can use any short alias. In this example, vm0, vm1, vm2,
+       vm3, and vm4 are used:
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+172.24.8.4 anaikregtestc73522602-cluster-com-mapr-vm0.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm0 vm0
+172.24.8.5 anaikregtestc73522602-cluster-com-mapr-vm1.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm1 vm1
+172.24.8.6 anaikregtestc73522602-cluster-com-mapr-vm2.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm2 vm2
+172.24.8.7 anaikregtestc73522602-cluster-com-mapr-vm3.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm3 vm3
+172.24.8.8 anaikregtestc73522602-cluster-com-mapr-vm4.izqafobxqxbuzkv4led1p3snic
+.dx.internal.cloudapp.net anaikregtestc73522602-cluster-com-mapr-vm4 vm4
+    3. Perform step 1 and 2 for each node in the cluster.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/TroubleshootingHive.html#TroubleshootingHive-WebHCat
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/TroubleshootingHive.html#TroubleshootingHive-WebHCat

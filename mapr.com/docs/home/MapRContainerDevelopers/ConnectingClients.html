@@ -1,0 +1,65 @@
+Connecting Clients to the MapR Container for Developers
+
+   You can access the MapR cluster running in the MapR Container for
+   Developers from your laptop. Simply issue client commands from your
+   laptop.
+
+Accessing the File System
+
+   The following command lists the files in MapR-FS on the cluster:
+/opt/mapr/bin/hadoop fs -ls /
+
+Accessing MapR-DB
+
+   To access MapR-DB, you can use MapR-DB shell:
+/opt/mapr/bin/mapr dbshell
+
+   In MapR-DB shell, you can create a table, insert into the table, and
+   read from the table:
+create /tmp/t1
+insert /tmp/t1 --v '{"a":"ABC"}' --id "ID1"
+find /tmp/t1
+
+Accessing Drill
+
+   The MapR client downloaded in the [1]Prerequisites to Running the MapR
+   Container for Developers topic includes a minimum set of clients. To
+   run other clients, you must first copy the client software to your
+   laptop.
+
+   The following example shows how to do this for Apache Drill 1.13:
+    1. Determine your docker <container-id> by examining the output of the
+       docker ps command
+    2. Copy Drill from your container to your laptop specifying the
+       <container-id>:
+docker cp <container-id>:/opt/mapr/drill /opt/mapr/drill
+    3. Connect to Drill as user mapr through JDBC by running sqlline:
+/opt/mapr/drill/drill-1.13.0/bin/sqlline -u "jdbc:drill:drillbit=localhost" -n m
+apr
+       Note: If you are using a different version of Drill, replace the
+       version string with your version.
+    4. Run a SQL query in sqlline:
+select * from cp.`employee.json` limit 10;
+
+Demo Applications
+
+   Sample applications are available at
+   [2]https://github.com/mapr-demos/mapr-db-60-getting-started. The
+   applications show you how to access a MapR-DB JSON table using the
+   following programming interfaces:
+     * [3]Drill JDBC
+     * [4]OJAI
+     * [5]Understanding the MapR-DB OJAI Connector for Spark
+
+   See the [6]README file in the github repository for detailed steps on
+   how to create the data used in the applications and how to run the
+   applications.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapRContainerDevelopers/MapRContainerDevelopersPreReqs.html#task_e4q_qyf_wbb
+   2. https://github.com/mapr-demos/mapr-db-60-getting-started
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill_jdbc_connector.html#drill_jdbc_connector
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/develop-apps-jsonDB.html#developing_client_applications_json_tables
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/NativeSparkConnectorJSON.html#concept_xpz_gxm_gz
+   6. https://github.com/mapr-demos/mapr-db-60-getting-started/blob/master/README.md

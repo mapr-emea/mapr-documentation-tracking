@@ -1,0 +1,62 @@
+Tuning Parameters for Client Apps
+
+   Though tuning client applications is generally not necessary, MapR does
+   offer tuning parameters to change the behavior of client-side caching.
+
+   Client application cache pending puts in buffers that are unique to
+   each tablet (region, in HBase terminology). Individual put buffers are
+   flushed when they are full or idle. As a result of this architecture
+   and behavior, client applications tend to send RPCs of 128KB when
+   flushing puts to disk, which results in better performance than
+   flushing a single global buffer would, as that could result in a large
+   number of small RPCs.
+
+   You can change the values of parameters that affect how put buffers are
+   flushed. Set values for them in the hbase-site.xml file or
+   core-site.xml file in your MapR installation. If a non-default value
+   for a parameter is set in both files, the value in the hbase-site.xml
+   file is used.
+
+   db.mapr.putbuffer.threshold.mb
+          Specifies the size of the cumulative put buffer for all tablets
+          in the client application. When this threshold is reached, the
+          put buffer that is most full is flushed to its tablet.
+
+          The default value is 32MB.
+
+          Increasing this value can improve performance when an
+          application performs operations on very large tables or on a
+          very large number of tables.
+
+   db.mapr.putbuffer.threshold.sec
+          Specifies the number of seconds that MapR-DB should wait before
+          flushing an idle put buffer.
+
+          The default value is 3.
+
+          This parameter has no effect if automatic flushing is enabled.
+
+   fs.mapr.tabletlru.size.kb
+          Specifies the size of the metadata cache for all tables in a
+          client application..
+
+          The metadata for each tablet is 128 bytes.
+
+          The default value of this parameter is 512KB, which allows for
+          the caching of the metadata of 4,096 tablets.
+
+          When this metadata cache is full, any operation on a tablet for
+          which the metadata is not cached requires an RPC to fetch that
+          tablet's metadata. Moreover, caching the newly retrieved
+          metadata removes from the cache the metadata of a different
+          tablet.
+
+          Increasing this value can improve performance when an
+          application performs operations on very large tables or on a
+          very large number of tables.
+
+   fs.mapr.threads
+          Specifies the number of threads to use when flushing put
+          buffers. Each thread makes synchronous RPCs when flushing.
+
+          The default value is 64.

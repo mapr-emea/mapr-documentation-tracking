@@ -1,0 +1,78 @@
+Configure Hue to Store Data in Oracle Database
+
+   Note: To configure Hue with Oracle 12, you need the [1]Oracle 11
+   Instant Client Base and SDK.
+    1. Install the following packages:
+
+       CentOS yum install gcc python-devel
+       SuSE   zypper install gcc python-devel
+       Ubuntu apt-get install gcc python-dev
+    2. Configure these parameters related to ORACLE_HOME:
+         a. Ensure that there is an ORACLE_HOME variable in your
+            environment and that this variable contains the path to the
+            directory for the Oracle installation:
+export ORACLE_HOME=<path_to_oracle>
+         b. Ensure that libraries in ORACLE_HOME are available to the
+            library folder:
+export LD_LIBRARY_PATH="$ORACLE_HOME:$LD_LIBRARY_PATH"
+         c. Ensure that there is a libclntsh.so library inside
+            ORACLE_HOME:
+cd $ORACLE_HOME
+ln -s libclntsh.so.11.* libclntsh.so
+
+    3. Install the Python cx_Oracle package in Hue:
+cd /opt/mapr/hue/hue-<version>
+source ./build/env/bin/activate
+pip install cx_Oracle
+deactivate
+    4. Configure database connection parameters in the
+       [desktop][[database]] section of hue.ini:
+       Note: SID refers to the Oracle system ID, which is used to uniquely
+       identify the database.
+[desktop]
+  ...
+  [[database]]
+    engine=oracle
+    host=<host>
+    port=1521
+    user=<user>
+    password=<password>
+    name=<SID of the database>
+
+       Note: To achieve a multithreading environment, you can specify the
+       options={'threaded':true} parameter in this section. For example:
+[desktop]
+  ...
+  [[database]]
+    engine=oracle
+    host=node1
+    port=1521
+    user=hue
+    password=hue_password
+    name=XE
+    options={'threaded':true}
+
+       By setting the port=0 parameter, you can use the Oracle Service
+       Name instead of specifying SSID. For example:
+[desktop]
+  ...
+  [[database]]
+    engine=oracle
+    port=0
+    user=hue
+    password=hue_password
+    name=node1:1521/hue
+
+    5. Perform the initial data migration:
+cd /opt/mapr/hue/hue-<version>
+source ./build/env/bin/activate
+hue syncdb --noinput
+hue migrate
+deactivate
+
+    6. Restart Hue:
+maprcli node services -name hue -action restart -nodes <node_with_hue>
+
+References
+
+   1. http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html

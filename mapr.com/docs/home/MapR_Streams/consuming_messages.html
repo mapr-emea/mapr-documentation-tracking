@@ -1,0 +1,59 @@
+Consuming Messages
+
+   This is the process by which consumers consume messages.
+
+   Consumers request the MapR-ES consumer client library to check whether
+   any new messages have been published in the topics or partitions they
+   are subscribed to or the partitions that they are assigned. Consumers
+   can do this at any time.
+
+   If a minimum number of bytes worth of messages is waiting across a
+   consumer's subscription, MapR-ES sends those messages to the consumer,
+   up to a maximum number of bytes. You can configure this minimum and
+   maximum in the configuration parameters for each consumer.
+
+   The MapR-ES consumer client library sends the consumer messages that
+   have been published by producers but not yet flushed to disk. If a
+   consumer is able to consume data at the rate at which a producer
+   publishes messages, the consumer client library library continuously
+   sends messages to consumers from its memory, increasing the speed of
+   throughput from producer to consumer.
+
+Time-based Consumption
+
+   As of MapR 6.0.1, MapR-ES supports the consumption of messages based on
+   the message's timestamp. When a consumer wants to search for messages
+   based on a timestamp, the consumer provides the topic-partition and the
+   timestamp, and then, MapR-ES locates the message and returns the offset
+   for that message. The returned message offset corresponds to the
+   earliest message in a topic-partition whose timestamp is equal to or
+   greater than (>=) the consumer-provided timestamp.
+
+   For example, with the following topic-partition, if your
+   consumer-provided timestamp is 1522195205, then offset 1 would be
+   returned because it is the earliest message with a timestamp that is
+   greater than or equal to the consumer-provided timestamp. In this case,
+   greater than (>).
+topic:partition0
+        offset 0: 1522195200
+        offset 1: 1522195210
+        offset 2: 1522195205
+        offset 3: 1522195215
+
+   Tip: By the way, the consumer-provided timestamp and the returned
+   message offset is in seconds since a Epoch Unix Time Stamp is used. In
+   this example, the consumer-provided timestamp is March 26th, 2018 @
+   12:00:05am and the message offsets are timestamped March 28th @
+   12:00:00, 12:00:010, 12:00:05, and 12:00:15 in that order.
+
+Resources
+
+   For information about MapR-ES streams or topics, see
+     * See the maprcli [1]stream info for information about stream data.
+     * See the maprcli [2]stream topic info for information about topic
+       data.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_info.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_info.html

@@ -1,0 +1,60 @@
+Create HP Vertica Volumes in MapR-FS
+
+   Each HP Vertica node is configured with two MapR volumes for HP Vertica
+   data and temp space. Create these HP Vertica volumes as a MapR
+   administrative user, typically, the user mapr.
+   Warning: In this configuration, the data space will host both the data
+   and catalog for HP Vertica.
+    1. On any MapR node, create a volume for HP Vertica, and give full
+       control to the dbadmin user.
+       This guide uses a mount point of /vertica both in the Hadoop
+       filesystem namespace and the Linux filesystem namespace for the NFS
+       mount:
+maprcli volume create -name vertica -path /vertica
+maprcli acl edit -type volume -name vertica -user dbadmin:fc
+    2. Create an individual volume, one per node, where HP Vertica will
+       run.
+       Warning:
+       This step results in a separate volume for HP Vertica temp space.
+       This volume uses a replication factor of 1 to reduce network
+       traffic. In addition, for the HP Vertica data volume, the
+       replication factor is set to 2 which increases high availability.
+       The MapR default replication factor is typically set to 3.
+       Since HP Vertica also provides redundancy through the use of their
+       K–Safety protection, the replication factor is set to a lower
+       level. The built in HP Vertica protection provides complete
+       database node redundancy, which includes the storage provided for
+       that node. MapR-FS only protects against disk failure.
+         a. Specify the localvolumehost option so that MapR keeps a local
+            replica of all file data on the host. Doing so provides data
+            locality for HP Vertica data access.
+         b. Use vertica.<hostname>.data as a naming convention for the
+            MapR volumes that will store the data and the catalog.
+         c. Use vertica.<hostname>.tmp as a naming convention for the MapR
+            volumes storing the temp data.
+         d. For each node, give full control of its volumes to the dbadmin
+            user.
+         e. The following script performs all of the above actions:
+MAPR_HOSTNAMES=`maprcli node list -columns hostname -noheader | awk '{print $1}'
+`
+for MAPR_HOSTNAME in $MAPR_HOSTNAMES; do
+# create the data volume
+maprcli volume create -name vertica.$MAPR_HOSTNAME.data -path /vertica/$MAPR_HOS
+TNAME/data
+-createparent true -localvolumehost $MAPR_HOSTNAME -replication 2
+# create the temp volume
+maprcli volume create -name vertica.$MAPR_HOSTNAME.tmp -path /vertica/$MAPR_HOST
+NAME/tmp
+-createparent true -localvolumehost $MAPR_HOSTNAME -replication 1
+
+# set permissions on the data volume
+maprcli acl edit -type volume -name vertica.$MAPR_HOSTNAME.data -user dbadmin:fc
+maprcli acl edit -type volume -name vertica.$MAPR_HOSTNAME.tmp -user dbadmin:fc
+
+# disable MapR compression
+hadoop mfs -setcompression off /vertica/$MAPR_HOSTNAME/data
+hadoop mfs -setcompression off /vertica/$MAPR_HOSTNAME/tmp
+done
+    3. From any MapR node, recursively set ownership to the HP Vertica
+       administrative user and group.
+hadoop fs -chown -R dbadmin:verticadba /vertica

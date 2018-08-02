@@ -1,0 +1,63 @@
+Streaming Data JDBC Examples
+
+   This section provides common usage scenarios of streaming data between
+   different databases to or from MapR-ES.
+
+Streaming Data from MapR-ES to a MySQL Database
+
+   The following is example code for streaming data from MapR-ES stream
+   topics to a MySQL database.
+POST /connectors HTTP/1.1
+ Host: connect.example.com
+ Content-Type: application/json
+ Accept: application/json
+{"name": "mysql-sink-connector",
+"config": {
+"connector.class":"io.confluent.connect.jdbc.JdbcSinkConnector",
+"connection.url":"jdbc:mysql://hostname:3306/mysql_db?user=<user>&password=<pass
+word>",
+"auto.create":"true",
+"topics":"/kafka-connect:topic1",
+"tasks.max":"2",
+"insert.mode":"insert"
+}}
+
+Streaming Data from a MySQL Database to MapR-ES
+
+   The following is example code for streaming data from a MySQL database
+   to MapR-ES stream topics.
+POST /connectors HTTP/1.1
+ Host: connect.example.com
+ Content-Type: application/json
+ Accept: application/json
+{"name": "mysql-source-connector",
+"config": { "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+"connection.url":"jdbc:mysql://hostname:3306/newdb?user=<user>&password=<passwor
+d>"
+"mode":"incrementing",
+"incrementing.column.name":"id",
+"topic.prefix":"/kafka-connect:mysql-",
+"tasks.max":"1"
+}}
+
+Streaming Data from a Hive Database to MapR-ES
+
+   The following is example code for streaming data from a Hive database
+   to MapR-ES stream topics.
+POST /connectors HTTP/1.1
+ Host: connect.example.com
+ Content-Type: application/json
+ Accept: application/json
+{"name": "hive-source-connector",
+"config": {
+"connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+"connection.url":"jdbc:hive2://hostname:10000/database_name;user=<user>;password
+=<pa
+ssword>",
+"mode":"bulk",
+"topic.prefix":"/kafka-connect:hive-",
+"tasks.max":"1"
+}}
+
+   Note: If you have a MapR secure cluster, use next connection.url
+   jdbc:hive2://hostname:10000/database_name;auth=maprsasl

@@ -1,0 +1,42 @@
+Read or Write LZO Compressed Data for Spark
+
+   This topic provides details for reading or writing LZO compressed data
+   for Spark.
+    1. Install the LZO library:
+sudo yum install lzo-devel lzo
+    2. Clone hadoop-lzo and build it:
+[mapr@node1 ~]$ git clone https://github.com/twitter/hadoop-lzo
+[mapr@node1 ~]$ cd hadoop-lzo
+[mapr@node1 hadoop-lzo]$ mvn package
+    3. Copy the jar file to hadoop classpath:
+[mapr@node1 hadoop-lzo]$ sudo cp target/hadoop-lzo-0.4.21-SNAPSHOT.jar /opt/mapr
+/hadoop/hadoop-2.7.0/share/hadoop/yarn/lib/
+    4. Add two LZO compression codes to core-site.xml:
+property: io.compression.codecs
+codecs: com.hadoop.compression.lzo.LzoCodec,com.hadoop.compression.lzo.LzopCodec
+/
+       It will look like this:
+<property>
+  <name>io.compression.codecs</name>
+  <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compres
+s.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,org.apache.hadoop.io.compre
+ss.DeflateCodec,org.apache.hadoop.io.compress.SnappyCodec,com.hadoop.compression
+.lzo.LzoCodec,com.hadoop.compression.lzo.LzopCodec</value>
+</property>
+
+<property>
+ <name>io.compression.codec.lzo.class</name>
+ <value>com.hadoop.compression.lzo.LzoCodec</value>
+</property>
+    5. Run Spark and read LZO compressed data:
+[mapr@node1 spark]$ ./bin/spark-shell --master yarn
+spark.read.csv("/user/mapr/LzoCompressedCsv").show
+    6. Write LZO compressed data with Spark:
+scala> df.write.option("codec","com.hadoop.compression.lzo.LzopCodec").csv("csv1
+")
+
+[mapr@node1 spark]$ hadoop fs -ls /user/mapr/csv1
+Found 2 items
+-rwxr-xr-x   3 mapr mapr          0 2017-12-15 12:42 /user/mapr/csv1/_SUCCESS
+-rwxr-xr-x   3 mapr mapr     493366 2017-12-15 12:42 /user/mapr/csv1/part-00000-
+256a95a9-eb9c-4048-b7ce-c95dfbef54d7.csv.lzo

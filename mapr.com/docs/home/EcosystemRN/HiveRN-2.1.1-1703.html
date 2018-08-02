@@ -1,0 +1,177 @@
+Hive 2.1-1703 Release Notes
+
+   Below are release notes for the Hive component included in the MapR
+   Converged Data Platform. You may also be interested in the [1]Apache
+   Hive 2.1.1 Release Notes or the [2]Apache Hive homepage.
+   Hive Version 2.1
+   Release Date April 2017
+   MapR Version Interoperability See [3]Hive and HCatalog Support Matrix
+   and [4]Ecosystem Support Matrix
+   Source on GitHub [5]https://github.com/mapr/hive/tree/2.1.1-mapr-1703
+   Maven Artifacts See [6]Maven Artifacts for MapR.
+   Package Names See [7]Package Names for MapR Expansion Packs (MEPs)
+   API for this Version See [8]Hive 2.1 API
+
+New in This Release
+
+   This version of Hive includes the following:
+     * Hive Hybrid Procedural SQL On Hadoop (HPL/SQL)
+       Hive Hybrid Procedural SQL On Hadoop (HPL/SQL), which is available
+       in Hive 2.1, is a tool that implements procedural SQL for Hive.
+       HPL/SQL is an open source tool that implements procedural SQL
+       language for Apache Hive, SparkSQL, Impala, as well as any other
+       SQL-on-Hadoop implementation, any NoSQL, and any RDBMS.
+       HPL/SQL is a hybrid and heterogeneous language that understands
+       syntaxes and semantics of almost any existing procedural SQL
+       dialect, and you can use with any database (for example, running
+       existing Oracle PL/SQL code on Apache Hive and Microsoft SQL
+       Server, or running Transact-SQL on Oracle, Cloudera Impala, or
+       Amazon Redshift).
+       Note: Create the hplsql-site.xml file to configure HPL/SQL feature.
+       See [9]http://www.hplsql.org/configuration for more information.
+     * Dynamically partitioned hash join for Tez.
+     * Support for aggregate push down through joins.
+     * DBTokenStore support to HS2 delegation token.
+     * Hive View Column Authorization.
+     * UDF substring_index
+       Returns the substring from string str before count occurrences of
+       the delimiter.
+     * Quarter UDF
+       The quarter from a string / date / timestamp returned by the
+       QUARTER(date) function may be useful for different domains like
+       retail, finance etc.
+     * Support for limited integer type promotion in ORC.
+     * ORC file dump in JSON format
+       ORC file dump uses custom format. Will be useful to dump ORC
+       metadata in json format so that other tools can be built on top it.
+     * UDF aes_encrypt and aes_decrypt with AES (Advanced Encryption
+       Standard) algorithm.
+       Oracle JRE supports AES-128 out of the box AES-192 and AES-256 are
+       supported if Cryptography Extension (JCE) Unlimited Strength
+       Jurisdiction Policy Files are installed.
+     * Possibility for Hive Parser to support multi col in clause (x,y..)
+       in ((..),..., ()).
+     * Support of special characters in quoted table names.
+     * Support for "show create database".
+     * Support escaping carriage return and new line for LazySimpleSerDe.
+     * Banker's rounding BROUND UDF
+       With banker's rounding, the value is rounded to the nearest even
+       number. Also known as "Gaussian rounding", and, in German,
+       "mathematische Rundung".
+     * Command to kill an ACID transaction.
+       This cleans up all state related to this transaction. The initiator
+       of this (if still alive) will get an error trying to
+       heartbeat/commit and will become aware that the transaction failed.
+     * Support for modifying the numRows and dataSize for a
+       table/partition.
+     * Support vectorizing when the input format is TEXTFILE and other
+       formats for better Map Vertex performance.
+     * Support for NULLS FIRST/NULLS LAST.
+       The NULLS FIRST and NULLS LAST options can be used to determine
+       whether nulls appear before or after non-null data values when the
+       ORDER BY clause is used.
+     * Supports aggregate functions in over clause.
+
+   MapR supports Hive 2.1 on Tez 0.8.4. When installing or upgrading to
+   Hive 2.1 using the MapR Installer, the installer does not automatically
+   install Tez. You must select Tez manually if you want it to be
+   installed. To configure Hive on Tez, see [10]Configuring Hive 2.1 and
+   Tez 0.8.
+
+Patches
+
+   This release by MapR includes the following patches on the base Apache
+   release. For complete details, refer to the commit log for this project
+   in GitHub.
+   Commit Date (YYYY-MM-DD) Comment
+   3b83fea 2017-01-22 MAPR-26541: The variable $BASEMAPR will now be
+   initialized by $HOME_MAPR from parent pid and if it cannot be defined,
+   will be set to /opt/mapr by default.
+   6ff94bc 2017-02-28 MAPR-25720: When restarting HS2, the issue that
+   caused Session manager to delete operation_logs folder a second time
+   after a huge delay is now fixed.
+   e8a6f79 2017-02-23 MAPR-26193: The issue that caused the "Permission
+   Denied" message when launching a hive shell is now fixed.
+   f69e9ee 2017-02-17 MAPR-25698: The missing log4j2.component.properties
+   file is now included with Hive and the log4j2.disable.jmx property
+   value is set to false by default to fix the
+   AccessControlExceptionImport error when importing from MySQL to Hive.
+   7d3b630 2017-02-07 MAPR-26169: The issue that caused the
+   FileNotFoundException when there was no file with localPath (for
+   example, no reduce work) is now fixed.
+   8d40378 2017-02-07 MAPR-25952: When starting Hive, the issue that
+   caused the message about absence of hbase is now fixed.
+   7afb69c 2017-01-30 MAPR-25938: The conflicts in the versions of
+   included Sentry libraries which caused insert queries to fail with
+   exception is now fixed.
+   13f2e20 2017-01-25 MAPR-25880: The missing HiveOperation field is now
+   included in HiveSemanticAnalyzerHookContext to allow StateStore to
+   acces the current HiveOperation.
+   e1f5878 2017-01-26 MAPR-25822: The issue that caused INSERT INTO
+   'table' VALUES command to overwrite previously inserted data is now
+   fixed.
+
+Known Issues and Limitations
+
+   Known Issues
+
+   Sqoop import to Hive as parquet file fails when the entire cluster is
+          configured to use Tez.
+          This is because of sqoop's incompatibility with Tez.
+
+          Workaround: Do not configure the entire cluster to use Tez.
+
+   Percentage sampling is not supported in
+          org.apache.hadoop.hive.ql.io.HiveInputFormat.
+          Hive uses org.apache.hadoop.hive.ql.io.HiveInputFormat by
+          default and so queries like 'SELECT * FROM tablename
+          TABLESAMPLE(20 percent);' will not work for Hive on Tez.
+
+          Workaround: Instead of
+          org.apache.hadoop.hive.ql.io.HiveInputFormat, use
+          org.apache.hadoop.hive.ql.io.CombineHiveInputFormat.
+
+          To change input format, do one of the following:
+
+          + Set hive.tez.input.format in hive shell. For example:
+hive> set hive.tez.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFor
+mat;
+          + Add org.apache.hadoop.hive.ql.io.CombineHiveInputFormat to
+            hive-site.xml file. For example:
+<property>
+  <name>hive.tez.input.format</name>
+  <value>org.apache.hadoop.hive.ql.io.CombineHiveInputFormat</value>
+</property>
+
+   Limitations
+     * MapR does not support Hive on Spark. Therefore, you cannot use
+       Spark as an execution engine for Hive. However, you can run Hive
+       and Spark on the same cluster. You can also use Spark SQL and Drill
+       to query Hive tables.
+     * MapR does not support HDFS encryption in Hive tables.
+     * MapR does not support Hbase-0.9X with Hive-2.1.1. Only Hbase-1.X is
+       compatible with Hive-2.1.1.
+     * MapR does not support LLAP with Hive-2.1.1 since Apache Slider is
+       not in the MapR ecosystem
+     * MapR does not support Apache Knox and Apache Ranger. HiveServer2
+       HTTP mode is not available with X-Forwarded-Host header for
+       authorization/audits.
+     * MapR does not support masking and filtering of rows/columns since
+       Apache Ranger is not in the MapR ecosystem.
+
+Resolved Issues
+
+   None.
+
+References
+
+   1. https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12335838&styleName=Text&projectId=12310843
+   2. http://hive.apache.org/
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_hive_hcat_matrix.html#reference_zfq_nsb_t5
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_eco_matrix.html#reference_kyp_kfv_s5
+   5. https://github.com/mapr/hive/tree/2.1.1-mapr-1703
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/MavenArtifacts.html#MavenArtifactsforMapR
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/MEPPkgNames.html#concept_zkc_jlh_hy
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Hive-2.1-API.html
+   9. http://www.hplsql.org/configuration
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/HiveandTez-Config.html#task_bbv_syp_cz

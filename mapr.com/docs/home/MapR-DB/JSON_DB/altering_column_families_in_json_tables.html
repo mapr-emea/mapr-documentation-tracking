@@ -1,0 +1,49 @@
+Altering Column Families
+
+   You can alter column families, including the default column family for
+   a table, by using the Admin.alterFamily() method in the MapR-DB JSON
+   Java API library.
+
+Permissions Required
+
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * createrenamefamilyperm on the table
+
+Example
+
+   Here is an example of using the API to change the name of a column
+   family:
+public void alterColumnFamily(String tablePath, String familyName,
+  String newFamilyName) throws DBException {
+  try (Admin admin = MapRDB.newAdmin()) {
+
+    /* Get a TableDescriptor object for the table. This object
+       gives access to the column families that are in the table. */
+    TableDescriptor tableDesc = admin.getTableDescriptor(tablePath);
+
+    /* Get a FamilyDescriptor object for the column family to
+       change the name of. /
+    FamilyDescriptor familyDesc = tableDesc.getFamily(familyName);
+
+    // Rename the column family.
+    familyDesc.setName(newFamilyName);
+
+    /* Call alterFamily(), passing in the path of the table,
+       the original name of the column family, and the
+       FamilyDescriptor in which the new name was set. */
+    admin.alterFamily(tablePath, familyName, familyDesc);
+  }
+}
+
+Alternative Method
+
+   You can also edit column families in JSON tables by running the command
+   [4]table cf edit.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-cf-edit.html#tablecfedit

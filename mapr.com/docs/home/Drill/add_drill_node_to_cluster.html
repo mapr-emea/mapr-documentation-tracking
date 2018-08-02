@@ -1,0 +1,33 @@
+Adding a Drill Node to a Cluster
+
+   To add a new node to a MapR cluster that provides the Drillbit service,
+   add the node to the cluster first, and then install Drill on the new
+   node. If you install Drill first, and then add the node to the cluster,
+   the cluster cannot detect ZooKeeper information and the cluster is
+   misnamed. These problems require some work to resolve. You need to edit
+   the drill-override.conf file in the mapr/drill directory and modify the
+   name of the cluster. Avoid this extra work, and install Drill only
+   after adding the node to the cluster by performing steps in the
+   following order:
+    1. Follow instructions for [1]adding a node to a cluster.
+    2. Reconfigure the cluster as described in the same instructions.
+    3. Verify that the new node is up and running.
+    4. Stop Warden, as shown:
+$ service mapr-warden stop
+    5. Stop ZooKeeper service, as shown:
+$ service mapr-zookeeper stop
+    6. [2]Configure the repository to add the ecosystem repository.
+    7. [3]Install Drill on the new node.
+    8. Reconfigure the node.
+$ /opt/mapr/server/configure.sh -R
+    9. Start ZooKeeper if the node is a ZooKeeper node.
+   10. Start warden to make configuration changes effective.
+
+   Verify that the Drillbit service is running on the node. It might take
+   a minute or so for the Drillbit to start after starting warden.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/t_add_nodes_to_clstr.html#AddingNodestoaCluster-ToA_26982474-d3e72
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/SetUpInternetRepoRHEL.html#SetUpInternetRepoRHEL
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/drill_installation.html

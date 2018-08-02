@@ -1,0 +1,52 @@
+Removing Hard Links
+
+   To remove a hard link using:
+     * Linux, run the following command:
+rm -f <hard link>
+     * Hadoop, run the following command:
+hadoop fs -rm <path to hard link>
+
+Example
+
+   For example, suppose there are 4 hard links to file cite75_99.txt.
+$ ls -l
+total 1289433
+-rwxr-xr-x 5 root root 264075431 Jul 28 13:46 cite75_99.txt
+-rwxr-xr-x 5 root root 264075431 Jul 28 13:46 cite-link1
+-rwxr-xr-x 5 root root 264075431 Jul 28 13:46 cite-link2
+-rwxr-xr-x 5 root root 264075431 Jul 28 13:46 cite-link3
+-rwxr-xr-x 5 root root 264075431 Jul 28 13:46 cite-link4
+
+$ maprcli fid stat -fid 2142.34.131274
+parent     deleteFlags     atime       gid  nlink  type       mtime       versio
+n  mode  uid  xattrInum  size       subtype   networkencryption  nblocks  compre
+ssion
+2142.16.2  DeleteTypeNone  1469738740  0    5      FTRegular  1469738771  104860
+0  755   0    0          264075431  FSTInval  false              8        lz4
+
+   To remove a hard link using:
+     * Linux, run the following command:
+rm -f cite-link1
+       To verify that the command ran successfully, run the following
+       command:
+$ ls -l
+total 1031546
+-rwxr-xr-x 4 root root 264075431 Jul 28 13:46 cite75_99.txt
+-rwxr-xr-x 4 root root 264075431 Jul 28 13:46 cite-link2
+-rwxr-xr-x 4 root root 264075431 Jul 28 13:46 cite-link3
+-rwxr-xr-x 4 root root 264075431 Jul 28 13:46 cite-link4
+     * Hadoop, run the following command:
+$ hadoop fs -rm /test-hl/cite-link2
+16/07/28 13:52:00 INFO Configuration.deprecation: io.bytes.per.checksum is depre
+cated. Instead, use dfs.bytes-per-checksum
+16/07/28 13:52:00 INFO fs.TrashPolicyDefault: Namenode trash configuration: Dele
+tion interval = 0 minutes, Emptier interval = 0 minutes.
+Deleted /test-hl/cite-link2
+       To verify that the command ran successfully, run the following
+       command:
+$ maprcli fid stat -fid 2142.34.131274
+parent  deleteFlags     atime       gid  nlink  type       mtime       version
+mode  uid  xattrInum  size       subtype   networkencryption  nblocks  compressi
+on
+0.0.0   DeleteTypeNone  1469738740  0    3      FTRegular  1469738771  1048603
+755   0    0          264075431  FSTInval  false              8        lz4

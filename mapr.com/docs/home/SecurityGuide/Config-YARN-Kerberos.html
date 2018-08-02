@@ -1,0 +1,88 @@
+Configuring YARN with Kerberos
+
+   Make sure that the following tasks are already completed, as directed
+   in earlier sections of this guide:
+     * [1]Enabling Wire-level Security by executing configure.sh with the
+       security options.
+     * [2]Configuring Kerberos by creating a Kerberos principle and keytab
+       file.
+
+   Note: To enable YARN REST SPNEGO, see [3]Configuring SPNEGO on MapR.
+
+   Now complete the following tasks.
+
+Configure the yarn-site.xml File
+
+   Add the following properties to the yarn-site.xml file on every node in
+   the cluster.
+/opt/mapr/hadoop/hadoop-<version>/etc/hadoop/yarn-site.xml
+
+   Note: You need to use /opt/mapr/conf/mapr.keytab for the keytab
+   property and mapr instead of yarn for the principal property.
+<!-- ResourceManager security configs -->
+<property>
+ <name>yarn.resourcemanager.keytab</name>
+ <value>/opt/mapr/conf/mapr.keytab</value>    <!-- path to the YARN keytab -->
+
+</property>
+<property>
+ <name>yarn.resourcemanager.principal</name>
+ <value>mapr/_HOST@YOUR-REALM.COM</value>
+</property>
+
+<!-- NodeManager security configs -->
+<property>
+ <name>yarn.nodemanager.keytab</name>
+<value>/opt/mapr/conf/mapr.keytab</value>    <!-- path to the YARN keytab -->
+
+</property>
+<property>
+ <name>yarn.nodemanager.principal</name>
+ <value>mapr/_HOST@YOUR-REALM.COM</value>
+</property>
+<property>
+ <name>yarn.nodemanager.container-executor.class</name>
+ <value>org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor</value>
+</property>
+<property>
+ <name>yarn.nodemanager.linux-container-executor.group</name>
+ <value>mapr</value>
+</property>
+
+Configure the mapred-site.xml File
+
+   Add the following properties to the mapred-site.xml file on every node
+   in the cluster.
+/opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/mapred-site.xml
+
+   Note that you need to use /opt/mapr/conf/mapr.keytab for the keytab
+   property and mapr instead of yarn for the principal property.
+
+Modifying the env_override.sh File
+
+   Either the /opt/mapr/conf/env.sh file or the
+   /opt/mapr/conf/env_override.sh file contains a setting for MapR login
+   options that defaults to the value maprsasl. Change this value to
+   hybrid, which includes Kerberos and other security protocols. For more
+   information about the env_override.sh file, see [4]About
+   env_override.sh.
+
+   The new line (after the change) should look like this:
+MAPR_LOGIN_OPTS="-Dhadoop.login=hybrid ${MAPR_JAAS_CONFIG_OPTS} ${MAPR_ZOOKEEPER
+_OPTS}"
+
+Restart ResourceManager, NodeManager, and JobHistoryServer
+
+   Restart the NodeManager, ResourceManager, and JobHistoryServer
+   services, using either the maprcli node services command (with the name
+   option) or the MCS. After restarting the services, make sure you can
+   run simple Hadoop jobs by running:
+hadoop jar /opt/mapr/hadoop/hadoop-<version>/share/hadoop/mapreduce/hadoop-mapre
+duce-examples-<version>.jar pi
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Configuring-Kerberos-User-Authentication.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ConfiguringSPNEGOonMapR.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb

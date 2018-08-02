@@ -1,0 +1,67 @@
+Authenticating Hue Users with LDAP Credentials
+
+   This section explains how to edit the ldap section of the hue.ini file
+   to enable Hue user authentication with LDAP credentials. These
+   instructions assume you have completed the steps in [1]Setting up Users
+   from an LDAP Database.
+   Warning:
+
+   If you switch to authentication through LDAP credentials, the Hue User
+   Admin users will lose superuser privileges unless you take one of the
+   following actions:
+     * Import one or more superuser accounts from LDAP and assign them
+       superuser permission.
+     * If you have already enabled the LDAP authentication back end, log
+       into Hue using the LDAP back end, which will create an LDAP user.
+       Next, disable the LDAP authentication back end and use User Admin
+       to give the superuser permission to the new LDAP user.
+
+   Before you edit the parameters in the hue.ini file, determine whether
+   your LDAP server allows anonymous searches.
+     * If anonymous searches are allowed, use the direct bind method.
+     * If anonymous searches are not allowed, use bind credentials (also
+       known as search and bind).
+
+   The following flow chart shows which parameters you must specify for
+   each of these authentication methods:
+
+   [27199516.png]
+
+   These are the parameters you need to set in the ldap section of the
+   hue.ini file so you can authenticate Hue users with LDAP credentials:
+   Parameter Description Comments
+   search_bind_authentication Determines which authentication method to
+   use: search and bind, or direct bind.
+
+   When set to true, Hue performs an LDAP search using bind_dn and
+   bind_password as provided in hue.ini. The search can be further limited
+   by the search filter user_filter.
+
+   When set to false, Hue performs a direct bind to LDAP using the
+   credentials provided from one of these sources:
+     * the UPN, formed by concatenating <shortname> (the user name
+       provided on the Hue login page) and nt_domain (if nt_domain is
+       specified)
+     * the ldap_username_pattern (if nt_domain is not specified)
+
+   nt_domain
+
+   The NT domain to connect to.
+
+   This parameter is only used with Active Directory.
+
+   Used with the direct bind method of authentication.
+
+   If nt_domain is specified, then ldap_username_pattern is ignored.
+   ldap_username_pattern Used to connect to directory services other than
+   Active Directory.
+
+   Used with the direct bind method of authentication.
+
+   Usually takes the form "cn=<username>,dc=example,dc=com"
+   backend The backend to use for authenticating users. Needs to be set to
+   desktop.auth.backend.LdapBackend for Hue authentication.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/ConfigureHuewithLDAP-SetupUsers.html

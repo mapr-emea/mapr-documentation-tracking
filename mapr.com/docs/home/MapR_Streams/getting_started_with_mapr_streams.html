@@ -1,0 +1,72 @@
+Getting Started with MapR-ES
+
+   If you have a basic understanding of MapR-ES's components and the
+   typical flow of messages from producers to consumers, you can give
+   MapR-ES a try.
+     * Ensure that your Linux, Windows, or OS X system has Java SDK 7 or
+       later installed.
+     * Install the latest version of MapR on a cluster.
+     * Install the MapR client package, if you want to run the producer
+       and consumer from a machine outside the cluster.
+
+    1. On a node in the MapR cluster, follow these steps:
+         a. Create a stream.
+               o Run this command if you plan to run the producer and
+                 consumer with the same user ID that you are using to
+                 create the stream:
+                 maprcli stream create -path /<path to and name of the
+                 stream>
+               o Run this command if you plan to run the producer and
+                 consumer with user IDs that are different from the user
+                 ID that you are using to create the stream:
+                 maprcli stream create -path /<path to and name of the
+                 stream> -consumeperm u:<user ID> -produceperm u:<user ID>
+                 The two additional parameters grant security permissions.
+                 By default, these permissions are granted to the user ID
+                 that ran the maprcli stream create command.
+
+                    -consumeperm
+                            Grants permission to read messages from topics
+                            that are in the stream.
+
+                    -produceperm
+                            Grants permission to publish messages to
+                            topics that are in the stream.
+
+         b. Create a topic.
+            Run this command to create the topic:
+            maprcli stream topic create -path <path and name of the
+            stream> -topic <name of the topic>
+    2. On the system where the MapR client is installed, compile and
+       launch the Java consumer first and then launch the Java producer.
+       In both the consumer and producer, change this text to the path and
+       name of your stream and to the name of the first of the topics:
+       /<path to and name of the stream>:<name of topic>
+       For the steps of compiling and launching, see [1]Compiling and
+       Running MapR-ES Java Apps.
+       Launch the consumer first, and then launch the producer. If you
+       launch the producer first and then the consumer, the producer
+       publishes 50 messages, but the consumer (as consumers do by
+       default) starts reading from the head of the partition, which is
+       after the 50 messages.
+       Note: As of MapR 6.0, the message offset in a partition starts from
+       zero (0). If you are upgrading and do not enable the MapR-DB/ES
+       feature, mfs.feature.db.streams.v6.support, the message offset in a
+       partition starts from one (1).
+       Figure: Result of starting the producer before starting the
+       consumer for this step
+       [getting_started_1.png]
+       If you launch the consumer first, the partition is empty and the
+       consumer continuously polls for new messages.
+       Figure: The position of a consumer on an empty partition
+       [getting_started_2.png]
+       After you launch the producer, the fifty messages are published to
+       the partition, and the consumer can move forward in the partition,
+       reading the messages.
+       Figure: Result of starting the consumer first and then starting the
+       producer for this step
+       [getting_started_3.png]
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/compiling_producers_and_consumers.html#building_producers_and_consumers

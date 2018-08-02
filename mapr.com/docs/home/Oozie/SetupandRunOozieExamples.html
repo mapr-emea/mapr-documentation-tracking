@@ -1,0 +1,45 @@
+Setup and Run Oozie Examples
+
+   To get familiar with Oozie, set up and try the examples.
+    1. Complete the following steps to set up the examples and copy them
+       to the cluster:
+         a. Extract the oozie examples archive oozie-examples.tar.gz:
+cd /opt/mapr/oozie/oozie-<version>
+tar xvfz ./oozie-examples.tar.gz -C /opt/mapr/oozie/oozie-<version>/
+         b. Copy the examples to MapR-FS. Run the following command as a
+            user that has permissions to write to the specified MapR-FS
+            directory:
+hadoop fs -put examples maprfs:///user/<user_name>/examples
+         c. Copy the input data to MapR-FS. Run the following command as a
+            user that has permissions to write to the specified MapR-FS
+            directory:
+hadoop fs -put examples/input-data maprfs:///user/<user_name>/input-data
+         d. Change permissions on the examples to make them accessible to
+            all users. Run the following command as the root user, using
+            sudo, or as the owner of the specified directory:
+hadoop fs -chmod -R 777 maprfs:///user/<user_name>/examples
+    2. Complete the following steps to run the examples:
+         a. Choose an example and run it with the oozie job command. You
+            can use the following commands to run the following examples.
+            The [1]<oozie_port_number> depends on whether your cluster is
+            secure.
+               o MapReduce
+/opt/mapr/oozie/oozie-<version>/bin/oozie job -oozie="http://localhost:<oozie_po
+rt_number>/oozie" -config /opt/mapr/oozie/oozie-<version>/examples/apps/map-redu
+ce/job.properties -run
+               o Spark
+/opt/mapr/oozie/oozie-<version>/bin/oozie job -oozie="http://localhost:<oozie_po
+rt_number>/oozie" -config /opt/mapr/oozie/oozie-<version>/examples/apps/spark/jo
+b.properties -run
+               o Hiveserver2
+/opt/mapr/oozie/oozie-<version>/bin/oozie job -oozie="http://localhost:<oozie_po
+rt_number>/oozie" -config /opt/mapr/oozie/oozie-<version>/examples/apps/hive2/jo
+b.properties -run
+            Note: To run the packaged Hive examples, make /tmp on MapR-FS
+            world-writable. Set /tmp to 777. Example:
+hadoop fs -chmod -R 777 /tmp
+            If /tmp does not exist, create /tmp and then set it to 777.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallOozie.html#InstallOozie__step_djg_dp4_qbb

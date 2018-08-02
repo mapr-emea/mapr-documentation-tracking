@@ -1,0 +1,86 @@
+Configuring Encryption for ODBC Connection
+
+   Hive uses cyrus-sasl-plain package for ODBC connection. This document
+   provides steps on how to configure SSL encryption between ODBC
+   connection to Hiveserver2 on non-secure cluster.
+    1. Generate ssl_keystore/ssl_truststore by running the following
+       command:
+sudo bash /opt/mapr/server/manageSSLKeys.sh create -ug mapr:mapr
+       Important: Make a note of the CN=HOST_NAME parameter in the output.
+    2. Configure SSL for Hive as described in [1]Configure Encryption
+       without Authentication.
+    3. Generate the .pem file. To generate:
+         a. Verify that ssl_keystore and ssl_truststore are present on the
+            system.
+cd /opt/mapr/conf
+ll *ssl*store*
+            If ssl_keystore and ssl_truststore are not present, then
+            generate them.
+         b. Generate .pem file using <ssl-keystore-password> password.
+keytool -importkeystore -srckeystore ssl_keystore -destkeystore ssl_keystore.p12
+ -srcstoretype jks -deststoretype pkcs12
+         c. Verify that the ssl_keystore.p12 and ssl_keystore.pem files
+            are created.
+            For example:
+openssl pkcs12 -in ssl_keystore.p12 -out ssl_keystore.pem
+openssl x509 -text -in ssl_keystore.pem
+    4. Configure SSL for ODBC driver by making the following changes in
+       the /etc/odbc.ini, /etc/odbcinst.ini, and /etc/mapr.hiveodbc.init
+       files. That is, in the:
+          + /etc/odbc.ini file:
+              a. Replace <HOST_NAME> with the host name.
+              b. Set the value for TrustedCerts to path to
+                 ssl_keystore.pem file.
+              c. Add the following to the file:
+[ODBC Data Sources]
+Sample MapR Hive DSN=Hive Hive ODBC Driver 64-bit
+[Hive]
+Driver=/opt/mapr/hiveodbc/lib/64/libmaprhiveodbc64.so
+HOST=<HOST_NAME>
+PORT=10000
+SSL=1
+CAIssuedCertNamesMismatch=1
+TrustedCerts=/opt/mapr/conf/ssl_keystore.pem
+AuthMech=4
+          + /etc/odbcinst.ini file, add the following:
+[ODBC Drivers]
+Mapr Hive ODBC Driver=Installed
+[Mapr Hive ODBC Driver 64-bit]
+Description=Mapr Hive ODBC Driver (64-bit)
+Driver=/opt/mapr/hiveodbc/lib/64/libmaprhiveodbc64.so
+          + etc/mapr.hiveodbc.ini file, add the following:
+[Driver]
+ErrorMessagesPath=/opt/mapr/hiveodbc/ErrorMessages/
+LogLevel=0
+LogPath=
+SwapFilePath=/tmp
+
+   Sample /etc/odbc.ini file
+[ODBC Data Sources]
+Sample MapR Hive DSN=Hive Hive ODBC Driver 64-bit
+[Hive]
+Driver=/opt/mapr/hiveodbc/lib/64/libmaprhiveodbc64.so
+HOST=<HOST_NAME>
+PORT=10000
+SSL=1
+CAIssuedCertNamesMismatch=1
+TrustedCerts=/opt/mapr/conf/ssl_keystore.pem
+AuthMech=4
+
+   Sample /etc/odbcinst.ini file
+[ODBC Drivers]
+Mapr Hive ODBC Driver=Installed
+[Mapr Hive ODBC Driver 64-bit]
+Description=Mapr Hive ODBC Driver (64-bit)
+Driver=/opt/mapr/hiveodbc/lib/64/libmaprhiveodbc64.so
+
+   Sample /etc/mapr.hiveodbc.ini file
+[Driver]
+ErrorMessagesPath=/opt/mapr/hiveodbc/ErrorMessages/
+LogLevel=0
+LogPath=
+SwapFilePath=/tmp
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/HiveEncryption-WithoutAuthentication.html

@@ -1,0 +1,249 @@
+New Features in Impala 1.4.1 for MapR
+
+Admission Control
+
+   A new feature that enforces limits on concurrent SQL queries and
+   statements that run in an Impala cluster with heavy workloads. When
+   admission control is enabled, Impala queues SQL queries and statements
+   that it would otherwise cancel or re-run due to insufficient resources
+   or performance bottlenecks.
+
+   You can configure admission control options that Impala uses to enforce
+   limits on the following behaviors:
+     * Number of concurrent queries that run in the cluster
+     * Query queue size
+     * Number of delayed queries that the queue can hold
+     * Amount of memory that queries use
+     * Time that queries can exist in queue before Impala cancels them
+
+   Refer to [1]Admission Control for more information.
+
+Partition Pruning
+
+   Partition pruning now includes performance improvements that reduce the
+   time spent on query planning for partitioned tables with thousands of
+   partitions. Previously, Impala could query tables with up to
+   approximately 3000 partitions. Now, Impala can comfortably query tables
+   with tens of thousands of partitions.
+
+Impala Daemon Options
+
+   The following table lists new Impala daemon start up options that you
+   can add to the env.sh configuration file:
+   Option Default Description
+   load_catalog_in_background true New start up option to control the
+   parallelism of metadata loading during start up for the catalogd
+   daemon. Makes Impala use background threads after start up to load and
+   cache metadata.
+   num_metadata_loading_threads 16 New start up option for controlling the
+   parallelism of metadata loading during start up for the catalogd
+   daemon. Determines how much parallelism Impala devotes to loading
+   metadata in the background. You can increase this value for systems
+   with a huge number of databases, tables, or partitions. You can lower
+   this value for busy systems that have CPU-constraints due to jobs from
+   other components running in the cluster.
+   insert_inherit_permissions
+
+   Same permissions as parent
+
+   directory
+
+   New start up option that causes Impala INSERT statements to create each
+   new partition with the same MapR-FS permissions as its parent
+   directory. By default, INSERT
+
+   statements create directories for new partitions using default MapR-FS
+   permissions.
+
+Impala-Shell Command Line Options
+
+   The following table lists the new option with its description:
+   Option Description
+   strict_unicode The impala-shell interpreter now supports UTF-8
+   characters for input and output. You can control whetherimpala-shell
+   ignores invalid Unicode code points through this option.
+
+Security
+
+   The following table contains new security features and their
+   descriptions:
+   Feature Description
+   LDAP LDAP connections can be secured through either SSL or TLS.
+   Sentry-based authorization Impala can now use Sentry-based
+   authorization based onthe original policy file.
+
+Functions
+
+   The following table lists new functions and their descriptions:
+   Statement Description
+
+   NULLIF()
+
+   NULLIFZERO()
+
+   ZEROIFNULL()
+   New conditional functions that simplify porting SQL containing vendor
+   extensions to Impala.
+   CURRENT DATABASE() New utility function that returns the database that
+   the session is currently using.
+
+Built-In Functions
+
+   The following table lists new built-in functions and their
+   descriptions:
+   Function Description
+   ADD_MONTHS() A built-in function that is an alias for the existing
+   MONTHS_ADD() function.
+   EXTRACT() A new built-in function that returns one date or time field
+   from a TIMESTAMP value.
+   ROUND() A new built-in function that rounds DECIMAL values to a
+   specified number of fractional digits.
+   TRUNC() A new built-in function that truncates date/time values to a
+   particular granularity, such as year, month, day, hour, and so on.
+
+   STDDEV(),
+
+   STDDEV_SAMP(),
+
+   STDDEV_POP(),
+
+   VARIANCE(),
+
+   VARIANCE_SAMP(),
+
+   VARIANCE_POP()
+   Built-in aggregate functions for computing properties for statistical
+   distributions.
+
+   MAX_INT(),
+
+   MIN_SMALLINT()
+
+   New built-in functions that you can use to check whether data values
+   are in an expected range.
+
+   You might be able to switch a column to a smaller type to save memory
+   during processing.
+
+   IS_INF(),
+
+   IS_NAN()
+
+   New built-in functions that check for special values infinity and “not
+   a number”. These values could be specified as inf or nan in text data
+   files.
+
+   They may also be produced by certain arithmetic expressions.
+
+Statements
+
+   The following table lists new or improved statements and their
+   descriptions:
+   Statement Description
+   COMPUTE STATS
+
+   Use this statement to collect table and column statistics with a single
+   statement.
+
+   Useful for query planning, join queries, queries on partitioned tables,
+   and any other data intensive operations.
+
+   This release includes the following performance improvements for the
+   statement:
+     * The
+NDV
+       function is sped up through native code generation.
+     * Because the NULL count is not currently used by the Impala query
+       planner, in Impala 1.4.0 and higher,
+COMPUTE STATS
+       does not count the NULL values for each column. The #Nulls field of
+       the stats table is
+       left as -1, signifying that the value is unknown.
+
+   CREATE TABLE
+
+   SQL syntax for creating a table.
+
+   This release includes the following improvements for the statement:
+     * You can now specify the clause FIELDS TERMINATED BY '\0' to use
+       text data files that use ASCII 0 (nul) characters as a delimiter.
+     * For interoperability with Parquet files created through other
+       Hadoop components, such as Pig or MapReduce applications, you can
+       create
+       an Impala table that automatically sets up the column definitions
+       based on the layout of an existing Parquet data file.
+     * Has a STORED AS AVRO clause, enabling you to create Avro tables
+       through Impala.
+
+   EXPLAIN PLAN
+
+   When you run EXPLAIN PLAN followed by a SELECT query, it returns the
+   query execution plan. EXPLAIN PLAN now provides more detail in a
+   simpler format with the following verbosity levels:
+     * 0 – Most concise
+     * 1
+     * 2
+     * 3 – Most verbose
+
+   INVALIDATE METADATA table_name Impala loads metadata for a Hive table
+   when you issue the INVALIDATE METADATA table_name statement if a Hive
+   table exists with the same name.
+   SHOW FUNCTIONS
+
+   Shows user-defined functions associated with a particular database.
+
+   This release includes the following improvements for the statement:
+     * Now displays the return type and argument type of each function.
+     * You can now specify the clause FIELDS TERMINATED BY '\0' with a
+       CREATE TABLE
+       statement to use text data files that use ASCII 0 (nul) characters
+       as a delimiter.
+
+   SHOW PARTITIONS
+
+   Displays information about each partition in a partitioned table. Run
+   the COMPUTE STATS statement after creating all table partitions and
+   then run
+
+   SHOW PARTITIONS for more informative output.
+
+Data Types
+
+   The following table lists new or improved data types with their
+   descriptions:
+   Data Type Description
+   DECIMAL A numeric data type that you can use in CREATE TABLE and ALTER
+   TABLE statements to store fixed-precision values when working with
+   currency or other fractional values where it is important to represent
+   values exactly and avoid rounding errors. Useful for calculations where
+   the imprecise representation and rounding behavior of FLOAT and DOUBLE
+   make them impractical to use. Includes enhancements to built-in
+   functions, numeric literals, and arithmetic expressions.
+   TIMESTAMP Accepts more input string formats through the UNIX TIMESTAMP
+   function, and produces more string formats through the FROM UNIXTIME
+   function.
+
+Clauses and Operators
+
+   The following table lists new or improved clauses and operators with
+   descriptions:
+   Feature Description
+   ORDER BY No longer requires a LIMIT clause. If the size of the result
+   set to be sorted exceeds the memory available to Impala,Impala uses a
+   temporary work space on disk to perform the sort operation.
+
+   REGEXP
+
+   RLIKE
+
+   Improved compatibility with the regular expression support for popular
+   database systems. There is no change to the behavior of the
+   regexp_extract() and regexp_replace() built-in functions.
+
+   These operators now match a regular expression string that occurs
+   anywhere inside the target string; the same as if the regular
+   expression was enclosed on each side by .*.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/admission_control.html

@@ -1,0 +1,73 @@
+Deleting Column Families
+
+   You can delete a column family (except for the default column family)
+   in a JSON table with the Admin.deleteFamily() Java method.
+   Important: Starting in the 6.0 release, you cannot delete a column
+   family from a JSON table.
+
+Permissions Required
+
+   The readAce and writeAce permissions on the volumes where the JSON
+   tables are located. For information about how to set permissions on
+   volumes, see [1]Setting Whole Volume ACEs.
+
+Behavior
+
+   The data that is in the specified column family is deleted. If the
+   column family is followed by one or more column families in a
+   hierarchy, the other column families in the hierarchy are unaffected
+   and still accessible. For example, if column family CF1 at path a.c is
+   followed by column family CF2 at path a.c.f, CF2 remains accessible and
+   only the data in CF1 is deleted.
+   Before deleting the column family CF1 at a.c After deleting the column
+   family CF1 at a.c
+{
+ "a" : {
+         "b" : "value_b",
+         "c" : {
+                 "d" : "value_d",
+                 "e" : "value_e",
+                 "f" : {
+                         "g" : "value_g",
+                         "h" : "value_h"
+                       }
+                }
+       }
+}
+
+{
+ "a" : {
+         "b" : "value_b",
+         "c" : {
+                 "d" : "",
+                 "e" : "",
+                 "f" : {
+                         "g" : "value_g",
+                         "h" : "value_h"
+                       }
+                }
+       }
+}
+
+Example of using the Admin.deleteFamily() method
+
+public void deleteColumnFamily(String tablePath, String familyName) throws DBExc
+eption {
+    try (Admin admin = MapRDB.newAdmin()) {
+      if (admin.tableExists(tablePath)) {
+        admin.deleteFamily(tablePath, familyName);
+      }
+    }
+}
+
+   Parameter Description
+   tablePath The path of the table in the MapR file system. See the "Table
+   Paths" section in [2]MapR-DB JSON Tables.
+   familyName The name of the column family to delete. You cannot delete
+   the default column family. If familyName is equal to "default", the API
+   returns an exception.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/json_tables.html#json

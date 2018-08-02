@@ -1,0 +1,209 @@
+dump replicationmanagerinfo
+
+   Returns information about which containers are under or over replicated
+   in a specified volume.
+
+   For each container, the command displays the current state of that
+   container.
+
+Syntax
+
+   CLI
+
+maprcli dump replicationmanagerinfo
+     [-cluster <cluster name>]
+     -volumename <volume name>
+
+          Note: For best results, use the -json option from the command
+          line.
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter
+
+   Description
+
+   cluster
+
+   The cluster on which to run the command. If this parameter is omitted,
+   the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+
+   volumename
+
+   Specifies the name of the volume. To obtain a volume name, use the
+   maprcli volume list command.
+
+Output
+
+   The maprcli dump replicationmanagerinfo returns information about
+   volumes and the containers on those volumes including the nodes on
+   which the containers have been replicated and the space allocated to
+   each container. If replication activity is not underway when the
+   maprcli command is executed, no container information is included. If
+   replication activity is underway, details of containers are listed.
+# maprcli dump replicationmanagerinfo -volumename mapr.metrics -json
+{
+    "timestamp":1433449934381,
+    "timeofday":"2015-06-04 08:32:14.381 GMT+0000",
+    "status":"OK",
+    "total":1,
+    "data":[
+        {
+            "VolumeName":"mapr.metrics",
+            "VolumeId":54955151,
+            "VolumeTopology":"/data",
+            "VolumeUsedSizeMB":0,
+            "VolumeReplication":3,
+            "VolumeMinReplication":2,
+            "MirrorThrottle":true,
+            "AccessTime":"Thu Jun 04 16:57:58 UTC 2015",
+            "limitSpread":true
+        },
+                {
+                        "ContainerId":2053,
+                        "Epoch":9,
+                        "Master":"10.250.1.15:5660-172.16.122.1:5660-192.168.115
+.1:5660--9-VALID",
+                        "ActiveServers":{
+                                "IP:Port":"10.250.1.15:5660-172.16.122.1:5660-19
+2.168.115.1:5660--9-VALID"
+                        },
+                        "InactiveServers":{
+
+                        },
+                        "UnusedServers":{
+
+                        },
+                        "OwnedSizeMB":"1 MB",
+                        "SharedSizeMB":"0 MB",
+                        "LogicalSizeMB":"1 MB",
+                        "Mtime":"Mon Apr 30 16:40:41 PDT 2012",
+                        "NameContainer":"true"
+                }
+        ]
+}
+
+   Output fields
+
+   Field
+
+   Description
+
+   VolumeName
+
+   Indicates the name of the volume.
+
+   VolumeId
+
+   Indicates the ID number of the volume.
+
+   VolumeTopology
+
+   The volume topology corresponds to the node topology of the rack or
+   nodes where the volume resides. By default, new volumes are created
+   with a topology of / (root directory). For more information, see
+   [1]Volume Topology.
+
+   VolumeUsedSizeMB
+
+   The size on disk (in MB) of the volume.
+
+   VolumeReplication
+
+   The desired replication factor, the number of copies of a volume
+   excluding the original. The default value is 3.
+
+   VolumeMinReplication
+
+   The minimum replication factor, the number of copies of a volume
+   (excluding the original) that should be maintained by the MapR cluster
+   for normal operation. When the replication factor falls below this
+   minimum, writes to the volume are disabled. The default value is 2.
+   MirrorThrottle Specifies whether mirror throttling is enabled (true) or
+   disabled (false). Throttling is set on the source volume and applies to
+   all its mirrors. This property was introduced in version 4.0.2.
+   AccessTime A value that can be used to determine which volumes are
+   accessed regularly. This value is updated every 6 hours with the last
+   time that an operation occurred on the volume. The access time is not
+   updated for changes to volume properties, creation of a snapshot, or
+   synchronization between a volume and a mirror. However, the volume
+   access time is updated the first time you upgrade to a MapR version
+   that includes this property. This property was introduced in version
+   4.0.2.
+   limitSpread An internal flag for MapR volumes to control the growth of
+   volume in terms of number of containers. When this flag is set, cldb
+   tries to limit the number of new containers created depending on the
+   present size of volume. If volume size (data in volume) is small, cldb
+   tries to reuse space in existing containers to avoid the creation of
+   new containers. This helps reduce the wasting of containers IDs in an
+   environment that has small volumes.
+
+   ContainerId
+
+   The unique ID number for the container.
+
+   Epoch
+
+   A sequence number that indicates the most recent copy of the container.
+   The CLDB uses the epoch to ensure that an out-of-date copy cannot
+   become the master for the container.
+
+   Master
+
+   The physical IP address and port number of the master copy. The master
+   copy is part of the original copy of the volume.
+
+   ActiveServers
+
+   The physical IP address and port number of each active node on which
+   the container resides.
+
+   InactiveServers
+
+   The physical IP address and port number of each inactive node on which
+   the container resides.
+
+   UnusedServers
+
+   The physical IP address and port number of each on which the container
+   does not reside.
+
+   OwnedSizeMB
+
+   The size on disk (in MB) dedicated to the container.
+
+   SharedSizeMB
+
+   The size on disk (in MB) shared by the container.
+
+   LogicalSizeMB
+
+   The logical size on disk (in MB) of the container.
+
+   Mtime
+
+   Indicates the time of the last modification to the container's
+   contents.
+
+   NameContainer
+
+   Indicates if the container is the name container for the volume. If
+   true, the container is the volume's first container and replication
+   occurs simultaneously from the master to the intermediate and tail
+   containers.
+
+Example
+
+   CLI
+
+maprcli dump replicationmanagerinfo -cluster docs41cluster -volumename mapr.metr
+ics -json
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpNodeTopology.html

@@ -1,0 +1,51 @@
+MapR-DB and MapR-FS
+
+   This topic describes how MapR-DB tables are implemented directly in the
+   MapR file system (MapR-FS) which allows MapR-DB to leverages the same
+   architecture as the rest of the MapR platform which provides minimal
+   additional management.
+     * MapR-DB tables are created in logical units called volumes.
+     * MapR-DB tables are sharded by implementing table regions (also
+       called tablets)
+     * Table regions are stored in abstract entities called data
+       containers.
+     * Data containers belong to MapR-FS volumes.
+
+Tables and Volumes
+
+   Because volumes are a management entity that logically organizes a
+   cluster’s data, they can be used to enforce disk usage limits, set
+   replication levels, define snapshots and mirrors, and establish
+   ownership and accountability.
+
+   Volumes do not have a fixed size and they do not occupy disk space
+   until MapR-FS writes data to a container within the volume. A large
+   volume may contain anywhere from 50-100 million containers.
+   Because tables are stored in containers and implemented in volumes, the
+   following capabilities can be leveraged:
+     * Multi-Tenancy
+     * Snapshots
+     * Mirroring and Replication
+
+Table Regions and Containers
+
+   Each region of a table, along with its corresponding write-ahead log
+   (WAL) files, b-trees, and other associated structures, is stored in one
+   container. Each container (which can be from 16 to 32 GB in size) can
+   store more than one region (which default in size to 4096 MB). The
+   recommended practice is to use the default size for region and allow
+   them to be split automatically. Massive regions can affect
+   synchronization of containers and load balancing across a cluster.
+   Smaller regions spread data better across more nodes.
+   Note: Since a container always belongs to exactly one volume, that
+   container’s replicas all belong to the same volume as well.
+   The following are important advantages to storing table regions in
+   containers:
+     * Cluster Scalability
+     * High Data Availability
+
+   For more information about containers, see [1]Containers and the CLDB.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/c_containers_cldb.html

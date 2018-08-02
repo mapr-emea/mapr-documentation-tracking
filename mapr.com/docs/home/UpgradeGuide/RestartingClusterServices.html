@@ -1,0 +1,92 @@
+Step 1: Restart and Check Cluster Services
+
+   After upgrading MapR Core using either a manual offline or rolling
+   upgrade method (not upgrading with the MapR Installer) and upgrading
+   your ecosystem components, configure and restart the cluster and
+   services.
+   Note: This task is applicable only to manual offline and rolling
+   upgrade methods.
+   Important: Before restarting cluster services, upgrade any existing
+   ecosystem packages to versions compatible with the upgraded MapR
+   release. For more information, see [1]MEP Components and OS Support.
+
+   This procedure configures and restarts the cluster and services,
+   including ecosystem components, remounts the NFS share, and checks that
+   all packages have been upgraded on all nodes.
+
+   After finishing this procedure, run non-trivial health checks, such as
+   performance benchmarks relevant the cluster’s typical workload or a
+   suite of common jobs. It is a good idea to run these types of checks
+   when the cluster is idle. In this procedure, you configure each node in
+   the cluster without changing the list of services that will run on the
+   node. If you want to change the list of services, do so after
+   completing the upgrade. After you have upgraded packages on all nodes,
+   perform this procedure on all nodes to restart the cluster. Upon
+   completion of this procedure MapR core services are running on all
+   nodes.
+    1. Merge any custom edits that you made to your cluster's environment
+       variables into the new /opt/mapr/conf/env_override.sh file before
+       restarting the cluster. This is because the upgrade process
+       replaces your original /opt/mapr/conf/env.sh file with a new copy
+       of env.sh that is appropriate for the MapR version to which you are
+       upgrading. The new env.sh does not include any custom edits you
+       might have made to the original env.sh. However, a backup of your
+       original env.sh file is saved as /opt/mapr/conf/env.sh<timestamp>.
+       Before restarting the cluster, you must add any custom entries from
+       /opt/mapr/conf/env.sh<timestamp> into
+       /opt/mapr/conf/env_override.sh, and copy the updated
+       env_override.sh to all other nodes in the cluster. See [2]About
+       env_override.sh.
+    2. On each node in the cluster, run [3]configure.sh with the -R option
+       # /opt/mapr/server/configure.sh -R
+    3. If ZooKeeper is installed on the node, start it.
+       # service mapr-zookeeper start
+    4. Start Warden.
+       # service mapr-warden start
+    5. Run a simple health-check targeting the file system and MapReduce
+       services only. Address any issues or alerts that might have come up
+       at this point.
+    6. Set the new cluster version in the /opt/mapr/MapRBuildVersion file
+       by running the following command on any node in the cluster.
+       # maprcli config save -values {mapr.targetversion:"`cat
+       /opt/mapr/MapRBuildVersion`"}
+    7. Verify the new cluster version.
+       For example:
+# maprcli config load -keys mapr.targetversion
+mapr.targetversion
+6.0.0.xxxxx.GA
+    8. Remount the MapR NFS share.
+       The following example assumes that the cluster is mounted at /mapr:
+       # mount -o hard,nolock <hostname>:/mapr /mapr
+    9. Run commands, as shown in the example, to check that the packages
+       have been upgraded successfully.
+       Check the following things:
+          + All expected nodes show up in a cluster node list, and the
+            expected services are configured on each node.
+          + A master CLDB is active, and all nodes return the same result.
+          + Only one ZooKeeper service claims to be the ZooKeeper leader,
+            and all other ZooKeepers are followers.
+       For example:
+# maprcli node list -columns hostname,csvc
+hostname configuredservice ip
+centos55 nodemanager,cldb,fileserver,hoststats 10.10.82.55
+centos56 nodemanager,cldb,fileserver,hoststats 10.10.82.56
+centos57 fileserver,nodemanager,hoststats,resourcemanager 10.10.82.57
+centos58 fileserver,nodemanager,webserver,nfs,hoststats,resourcemanager 10.10.82
+.58
+...more nodes...
+
+# maprcli node cldbmaster
+cldbmaster
+ServerID: 8851109109619685455 HostName: centos56
+
+# service mapr-zookeeper qstatus
+JMX enabled by default
+Using config: /opt/mapr/zookeeper/zookeeper-3.4.5/conf/zoo.cfg
+Mode: follower
+
+References
+
+   1. https://maprdocs.mapr.com/home/InteropMatrix/r_MEP_components.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh

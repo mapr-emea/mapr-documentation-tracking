@@ -1,0 +1,120 @@
+stream replica autosetup
+
+   Sets up and starts replication between a source stream and replica
+   stream.
+   The maprcli stream replica autosetup command performs the following
+   steps to set up replication:
+    1. Creates a stream in the destination cluster.
+    2. Declares the new stream to be a replica of the source stream and
+       ensures that replication does not begin immediately after the next
+       step.
+    3. Declares the source stream as the original of the replica stream.
+    4. Runs the mapr copystream utility to load a copy of the source data
+       into the replica.
+    5. For multi-master replication, it declares the source stream to be a
+       replica of the new stream and then declares the new stream to be an
+       upstream source for the source stream.
+    6. Clears the paused replication state to start replication.
+
+   For more information about the automatic setup process, see [1]Replica
+   Autosetup for Streams.
+   Note: Before you set up replication for a stream, verify that the
+   cluster is setup for replication. For more information, see
+   [2]Preparing Clusters for Stream Replication.
+
+Permissions Required at the Source Cluster
+
+   To run this command, your user ID must have the following permissions:
+     * [3]readAce and [4]writeAce on the volume
+     * [5]lookupdir on directories in the path
+     * adminperm and copyperm permissions on the source stream
+
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Permissions Required at the Target Cluster
+
+   To run this command, your user ID must have the following permissions:
+     * [6]readAce and [7]writeAce on the volume
+     * [8]lookupdir on directories in the path
+
+Syntax
+
+   CLI
+maprcli stream replica autosetup
+         -path <stream path>
+         -replica <remote stream path>
+        [ -synchronous <replicate to remote stream before acknowledging producer
+s> default: false ]
+        [ -multimaster <set up bi-directional replication> default: false ]
+        [ -throttle <throttle replication operations under load> default: false
+]
+        [ -networkencryption <enable on-wire encryption> default: false ]
+        [ -networkcompression <on-wire compression type: off|lz4|lzf|zlib> defau
+lt: compression setting on stream ]
+       [ -directcopy enable directcopy. default: true ]
+       [ -useexistingreplica use existing replica table if present. default: fal
+se ]
+
+   REST
+   http[s]://<host>:<port>/rest/stream/replica/autosetup?path=<path>&repli
+   ca=<name>
+
+Parameters
+
+   Parameter Description
+   path The path and name of the stream that you want to create a replica
+   for.
+   replica The path and name of the stream that you want to create as a
+   replica of the stream that you specified with the -path parameter.
+   synchronous A boolean value that specifies whether replication is
+   synchronous or asynchronous. The values are true or false. The default
+   is false and specifies asynchronous replication.
+   multimaster A boolean value that specifies whether or not to set up a
+   multi-master topology. The values are true or false. The default is
+   false and specifies to use the basic master-slave topology, rather than
+   the multi-master topology.
+   throttle A boolean value that specifies whether to throttle replication
+   operations. Throttle the replication stream to minimize the impact of
+   the replication process on incoming operations during periods of heavy
+   load. The values are true or false. The default is false.
+   Throttling has two effects, both of which allow MapR-ES to use more
+   system resources to process new messages:
+     * Throttling slows down the rate at which changes to a stream are
+       replicated.
+     * Throttling slows down the rate at which messages to be replicated
+       are read from disk.
+
+   networkencryption A boolean value that specifies whether or not to
+   enable on-wire encryption. The values are true or false. The default is
+   false. If you set the value to true, the local cluster and any other
+   cluster that is part of the replication process must be enabled for
+   security.
+   networkcompression Specifies the type of compression to use when
+   replicating messages. For more information, see [9]Managing
+   Compression.
+   directcopy A Boolean value that specifies whether or not autosetup will
+   use the directcopy option . The values are true or false. Autosetup
+   with direct copy (true) is the default. If you set this parameter to
+   false, the cluster will run autosetup without the directcopy option.
+   For more information, see [10]Replica Autosetup for Streams.
+   useexistingreplica When the directcopy parameter is set to true
+   (default), this Boolean value specifies whether or not an existing
+   stream can be used as the replica stream. The values for this parameter
+   are true or false. No reuse of existing tables (false) is the default.
+   If a stream exists with the specified name, and this parameter is set
+   to false, the create stream operation will fail.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/Stream_ReplicaAutosetup.html#concept_hbv_lyz_m1b
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/configuring_for_repl_between_streams.html#configuring_for_repl_between_streams
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Compression.html#Compression
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/Stream_ReplicaAutosetup.html#concept_hbv_lyz_m1b

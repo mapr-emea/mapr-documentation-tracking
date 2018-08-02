@@ -1,0 +1,46 @@
+Configure NFS Write Performance
+
+   The default RPC requests configuration can negatively impact
+   performance and memory. To avoid performance and memory issues,
+   configure the number of outstanding RPC requests to the NFS server to
+   be 128. The kernel tunable value sunrpc.tcp_slot_table_entries
+   represents the number of simultaneous Remote Procedure Call (RPC)
+   requests. This tunable's default value is 16. Increasing this value to
+   128 may improve write speeds. Use the command sysctl -w
+   sunrpc.tcp_slot_table_entries=128 to set the value. Add an entry to
+   your sysctl.conf file to make the setting persist across reboots.
+
+   Perform the following steps as the root user on each NFS client
+   machine:
+    1. Issue the following commands to create the sunrpc.conf file under
+       /etc/modprobe.d with the recommended configuration. This enables
+       the configuration to persist after a reboot of the NFS client
+       machine.
+echo "options sunrpc tcp_slot_table_entries=128" >> /etc/modprobe.d/sunrpc.conf
+echo "options sunrpc tcp_max_slot_table_entries=128" >>  /etc/modprobe.d/sunrpc.
+conf
+
+    2. Issue the following echo commands. This enables the configuration
+       to take effect after you remount the NFS client to the NFS gateway.
+echo 128 > /proc/sys/sunrpc/tcp_slot_table_entries
+echo 128 > /proc/sys/sunrpc/tcp_max_slot_table_entries
+    3. Remount the NFS client to the NFS gateway. Mount the MapR NFS
+       server with a rsize/wsize of 128K as this significantly cuts down
+       NFS server requests for a given transfer and improves the overall
+       performance. For example, the following commands unmount and mount
+       the NFS assuming that the cluster is mounted at /mapr.
+# umount /mapr
+# mount -o nolock,rsize=131072,wsize=131072 <hostname>:/mapr /mapr
+    4. After the reboot of the node, if the /proc/sys/sunrpc directory is
+       not available or if rpcidmapd is not running, start the rpcidmapd
+       service using the following command: service rpcidmapd start.
+
+   Note: Failure to configure this property may result in the following
+   error in /opt/mapr/logs/nfsserver.log file:
+ERROR nfsserver[38960] fs/nfsd/requesthandle.cc:791 0.0.0.0[0] cannot allocate m
+ore OncRpcContexts: [numDropped=2556001] dropping connection from nfsc=10.13.64.
+225:0
+
+   Note: NFS write performance varies between different Linux
+   distributions. This suggested change may have no effect, or even a
+   negative effect on your particular cluster.

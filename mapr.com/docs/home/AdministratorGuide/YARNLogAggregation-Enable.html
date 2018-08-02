@@ -1,0 +1,32 @@
+Enabling YARN Log Aggregation
+
+   To enable YARN log aggregation, add or edit the following properties in
+   yarn-site.xml:
+     * Set the value of yarn.log-aggregation-enable to true.
+     * Optional: Set the value of yarn.nodemanager.remote-app-log-dir to a
+       location in the MapR-FS. By default, the location is
+       maprfs:///tmp/logs.
+     * Optional: Set the value of
+       yarn.nodemanager.remote-app-log-dir-suffix to the name of the
+       folder that should contain the logs for each user. By default, the
+       folder name is logs.
+
+   On a non-secure cluster, you also need to add the following property to
+   /opt/mapr/hadoop/hadoop-2.x/etc/hadoop/yarn-env.sh on the Node Manager
+   nodes:
+
+   export MAPR_IMPERSONATION_ENABLED=1
+
+   Then restart the Node Manager services. This setting enables
+   impersonation for Node Manager processes so that log files can be
+   created with the correct user ownership.
+
+   Aggregated logs are owned by the user who runs the job. For example,
+   when user admin runs a job, the logs are stored to
+   maprfs:///tmp/logs/admin. If user analyst runs a job, the logs are
+   stored to maprfs:///tmp/logs/analyst. If these two users do not share
+   the same UNIX group, they will not be able to see each other's logs.
+   Note: If centralized logging and YARN log aggregation are enabled, the
+   logs for MapReduce version 2 applications will be managed by
+   Centralized Logging while the logs for non-MapReduce applications will
+   be managed by YARN log aggregation.

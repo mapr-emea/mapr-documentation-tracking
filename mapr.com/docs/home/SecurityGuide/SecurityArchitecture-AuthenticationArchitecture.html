@@ -1,0 +1,54 @@
+Authentication Architecture: The maprlogin Utility
+
+   Describes the authentication architecture in MapR.
+
+   The [1]maprlogin utility supports user authentication with either
+   username and password or Kerberos to generate a unique session token
+   called a ticket. The following diagram outlines the process flow:
+   [maprlogin.png]
+
+   On clusters that use Kerberos for authentication, a MapR ticket is
+   implicitly obtained for a user that runs a MapR command without first
+   using the maprlogin utility. The implicit authentication flow for the
+   maprlogin utility first checks for a valid ticket for the user, and
+   uses that ticket if it exists. If a ticket does not exist, the
+   maprlogin utility checks if Kerberos is enabled for the cluster, then
+   checks for an existing valid Kerberos identity. When the maprlogin
+   utility finds a valid Kerberos identity, it generates a ticket for that
+   Kerberos identity.
+
+   When you explicitly generate a ticket, you have the option to
+   authenticate with your username and password or authenticate with
+   Kerberos:
+    1. The user on the client machine invokes the maprlogin utility, which
+       connects to a CLDB node in the cluster using HTTPS. The hostname
+       for the CLDB node is specified in the mapr-clusters.conf file.
+         a. When using username/password authentication, the node
+            authenticates using PAM modules with the Java Authentication
+            and Authorization Service (JAAS). The JAAS configuration is
+            specified in the [2]mapr.login.conf file. The system can use
+            any registry that has a PAM module available.
+         b. When using Kerberos to authenticate, the CLDB node verifies
+            the Kerberos principal with the keytab file.
+    2. After authenticating, the CLDB node uses the standard UNIX APIs
+       getpwnam_r and getgrouplist, which are controlled by the
+       /etc/nsswitch.conf file, to determine the user's user IDs and group
+       IDs.
+    3. The CLDB node generates a ticket and returns it to the client
+       machine, completing the login communication between the client and
+       the CLDB.
+    4. After login, the client communicates with a MapR server. The server
+       validates that the ticket is properly encrypted, to verify that the
+       ticket was issued by the cluster's CLDB.
+    5. The server also verifies that the ticket has not expired or been
+       blacklisted.
+    6. The server checks the ticket for the presence of a privileged
+       identity such as the mapr user. Privileged identities have
+       impersonation functionality enabled.
+    7. The ticket's user and group information are used for authorization
+       to the cluster, unless impersonation is in effect.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr.login.conf.html

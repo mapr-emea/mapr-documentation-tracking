@@ -1,0 +1,66 @@
+Configuring SPNEGO on the Drillbit (Web Server)
+
+   To configure SPNEGO on the web server, complete the following steps:
+    1. Generate a Kerberos principal on each web server that will receive
+       inbound SPNEGO traffic. Each principal must have a corresponding
+       keytab. The principal must have the following form:
+"HTTP/<client-known-server-hostname@realm>"
+
+   Example: "HTTP/example.QA.LAB@QA.LAB"
+   //In this example, the client known server hostname is example.QA.LAB.
+       Note: If HTTPS is enabled on the Drillbit (web server), the SPNEGO
+       principal should also start with "HTTP/", not "HTTPS/" even though
+       the URL includes HTTPS.
+    2. Update the /opt/mapr/drill/drill-<version>/conf/drill-override.conf
+       file on each Drillbit with the following server-side SPNEGO
+       configurations:
+          + To enable SPNEGO, add the following configuration to
+            drill-override.conf:
+impersonation: {
+                    enabled: true,
+                    max_chained_user_hops: 3
+              },
+              drill.exec.http: {
+                    spnego.auth.principal:"HTTP/hostname@realm",
+                    spnego.auth.keytab:"path/to/keytab",
+                    auth.mechanisms: ["SPNEGO"]
+              }
+      }
+      //The default authentication mechanism is "FORM".
+          + To enable SPNEGO and FORM authentication, add the following
+            configuration to drill-override.conf:
+impersonation: {
+               enabled: true,
+               max_chained_user_hops: 3
+             },
+             security.user.auth: {
+                     enabled: true,
+                     packages += "org.apache.drill.exec.rpc.user.security",
+                     impl: "pam4j",
+                     pam_profiles: [ "sudo", "login" ]
+              }
+            drill.exec.http: {
+                     spnego.auth.principal:"HTTP/hostname@realm",
+                     spnego.auth.keytab:"path/to/keytab",
+                     auth.mechanisms: ["SPNEGO", "FORM"]
+            }
+      }
+    3. (Optional) To configure the mapping from a Kerberos principal to a
+       user account used by Drill, update the
+       drill.exec.security.auth.auth_to_local property in the
+       drill-override.conf file with custom rules, as described in
+       [1]Mapping from Kerberos Principal to OS user account.
+       Note: Drill uses a Hadoop Kerberos name and rules to transform the
+       client Kerberos principal to the principal Drill uses internally as
+       the client’s identity. By default, this mapping rule extracts the
+       first portion from the provided principal. For example, if the
+       principal format is Name1/Name2@realm, the default rule extracts
+       only Name1 from the principal and stores Name1 as the client’s
+       identity on server side. Drill uses the short name, for example
+       Name1, as the user account known to Drill. This user account name
+       is used to determine if the authenticated user has administrative
+       privileges.
+
+References
+
+   1. https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Mapping_from_Kerberos_principal_to_OS_user_account

@@ -1,0 +1,238 @@
+Drill 1.12.0-1801 Release Notes
+
+   This section provides reference information, including new features,
+   default configuration changes, improvements, resolved issues, known
+   issues, and limitations for Drill 1.12.0-1801.
+
+   The following release notes apply to the 1.12.0 version of the Apache
+   Drill component included in the MapR Converged Data Platform.
+   Version 1.12.0
+   Release Date February 2018
+   MapR Version Interoperability See the [1]MEP Components and OS Support
+   , [2]Interoperability Matrix, and [3]Drill Support Matrix.
+   Package Names [4]Package Names for MapR Expansion Packs (MEPs)
+
+New in this Release
+
+     * (MD-1649) Index-based query plans for queries without filters,
+       including queries with GROUP BY, JOIN, and DISTINCT projections.
+       See [5]Index Planning in Drill.
+     * (MD-2301) Ability to submit queries from the REST API when
+       impersonation is enabled and authentication is disabled. See
+       [6]Submitting Queries.
+     * (MD-2745) Support for NaN (Not-a-Number) and Infinity (both
+       POSITIVE and NEGATIVE) as numeric values. See [7]JSON Data Model.
+     * (MD-2490, DRILL-5723) System options improvements, including a new
+       internal system options table.
+
+Default Configuration Changes
+
+   The default size for the store.parquet.block-size parameter is now
+   268435456 (256 MB), the same size as MapR-FS chunk sizes. Previously,
+   the default size was 536870912 (512 MB). See [8]Configuring the Parquet
+   Block Size for more information.
+
+Improvements
+
+   In addition to the features mentioned above, Drill 1.12 includes the
+   following improvements:
+   MapR Tracking Numbers Improvements
+
+   MD-3365
+   Bounds checking for direct memory is now disabled by default. You can
+   enable bounds checking, as explained in [9]Configuring Drill Memory.
+   MD-3314 Unable to re-run queries from Profiles tab with impersonation
+   and without authentication
+   MD-3086 Improve the row count estimates for LIMIT queries to avoid
+   over-parallelization
+   MD-3053 MapR-DB Statistics Improvements
+   MD-2867 DRILL-5855 Provide a useful error message when the
+   SystemOptionManager is queried for a non-existent option
+   MD-2842 Projecting a Few Columns with DISTINCT, LIMIT and ORDER BY
+   without a Filter Specified should use a Secondary Index Tables for Fast
+   Query Response Times
+   MD-2758 Drill performance improvement for text search vs Impala
+   MD-2745 Error parsing JSON containing token 'NaN'
+   MD-2647 Enable UTF-8 support in query string by default
+   MD-2518 Parquet Scan Performance Improvement
+   MD-2403 Drillbit fails to start when only keystore path is provided
+   without keystore password.
+   MD-2323 Review & update the default values of index planning config
+   options
+   MD-2319 Query Containing Wildcard in String Matching Filter Runs 4x
+   Slower Than Impala
+   MD-2301 Support Impersonation without authentication for REST API
+   MD-2196 DRILL-4264: Allow field names to include dots
+   MD-2002 Operator Specific Handle for Empty Batches
+   MD-1752 Throttling-based per-query memory assignment
+   MD-1650 Drill Join query with Secondary indexes
+   MD-1649, MD-3267 Support Index Planning for Queries with GROUP BY w/o
+   WHERE clause
+   MD-1431 Improve Performance of Drill's Parquet Scan Operator (Amadeus)
+   MD-1247, MD-1810 Drill only initializes enabled storage plugins and
+   registers schemas for workspaces that relate directly to a query, which
+   improves query time for small queries that run concurrently. The
+   Foreman in Drill caches the root schema of the JSON document for use in
+   subsequent queries. Previously, Drill initialized all enabled storage
+   plugins and registered workspace schemas for each query without caching
+   the root schema, which caused an increase in query time if a storage
+   plugin was misconfigured or the underlying data source was down or
+   slow.
+   MD-580 Improve performance of Parquet scan operator
+   For a list of additional features and improvements, see [10]Apache
+   Drill 1.12 Release Notes.
+
+Resolved Issues
+
+   This release of Drill includes the following resolved issues:
+   MapR Tracking Numbers Resolved Issues
+   MD-3471 Intermittent permission denied errors with Drill queries on
+   Views
+   MD-3423 DRILL-5880 : Advanced tests fail with error:
+   "UNSUPPORTED_OPERATION ERROR: This query cannot be planned possibly due
+   to either a cartesian join or an inequality join"
+   MD-3322 You no longer need to enable the
+   planner.index.force_sort_noncovering option for Drill to correctly
+   return the results of a non-covering query in sorted order.
+   MD-3249 Query with union on 520 columns failing with compilation
+   exception
+   MD-3246 Investigate jackson-databind vulnerabilities CVE-2017-15095 &
+   CVE-2017-7525
+   MD-3196 Query hangs when we concat many items
+   MD-3155 Simba JDBC driver dependency issues with third party
+   applications
+   MD-3131 DRILL-5967 Memory leak by HashPartitionSender
+   MD-3071 Queries (intermittently) fail with SYSTEM ERROR: RpcException:
+   Data not accepted downstream.
+   MD-3066 Queries with join on two or more tables fail to pick hash index
+   plans for all eligible tables
+   MD-3062 DRILL-5822: The query with "SELECT *" with "ORDER BY" clause
+   and `planner.slice_target`=1 doesn't preserve column order
+   MD-3055 Remove hbase and hbase_describe plugin templates from
+   1.11.0-mapr branch
+   MD-3031 Duplicate columns projected from MapR-DB Scan for large IN
+   condition
+   MD-2987 DRILL-5771: Fix serDe errors when format plugin is used with
+   table function
+   MD-2983 Using option `planner.index.use_hashjoin_noncovering`=true is
+   causing NPE
+   MD-2979 Memory leak by ParquetRowGroupScan
+   MD-2978 Drill isn't honoring option not to save query profiles
+   MD-2894 Order by doesn't sort columns when window function is involved
+   in the query
+   MD-2843 MIN MAX DIR tests fail and return incorrect results
+   MD-2807 DRILL-5922 Intermittent Memory Leaks in the ROOT allocator
+   MD-2771 skip.header.line.count does not work for Hive table with data
+   file size > chunk size
+   MD-2770 java.lang.NoClassDefFoundError exception not handled in
+   org.apache.drill.exec.rpc.security.ClientAuthenticatorProvider
+   MD-2769 DRILL-5819: Default value of security.admin.user_groups and
+   security.admin.users is "true"
+   MD-2730 Null Pointer Exception with query using table function
+   MD-2723 Client to Bit Encryption shown as disabled in the drill
+   webserver when SSL encryption is enabled
+   MD-2712 Queries failed with AssertionError: rel has lower cost than the
+   best cost of subset
+   MD-2702 Rename ssl property enableHostVerification as
+   disableHostVerification
+   MD-2635 Enabling SSL using hadoop config doesn't honor
+   "ssl.server.keystore.keypassword" property
+   MD-2632 DRILL-5775: Select * query on a maprdb binary table fails
+   MD-2621 Fix XSS vulnerabilities in Drill
+   MD-2619 Drill fails to start when https is enabled with a keystore
+   having keyPassword different from keyStorePassword
+   MD-2617 NullPointerException: Querying maprdb json tables
+   MD-2528 Parquet int_64 causes UnsupportedOperationException in Drill
+   MD-2516 Hash function produces skewed results on String values with
+   same leading prefix
+   MD-2509 Some queries in concurrent execution get stuck in STARTING
+   phase
+   MD-2483 exec.hashagg.num_partitions cannot be set by "alter session" or
+   "alter system"
+   MD-2464 DRILL-5715: Performance of refactored HashAgg operator
+   regressed
+   MD-2459 DRILL-5714: Fix NPE when mapr-db plugin is used in table
+   function
+   MD-2436 Issue with drill-config.sh checking java version
+   MD-2412 Query with 2-way JOIN fails with "Hash join does not support
+   schema changes"
+   MD-2379 drill.connections.rpc.user.<encrypted/unencrypted> metric can
+   result in a neg value
+   MD-2375 RowKeyJoin is generated instead of IndexScan for queries with
+   derived table/ table functions
+   MD-2292 Query hangs with bit to bit authentication
+   MD-2216 DRILL-5660: Drill 1.10 queries fail due to Parquet Metadata
+   "corruption" from DRILL-3867
+   MD-2201 DRILL-4469: SUM window query returns incorrect results over
+   integer data
+   MD-2130 Drill wrong old date-time values displaying
+   MD-2125 Queries fail with "Failed to create schema tree." when
+   Impersonation is enabled and logins are anonymous
+   MD-2041 Potential wrong result from spillable hash agg
+   MD-1945 DRILL-4139: Fix parquet partition pruning for BIT, INTERVAL and
+   DECIMAL types
+   MD-1828 DRILL-5507 Millions of "Failure finding Drillbit running on
+   host" info messages in foreman logs
+   MD-1586 Pam authentication with Centrify doesn't work by JPam
+   restriction
+   MD-1455 Hash aggregate does not support schema changes
+   MD-1205 Simple query with only one join condition failed with "Hash
+   join does not support schema changes"
+   MD-1171 Security: Stored XSS (Drillbit>>Query) vulnerability
+   MD-1168 Drill Web UI Page Source Has Links To External Sites
+   MD-1122 Fix the Hive default storage plugin template.
+   MD-1115 DRILL-5464: HashAgg throws a SchemaChangeException when atleast
+   1 scan fragment reads 0 rows
+   MD-965 UnsupportedOperationException: Unable to get holder type for
+   minor type [LATE] and mode [OPTIONAL].
+   MD-853 Query on TPC-H SF100 dataset fails with "Hash join does not
+   support schema changes"
+
+Known Issues
+
+   This release of Drill includes the following known issues:
+   MapR Tracking Numbers Known Issues
+   MD-3564 Min/Max functions logic should be improved
+   MD-3563 Order by clause works inconsistently when sorting columns with
+   NaN
+   MD-3534 Query runs out of memory when using SI indices
+   MD-3521 Nan/Inf data types: strange query result with INNER JOIN
+   operator when selecting 1 column
+   MD-3497 NaN/Infinity: some functions don't work as expected
+   MD-3449 Queries using non-covering index plans with larger rowkey join
+   batch size fail with "CONNECTION ERROR: Exceeded timeout while waiting
+   send intermediate work fragments to remote nodes"
+   MD-3345 Query using index plans (intermittently) fails with
+   IllegalStateException: #Scan ranges should be greater than 0 since
+   estimated rowcount=[non-zero]
+   MD-3344 TPC-H Query 1 returns rows with incorrect precision on Parquet
+   SF100 dataset
+   MD-3201 Multiple occurrences of "AnalyzerException: Error at
+   instruction 98: Expected an object reference, but found ." seen in
+   drillbit.out
+   MD-2455 Query with INTERVAL in predicate does not return any rows
+
+Patches
+
+   None
+
+Limitation
+
+   (Ubuntu systems only) If you uninstall Drill 1.11 or upgrade from Drill
+   1.11 to Drill 1.12, you must manually backup log files, third-party JAR
+   files, and configuration files and settings prior to performing the
+   uninstall or upgrade procedure. Failure to do so results in the loss of
+   the files and configurations.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_MEP_components.html#reference_pk5_5xb_tw
+   2. http://maprdocs.mapr.com/home/InteropMatrix/c_matrix_intro.html#concept_nym_4pb_t5
+   3. http://maprdocs.mapr.com/home/InteropMatrix/r_drill_matrix.html#reference_lv3_2sb_t5
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/MEPPkgNames.html#concept_zkc_jlh_hy
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/index-planning-drill.html#index-planning-drill
+   6. https://drill.apache.org/docs/submitting-queries-from-the-rest-api-when-impersonation-is-enabled-and-authentication-is-disabled/
+   7. https://drill.apache.org/docs/json-data-model/#data-type-mapping
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/parquet-block-size.html#parquet-block-size
+   9. https://drill.apache.org/docs/configuring-drill-memory/#about-the-drillbit-startup-script
+  10. https://drill.apache.org/docs/apache-drill-1-12-0-release-notes/

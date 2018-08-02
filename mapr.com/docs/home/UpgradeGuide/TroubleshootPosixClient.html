@@ -1,0 +1,17 @@
+Troubleshooting MapR POSIX Client Upgrades
+
+   If you are having difficulty upgrading the MapR POSIX Client, it may be
+   due to a shared memory segment lock.
+
+   If the mapr-loopbacknfs service fails to start after an upgrade, check
+   if a shared memory segment lock was the cause of the failure using this
+   procedure.
+    1. Open the loopbacknfs.log file. The loopbacknfs.log file is in the
+       following directory: /usr/local/mapr-loopbacknfs/logs/
+    2. Check for the following string: Create/Attach to shm failed
+    3. If the string exists perform the following steps:
+         a. Run the following command to identify the shmid of the lock:
+            ipcs -m | grep 0x0000161c
+         b. Run the following command to remove the lock: ipcrm -m <shm
+            id>
+         c. Start the mapr-loopbacknfs service.

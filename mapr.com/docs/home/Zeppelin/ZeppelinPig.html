@@ -1,0 +1,32 @@
+Running Pig Scripts in Zeppelin
+
+   This section contains a sample of an Apache Pig script that you can run
+   in your Apache Zeppelin notebook.
+   This example reads the contents of your password file and outputs the
+   first field in the file: the user name.
+    1. Using the shell interpreter, copy the password file to MapR-FS:
+          + [1]POSIX
+          + [2]Hadoop
+       To use POSIX shell commands like cp, you must have a [3]MapR-FS
+       mount point in your container. The example below assumes your mount
+       point is /mapr and your cluster name is my.cluster.com:
+%sh
+cp /etc/passwd /mapr/my.cluster.com/user/mapruser1
+%sh
+hadoop fs -put /etc/passwd /user/mapruser1/
+    2. Load the password file in Pig and output the first field in each
+       line in the file:
+%pig
+A = load 'passwd' using PigStorage(':');
+B = foreach A generate $0 as id;
+dump B;
+
+   There are other examples of [4]using Pig in the Zeppelin tutorial,
+   including running Pig queries.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinPig.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinPig.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_i4r_5c2_rbb
+   4. https://zeppelin.apache.org/docs/latest/interpreter/pig.html#example

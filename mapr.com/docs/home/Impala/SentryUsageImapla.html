@@ -1,0 +1,67 @@
+Sentry
+
+   Important: MapR officially supports Sentry with Impala, Hive, Sqoop2,
+   and Hue only if you buy Impala support and configure Impala to use
+   Sentry.
+
+   Apache Sentry is an authorization module for Hadoop that provides the
+   granular, role-based authorization required to provide precise levels
+   of access to authenticated users and applications. Sentry allows users
+   to see only those objects for which they have privileges.
+
+Storage Models
+
+   Sentry supports two models for storing policy rules:
+
+   Database storage (preferred)
+          As of Sentry 1.6-1602, you can configure Sentry to use the
+          database storage mode. With this mode, the Sentry service
+          provides access to read and maintain privileges and roles from a
+          database.
+
+   File-based storage
+          Privileges and roles are accessed from and maintained in a
+          policy file (global-policy.ini) which you can store on the
+          MapR-FS. The following diagram illustrates the architecture of
+          the file-based storage model:
+
+          [sentry_filebased.png]
+
+Privileges
+
+   Privileges are granted on different objects in the schema, including
+   tables, databases, URIs and servers. The object hierarchy is set up
+   like this, where objects inherit privileges from objects above them in
+   the hierarchy:
+   [sentry_privileges.png]
+
+   Privileges and roles are specified in either a relational database (for
+   database rule storage) or a global-policy.ini file (for file-based rule
+   storage). The following examples show a global-policy.ini file along
+   with the equivalent set of privileges and roles expressed in HiveSQL
+   syntax.
+
+Sample global-policy.ini File
+
+[groups]
+        # Assigns each Hadoop group to its set of roles
+        manager = analyst_role, junior_analyst_role
+        analyst = analyst_role
+        jranalyst = junior_analyst_role
+        customers_admin = customers_admin_role
+        admin = admin_role
+
+        [roles]
+        # The uris below define a landing pad which
+        # the user can use to import or export data from the system.
+        # Since the server runs as the user "hive," files in that directory
+        # must either have read/write permissions set for the group hive
+        # or have read/write permissions set for world.
+        analyst_role = server=HS2->db=analyst1, \
+        server=HS2->db=jranalyst1->table=*->action=select
+        server=HS2->uri=maprfs:/landing/analyst1
+        junior_analyst_role = server=HS2->db=jranalyst1, \
+        server=HS2->uri=maprfs:/landing/jranalyst1
+
+        # Implies everything on HS2.
+        admin_role = server=HS2

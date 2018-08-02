@@ -1,0 +1,83 @@
+hdfsOpenFile2()
+
+   Supported by libMapRClient for hadoop-2.x
+
+   Opens a file in a given mode. Creates the file if the file does not
+   exist.
+
+   If hdfsOpenFile2() creates a file, it stores the size of the name
+   container in a location that you pass a pointer into, so that you can
+   keep track of this size. The size is in bytes.
+
+   Keeping track of the size of the name container is useful when you are
+   creating files that are less than or equal to 64 KB. When the size of
+   all of the such files together for one name container exceeds 64 GB,
+   operations on the name container can become inefficient. If the size of
+   a name container reaches 64 GB, you can switch to a new or different
+   volume.
+
+   Before the call to hdfsOpenFile2(), hdfsExists() can check that the
+   file exists, if a check is needed.
+
+   After finishing work on a file, call hdfsCloseFile() to free the
+   resources that are associated with the file.
+
+Signature
+
+hdfsFile hdfsOpenFile2(hdfsFS fs, const char* path, int flags, int bufferSize, s
+hort replication, tSize blocksize, tSize *nameSizeInBytes)
+
+Parameters
+
+   Parameter Description
+   fs The handle of the filesystem where the file is located. Obtain this
+   handle with one of the hdfsConnect() APIs.
+   path The full path to the file.
+   flags One of the following values. These flags are included in the
+   fcntl.h header file.
+
+   O_RDONLY
+          Opens the file in read-only mode with the current offset at 0.
+
+   O_RDWR
+          Opens the file in read-write mode. If the file already exists,
+          it is truncated to offset 0, effectively deleting the content of
+          the file.
+
+   O_RDWR | O_APPEND
+          Opens the file in read-write mode with the current offset at 0.
+          Writing to the file with hdfsWrite() appends the written data to
+          the end of the file. Data written with hdfsPwrite() is not
+          appended, but written starting at the offset specified in the
+          call to that API.
+
+   O_WRONLY
+          Opens the file in write-only mode. If the file already exists,
+          it is truncated to offset 0, effectively deleting the content of
+          the file.
+
+   O_WRONLY | O_APPEND
+          Opens the file in write-only mode with the current offset at 0.
+          Writing to the file with hdfsWrite() appends the written data to
+          the end of the file. Data written with hdfsPwrite() is not
+          appended, but written starting at the offset specified in the
+          call to that API.
+
+   bufferSize Ignored for files on MapR-FS
+   replication Ignored for files on MapR-FS
+   blocksize The size of chunks for the file in bytes. Use 0 if you want
+   to use the value that is specified for the fs.mapr.block.size parameter
+   in the /opt/mapr/hadoop/hadoop-2.x/etc/hadoop/core-site.xml file on the
+   client (if the client is using the libMapRClient version of
+   hadoop-2.x). If this parameter is not set in core-site.xml, the default
+   value is taken from the directory’s .dfs_attrributes file.
+   nameSizeInBytes A pointer to a memory buffer that can store the size in
+   bytes of the name container. The value is returned only if
+   hdfsOpenFile2() creates the specified file because the file does not
+   already exist.
+
+Return Value
+
+   Returns the handle to the open file or NULL on error.
+
+   Check errno for error codes and meanings.

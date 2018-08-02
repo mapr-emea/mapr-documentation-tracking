@@ -1,0 +1,57 @@
+Using the MapR-DB JSON REST API
+
+   Starting in the MEP 5.0 release, you can use a REST API to access
+   MapR-DB JSON tables. The REST API allows you to use HTTP calls to
+   perform basic operations on MapR-DB JSON tables.
+
+   The API supports the following operations:
+     * Create and delete MapR-DB JSON tables
+     * Insert, update, and delete documents from a table
+     * Retrieve documents while specifying filter conditions and
+       projections
+
+   The REST API has the following characteristics:
+     * Operations are stateless
+     * Operations are synchronous
+     * Request responses are not buffered
+     * Web connections are secure when connecting to secure MapR clusters
+     * Supports the following methods of authentication:
+          + Basic authentication
+          + Token-based authentication using [1]JSON Web Tokens (JWT)
+     * [2]Supports user impersonation - All data access calls are run on
+       behalf of the authenticated user
+     * Returns HTTP error codes and detailed error responses in the
+       response message body
+
+   When connecting to a MapR cluster, you must use HTTPS in your requests.
+
+   With basic authentication, you pass a username and password in your Web
+   client. With token based authentication, you generate a token and then
+   pass the token in the header of subsequent API requests.
+
+   The [3]MapR Data Access Gateway is the service that supports this web
+   API. You should configure multiple instances of this service across
+   your MapR cluster to distribute request processing. To achieve load
+   balancing, you must install an external load balancer. Using token
+   based authentication and an external load balancer, you can achieve
+   high availability and failover. Because the REST API is stateless, you
+   do not have to regenerate your authentication token when different
+   service instances process your API request. This applies even in the
+   event of failovers and service restart. You must regenerate your token
+   when it expires.
+
+   The API does not support the following features:
+     * MapR-DB JSON administrative commands, except the commands noted
+       earlier
+     * [4]Read Your Own Writes
+
+   To modify properties that the MapR-DB JSON REST API uses, see
+   [5]Application Properties.
+
+References
+
+   1. https://jwt.io/
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/c_config_impersonation.html#concept_uws_bcz_dt
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/MapRDataAccessGateway.html#MapRDataAccessGateway
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/querying-read-your-writes.html#reference_dfh_2vk_f1b
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__sectiondiv_pjf_2vz_m2b

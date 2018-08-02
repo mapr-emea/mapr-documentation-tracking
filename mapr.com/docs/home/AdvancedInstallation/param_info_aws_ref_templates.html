@@ -1,0 +1,103 @@
+Parameter Information for AWS Reference Templates
+
+   This table describes the parameters in the MapR reference templates for
+   AWS. Note that different templates can display different parameters and
+   may present the parameters in a different order.
+   Parameter Do this . . .
+   Stack name Specify the stack name. MapR resources in AWS are grouped
+   together as a stack that you create and delete as a single unit. The
+   stack name cannot contain spaces.
+   keyName Enter the key pair that you configure in [1]Creating a Key
+   Pair.
+   IAMInstanceProfile Enter the role you created in [2]Creating a Role for
+   the MapR Installer.
+   clusterName Enter a name for the cluster.
+   clusterAdminPassword Enter the password you will use to log into MCS or
+   the MapR Installer. This is the password for the UID mapr.
+   Note: For cloud deployments, the installer uses the Cluster Admin
+   Password as the MySQL root password when it creates a MySQL database
+   for certain services that require a database.
+   clusterAdminPasswordConfirm Enter the clusterAdminPassword again for
+   verification.
+   MEP Select the MapR Expansion Pack version.
+   provisioningTemplate Select from the list of auto-provisioning
+   templates. For more information about the templates, see
+   [3]Auto-Provisioning Templates. Some offerings are preconfigured for
+   provisioning and might not display this parameter.
+   nodeCount Specify the number of nodes in the cluster.
+   amiID Specify the Amazon Machine Image (AMI) ID. Leave this field empty
+   to use a default AMI.
+   sshUser Specify the ssh user with sudo privilege for the AMI you
+   specified in amiID.
+   instanceType Select from the list of AWS instance types. MapR
+   CloudFormation templates support the following instance types:
+     * m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge, m4.16xlarge
+     * m3.xlarge, m3.2xlarge
+     * c4.2xlarge, c4.4xlarge, c4.8xlarge
+     * c3.2xlarge, c3.4xlarge, c3.8xlarge
+     * r4.large, r4.xlarge, r4.2xlarge, r4.4xlarge, r4.8xlarge
+     * r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge
+     * p2.xlarge
+     * g2.8xlarge
+     * Local Storage Instances (Use only local disks, not EBS)
+     * i3.large, i3.xlarge, i3.2xlarge, i3.4xlarge, i3.8xlarge
+     * d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge
+
+   For more information about instance types, see [4]Amazon EC2 Instance
+   Types.
+   useInstanceStore Set this value to true if the machine type supports
+   instance stores (ephemeral disks) and you want to use only those disks.
+   No EBS volumes will be attached.
+   Note: This field is enabled for d2.* and i3.* instance types. i3.* uses
+   NVMe disks, which are added by default in AWS. If you use i3.* images,
+   the option is implicitly true.
+   diskCount Specify the disks per node.
+   diskType Specify the disk type. For more information, see [5]Amazon EBS
+   Volume Types.
+   diskSize Specify the disk size.
+   installerOnItsOwn Select true to configure the MapR Installer on a node
+   that is not part of the cluster. When you select true, the installer is
+   started on a t2.small instance. Select false to configure the installer
+   on a node in the cluster. Note that if you select true, the cluster
+   will consist of the nodeCount plus another node for the installer.
+   useExistingSubnet Specify a subnet ID if you want to use an existing
+   subnet. Leave this field empty if you would like a new BPC and subnets
+   created. If you choose to use your own subnet:
+     * The subnet must have access to the Internet. Hosts on that subnet
+       must have transparent outbound access to the Internet with no
+       additional configuration required. This means either an automatic
+       VPN or public IP addresses. The system will connect to the Internet
+       to update packages and software.
+     * The subnet must be able to communicate to all hosts within the
+       subnet on all ports.
+     * You must have a mechanism to connect with the hosts on the subnet.
+
+   securityGroups Specify the security group IDs for an existing subnet if
+   you specified a subnet ID for useExistingSubnet. Leave this field empty
+   to create a new VPC and subnets.
+   installOpenVPN Select True if you want to install OpenVPN. For more
+   information, see [6]Using OpenVPN.
+   openVPNuser Specify a user name for OpenVPN if you will use OpenVPN to
+   connect to the cluster. For more information, see [7]Using OpenVPN.
+   openVPNpassword Specify a password for OpenVPN if you will use OpenVPN
+   to connect to the cluster. For more information, see [8]Using OpenVPN
+   assignPublicIP If you want to assign a public IP address to each node,
+   set this value to true. If you set the value to false, you must ensure
+   that you have a way to connect to the private IP addresses.
+   Note: It is recommended that you enable assignPublicIP if you are not
+   using your own subnet, and you are letting the template create the VPC
+   and subnet.
+   publicAccess CIDR If you want to restrict the IP address from which the
+   stack can be accessed, specify the IP address range in this field. This
+   field applies only when the template creates the VPC and subnets.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/creating_key_pair.html#task_yr3_n3v_x1b
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/create_role_for_MapR_installer_aws.html#task_c4p_mjv_x1b
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/auto-provisioning-templates.html#concept_iwk_rbp_zcb
+   4. https://aws.amazon.com/ec2/instance-types/
+   5. http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/using_OpenVPN.html#concept_kwx_hhp_x1b
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/using_OpenVPN.html#concept_kwx_hhp_x1b
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/using_OpenVPN.html#concept_kwx_hhp_x1b

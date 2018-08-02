@@ -1,0 +1,39 @@
+Manual or Automatic Failover for the ResourceManager
+
+   With manual or automatic failover, an active ResourceManager and two
+   standby ResourceManager processes run in the cluster. The standby
+   ResourceManager nodes run the ResourceManager process without loading
+   the working state. When the active ResourceManager fails, one of the
+   standby ResourceManager nodes can load the working state from the
+   ZooKeeper and continue providing services to the cluster.
+
+   ResourceManager clients (MapR client nodes, ApplicationMaster
+   processes, and NodeManager nodes) attempt connections to the
+   ResourceManager nodes in a round-robin fashion until they hit an active
+   ResourceManager node. If the active ResourceManager node is down,
+   ResourceManager clients resume round-robin polling until an active
+   ResourceManager node is detected.
+
+   For web requests, including REST API requests, standby ResourceManager
+   nodes automatically redirect web requests to the active ResourceManager
+   node.
+
+   The difference between manual and automatic failover is how the
+   transition from standby to active occurs for the ResourceManager
+   process.
+     * With manual failover, you manually invoke the transition of the
+       ResourceManager from standby to active with the [1]yarn rmadmin
+       command.
+     * With automatic failover, the ResourceManager processes have an
+       embedded ZooKeeper-based ActiveStandbyElector, which chooses the
+       active ResourceManager. This ActiveStandbyElector also detects
+       failures in the currently active ResourceManager and automatically
+       transitions one of the standby ResourceManagers to an active state.
+
+   If you specify multiple ResourceManagers when you run configure.sh,
+   automatic failover is configured. However, you can edit the
+   yarn-site.xml to enable manual failover instead.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/yarn-rmadmin.html#yarnrmadmin

@@ -1,0 +1,52 @@
+Compiling and Running C Applications on MapR-FS Clients
+
+   MapR-FS exposes the HDFS API; if you already have a client program
+   built to use libhdfs, you do not have to relink your program just to
+   access the MapR filesystem. However, re-linking to the MapR-specific
+   shared library libMapRClient.so will give you better performance on
+   MapR-FS, because it does not make any Java calls to access the
+   filesystem (unlike libhdfs.so).
+
+   The script below sets environment variables to necessary values and
+   compiles one of the sample applications. Use this script as an example
+   for building and launching your own applications.
+
+   When you set HADOOP_HOME for your own client applications, set it to
+   the path for the version of libhdfs that your application uses. The
+   path is:
+
+   MAPR_HOME/hadoop/hadoop-2.x/
+
+   Also, set the path to your application in the gcc command, of course.
+
+   This script assumes that MAPR_HOME is set to the default value of
+   /opt/mapr.
+#!/bin/bash
+#Setup environment
+export HADOOP_HOME=${MAPR_HOME}/hadoop/hadoop-2.7.0/
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MAPR_HOME}/lib/native/
+export LD_RUN_PATH=${LD_RUN_PATH}:${MAPR_HOME}/lib
+GCC_OPTS="-Wl,--allow-shlib-undefined -I. -I{$HADOOP_HOME}/include/"
+
+#Compile and Link
+gcc ${GCC_OPTS} ${HADOOP_HOME}src/c++/libhdfs/hdfs_read.c -o hdfs_read -L${MAPR_
+HOME}/lib -lMapRClient
+
+#Launch the application
+./hdfs_read
+
+   Note:
+     * The compiled libMapRClient is statically linked to the following
+       third-party libraries:
+          + Crypto++: libcryptoapp.a (v5.6.2)
+          + Protobuf: libprotobuf-lite.a (v2.5.0)
+     * If a client application connects to the local fileserver, before
+       launching the application you can set the MAPR_CLIENT_SHMEM
+       environment variable to control how much of the local system's
+       memory should be devoted to the resources and buffers used for
+       communication between the client application and the local
+       fileserver. By default, the size of the shared memory is 20 MB. If
+       you want to change this value, specify it as a number of pages. For
+       example, to set the shared memory at 128 MB, multiply 128 by 10242
+       bytes and then divide the product by 8192 bytes. In this case, the
+       value would be 16384 pages.

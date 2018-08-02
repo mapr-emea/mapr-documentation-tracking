@@ -1,0 +1,69 @@
+dump cldbnodes
+
+   Lists the nodes that contain container location database (CLDB) data.
+
+   The CLDB is a service running on one or more MapR nodes that maintains
+   the location of cluster containers, services, and other information.
+   The CLDB automatically replicates its data to other nodes in the
+   cluster, preserving at least two (and generally three) copies of the
+   CLDB data. If the CLDB process dies, it is automatically restarted on
+   the node.
+
+Syntax
+
+   CLI
+
+maprcli dump cldbnodes
+    [-cluster <cluster name>]
+    -zkconnect <ZooKeeper Connect String>
+    -json | -long
+
+          Note: For best results, use the -json option from the command
+          line.
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster The cluster on which to run the command. If this parameter is
+   omitted, the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+   zkconnect A ZooKeeper connect string, which specifies a list of the
+   hosts running ZooKeeper, and the port to use on each, in the format:
+   '<host>[:<port>][,<host>[:<port>]...]'. To obtain zookeeper connection
+   strings, use the maprcli node listzookeepers command.
+   json | long This command returns multiple levels of data. You need to
+   specify either JSON format or "long" format to see the full output.
+
+Output
+
+   The maprcli dump cldbnodes command returns the IP address and port
+   number of the CLDB nodes on the cluster.
+$ maprcli dump cldbnodes -zkconnect centos23.lab:5181 -json
+{
+    "timestamp":1433270634424,
+    "timeofday":"2015-06-02 06:43:54.424 GMT+0000",
+    "status":"OK",
+    "total":1,
+    "data":[
+        {
+            "valid":[
+                "10.10.82.23:5660-",
+                "10.10.82.28:5660-",
+                "10.10.82.29:5660-",
+                "10.10.82.22:5660-"
+            ]
+        }
+    ]
+}
+
+Example
+
+   CLI
+
+maprcli dump cldbnodes -zkconnect centos23.lab:5181 -json

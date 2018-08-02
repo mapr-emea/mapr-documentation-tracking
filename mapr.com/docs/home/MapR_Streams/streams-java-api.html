@@ -1,0 +1,147 @@
+MapR-ES Java API Library
+
+   Use the MapR-ES Admin Java API library as an alternative to maprcli
+   commands and the REST APIs for performing administrative tasks on
+   streams and topics. This library can also be used for analysis of the
+   contents of streams.
+
+Javadoc
+
+   The following Apache Kafka Java API versions are supported:
+
+   CAPTION: Table 1. Supported Apache Kafka APIs
+
+     MapR version    Apache Kafka API
+   As of 6.0.1       1.0
+   6.0.0 and earlier 0.90
+   See the following APIs for detailed information:
+     * [1]MapR-ES Java API Library (6.0.1)
+     * [2]Apache Kafka 1.0 APIs used with MapR-ES (6.0.1)
+     * [3]MapR-ES Java API Library (6.0.0)
+     * [4]Apache Kafka 0.90 APIs used with MapR-ES (6.0.0)
+
+Java Interfaces, Classes, and Enums
+
+   The MapR-ES Java API library consists of the following interfaces and
+   class:
+
+   [5]Admin
+          Provides methods for performing administrative tasks on streams
+          and topics, as well as for obtaining StreamDescriptor and
+          TopicDescriptor objects.
+
+   [6]StreamDescriptor
+          Provides methods for setting and retrieving values for stream
+          attributes. StreamDescriptor is passed into methods when
+          performing operations on streams, for example, creating a new
+          stream and editing an existing stream. StreamDescriptor is also
+          used to find attribute values for an existing stream.
+
+   [7]TopicDescriptor
+          Note: TopicDescriptor is new as of 6.0.1.
+          Provides methods for setting and retrieving topic values.
+          TopicDescriptor is passed into methods when performing
+          operations on topics, for example, setting and retrieving topic
+          partitions and timestamp type. The available timestamp type can
+          be either createtime or logappendtime.
+
+          When a producer writes a message to a MapR-ES topic, a timestamp
+          is included that is part of the message record. This timestamp
+          can be used to implement time-based indexing. Time-based
+          indexing enables consumers to find the offsets for messages
+          based on timestamps. The returned message offset corresponds to
+          the earliest topic-partition message whose timestamp is equal to
+          or greater than the provided timestamp.
+
+          Note: APIs that support timeout semantics will adhere to the
+          specified timeouts only if the client is configured for soft
+          mount.
+
+   [8]Streams Class
+          Streams class is also required to create an instance of Admin,
+          which is used for all admin operations on streams. It can also
+          be used to create a StreamDescriptor or TopicDescriptor objects.
+
+          Provides the entry point to accessing MapR-ES streams for
+          analytics purposes.
+
+   [9]TimestampType Enum
+          Note: TopicDescriptor is new as of 6.0.1.
+          Provides the timestamp type of the records.
+
+   TopicRefreshListListener / TopicRefreshRegexListener
+          Note: Internal; not for public usage.
+
+MapR-ES Java APIs (as of 6.0.1)
+
+   The following table lists the new Interfaces and APIs for MapR 6.0.1.
+   They are the delta between MapR 6.0.1 and 6.0.0, meaning, they are
+   applicable to MapR 6.0.1 but not MapR 6.0.0.
+
+   CAPTION: Table 2. MapR-ES APIs (as of 6.0.1)
+
+   Interface and Methods Description
+   Admin.close Long duration for TimeUnit.
+   Admin.createTopic TopicDescriptor array for topic attributes.
+   Admin.editTopic TopicDescriptor array for topic attributes.
+   Admin.getTopicDescriptor Method for retrieving topic attributes.
+   Admin.listTopic Method for listing all the topics in a stream.
+   Admin.streamExists Method for determining whether a stream exists.
+   StreamDescriptor.getDefaultTimestampType Method for retrieving the
+   timestamp type.
+   StreamDescriptor.setDefaultTimestampType Method for setting the
+   timestamp type.
+   TopicDescriptor New MapR interface.
+   TopicDescriptor.getPartitions Method associated with the new interface.
+   TopicDescriptor.setPartitions Method associated with the new interface.
+   TopicDescriptor.getTimestampType Method associated with the new
+   interface.
+   TopicDescriptor.setTimestampType Method associated with the new
+   interface.
+   Enum TimestampType New Enum class and associated methods.
+
+Backward Compatibility
+
+   As of MapR 6.0.1, Apache Kafka 1.0 is supported. The following pause,
+   resume, seekToBeginning, and seekToEnd APIs support the Collection
+   Interface. The deprecated APIs will continue to run unchanged, however,
+   they may be removed in a future release.
+
+   CAPTION: Table 3. Deprecated MapR APIs (as of 6.0.1)
+
+   Replacement Collection APIs Deprecated APIs
+   void pause(Collection<TopicPartition> partitions); void
+   pause(TopicPartition... partitions);
+   void resume(Collection<TopicPartition>partitions); void
+   resume(TopicPartition... partitions);
+   void seekToBeginning(Collection<TopicPartition>); void
+   seekToBeginning(TopicPartition... partitions);
+   void seekToEnd(Collection<TopicPartition>); void
+   seekToEnd(TopicPartition... partitions);
+   The following subscribe and assign APIs support the Collection
+   Interface (which is more generalized) as well as the List Interface.
+   Support for the List Interface has been retained for backward binary
+   compatibility.
+
+   CAPTION: Table 4. Retained MapR APIs (as of 6.0.1)
+
+   Replacement Collection APIs Retained APIs
+   void subscribe(Collection<String> topics); void
+   subscribe(java.util.List<java.lang.String> topics);
+   void subscribe(Collection<String> topics, ConsumerRebalanceListener);
+   void subscribe(java.util.List<java.lang.String> topics,
+   ConsumerRebalanceListener listener);
+   void assign(Collection<TopicPartition> partitions); void
+   assign(java.util.List<TopicPartition> partitions);
+
+References
+
+   1. http://maprdocs.mapr.com/apidocs/601/mapr-streams/
+   2. http://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/
+   3. http://maprdocs.mapr.com/apidocs/60/mapr-streams/
+   4. http://maprdocs.mapr.com/apidocs/60/mapr-streams-kafka/
+   5. http://maprdocs.mapr.com/apidocs/601/mapr-streams/com/mapr/streams/Admin.html
+   6. http://maprdocs.mapr.com/apidocs/601/mapr-streams/com/mapr/streams/StreamDescriptor.html
+   7. http://maprdocs.mapr.com/apidocs/601/mapr-streams/com/mapr/streams/TopicDescriptor.html
+   8. http://maprdocs.mapr.com/apidocs/601/mapr-streams/com/mapr/streams/Streams.html
+   9. http://maprdocs.mapr.com/apidocs/601/mapr-streams/com/mapr/streams/TimestampType.html

@@ -1,0 +1,83 @@
+Install Impala
+
+   This topic provides instructions for using package managers to download
+   and install Impala from the MEP repository.
+   Install the Impala package on nodes in the cluster that you have
+   designated to run Impala. Install the Impala server on every node
+   designated to run impalad. Install the statestore and catalog packages
+   on only one node in the cluster.
+   Note: It is recommended that you install statestore and catalog
+   together on a separate machine from the Impala server.
+
+   Complete the following steps to install Impala, impala-server,
+   statestore, and catalog:
+    1. Install the mapr-impala package on all the nodes designated to run
+       Impala. To install the package, issue the following command:
+$ sudo yum install mapr-impala
+    2. In /opt/mapr/impala/impala-<version>/conf/env.sh, complete the
+       following steps:
+         a. Verify that the statestore address is set to the address where
+            you plan to run the statestore service.
+IMPALA_STATE_STORE_HOST=<IP address hosting statestore>
+         b. Change the catalog service address to the address where you
+            plan to run the catalog service.
+CATALOG_SERVICE_HOST=<IP address hosting catalog service>
+         c. Add the mem_limit and num_threads_per_disk parameters to
+            IMPALA_SERVER_ARGS to allocate a specific amount of memory to
+            Impala, and limit the number of threads that each disk
+            processes per impala server daemon. The default Impala memory
+            setting is high, which can result in conflict between Impala
+            and other frameworks running in the cluster. Adding these
+            parameters can alleviate any potential resource conflicts.
+export IMPALA_SERVER_ARGS=${IMPALA_SERVER_ARGS:- \
+    -log_dir=${IMPALA_LOG_DIR} \
+    -state_store_port=${IMPALA_STATE_STORE_PORT} \
+    -use_statestore -state_store_host=${IMPALA_STATE_STORE_HOST} \
+    -catalog_service_host=${CATALOG_SERVICE_HOST} \
+    -be_port=${IMPALA_BACKEND_PORT} \
+    -mem_limit=<absolute notation or percentage of physical memory> \
+    -num_threads_per_disk=<n>}
+       See [1]Additional Impala Configuration Options for more information
+       about these options and other options that you can modify in
+       env.sh.
+       Warning:
+       The default maximum heap space allocated to the MapR-FS fileserver
+       should provide enough memory for the MapR-FS fileserver to run
+       concurrently with Impala, however you can modify it if needed. To
+       modify the maximum heap space, navigate to
+       /opt/mapr/conf/warden.conf, and change the
+       service.command.mfs.heapsize.maxpercent parameter. Issue the
+       following command to restart Warden after you modify the parameter:
+service mapr-warden restart
+       Refer to [2]warden.conf for more Warden configuration information.
+    3. Verify that the following property is configured in hive-site.xml
+       on all the nodes:
+<property>
+        <name>hive.metastore.uris</name>
+        <value>thrift://<metastore_server_host>:9083</value>
+</property>
+    4. Install the Impala components.
+         a. To install the statestore service, issue the following
+            command:
+$ sudo yum install mapr-impala-statestore
+         b. To install the catalog service, issue the following command:
+$ sudo yum install mapr-impala-catalog
+         c. To install the Impala server, issue the following command:
+$ sudo yum install mapr-impala-server
+    5. Run configure.sh to refresh the node configuration.
+/opt/mapr/server/configure.sh -R
+    6. If the Hive metastore has MapR-SASL enabled, copy
+       $HIVE_HOME/conf/hive-site.xml to $IMPALA_HOME/conf/. Repeat this
+       step any time hive-site.xml is modified.
+
+   At this point, the Impala servers, catalog, and statestore should be
+   running. For instructions on how to run a simple Impala query and how
+   to query MapR-DB tables, refer to [3]Example: Running an Impala SQL
+   Query and [4]Query MapR-DB and HBase Tables with Impala.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/AdditionalImpalaConfigurOptions.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/warden.conf.html#warden.conf
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/WorkingwithImpala-SQLDialect.html#WorkingwithImpala-Impala
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/WorkingwithImpala-QueryMa.html

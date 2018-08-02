@@ -1,0 +1,114 @@
+service list
+
+   Lists all services on the specified node, the memory allocated for each
+   service, the state of each service, and log path for each service.
+
+Syntax
+
+   CLI
+
+maprcli service list
+    -node <node name>
+    [ -cluster <cluster name> ]
+    [ -zkconnect <ZooKeeper connect string> ]
+    [ -output terse|verbose ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host>:<port>/rest/service/list?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster The cluster on which to run the command. If this parameter is
+   omitted, the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+   node The node for which to list services. Default: localhost. If this
+   is not specified, the /etc/hosts file must include the IP address or
+   hostname for the localhost.
+   output Whether the output should be terse or verbose. Default: verbose.
+   zkconnect A ZooKeeper connect string, which specifies a list of the
+   hosts running ZooKeeper, and the port to use on each, in the format:
+   '<host>[:<port>][,<host>[:<port>]...]'. To obtain zookeeper connection
+   strings, use the maprcli node listzookeepers command.
+
+Output Fields
+
+      Field                          Description
+   memallocated The amount of system memory allocated to the service.
+   name         Service name.
+   state        Current state of the service. See [1]Service States.
+   logpath      Path to the log files for the service.
+   displayname  Display name of the service in the MCS.
+
+Service States
+
+   The following table lists the service states with their descriptions:
+   State Description
+   0 Not configured. The package for the service is not installed and/or
+   the service is not configured (configure.sh has not run).
+   1 Configured. The package for the service is installed and configured.
+   2 Running. The service is installed, started by the warden, and is
+   currently running.
+   3 Stopped. The service is installed and configure.sh has run, but the
+   service is not running.
+   4 Failed. The service is installed and configured, but not running.
+   5 Stand by. The service is installed and is in standby mode, waiting to
+   take over in case of failure of another instance.
+
+Examples
+
+   CLI Example
+
+   The following output is an example of the service information returned
+   when you run the service list command:
+# maprcli service list
+logpath                                 displayname         name             sta
+te
+/opt/mapr/logs/mfs.log                  FileServer          fileserver       0
+
+/opt/mapr/hadoop/hadoop-2.7.0/logs      ResourceManager     resourcemanager  0
+
+/opt/mapr/logs/cldb.log                 CLDB                cldb             0
+
+/opt/mapr/hadoop/hadoop-2.7.0/logs      NodeManager         nodemanager      0
+
+/opt/mapr/logs/gateway.log              GatewayService      gateway          0
+
+/opt/mapr/logs/hoststats.log            HostStats           hoststats        0
+
+/opt/mapr/apiserver/logs/apiserver.log  APIServer           apiserver        0
+
+   REST Example
+
+   The following output is an example of the service information returned
+   when you issue the service list REST API call:
+# curl -k -X GET 'https://abc.sj.us:8443/rest/service/list' --user mapr:mapr
+{"timestamp":1529380971417,"timeofday":"2018-06-18 09:02:51.417 GMT-0700 PM","st
+atus":"OK","total":9,"data":[{"name":"fileserver","state":0,"logpath":"/opt/mapr
+/logs/mfs.log","displayname":"FileServer"},{"name":"resourcemanager","state":0,"
+logpath":"/opt/mapr/hadoop/hadoop-2.7.0/logs","displayname":"ResourceManager"},{
+"name":"cldb","state":0,"logpath":"/opt/mapr/logs/cldb.log","displayname":"CLDB"
+},{"name":"nodemanager","state":0,"logpath":"/opt/mapr/hadoop/hadoop-2.7.0/logs"
+,"displayname":"NodeManager"},{"name":"gateway","state":0,"logpath":"/opt/mapr/l
+ogs/gateway.log","displayname":"GatewayService"},{"name":"hoststats","state":0,"
+logpath":"/opt/mapr/logs/hoststats.log","displayname":"HostStats"},{"name":"apis
+erver","state":0,"logpath":"/opt/mapr/apiserver/logs/apiserver.log","displayname
+":"APIServer"}]}
+
+   Note: When you configure high availability for the ResourceManager, the
+   status of standby ResourceManager service differs based on the selected
+   failover implementation. When the cluster uses manual or automatic
+   failover for the ResourceManager, standby ResourceManagers have a state
+   equal to 2 (running). When the cluster uses zero configuration failover
+   for the ResourceManager, standby ResourceManagers have a state equal to
+   5 (stand by).
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/service-list.html#servicelist__state

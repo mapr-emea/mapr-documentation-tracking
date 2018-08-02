@@ -1,0 +1,39 @@
+Integrate Hue with Spark (Experimental Only)
+
+   You can configure Hue to use the Spark Notebook UI. This allows users
+   to submit Spark jobs from Hue.
+   Note: Spark Notebook is a feature that utilizes the Spark REST Job
+   Server (Livy). The mapr-livy package must be installed on a node were
+   the mapr-spark package is installed or the Livy service will not start.
+    1. In the [spark] section of the hue.ini, set the livy_server_host
+       parameter to the host where the Livy server is running.
+[spark]
+# IP or hostname of livy server.
+livy_server_host=ubuntu500
+       Note: If the Livy server runs on the same node as the Hue UI, you
+       are not required to set this property as the value defaults to the
+       local host.
+    2. Restart Hue.
+maprcli node services -name hue -action restart -nodes <hue node>
+
+   Additional Information
+     * If needed, you can use the MCS or maprcli to start, stop, or
+       restart the Livy Server. For more information, see [1]Managing
+       Services.
+
+   Note: Troubleshooting Tip
+   If you have more that one version of Python installed, you may see the
+   following error when executing Python samples:
+Py4JJavaError: An error occurred while calling z:org.apache.spark.api.python.Pyt
+honRDD.collectAndServe...
+
+   Workaround:
+
+   Set the following environment variables in
+   /opt/mapr/spark/spark-<version>/conf/spark-env.sh:
+export PYSPARK_PYTHON=/usr/bin/python2.7
+export PYSPARK_DRIVER_PYTHON=/usr/bin/python2.7
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ManageServices.html

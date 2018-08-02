@@ -1,0 +1,68 @@
+Configuring YARN for Control Groups
+
+   Configure YARN to use Control Groups (Cgroups) when you want to limit
+   and monitor the CPU resources that are available to process YARN
+   containers on a node. CGroups are a Linux kernel feature that is
+   available through the LinuxContainerExecutor program.
+   Complete the following steps to configure YARN to use Cgroups:
+    1. Configure CGroup Properties for the LinuxContainerExecutor.
+         a. Cgroups are a Linux kernel feature that is available through
+            the LinuxContainerExecutor program. Configure or verify the
+            configuration of the following LinuxContainerExecutor
+            properties in the yarn-site.xml on each NodeManager and
+            ResourceManager node:
+
+   Properties Configuration Description
+   yarn.nodemanager.container-executor.class Verify that this property is
+   set to
+   org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor.
+   yarn.nodemanager.linux-container-executor.resources-handler.class Set
+   this property to
+   org.apache.hadoop.yarn.server.nodemanager.util.CgroupsLCEResourcesHandl
+   er
+   yarn.nodemanager.linux-container-executor.cgroups.hierarchy Verify or
+   set this property to the location of the Cgroups hierarchy. If
+   yarn.nodemanager.linux-container-executor.cgroups.mount is false then
+   this cgroups hierarchy must already exist in this location. By default,
+   this is set to /hadoop-yarn.
+   yarn.nodemanager.linux-container-executor.cgroups.mount If the Cgroup
+   hierarchy is already configured, verify that this value is set to the
+   default, false. Otherwise, set this value to true.
+   yarn.nodemanager.linux-container-executor.cgroups.mount-path Set this
+   property to the path where the LinuxContainerExecutor should attempt to
+   mount cgroups if the hierarchy is not found. The container-executor
+   binary will try to mount to <mountPath>/cpu, which must exists before
+   the NodeManager service is started on this node.
+   yarn.nodemanager.linux-container-executor.group Verify that this
+   setting matches the yarn.nodemanager.linux-container-executor.group
+   setting in container-executor.cfg
+   (/opt/mapr/hadoop/hadoop-2.x.x/etc/hadoop/container-executor.cfg).
+    2. Configure Resource Limits for YARN Container.
+         a. To limit the YARN container resources, you have the following
+            options which you configure in the yarn-site.xml:
+
+   To Perform
+   Limit the CPU resources available to container processes Set
+   yarn.nodemanager.resource.percentage-physical-cpu-limit to the
+   percentage at which you want to limit the CPU usage of all YARN
+   containers. For example, if you set this value to 75, YARN containers
+   on this node cannot use more than 75% of the CPU that is available on
+   the node.
+   Specify if CPU allocation should have a hard or soft limit
+
+   If containers should not use more CPU than what was originally
+   allocated, set
+   yarn.nodemanager.linux-container-executor.cgroups.strict-resource-usage
+   to true.
+   Set
+   yarn.nodemanager.linux-container-executor.cgroups.strict-resource-usage
+   to false, if containers can use additional amounts of unused, available
+   CPU.
+    3. Restart the Services.
+         a. Restart each NodeManager and ResourceManager service so that
+            changes to yarn-site.xml take effect. For more information,
+            see [1]Restarting the Services.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/nodes/Services-Restart.html

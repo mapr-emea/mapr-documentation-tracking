@@ -1,0 +1,95 @@
+Sample Usage
+
+   This section contains some examples to show how to run the
+   configure-crosscluster.sh utility.
+
+Example 1
+
+   Suppose both the local and remote MapR administrator usernames are
+   mapr, and both the local and remote cross-cluster users for mirroring
+   and gateway/streams replication are also mapr, specify only the
+   -remoteip argument for a fresh run:
+$ /opt/mapr/server/configure-crosscluster.sh create server -remoteip 10.10.1.1
+
+Example 2
+
+   Suppose the local MapR administrator username defaults to mapr, and the
+   remote MapR administrator username defaults to the local MapR
+   administrator username. For different user names for the local and
+   remote MapR administrator, you can specify them using the -localuser
+   and -remoteuser arguments. For example, if the local MapR administrator
+   username is admin and the remote MapR administrator username is mapr:
+$ /opt/mapr/server/configure-crosscluster.sh create server -remoteip 10.10.1.1 -
+localuser admin -remoteuser mapr
+
+Example 3
+
+   Suppose the local cross-cluster user defaults to the local MapR
+   administrative user, and the remote cross-cluster user defaults to the
+   remote MapR administrative user. To use a different cross-cluster user
+   for mirroring or gateway/streams replication, specify the
+   -localcrossclusteruser and/or -remotecrossclusteruser arguments. For
+   example, if the local cross-cluster username is crosscluster, run the
+   utility as follows:
+$ /opt/mapr/server/configure-crosscluster.sh create server -remoteip 10.10.1.1 -
+localcrossclusteruser crosscluster
+
+Example 4
+
+   By default, the utility performs ssh and scp operations between the
+   node where the utility is running and the other nodes in the local and
+   remote clusters using the default SSH port 22. To use a non-default SSH
+   port, either for the local or remote clusters, specify the port number
+   using the -localport or -remoteport option. For example, if the SSH
+   port for the local cluster is 10022, run the utility as follows. The
+   remote SSH port is the default value of 22 if the -remoteport argument
+   is not specified:
+$ /opt/mapr/server/configure-crosscluster.sh create server -remoteip 10.10.1.1 -
+localport 10022
+
+Example 5
+
+   By default, the utility determines the list of hosts in the local and
+   remote clusters by running the maprcli node list command on both the
+   local and remote nodes, and updates the configuration for all the nodes
+   in the local and remote clusters. To only update the configuration for
+   a subset of nodes in either the local or remote cluster, such as when
+   you want to update only the CLDB nodes, specify the path to the file
+   containing the list of hosts, one per line, using the -localhosts and
+   -remotehosts options respectively. For example, to update the
+   configuration for only the local nodes specified in the file /tmp/local
+   and the remote nodes specified in the file /tmp/remote:
+$ /opt/mapr/server/configure-crosscluster.sh create server -remoteip 10.10.1.1 -
+localhosts /tmp/local -remotehosts /tmp/remote
+
+Example 6
+
+   To configure cross-cluster functionality for user without setting up
+   server cross-cluster functionality, specify user as the argument. This
+   allows users to run commands like maprcli node list using the -cluster
+   parameter and remote cluster name:
+$ /opt/mapr/server/configure-crosscluster.sh create user -remoteip 10.10.1.1
+
+Example 7
+
+   To configure both user and server cross-cluster functionality, specify
+   all in the argument instead of user or server:
+$ /opt/mapr/server/configure-crosscluster.sh create all -remoteip 10.10.1.1
+
+Example 8
+
+   To re-run this utility with the recovery option to copy the
+   configuration files from the most recently failed run, use the -recover
+   option. To update the configuration for a specified list of local or
+   remote hosts, use the -recover option together with the -localhosts and
+   -remotehosts options.
+$ /opt/mapr/server/configure-crosscluster.sh create server -remoteip 10.10.1.103
+ -localuser admin -remoteuser mapr -recover latest -localhosts local -remotehost
+s remote
+
+   See [1]Sample Failure, Troubleshooting, and Recovery Session for more
+   information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/TroubleshootingAndRecovering.html#TroubleshootingAndRecovering__sample

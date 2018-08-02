@@ -1,0 +1,62 @@
+Table Replication Errors
+
+   Logged As
+          VOLUME_ALARM_TABLE_REPL_ERROR
+
+   Meaning
+          This alarm displays the paths and names of the source tables for
+          which the alarms were issued. Up to ten (10) source tables, that
+          have encountered an error, are displayed.
+
+Diagnostics
+
+   To identify the cause of the alarm, run the [1]maprcli table replica
+   list command. This command displays an errors field with additional
+   information about the error.
+maprcli table replica list -path <table path>
+
+   The errors field provides the following information:
+     * Code - table replication error code:
+     * Host - host that the error occurred on
+     * Msg - error message information
+
+   For additional information about possible causes of the error, see the
+   following log files (located in the /opt/mapr/logs directory):
+     * mfs.log-5 - for the nameserver node of the source table
+     * mfs.log-5 - for the nameserver node of the destination table
+     * gateway.log
+
+Error Conditions
+
+   Possible Error Conditions Description
+   A missing table or column family on the destination cluster If a column
+   family no longer exists in the replica, pause replication with the
+   maprcli table replica pause command, recreate the column family with
+   the maprcli table cf createcommand, run the CopyTable utility to copy
+   data from the source table into the column family, and then resume
+   replication with the maprcli table replica resume command.
+   A mismatch in column family names for the table on the destination
+   cluster
+
+   If the column family still exists in the replica but the name of the
+   column family was changed, run the maprcli table cf edit command with
+   the parameter -newcfname set to the correct name. Replication will
+   resume automatically.
+   Unreachable gateways on the destination cluster This error occurs only
+   if none of the gateways on the cluster are reachable.
+   Autosetup with directcopy has failed while copying data from the source
+   to the replica This error could be raised under the following
+   conditions:
+     * If this error occurs due to a connection failure, this alarm should
+       get resolved once the connection is restored.
+     * If this error occurs due to other error conditions such as missing
+       tables, mis-matched column families, or an unreachable gateway, the
+       error condition may not get resolved on its own and may need
+       administration action. For example, if a PUT operation fails on
+       destination cluster due to an Out-Of-Space condition, the
+       administrator will need to add more storage before the PUT retry
+       succeeds.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-list.html

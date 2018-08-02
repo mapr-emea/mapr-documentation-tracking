@@ -1,0 +1,156 @@
+Mounting NFS on a Windows Client
+
+   To set up the Windows NFS client, mount the cluster, map a network
+   drive, and configure the user ID (UID) and group ID (GID). The Windows
+   client must access NFS using a valid UID and GID from the Linux domain.
+   Mismatched UID or GID will result in permissions problems when
+   MapReduce jobs try to access files that were copied from Windows over
+   an NFS share.
+   Note: Because of Windows directory caching, there may appear to be no
+   .snapshot directory in each volume's root directory. As a workaround,
+   force Windows to re-load the volume's root directory by updating its
+   modification time (for example, by creating an empty file or directory
+   in the volume's root directory).
+   Note: With Windows NFS clients, use the -o nolockoption on the NFS
+   server to prevent the Linux NLM from registering with the portmapper.
+   The native Linux NLM conflicts with the MapR NFS server.
+
+   Complete the following steps to mount NFS on a Windows client:
+    1. Mount the Cluster.
+          + [1]Windows 10 Enterprise
+          + [2]Windows 7 Enterprise
+          + [3]Other Versions of Windows
+       Complete the following steps for Windows 10 Enterprise
+         a. Open Start > Control Panel > Programs.
+         b. Select Turn Windows features on or off.
+         c. Select Services for NFS.
+         d. Click OK.
+         e. Enable write permissions for the anonymous user because the
+            default options only grant read permissions when mounting a
+            UNIX share using the anonymous user.
+            To grant write permissions, make a change to the Windows
+            registry by performing the following steps:
+              i. Open regedit by typing it in the search box and pressing
+                 Enter.
+             ii. Create a new New DWORD (32-bit) Value inside the
+                 HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ClientForNFS\Curren
+                 tVersion\Default folder named AnonymousUid and
+                 AnonymousGid and assign the UID and GID found on the UNIX
+                 directory as shared by the NFS system.
+         f. Restart the NFS client or reboot the machine to apply the
+            changes.
+         g. Mount the cluster and map it to a drive using the Map Network
+            Drive tool or from the command line.
+mount -o anon usa-node01:/mapr z:
+            For more information, see step 2 below.
+       Complete the following steps for Windows 7 Ultimate or Windows 7
+       Enterprise
+         a. Open Start > Control Panel > Programs.
+         b. Select Turn Windows features on or off.
+         c. Select Services for NFS.
+         d. Click OK.
+         e. Mount the cluster and map it to a drive using the Map Network
+            Drive tool or from the command line.
+mount -o nolock usa-node01:/mapr z:
+            For more information, see step 2 below.
+       Complete the following steps for all other versions of Windows:
+         a. Download and install Microsoft Windows Services for Unix
+            (SFU). You only need to install the NFS Client and the User
+            Name Mapping.
+         b. Configure the user authentication in SFU to match the
+            authentication used by the cluster (LDAP or operating system
+            users). You can map local Windows users to cluster Linux
+            users, if desired.
+         c. Once SFU is installed and configured, mount the cluster and
+            map it to a drive using the Map Network Drive tool or from the
+            command line.
+mount -o nolock usa-node01:/mapr z:
+            For more information, see step 2 below.
+    2. Map a network drive with the Map Network Drive tool.
+         a. Open Start > My Computer.
+         b. Select Tools > Map Network Drive.
+         c. In the Map Network Drive window, choose an unused drive letter
+            from the Drive drop-down list.
+         d. Specify the Folder by browsing for the MapR cluster, or by
+            typing the hostname and directory into the text field.
+         e. Browse for the MapR cluster or type the name of the folder to
+            map. This name must follow UNC. Alternatively, click the
+            Browse… button to find the correct folder by browsing
+            available network shares.
+         f. Select Reconnect at login to reconnect automatically to the
+            MapR cluster whenever you log into the computer.
+         g. Click Finish.
+    3. Configure the UID and GID for NFS access.
+          + [4]System that is part of Active Directory Domain
+          + [5]System not using Active Directory
+       For a system that is part of the Active Directory Domain, you must
+       instruct the NFS client to access an AD server to get uidNumber and
+       gidNumber.
+         a. Ensure the AD Users schema has auxiliary class posixAccount.
+         b. Populate AD uidNumber and gidNumber fields with matching uid
+            and gid from Linux.
+         c. Configure the NFS client to look up uid and gid in the AD DS
+            store.
+         d. Refer to details here:
+            http://technet.microsoft.com/en-us/library/hh509016(v=ws.10).a
+            spx.
+       For a standalone Windows 7 or Vista machine (not using Active
+       Directory), Windows always uses its configured Anonymous UID and
+       GID for NFS access, which by default are -2. However, you can
+       configure Windows to use specific values, which results in being
+       able to access NFS using those values.
+       The UID and GID values are set in the Windows Registry and are
+       global on the Windows NFS client box. This solution might not work
+       well if your Windows box has multiple users who each need access to
+       NFS with their own permissions, but there is no obvious way to
+       avoid this limitation.
+       The values are stored in the registry path
+       HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ClientForNFS\CurrentVersion\D
+       efault. The two DWORD values are AnonymousUid and AnonymousGid. If
+       they do not exist, you must create them.
+       Refer to details here:
+       http://blogs.msdn.com/b/sfu/archive/2009/03/27/can-i-set-up-user-na
+       me-mapping-in-windows-vista.aspx.
+    4. (Optional) Deactivate the nlockmgr service.
+       If the nlockmgr service is active on a Windows machine, attempts to
+       mount a MapR NFS share fail with the following message:
+C:\Users\administrator.Client1>mount -o nolock -u:mapr -p:mapr ClusterNode1:/map
+r / g:
+Network Error - 53
+Type 'NET HELPMSG 53' for more information.
+         a. Run the rpcinfo command to confirm that the nlockmgr service
+            is active.
+C:\Users\administrator.Client1>rpcinfo -p ClusterNode1
+program version protocol     port
+--------------------------------------------------
+100000       4      tcp      111    portmapper
+100024       1      udp    60588    status
+100007       2      udp      817    ypbind
+100021       1      udp    47016    nlockmgr
+100021       3      udp    47016    nlockmgr
+100021       4      udp    47016    nlockmgr
+100021       1      tcp    34254    nlockmgr
+100021       3      tcp    34254    nlockmgr
+100021       4      tcp    34254    nlockmgr
+         b. Check the output for the presence of nlockmgr. To deregister
+            nlockmgr services on the node, use the -d switch in rpcinfo on
+            the MapR node.
+[root@ClusterNode1 ~]# rpcinfo -d 100021 1
+[root@ClusterNode1 ~]# rpcinfo -d 100021 2
+[root@ClusterNode1 ~]# rpcinfo -d 100021 3
+[root@ClusterNode1 ~]# rpcinfo -d 100021 4
+         c. Re-check rpcinfo output to verify that no nlockmgr services
+            are registered. The NFS mount completes successfully at this
+            point.
+C:\Users\administrator.Client1>mount -o nolock -u:mapr -p:mapr ClusterNode1:/map
+r/ Z:
+Z: is now successfully connected to ClusterNode1:/mapr/
+The command completed successfully.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MountingNFSonWindowsClient.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MountingNFSonWindowsClient.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MountingNFSonWindowsClient.html#div1entry3
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MountingNFSonWindowsClient.html#div2entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MountingNFSonWindowsClient.html#div2entry2

@@ -1,0 +1,54 @@
+LDAP Authentication
+
+   As of Impala 1.2.3, client connections with Impala can be authenticated
+   against LDAP servers. You can configure LDAP authentication for client
+   connections with Impala on a non-secure MapR cluster. When you
+   configure LDAP authentication, you must configure SSL between the
+   client and Impala, and between Impala and the LDAP server to avoid
+   sending credentials over the wire in clear text. Configuration
+   requirements apply to the server side when configuring and starting
+   Impala.
+
+   If the Hive metastore has MapR-SASL enabled, copy
+   $HIVE_HOME/conf/hive-site.xml to $IMPALA_HOME/conf/. Repeat this step
+   any time the hive-site.xml file is modified.
+
+   Modify /opt/mapr/impala/impala-<version>/conf/env.sh and include the
+   following options to configure Impala server LDAP authentication:
+   Options Description
+   --enable_ldap_auth Set this option to "true" in all environments to
+   enable LDAP authentication between Impala and the client.
+   --ldap_uri Sets the URI of the LDAP server to use. Typically, the URI
+   is prefixed with ldap://<hostname>. Optionally, the URI can specify the
+   port. For example, ldap://<hostname>:<port>.
+   --ldap_manual_config extend col Bypasses all of the automatic
+   configuration if you need to provide a custom SASL.
+   --ldap_tls Tells Impala to start a TLS connection to the LDAP server
+   and to fail authentication if Impala cannot start the TLS connection.
+   Example:
+IMPALA_SERVER_ARGS=" \
+    -log_dir=${IMPALA_LOG_DIR} \
+    -state_store_port=${IMPALA_STATE_STORE_PORT} \
+    -enable_ldap_auth=true \
+    -ldap_uri=ldap://10.250.1.5/ \
+    -ldap_tls=true \
+    -use_statestore \
+    -state_store_host=${IMPALA_STATE_STORE_HOST} \
+    -catalog_service_host=${CATALOG_SERVICE_HOST} \
+    -be_port=${IMPALA_BACKEND_PORT}"
+
+   After you restart the Impala server, statestore, and catalog, you can
+   connect to Impala using LDAP authentication. To connect to Impala,
+   launch the impala-shell from a client node and issue the following
+   commands:
+   Command Description
+   -l Enables LDAP authentication.
+   -u Sets the user. The impala-shell prompts you for the password. Per
+   Active Directory, the user is the short username, not the full LDAP
+   distinguished name.
+   --ldap_password_cmd (Impala 2.5.0 only) Sets the bash command to
+   retrieve the LDAP user password.
+   Example:
+impala-shell -l -u uid=qa-user1,ou=People,dc=maprtech,dc=com --ldap_password_cmd
+="echo -n
+      secret"

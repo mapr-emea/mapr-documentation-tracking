@@ -1,0 +1,25 @@
+Configure Repository Encryption for Sqoop2
+
+   As of Sqoop 1.99.7, you can configure the Sqoop2 repository to encrypt
+   password data.
+    1. Stop the Sqoop2 server.
+maprcli node services -name sqoop2 -action stop -nodes <space delimited list of
+nodes>
+    2. In the sqoop.properties file
+       (/opt/mapr/sqoop/sqoop-<version>/conf/sqoop.properties), configure
+       the repository encryption related properties. For example:
+org.apache.sqoop.security.repo_encryption.enabled=true
+org.apache.sqoop.security.repo_encryption.password=<ssl-keystore-password>
+org.apache.sqoop.security.repo_encryption.hmac_algorithm=HmacSHA256
+org.apache.sqoop.security.repo_encryption.cipher_algorithm=AES
+org.apache.sqoop.security.repo_encryption.cipher_key_size=16
+org.apache.sqoop.security.repo_encryption.cipher_spec=AES/CBC/PKCS5Padding
+org.apache.sqoop.security.repo_encryption.initialization_vector_size=16
+org.apache.sqoop.security.repo_encryption.pbkdf2_algorithm=PBKDF2WithHmacSHA1
+org.apache.sqoop.security.repo_encryption.pbkdf2_rounds=4000
+
+    3. Remove the Sqoop2 repository.
+rm -rf /opt/mapr/sqoop/repository
+    4. Start the Sqoop2 server.
+maprcli node services -name sqoop2 -action start -nodes <space delimited list of
+ nodes>

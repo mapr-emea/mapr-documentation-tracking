@@ -1,0 +1,140 @@
+Volume Topology
+
+   The topology describes the locations of nodes and racks in the cluster.
+   Volume topology is based on node topology. You define volume topology
+   after you define node topology. When you set up node topology, you can
+   group nodes by rack or switch. MapR-FS uses node topology to determine
+   where to replicate data for continuous access to the data in the event
+   of a rack or node failure.
+
+   A volume’s topology defines which racks or nodes a volume includes.
+
+   The following image represents a volume that spans a cluster:
+   [volume.png]
+
+Topology of Local Volume Replicas
+
+   The master copies for containers of local volumes are placed on the
+   local node. The nodes for the replica copies for containers of local
+   volumes are chosen in the following order:
+    1. If a topology is explicitly specified for replicas during volume
+       creation or modification, that topology will be used.
+    2. If the configuration parameter that specifies a relative path for
+       replicas of local volumes is set, that will be used.
+    3. The default volume topology will be used.
+
+   See [1]Setting the Topology for Local Volume Replicas, [2]Creating
+   Replicas of Local Volumes in Custom Topology Using the CLI, and
+   [3]Setting Default Volume Topology Using the CLI.
+
+Mirror Volume Topology
+
+   When the root volume on a cluster is mirrored, the source root volume
+   contains a writable volume link, .rw that points to the read/write
+   copies of all local volumes. In that case, the mount path / refers to
+   one of the root volume's mirrors, and is read-only. The mount path /.rw
+   refers to the source volume, and is read/write.
+
+   A mount path that consists entirely of mirrored volumes refers to a
+   mirrored copy of the specified volume. When a mount path contains
+   volumes that are not mirrored, the path refers to the target volume
+   directly. In cases where a path refers to a mirrored copy, the .rw link
+   is useful for navigating to the read/write source volume.
+
+Sample Volume Topology with Mirrors
+
+   The following example shows a volume topology with mirrors:
+
+   For the four volumes /, a, b, and c, the following table indicates the
+   volumes referred to by example mount paths for particular combinations
+   of mirrored and not mirrored volumes in the path:
+
+   /
+
+   a
+
+   b
+
+   c
+
+   This Path
+
+   Refers To This Volume...
+
+   Which is...
+
+   Mirrored
+
+   Mirrored
+
+   Mirrored
+
+   Mirrored
+
+   /a/b/c
+
+   Mirror of c
+
+   Read-only
+
+   Mirrored
+
+   Mirrored
+
+   Mirrored
+
+   Mirrored
+
+   /.rw/a/b/c
+
+   c directly
+
+   Read/Write
+
+   Mirrored
+
+   Mirrored
+
+   Not Mirrored
+
+   Mirrored
+
+   /a/b/c
+
+   c directly
+
+   Read/Write
+
+   Mirrored
+
+   Mirrored
+
+   Not Mirrored
+
+   Mirrored
+
+   /a
+
+   Mirror of a
+
+   Read-only
+
+   Not Mirrored
+
+   Mirrored
+
+   Mirrored
+
+   Mirrored
+
+   /a/b/c
+
+   c directly
+
+   Read/Write
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpTopology-LocalVolReplica-Overview.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpTopology-LocalVolReplica.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpTopology-DefaultVolumeTopology.html

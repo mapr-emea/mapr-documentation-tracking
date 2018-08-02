@@ -1,0 +1,38 @@
+Set Up a Local Repository: RHEL/CentOS
+
+   To create a local repository, download your files from the Internet and
+   then add the repositories to each node in the cluster.
+
+   You create a local repository from files that you download from the
+   internet, and then add the repositories to each node in the cluster.
+   The files that you download differ from version to version. Using a
+   maprtech.repo file, you specify URLs of the RHEL/CentOS packages. See
+   the [1]Release Notes for the URLs for all release packages.
+    1. Log in as root on the node or use sudo.
+    2. Create the following directory if it does not exist:
+       /var/www/html/yum/base
+    3. On a computer that is connected to the internet, download the
+       following files, substituting the appropriate <version> and
+       <datestamp>:
+       For example:
+http://package.mapr.com/<product_package>.rpm.tgz
+    4. Copy the files to /var/www/html/yum/base on the node, and extract
+       them there.
+       For example:
+tar -xvzf <product_package>.rpm.tgz
+    5. Create the base repository headers.
+createrepo /var/www/html/yum/base
+    6. Verify that the content of the new /var/www/html/yum/base/repodata
+       directory contains filelists.xml.gz, other.xml.gz, primary.xml.gz,
+       and repomd.xml.
+    7. On each node, create a text file called maprtech.repo in
+       /etc/yum.repos.d.
+[maprtech]
+name=MapR Technologies, Inc.
+baseurl=http://<host>/yum/base
+enabled=1
+gpgcheck=0
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_packages_and_deps_60.html

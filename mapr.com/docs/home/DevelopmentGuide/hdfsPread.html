@@ -1,0 +1,41 @@
+hdfsPread()
+
+   Supported by libMapRClient for hadoop-2.x
+
+   Reads an open file from a specified offset.
+
+   Whereas hdfsRead() increments the current offset in the file by the
+   number of bytes that are read, hdfsPread() does not change the current
+   offset. For example, if the current offset is 0 and hdfsPread() starts
+   reading from offset 100, after the read the current offset is still 0.
+
+Signature
+
+tSize  hdfsPread(hdfsFS fs, hdfsFile file, tOffset position, void* buffer, tSize
+ length)
+
+Parameters
+
+   Parameter Description
+   fs The handle of the filesystem where the file is located. Obtain this
+   handle with one of the hdfsConnect() APIs.
+   file The file handle. Obtain this handle with one of the hdfsOpenFile()
+   APIs.
+   position Offset from which to read.
+   buffer The buffer to copy read bytes into.
+   length The length of the buffer. The maximum size of tSize is the
+   maximum buffer length.
+
+Return Value
+
+   Returns the number of bytes actually read, which can be less than than
+   the length of the buffer if the end of the file is reached during the
+   read. Returns -1 on error.
+
+   On error, errno is set to one of the following values:
+     * EACCES if the access permissions are violated.
+     * ESTALE if the file doesn't exist on the server.
+     * EINVAL if the arguments are invalid or if the file type doesn't
+       support read operations.
+
+   To recover from errors, close the file by calling hdfsCloseFile().

@@ -1,0 +1,81 @@
+MapR-DB JSON ImportJSON
+
+   Imports one or more JSON documents into a MapR-DB JSON table. The JSON
+   documents must be flat text files.
+
+Required Permissions
+
+     * The readAce permission on the volume where the JSON documents to
+       import are located.
+     * The writeAce permission on the volume in which the destination
+       table is located.
+
+   For information about how to set permissions on volumes, see [1]Setting
+   Whole Volume ACEs.
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+mapr importJSON
+[-idfield <Name of ID field in JSON Data>]
+[-bulkload <true|false>, default is false]
+[-mapreduce : <true|false>, default is true]
+-src <text file or directory>
+-dst <JSON table>
+
+Parameters
+
+     *
+
+   Parameter Description
+   idfield The name of the field that contains the value to use for each
+   document's _id field.
+
+   An _id field is inserted into each document that is imported into a
+   table, if the document does not already contain one.
+
+   Documents that do not already contain an _id field must contain a field
+   with a value that can be used for the inserted _id field.
+
+   For example, each document might have a product_ID field with a value
+   that would be suitable for the _id field.
+
+   Use quotation marks around the name.
+   bulkload A Boolean value that specifies whether or not to perform a
+   full bulk load of the table. The default is not to use bulk loading
+   (true). After a bulk load, you must set the -bulkload parameter of the
+   table to false by running the command maprcli table edit -path <path to
+   table> -bulkload false.
+
+   This parameter cannot be set to true when the -mapreduce parameter is
+   set to false.
+   mapreduce
+
+   A Boolean value that specifies whether or not to use a MapReduce
+   program to perform the copying operation. The default, preferred method
+   is to use a MapReduce program (true).
+   src The path of a JSON document in text format or a directory of such
+   documents.
+
+   If you specify a directory and that directory contains only the JSON
+   files to import, use an asterisk at the end of the path, as in this
+   example: /user/data/*
+
+   If you specify a directory and that directory contains both the JSON
+   files to import and other files, use a more specific wildcard, such as
+   *.json .
+
+   The path must be in the MapR filesystem. To move files there from the
+   Linux filesystem, use the command hadoop fs -copyFromLocal.
+   dst The path of the destination MapR-DB JSON table.
+
+Example
+
+[user@hostname ~]$ mapr importJSON -idfield "acno" -src
+/temp/tate/collection/artworks/p/801/* -dst /collection/artworks
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html

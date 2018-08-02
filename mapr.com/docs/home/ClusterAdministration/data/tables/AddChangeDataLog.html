@@ -1,0 +1,75 @@
+Adding a Change Data Log
+
+   You can add a change data log using MCS and the CLI. To add a change
+   data log, you must have the following permissions:
+     * Replication Access (UI) or replperm (CLI) on the source table on
+       the source cluster
+     * Topic (UI) or topicperm (CLI) on the destination stream in the
+       destination cluster
+
+   If you are a normal user and want to create a changelog between your
+   own MapR-DB table and someone else's stream topic, you must have Topic
+   (UI) permission or topicperm (CLI) on the destination stream.
+
+Adding a Change Data Log Using the MapR Control System
+
+    1. Log in to MCS and go to the Change Data Capture tab in the [1]table
+       information page.
+    2. Click Add Change Log to display the Add Change Log page.
+    3. Set values for the following.
+
+   Destination Cluster (Required) The path to the cluster on which the
+   changelog stream exists.
+
+   If the destination stream is on a remote secure cluster, then a gateway
+   and secure configuration must first be setup. For more information, see
+   [2]Table Replication, [3]Administering MapR Gateways, and
+   [4]Configuring Secure Clusters for Cross-Cluster Mirroring and
+   Replication.
+   Destination Stream Topic Name (Required) The target of the changelog
+   stream, specified as <stream_path>:<topic_name>, to which all change
+   data records will be published. The stream must exist as a changelog
+   stream or the operation fails.
+   Publish to Existing Topic Whether (Yes) or not (No) to publish to
+   existing topic. If value is No and the topic does not already exist, it
+   will be created.
+   Publish Existing Data Whether (Yes) or not (No) to initiate publishing
+   of the existing data to the stream. If value is No, only new changes
+   will be propagated.
+   Defer Publishing Whether (Yes) or not (No) to pause propagation after
+   creating the change log.
+   Throttle Whether (Yes) or not (No) the data transfer to the stream for
+   this change log must be throttled.
+   Synchronously Whether (Yes) or not (No) to acknowledge the client
+   writes to the table before the CDC gateway receives the data.
+   Encrypt on Wire Whether (Yes) or not (No) the data transfer between MFS
+   and gateway for this change log is encrypted.
+   Compress on Wire The compression scheme of the data transfer between
+   MFS and gateway for this change log instance.
+    4. Choose one of the following:
+          + For JSON table:
+               o Publish Entire Document — to publish the entire document
+                 to the stream topic.
+               o Publish Selected Field Path — to specify the paths to the
+                 fields to publish to the stream topic.
+          + For Binary table:
+               o Publish Entire Document — to publish the entire document
+                 to the stream topic.
+               o Publish Selected Column Families — to specify the column
+                 families to publish to the stream topic.
+    5. Click Add Change Log.
+
+Adding a Change Data Log Using the CLI and REST API
+
+   The basic command to add a change data log to a table is:
+maprcli table changelog add
+
+   For complete reference, see [5]table changelog add.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ViewTableDetails.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ReplicatingMapR-DBTables.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/MapRGateways.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-changelog-add.html

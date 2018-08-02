@@ -1,0 +1,67 @@
+Addressing Data Alarms
+
+   When a disk fails, data on that disk becomes unavailable. As a result,
+   you will probably see one of these two data alarms along with a Disk
+   Failure alarm:
+     * Data Unavailable (VOLUME_ALARM_DATA_UNAVAILABLE) - if there was
+       only one copy of data and it was on the failed disk; or if data was
+       replicated more than once, but all disks with that data failed
+     * Data Under Replicated (VOLUME_ALARM_DATA_UNDER_REPLICATED) - if
+       data on the failed disk is replicated elsewhere, but the minimum
+       replication factor is not met as a result of the failed disk
+
+   If you see a Data Unavailable volume alarm in the cluster, follow these
+   steps to run the/opt/mapr/server/fsck utility on all the offline
+   storage pools. On each node in the cluster that has raised a disk
+   failure alarm:
+    1. Run the following command to identify which storage pools are
+       offline:
+[user@host] /opt/mapr/server/mrconfig sp list | grep Offline
+    2. For each storage pool reported by the previous command, run the
+       following command, where <sp> specifies the name of an offline
+       storage pool:
+[user@host] /opt/mapr/server/fsck -n <sp> -r
+       When you run [1]fsck with the -r option, the fsck utility
+       identifies corrupt blocks and removes them. If there are no corrupt
+       blocks, fsck clears the error condition so you can bring the
+       storage pool back online.
+       Note: Using the /opt/mapr/server/fsck utility with the -r flag to
+       repair a filesystem risks data loss. Call MapR support before using
+       /opt/mapr/server/fsck -r.
+    3. Verify that all Data Unavailable volume alarms are cleared. If Data
+       Unavailable volume alarms persist, contact MapR support or post on
+       [2]answers.mapr.com.
+
+   If there are any Data Under Replicated volume alarms in the cluster,
+   MapR can repair the problem by automatically replicating data and
+   putting it on another disk. After you allow a reasonable amount of time
+   for re-replication, verify that the under-replication alarms are
+   cleared.
+
+   Using the /opt/mapr/server/fsck utility with the -r option produces
+   different results depending on the scenario. The fsck utility does not
+   interpret the scenario nor does it have a safe mode.
+     * If a disk is offline because of an imbalanced b-tree, using fsck -r
+       may result in data loss from bad containers and data loss if
+       additional replicas are unavailable.
+     * If a disk is offline because of an I/O error, using fsck -r
+       produces indeterminate results. A disk that is throwing I/O errors
+       is questionable in terms of data content and reliability. For
+       example, an operation that completed on the disk but was never
+       returned may have partial data remaining on the disk. Using fsck -r
+       retains any partial data.
+     * If a disk is offline because of a slow I/O, using fsck -r does not
+       produce data loss.
+
+   The most conservative usage of fsck -r is to run fsck without the -r
+   option (verification mode) and check the output. If the output is ok,
+   then run fsck with the -roption.
+   Note: Disk Failure node alarms that persist require disk replacement.
+   If Data Under Replicated volume alarms persist, contact MapR support or
+   post on [3]answers.mapr.com.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/fsck.html#fsck
+   2. http://answers.mapr.com/
+   3. http://answers.mapr.com/

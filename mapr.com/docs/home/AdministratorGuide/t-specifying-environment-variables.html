@@ -1,0 +1,47 @@
+Specifying Environment Variables
+
+   A subset of the environment variables defined on the servers for the
+   MapR cluster must be defined, with the same values, on the client. You
+   can add environment variables directly to the startup script, or create
+   a local env.sh file in /usr/local/mapr-loopbacknfs/conf. You cannot
+   simply copy the env.sh file from a server node in the cluster because
+   the MAPR_HOME setting would be different.
+
+   Complete the following steps to specify environment variables:
+    1. On a server node in the MapR cluster, locate the env.sh and
+       env_override.sh files in the /opt/mapr/conf directory. If the
+       env_override.sh file is not present, use the env.sh file. For more
+       information about these files, see [1]About env_override.sh.
+    2. Retrieve the MAPR_SUBNETS and JAVA_HOME settings from the server
+       files and clone them to /usr/local/mapr-loopbacknfs/conf/env.sh on
+       the client node.
+    3. (Optional) Set the NFS_LOOPBACK_HONOUR_SUBNETS environment variable
+       to avoid re-registration whenever there is a change in any network
+       interface. Value can be:
+          + true to consider the MAPR_SUBNETS while registering with CLDB.
+            If set to true, re-registration does not happen whenever there
+            is a change in any network interface.
+          + false to ignore the MAPR_SUBNETS. If set to false,
+            re-registration happens whenever there is a change in any
+            network interface.
+       For example:
+# export NFS_LOOPBACK_HONOUR_SUBNETS=true
+# export MAPR_SUBNETS=10.10.104.0/24
+
+# env | grep SUBNET
+NFS_LOOPBACK_HONOUR_SUBNETS=true
+MAPR_SUBNETS=10.10.105.0/24,10.10.104.0/24
+    4. Change the JAVA_HOME setting to point to the location where Java is
+       installed on the client.
+    5. Add the following lines to the client node env.sh file:
+export MAPR_HOME=/usr/local/mapr-loopbacknfs
+export MAPR_TICKETFILE_LOCATION=/usr/local/mapr-loopbacknfs/initscripts/mapr-loo
+pbacknfs/longlived_ticket
+       Note: To allow impersonation, set the value for
+       MAPR_TICKETFILE_LOCATION to the path to the mapr user ticket.
+    6. Save and close the env.sh file.
+    7. Restart the loopbacknfs service for the changes to take effect.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb

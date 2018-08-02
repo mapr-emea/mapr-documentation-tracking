@@ -1,0 +1,84 @@
+Security Considerations for the MapR PACC
+
+   This section describes key considerations for using Docker containers
+   with secure and non-secure MapR clusters.
+
+Secure Clusters
+
+   Docker containers, like other virtualization technologies, allow client
+   access from user identities that are not controlled by central IT. As a
+   result, these technologies can be problematic when used with clusters
+   that are not secure (where trust is based on trusting the client).
+   Therefore, MapR suggests that you use secure clusters with MapR PACCs.
+
+   MapR PACCs, and applications built from them, are launched with a MapR
+   ticket that contains the application's identity from the perspective of
+   the cluster. On secure clusters, the user identity, user ID (UID), and
+   group ID (GID) are specified in the MapR ticket and passed to MapR-FS
+   for cluster communication. The ticket ensures that operations, such as
+   authorization and auditing, are performed as the authenticated MapR
+   user. A different ticket should be created for each container that is
+   launched. The user’s identity should be the identity of the user who
+   accesses data.
+
+   All access from Docker containers to the MapR cluster requires a MapR
+   ticket be present inside the container. Users or administrators should
+   generate a MapR ticket for each container prior to launch, and pass the
+   ticket into the container at runtime. The MapR ticket must be generated
+   for the user that your applications access the cluster as. You should
+   create a container user with the same MAPR_CONTAINER_USER,
+   MAPR_CONTAINER_GROUP, MAPR_CONTAINER_GID, and MAPR_CONTAINER_UID
+   runtime environment variables.
+
+   Always use service or user tickets, not impersonation tickets. The
+   ticket type and lifetime should consider the lifetime of the
+   application being deployed. Use of impersonation tickets may allow
+   rogue applications running in containers to impersonate arbitrary users
+   (including root or mapr) and gain access to any data in the cluster.
+
+   The MapR ticket file location in the container is set with the
+   MAPR_TICKETFILE_LOCATION environment variable, which is set at runtime
+   for the user specified in MAPR_CONTAINER_USER. The ticket file must
+   always be stored in /tmp. For example: /tmp/mapr_ticket.
+
+   In case of loss or breach, you can revoke tickets.
+
+Non-Secure Clusters
+
+   On non-secure clusters, you can restrict access by running the
+   application inside the container as a user with appropriate privileges
+   on the MapR cluster. This is controlled using runtime environment
+   variables.
+   Note: MapR recommends that you do not use either mapr or root users.
+     * MAPR_CONTAINER_USER and MAPR_CONTAINER_UID specify:
+          + The default user invoked when starting the container
+          + The user that the user application inside the container will
+            run as
+
+     * MAPR_CONTAINER_GID represents the GID that the application inside
+       the Docker container will run as
+     * MAPR_CONTAINER_GROUP represents the group that the application
+       inside the Docker container will run as
+
+Related Information
+
+   For more information related to security topics discussed in this
+   section, see:
+     * [1]Managing Secure Clusters —secure cluster details
+     * [2]Managing Users and Groups —MapR user roles
+     * [3]Using the docker run Command —Docker container variable details
+     * Tickets
+          + [4]Managing Tickets—using tickets
+          + [5]maprlogin —originating tickets
+          + [6]Generating a MapR User Ticket —generating tickets
+          + [7]How Tickets Work —revoking a user’s existing valid tickets
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Secure-cluster-administration.html#Secure-cluster-admin
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c-managing-users-and-groups.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/RunningtheMapRPACC.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Tickets.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingMapRUserTicket.html#TicketsandCertificates-Ge_26281159-d3e202
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/HowTicketsWork.html#TicketsandCertificates-Ho_26281159-d3e369

@@ -1,0 +1,43 @@
+Enable User Impersonation for Hue
+
+   To enable Hue to submit requests on behalf of any other user, complete
+   the following steps:
+    1. Verify or configure the following lines to the
+       /opt/mapr/hadoop/hadoop-<version>/etc/hadoop/core-site.xml file for
+       all nodes running ResourceManager:
+<property>
+  <name>hadoop.proxyuser.<default_user>.hosts</name>
+  <value>*</value>
+</property>
+
+<property>
+  <name>hadoop.proxyuser.<default_user>.groups</name>
+  <value>*</value>
+</property>
+    2. To enable the Hue file browser to view files in the MapR-FS, add
+       the following proxy user settings in the configuration block of the
+       httpfs-site.xml:
+<!-- Hue HttpFS proxy user setting -->
+<configuration>
+  <property>
+    <name>httpfs.proxyuser.<default_user>.hosts</name>
+    <value>*</value>
+  </property>
+
+  <property>
+    <name>httpfs.proxyuser.<default_user>.groups</name>
+    <value>*</value>
+  </property>
+</configuration>
+    3. Perform any additional Hue configurations and then restart Hue so
+       that the changes will take effect. See [1]Starting the Hue
+       Webserver.
+       In most cases, mapr is the <default_user>. The <default_user> you
+       specify must also be the default_user that is configured in the
+       [desktop] section of the hue.ini.
+       Note: Based on the ecosystem components that you want to use,
+       addition configuration may be required.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/StartingHueWebserver.html#task_k3f_zh3_1v

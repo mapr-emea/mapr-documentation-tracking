@@ -1,0 +1,53 @@
+Installing the MapR Client on CentOS, RedHat, Oracle Linux
+
+   This section describes how to install the MapR Client on CentOS,
+   RedHat, Oracle Linux.
+    1. Remove any previous MapR software. You can use rpm -qa | grep mapr
+       to get a list of installed MapR packages, then type the packages
+       separated by spaces after the rpm -e command:
+rpm -qa | grep mapr
+rpm -e mapr-fileserver mapr-core
+    2. Install the MapR package key. The package key must be installed
+       before you can install MapR packages. For more information, see
+       [1]Step 1: Install the MapR Package Key:
+rpm --import http://package.mapr.com/releases/pub/maprgpg.key
+    3. Install the MapR client for your target architecture:
+yum install mapr-client.i386
+yum install mapr-client.x86_64
+    4. Run configure.sh to configure the client. For details about the
+       syntax, parameters, and behavior of configure.sh, see
+       [2]configure.sh.
+
+        Non-secure cluster example
+                In the following example, the -N parameter specifies the
+                cluster name, the -c (lowercase) parameter specifies a
+                client configuration, the -C (uppercase) parameter
+                specifies the CLDB nodes, and the -HS parameter specifies
+                the HistoryServer node:
+
+/opt/mapr/server/configure.sh -N my.cluster.com -c -C mynode01:7222 -HS mynode02
+
+        Secure cluster example
+                In the following example, the -N parameter specifies the
+                cluster name, the -c (lowercase) parameter specifies a
+                client configuration, the -secure parameter indicates that
+                the cluster is secure, the -C (uppercase) parameter
+                specifies the CLDB nodes, and the -HS parameter specifies
+                the HistoryServer node:
+
+/opt/mapr/server/configure.sh -N my.cluster.com -c -secure -C mynode01:7222 -HS
+mynode02
+
+    5. To use this client with a secure cluster or clusters, copy the
+       ssl_truststore file from the /opt/mapr/conf directory on the
+       cluster to the /opt/mapr/conf directory on the client.
+       If this client will connect to multiple clusters, merge the
+       ssl_truststore files with the /opt/mapr/server/manageSSLKeys.sh
+       tool. See [3]Managing Secure Clusters for details on how to connect
+       to a secure cluster.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingMapRSoftware-package-key.html#InstallingMapRSoftware-package-key
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Secure-cluster-administration.html

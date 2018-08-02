@@ -1,0 +1,195 @@
+New Features in Impala 2.7.0 for MapR
+
+   Impala 2.7.0 for MapR introduces some new features that enhance the
+   behavior and performance of Impala.
+
+Performance Improvements
+
+   Impala 2.7.0 for MapR introduces the following performance
+   improvements:
+     * Overall performance improvements for secure clusters.
+     * Overall performance improvements for join queries. A pre-fetching
+       mechanism is used while building the in-memory hash table to
+       evaluate join predicates.
+     * Improved query time for queries run against DECIMAL columns in Avro
+       tables. The code that parses DECIMAL values from Avro now uses
+       native code generation.
+     * Improved efficiency in LLVM code generation that can reduce codegen
+       time, especially for short queries.
+     * Improved performance reading Parquet files.
+     * Improved performance for top-N queries, or queries that include
+       both ORDER BY and LIMIT clauses.
+
+Support for the Amazon S3 File System
+
+   You can use Impala to query data in the Amazon S3 file system. Impala
+   can query any file type supported by the S3 file system.
+   To run Impala on the Amazon S3 file system, add the properties below to
+   the core-site.xml file, copy the core-site.xml file to the
+   IMPALA_CONF_DIR (located in /opt/mapr/impala/impala-2.7.0/conf), and
+   restart the MapR Warden service.
+<property>
+<name>fs.s3a.access.key</name>
+<value><ACCESS_KEY></value>
+</property>
+
+<property>
+<name>fs.s3a.secret.key</name>
+<value><SECRET_KEY></value>
+</property>
+
+   Note:
+   If you plan to run Impala on a secure cluster, create and add the root
+   Certificate Authority (CA) certificate that signed the Amazon S3
+   certificate to the truststore. Alternatively, you can add the following
+   property to core-site.xml:
+<property>
+  <name>fs.s3a.connection.ssl.enabled</name>
+  <value>false</value>
+</property>
+
+Impala Web User Interface Improvements
+
+   In version 2.7.0, Impala provides the following Web User Interface
+   improvements:
+     * Forced session expiry from the /sessions tab. You can force a
+       session to end by clicking on the link provided in the tab.
+     * Additional Impala memory information on the /memz tab.
+     * A Memory tab on the Details page for a query.
+
+Set Column Stats Clause
+
+   In version 2.7.0, you can use the SET COLUMN STATS clause with the
+   ATLER TABLE statement to set a specific statistical value for a column.
+   You can set a column to the number of distinct values, number of nulls,
+   maximum size, or average size using the respective case-insensitive
+   symbolic names:
+   numDVs, numNulls, avgSize, maxSize
+   Note: This operation applies to an entire table, not a specific
+   partition. You must use single quotation marks around the symbolic name
+   and value.
+   Run the ALTER TABLE command with the SET COLUMN STATS clause from the
+   impala-shell, as shown in the following example:
+$ impala-shell -i localhost
+...
+[localhost:21000] > create table example (id int);
+[localhost:21000] > insert into example values (1), (2), (3);
+[localhost:21000] > show column stats example;
++--------+--------+------------------+--------+----------+----------+
+| Column | Type   | #Distinct Values | #Nulls | Max Size | Avg Size |
++--------+--------+------------------+--------+----------+----------+
+| id      | INT   | -1               | -1     | 4        | 4        |
++--------+--------+------------------+--------+----------+----------+
+[localhost:21000] > alter table example set column stats id ('numDvs'='3','numNu
+lls'='0');
+[localhost:21000] > show column stats example;
++--------+--------+------------------+--------+----------+----------+
+| Column | Type   | #Distinct Values | #Nulls | Max Size | Avg Size |
++--------+--------+------------------+--------+----------+----------+
+| id     | INT    | 3                | 0      | 4        | 4        |
++--------+--------+------------------+--------+----------+----------+
+
+SOURCE Command
+
+   The SOURCE command runs SQL statements from an SQL source file. You
+   issue the SOURCE command from the impala-shell. The source file can
+   contain SQL statements and impala-shell commands, as well as additional
+   SOURCE commands. Each statement or command must end with a semicolon
+   (;), except for the last statement or command in the file.
+
+   Including additional SOURCE commands inside the source file allows you
+   to set up flexible statement sequences for use cases, such as schema
+   setup, ETL, or reporting.
+
+   Run the SOURCE command from the impala-shell, as shown in the following
+   example:
+$ cat example.sql
+show databases;
+show tables in customers;
+$ impala-shell -i localhost
+...
+[localhost:21000] > source example.sql;
+Query: show databases
++------------------+----------------------------------------------+
+| name             | comment                                      |
++------------------+----------------------------------------------+
+| customers        | Stores customer records                      |
+| default          | Default Hive database                        |
++------------------+----------------------------------------------+
+Fetched 2 row(s) in 0.06s
+Query: show tables in customers
++--------------+
+| name         |
++--------------+
+| customer_001 |
+| customer_002 |
+| customer_003 |
+| customer_004 |
+| customer_005 |
++--------------+
+Fetched 5 row(s) in 0.03s
+
+   Additionally, you can run the SOURCE command on an SQL file that
+   contains statements and calls a SOURCE command from another SLQ file,
+   as shown in the following example:
+$ cat example1.sql
+show databases;
+source example2.sql
+$ cat example2.sql
+show tables in customers;
+
+$ impala-shell -i localhost
+...
+[localhost:21000] > source example1.sql;
+Query: show databases
++------------------+----------------------------------------------+
+| name             | comment                                      |
++------------------+----------------------------------------------+
+| customers        | Stores customer records                      |
+| default          | Default Hive database                        |
++------------------+----------------------------------------------+
+Fetched 2 row(s) in 0.06s
+Query: show tables in customers
++--------------+
+| name         |
++--------------+
+| customer_001 |
+| customer_002 |
+| customer_003 |
+| customer_004 |
+| customer_005 |
++--------------+
+Fetched 5 row(s) in 0.03s
+
+New Runtime Filter Options
+
+   The Runtime Filtering feature was introduced in [1]Impala 2.5.0 to
+   optimize queries against partitioned tables or to evaluate join
+   conditions when partial table data is needed. Impala 2.7.0 introduces
+   two new filtering options that fine-tune the sizes of the Bloom filter
+   structures used in runtime filtering:
+   The following table lists the new query options and their descriptions.
+   Only modify these options when tuning long-running queries with a
+   combination of large partitioned tables and joins on large tables.
+   Option Description Type Default
+   RUNTIME_FILTER_MIN_SIZE Adjusts runtime filtering settings. Defines the
+   minimum size for a filter, regardless of the estimates produced by the
+   planner. This setting overrides any smaller value set for the
+   RUNTIME_BLOOM_FILTER_SIZE option. Impala rounds filter sizes up to the
+   nearest power of two. integer
+
+   0 (indicates that the value from the corresponding impalad startup
+   option is used)
+
+   RUNTIME_FILTER_MAX_SIZE Adjusts runtime filtering settings. Defines the
+   maximum size for a filter, regardless of the estimates produced by the
+   planner. This setting overrides any smaller value set for the
+   RUNTIME_BLOOM_FILTER_SIZE option. Impala rounds filter sizes up to the
+   nearest power of two. integer
+
+   0 (indicates that the value from the corresponding impalad startup
+   option is used)
+
+References
+
+   1. http://maprdocs.mapr.com/home/Impala/new_features_impala_250.html?hl=runtime,filtering

@@ -1,0 +1,87 @@
+Step 5: Validate Cluster Configuration and Status
+
+   If all goes well, the Drill-on-YARN command line tool prints a URL for
+   the Drill Application Master process that you can use to monitor the
+   cluster. The drillbits should be up and running, unless the upload or
+   launch failed.
+
+   Failed upload
+          If the upload fails, the most likely reason is that the
+          HADOOP_HOME variable is not set, or the user launching
+          Drill-on-YARN does not have permission to create or write to the
+          DFS location set in the Drill-on-YARN configuration file.
+
+   Failed launch
+          If the launch fails, verify that the YARN maximum container size
+          was set to be at least as large as the Drill container size and
+          that YARN can provide the number of vcores and disks you have
+          requested for Drill.
+
+Monitor Cluster Activity
+
+   When the cluster launches successfully, you can verify the status of
+   the components in the Drill cluster from the command line or you can
+   copy the Application Master URL into your browser to use the
+   Application Master web UI.
+   To check the status from the command line, issue the following command:
+$DRILL_HOME/bin/drill-on-yarn.sh --site $DRILL_SITE status
+     * Verify that the drillbits are in the Running state (or transition
+       to that state after a few moments.) If the drillbits remain in the
+       Requesting state, the likely cause is that YARN cannot provide a
+       container of the requested size. You can access this information on
+       the Drillbits page in the Application Master web UI.
+     * Verify that the Application Master has correctly picked up the
+       YARN-related configuration from drill-override.conf and
+       drill-on-yarn.conf. You can access this information on the
+       Configuration page in the Application Master web UI.
+     * Verify that the Application Master is running. The Drill
+       Application Master uses ZooKeeper to verify that only one
+       Application Master runs per Drill cluster. The Application Master
+       fails if ZooKeeper is down, is configured incorrectly in
+       drill-override.conf, or if another Application Master is running
+       for the same cluster.
+     * Verify that that the configurations in are correct in
+       drill-override.conf if there are drillbit failures. Drill-on-YARN
+       detects drillbit failures and retries each drillbit a few times. If
+       the drillbit continues to fail, the node is black-listed for that
+       run of Drill-on-YARN. You can see failures in the History page of
+       the web UI. If your Drillbits fail, the most likely reason is
+       misconfiguration within drill-override.conf. Use YARN to locate and
+       view the Drill logs for the failed container.
+
+Resize the Cluster
+
+   If the cluster works well for a single node, you can increase the
+   number of nodes.
+   Note: In the Drill 1.8 release, adding nodes can be done while users
+   run queries. However, removing nodes from the cluster causes queries to
+   fail, and so should only be done when the cluster is idle.
+   To make a permanent change, modify the cluster size in
+   drill-on-yarn.conf:
+cluster: [
+   {
+     ...
+     count: 5
+   }
+ ]
+
+   You can also resize the cluster dynamically. To add two nodes from the
+   command line:
+$DRILL_HOME/bin/drill-on-yarn.sh --site $DRILL_SITE resize +2
+
+   To set the cluster size to a total of five nodes:
+$DRILL_HOME/bin/drill-on-yarn.sh --site $DRILL_SITE resize 5
+
+   To remove one of the nodes:
+$DRILL_HOME/bin/drill-on-yarn.sh --site $DRILL_SITE resize -1
+
+   You can also resize your cluster using the Manage page of the
+   Application Master web UI, by entering the number of desired nodes and
+   clicking Go.
+
+Stop the Cluster
+
+   You can stop the cluster from the command line or from the Manage page
+   in the Application Master web UI.
+   To stop the cluster from the command line, issue the following command:
+$DRILL_HOME/bin/drill-on-yarn.sh --site $DRILL_SITE stop

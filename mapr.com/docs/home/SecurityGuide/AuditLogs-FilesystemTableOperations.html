@@ -1,0 +1,50 @@
+Viewing Audit Logs for Filesystem, Table, and Stream Operations
+
+   These types of audit log record operations that are managed by the mfs
+   service, MapR-DB, and MapR-ES. These operations take place within
+   volumes and have effects at the level of the MapR filesystem.
+
+   These audit logs are stored in a system volume created specifically to
+   store them. This volume is created automatically during cluster
+   installations and upgrades. Operations are logged on the nodes on which
+   the operations are executed, which could differ from the nodes where
+   operations are initiated. Logs are stored in the MapR file system at
+   /var/mapr/local/<node_name>/audit/. By default, only root and the mapr
+   superuser can read the log files. To allow other users to read the
+   logs, set ACEs on the directory granting readfile (rf), readdir (rd),
+   and lookupdir (ld) permissions to the users. For example:
+~# hadoop mfs -setace -R -aces "rf:u:root|u:mapr|u:m7user1,rd:u:root|u:mapr|u:m7
+user1,ld:u:root|u:mapr|u:m7user1" /var/mapr/local/sample.qa.lab/audit/
+
+   Note: For more information, see [1]Using ACEs for MapR-FS.
+
+Audit logs for operations on directories and files
+
+   Operations on directories and files, as well as the deletion of MapR-DB
+   tables, are logged in files that have this naming convention:
+   FSAudit.log.json-dd-mm-yyyy-<001-999>
+
+   To see what information is recorded in typical log entries, see
+   [2]Example Log Entries for Audited Filesystem Operations.
+
+Audit logs for operations on MapR-DB tables and MapR streams
+
+   All operations on MapR-DB tables and MapR streams are logged in files
+   that have this naming convention: DBAudit.log.json-dd-mm-yyy-<001-999>
+
+   Operations that result from maprcli commands, REST calls, or activity
+   in the MapR Control Service are also logged in
+   /opt/mapr/mapr-cli-audit-log/audit.log.json in the local filesystem on
+   the nodes where the operations are processed.
+
+   To see what information is recorded in typical log entries, see
+   [3]Example Log Entries for Audited Operations on MapR-DB Tables.
+   Note: Due to the way that the creation of tables is processed
+   internally, sometimes the creation of tables is logged in
+   FSAudit.log.json, rather than in DBAudit.log.json.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/MapR-FS-ACEs.html#concept_ctp_f45_25
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ExampleLogEntries-AuditedFSOperations.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ExampleLogEntries-AuditedDBOperations.html

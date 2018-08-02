@@ -1,0 +1,43 @@
+Patching a Non-Secure Cluster
+
+   The following steps show how to patch a secure cluster when you are
+   unable to establish a secure connection. Once the fix is complete, no
+   further action is required except to access the MCS and other web
+   interfaces, such as the JobTracker UI and the ResourceManager UI.
+    1. Determine which nodes in the cluster run the webserver role. For
+       example:
+$ maprcli node list -columns configuredservice -filter '[configuredservice==webs
+erver]'
+hostname  configuredservice                                    ip
+centos21  webserver,nodemanager,cldb,fileserver,resourcemanager,hoststats  10.10
+.82.21
+
+    2. Perform the following steps on each webserver node:
+         a. Download the script from the following location:
+            [1]http://package.mapr.com/scripts/mcs/
+wget http://package.mapr.com/scripts/mcs/fixssl
+         b. Run the following command to update the permissions on the
+            file:
+chmod 755 fixssl
+         c. Run the following command to run the script:
+sudo ./fixssl
+       Once you run the script, the following is displayed:
+Webserver restarted. Issue should be resolved"
+
+   The fixssl script performs the following steps on a node in a secure
+   cluster:
+    1. Updates manageSSLKeys.sh to use the new certificate cipher
+       algorithm.
+    2. Backs up the existing certificates so that new versions can be
+       generated with the new cipher algorithm:
+          + /opt/mapr/conf/ssl_keystore is renamed to
+            /opt/mapr/conf/ssl_keystore_old
+          + /opt/mapr/comf/ssl_truststore is renamed to
+            /opt/mapr/comf/ssl_truststore_old
+    3. Runs /opt/mapr/server/configure.sh -R to generate new versions of
+       the keystore and truststore files.
+    4. Restarts the webserver.
+
+References
+
+   1. http://package.mapr.com/scripts/mcs/

@@ -1,0 +1,53 @@
+Security and CDC
+
+   Security for CDC is applied through Access Control Expressions (ACEs).
+   In addition, if a secure cluster configuration is implemented, then
+   additional setup may be needed depending on the configuration.
+
+Access Control Expressions (ACEs)
+
+   Since Change Data Capture (CDC) changed data records are propagated
+   from a MapR-DB source table to a MapR-ES stream topic, the access
+   control expressions (ACEs) on the source table and destination stream
+   are used for establishing permissions.
+
+   Once a MapR-ES stream is created for purposes of receiving change data
+   records, it is dedicated for that sole purpose. For example, a producer
+   application should not perform CRUD operations on the topics in the
+   stream.
+
+   The following permissions are applicable depending on the scenario:
+     * If you are a normal user and you want to create a changelog from a
+       source table and to a destination stream topic, the following
+       permissions are required:
+          + replperm on the source table in the source cluster
+          + topicperm on the destination stream in the destination cluster
+     * If you are a normal user and want to create a changelog between
+       your own MapR-DB table and someone else's stream topic, you must be
+       granted topicperm permissions on the destination stream.
+     * If you are a normal user and want to receive or read the data in a
+       stream topic, you must be granted consumeperm permission on the
+       destination topic.
+
+   For more information about ACEs, see [1]Managing Access Control
+   Expressions
+
+Secure Clusters
+
+   The destination MapR-ES stream could be in same cluster as the MapR-DB
+   source table or it could be on a remote MapR cluster. How the
+   configuration is setup depends on the purpose for using CDC.
+     * If your destination stream is on the same cluster as the source
+       table and the cluster is secure, then additional configurations are
+       not required.
+     * If your destination stream is on a remote secure cluster, then a
+       gateway and secure configuration must be setup. See [2]Table
+       Replication, [3]Administering MapR Gateways, and [4]Configuring
+       Secure Clusters for Cross-Cluster Mirroring and Replication
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ACEs.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ReplicatingMapR-DBTables.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/MapRGateways.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html

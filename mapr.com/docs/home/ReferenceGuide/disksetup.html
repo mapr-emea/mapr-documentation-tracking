@@ -1,0 +1,121 @@
+disksetup
+
+   The disksetup command formats specified disks for use by MapR storage
+   and adds those disks to the [1]disktab file.
+
+   You do not need to set up RAID (Redundant Array of Independent Disks)
+   on disks used by MapR-FS. MapR uses disksetup to set up storage pools.
+   In most cases, you should let MapR calculate storage pools using the
+   default [2]stripe width of two or three disks. If you anticipate a high
+   volume of random-access I/O, you can use the -W option to specify
+   larger storage pools of up to 8 disks each.
+
+   See [3]Setting Up Disks for MapR for more information about when and
+   how to use disksetup.
+
+Syntax
+
+/opt/mapr/server/disksetup
+    [-F]
+    [-G]
+    [-M]
+    [-W <stripe_width>]
+    <disk list file>
+
+Options
+
+   Option
+
+   Description
+
+   -F
+
+   Forces formatting of all specified disks. Disks that are already
+   formatted for MapR are not reformatted by disksetup unless you specify
+   this option. The -F option fails when a filesystem has an entry in the
+   [4]disktab file, is mounted, or is in use. Call maprcli [5]disk remove
+   to remove a disk entry from the disktab file.
+
+   -G
+
+   Generates disktab contents from input disk list, but does not format
+   disks. This option is useful if disk names change after a reboot, or if
+   the disktab file is damaged.
+
+   -M
+
+   Uses the maximum available number of disks per storage pool.
+
+   -W
+
+   Specifies the number of disks per storage pool.
+
+Examples
+
+   Setting up disks specified in the file /tmp/disks.txt:
+/opt/mapr/server/disksetup -F /tmp/disks.txt
+
+   Reformatting all disks
+
+   To reformat all disks, remove the disktab file and issue the disksetup
+   -F command to format the disk:
+/opt/mapr/server/disksetup -F
+
+   To reformat a particular disk from the disktab use the maprcli disk
+   remove and maprcli [6]disk add commands. For more information, see
+   [7]Setting Up Disks for MapR.
+   Specifying disks
+
+   The [8]disksetup script is used to format disks for use by the MapR
+   cluster. Create a text file /tmp/disks.txt listing the disks and
+   partitions for use by MapR on the node. Each line lists either a single
+   disk or all applicable partitions on a single disk. When listing
+   multiple partitions on a line, separate by spaces. For example:
+/dev/sdb
+/dev/sdc1 /dev/sdc2 /dev/sdc4
+/dev/sdd
+
+   Later, when you run disksetup to format the disks, specify the
+   disks.txt file. For example:
+/opt/mapr/server/disksetup -F /tmp/disks.txt
+
+   Note:
+
+   The script disksetup removes all data from the specified disks. Make
+   sure you specify the disks correctly, and that any data you wish to
+   keep has been backed up elsewhere.
+
+   If you are re-using a node that was used previously in another cluster,
+   be sure to format the disks to remove any traces of data from the old
+   cluster.
+   Warning: Run [9]disksetup only after running [10]configure.sh .
+   Test Purposes Only: Using a Flat File for Storage
+
+   When setting up a small cluster for evaluation purposes, if a
+   particular node does not have physical disks or partitions available to
+   dedicate to the cluster, you can use a flat file on an existing disk
+   partition as the node's storage. Create at least a 16GB file, and
+   include a path to the file in the disk list file for the [11]disksetup
+   script.
+
+   The following example creates a 20 GB flat file (bs=1G specifies 1
+   gigabyte blocks, multiplied by count=20) at /root/storagefile:
+$ dd if=/dev/zero of=/root/storagefile bs=1G count=20
+
+   Then, you would add the following to the disk list file /tmp/disks.txt
+   to be used by disksetup:
+/root/storagefile
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disktab.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c-setting-up-disks-for-mapr.html#c-setting-up-disks-for-mapr
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disktab.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disk-remove.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disk-add.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c-setting-up-disks-for-mapr.html#c-setting-up-disks-for-mapr
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disksetup.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disksetup.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disksetup.html

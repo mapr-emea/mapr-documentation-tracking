@@ -1,0 +1,45 @@
+Enabling Zero Configuration Failover for the ResourceManager
+
+   To enable zero configuration failover, do not specify the -RM parameter
+   when you run configure.sh on each node in the cluster. However, for
+   failover to occur, at least two nodes in the cluster must have the
+   ResourceManager role.
+
+   For example, if the cluster includes multiple nodes with the
+   ResourceManager role, you can run the following configure.sh command on
+   each cluster node and no further configuration is required:
+/opt/mapr/server/configure.sh -N mycluster -C centos21 -Z centos21 -HS centos22
+-F /tmp/disks.txt -disk-opts F
+
+   configure.sh automatically populates yarn-site.xml with the following
+   configuration:
+<configuration>
+<!-- Resource Manager MapR HA Configs -->
+<property>
+        <name>yarn.resourcemanager.ha.custom-ha-enabled</name>
+        <value>true</value>
+        <description>MapR Zookeeper based RM Reconnect Enabled. If this is true,
+ set the failover proxy to be the class MapRZKBasedRMFailoverProxyProvider</desc
+ription>
+</property>
+<property>
+        <name>yarn.client.failover-proxy-provider</name>
+        <value>org.apache.hadoop.yarn.client.MapRZKBasedRMFailoverProxyProvider<
+/value>
+        <description>Zookeeper based reconnect proxy provider. Should be set if
+and only if mapr-ha-enabled property is true.</description>
+</property>
+<property>
+        <name>yarn.resourcemanager.recovery.enabled</name>
+        <value>true</value>
+        <description>RM Recovery Enabled</description>
+</property>
+<!-- :::CAUTION::: DO NOT EDIT ANYTHING ON OR ABOVE THIS LINE -->
+</configuration>
+
+   For more information about the ResourceManager properties in
+   yarn-site.xml, see [1]ResourceManager Configuration Properties.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/RM-ConfigProperties.html

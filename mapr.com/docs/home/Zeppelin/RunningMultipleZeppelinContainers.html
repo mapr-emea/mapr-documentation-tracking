@@ -1,0 +1,62 @@
+Running Multiple Zeppelin Containers on a Single Host
+
+   To run multiple Apache Zeppelin containers on a single host, you must
+   modify certain parameters in your docker run command. If you are using
+   version 1.0 of the MapR Data Science Refinery, you also must modify the
+   Livy interpreter's configuration and restart the Livy service.
+   Important: You cannot use host networking when running multiple
+   Zeppelin containers on a single host. You must use the default
+   [1]Bridge Networking.
+    1. Select different port numbers for your new container:
+         a. Choose a different connection port number; for example, 9996
+         b. Choose a different port range for the Livy launcher; for
+            example, 10011-10021
+         c. Choose a different port range for the Spark interpreter; for
+            example, 13011-13021
+    2. Issue your docker run command with the port numbers you selected in
+       Step 1 using one of the following two commands, depending on the
+       version of the MapR Data Science Refinery you are using:
+          + Version 1.1 or later:
+docker run -it ... \
+   -e ZEPPELIN_SSL_PORT=9996 -p 9996:9996 \
+   -p 10011-10021:10011-10021 -e LIVY_RSC_PORT_RANGE="10011~10021" \
+   -p 13011-13021:13011-13021 -e SPARK_PORT_RANGE="13011~13021" \
+   ... \
+   maprtech/data-science-refinery:v1.2_6.0.1_5.0.0_centos7
+            If you are not using the Spark interpreter, you can omit the
+            following parameters:
+-p 13011-13021:13011-13021 -e SPARK_PORT_RANGE="13011~13021"
+            Use tilde (~) rather than dash (-) when specifying the range
+            with the LIVY_RSC_PORT_RANGE and SPARK_PORT_RANGE environment
+            variables.
+          + Version 1.0:
+docker run -it ... \
+   -e ZEPPELIN_SSL_PORT=9996 -p 9996:9996 \
+   -p 10011-10021:10011-10021 \
+   ... \
+   maprtech/data-science-refinery:v1.2_6.0.1_5.0.0_centos7
+    3. If you are using Version 1.1 or later of the MapR Data Science
+       Refinery, skip to Step 7. Otherwise, continue to Step 4.
+    4. Determine your container-id using the output from the following
+       command:
+docker ps
+    5. Log in to your container as the user running the container using
+       the container-id:
+docker exec -it --user <MAPR_CONTAINER_USER> <container-id> bash -l
+    6. Update the following property in
+       /opt/mapr/livy/livy-<version>/conf/livy-client.conf to match the
+       port range you chose in Step 1b:
+livy.rsc.launcher.port.range = 10011~10021
+       Note: Make sure to use tilde (~) rather than dash (-) when
+       specifying the range.
+    7. Restart the Livy service:
+/opt/mapr/livy/livy-<version>/bin/livy-server stop
+/opt/mapr/livy/livy-<version>/bin/livy-server start
+    8. Connect to the new container using the port number you chose in
+       Step 1a. The following URL assumes you are running the container on
+       your local machine:
+https://localhost:9996
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_h1n_pc2_rbb

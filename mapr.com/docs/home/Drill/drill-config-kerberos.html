@@ -1,0 +1,226 @@
+Configuring Authentication and Encryption
+
+   To enable authentication and encryption, you must create a Kerberos
+   principal identity and a keytab file. You add the principal and keytab
+   file to <DRILLINSTALL_HOME>/conf/drill-override.conf with the specified
+   configuration parameters. In addition, you can configure a mapping from
+   a Kerberos principal to a Drill user account. This mapping is used by a
+   Drillbit to convert an authenticated client principal to a
+   corresponding Kerberos short name, which is used to determine
+   administrator privileges for the client principal. After you complete
+   the configuration steps, restart the Drillbit.
+   To enable authentication and encyption using the Kerberos mechanism,
+   configure the following Kerberos-specific parameters in
+   drill-override.conf:
+   Note: Only Drill 1.11 and later supports encryption.
+   Note: For client-side configuration, see [1]Drill Drivers.
+   Parameters Communication Path Description Default
+   drill.exec.security.auth.principal Drill client (ODBC/JDBC) to Drillbit
+   String representation of the Kerberos principal used by the Drillbit
+   service. N/A
+   drill.exec.security.auth.keytab Drill client (ODBC/JDBC) to Drillbit
+   Location of the keytab file for the configured Drillbit service
+   principal.
+   Note: The Kerberos keytab file that contains the encrypted key for the
+   Drillbit service principal. The file should be readable by the Drillbit
+   process user.
+   N/A
+   drill.exec.security.auth.auth_to_local Drill client (ODBC/JDBC) to
+   Drillbit Custom rules to convert the Kerberos principal to the Kerberos
+   short name.
+   Note: Drill uses a Hadoop Kerberos name and rules to transform the
+   Kerberos principal provided by client to the one it will use internally
+   as the client’s identity. This client identity is used to determine
+   administrator privileges. See [2]Mapping from Kerberos Principal to OS
+   user account in the [3]Hadoop in Secure Mode documentation for details
+   about how the rule works.
+   The primary name of the Kerberos principal. By default, this mapping
+   rule extracts the first part from the provided principal. For example,
+   if the principal format is <Name1>/<Name2>@realm, the default rule
+   extracts only Name1 from the principal and Name1 as the client’s
+   identity on server side.
+   drill.exec.security.user.encryption.sasl.enabled Drill client
+   (ODBC/JDBC) to Drillbit Enables/disables encryption for the
+   communication path between the Drill client and Drillbit. false
+   drill.exec.security.bit.auth.use_login_principal Drilbit to Drillbit
+   When set to true, the Drillbit uses the same logged in service
+   principal configured with drill.exec.security.auth.principal for the
+   Drillbit to Drillbit communication paths. When this parameter is set to
+   false, a principal is constructed using the hostname from ZooKeeper for
+   the remote Drillbit and keeping the primary and realm information the
+   same as the logged in principal set by
+   drill.exec.security.auth.principal . false
+   drill.exec.security.bit.encryption.sasl.enabled Drillbit to Drillbit
+   Enables/disables encryption for the communication path between the
+   Drillbits. false
+
+Steps to Enable Kerberos Authentication and Encryption
+
+   Complete the following steps to enable Drill to use Kerberos for
+   authentication and encryption:
+    1. Create a Kerberos principal identity and a keytab file. You can
+       create one principal for each Drillbit or one principal for all
+       Drillbits in a cluster.
+       Note: The adminstrator must own the drill.keytab file and have the
+       ability to read the file.
+          + For a single principal per node in cluster:
+    # kadmin
+    : addprinc -randkey <username>/<FQDN>@<REALM>.COM
+    : ktadd -k /opt/mapr/conf/drill.keytab <username>/<FQDN>@<REALM>.COM
+
+          + For a single principal per cluster, use <clustername> instead
+            of <FQDN>:
+    # kadmin
+    : addprinc -randkey <username>/<clustername>@<REALM>.COM
+    : ktadd -k /opt/mapr/conf/drill.keytab <username>/<clustername>@<REALM>.COM
+       Note: The instance name must be lowercase. If _HOST is set as the
+       instance name in the principal, it is replaced with the fully
+       qualified domain name of that host for the instance name. For
+       example, if a Drillbit running on host01.aws.lab uses
+       drill/_HOST@<EXAMPLE>.COM as the principal, the canonicalized
+       principal is drill/host01.aws.lab@<EXAMPLE>.COM.
+    2. Add the Kerberos principal identity, keytab file, and parameters
+       specific to Kerberos to the drill-override.conf file. You can use
+       the following configuration examples for enabling authentication,
+       encryption, or both between the Drill client and Drillbit and
+       between Drillbits.
+
+        Example 1: Enabling Kerberos Authentication Between the Drill
+                Client and Drillbit
+
+      drill.exec: {
+        cluster-id: "drillbits1",
+        zk.connect: "qa102-81.qa.lab:5181,qa102-82.qa.lab:5181,qa102-83.qa.lab:5
+181",
+        impersonation: {
+          enabled: true,
+          max_chained_user_hops: 3
+        },
+        security: {
+                user.auth.enabled:true,
+                auth.mechanisms:["KERBEROS"],
+                auth.principal:"drill/<clustername>@<REALM>.COM",
+                auth.keytab:"/etc/drill/conf/drill.keytab"
+              }
+        }
+
+        Example 2: Enabling Kerberos Authentication and Encryption Between
+                the Drill Client and Drillbit
+
+      drill.exec: {
+        cluster-id: "drillbits1",
+        zk.connect: "qa102-81.qa.lab:5181,qa102-82.qa.lab:5181,qa102-83.qa.lab:5
+181",
+        impersonation: {
+          enabled: true,
+          max_chained_user_hops: 3
+        },
+        security: {
+                user.auth.enabled:true,
+                auth.mechanisms:["KERBEROS"],
+                auth.principal:"drill/<clustername>@<REALM>.COM",
+                auth.keytab:"/etc/drill/conf/drill.keytab",
+             user.encryption.sasl.enabled: true
+              }
+            }
+        }
+
+        Example 3: Enabling Kerberos Authentication Between Drill Client
+                and Drillbits and Between Drillbits
+
+      drill.exec: {
+        cluster-id: "drillbits1",
+        zk.connect: "qa102-81.qa.lab:5181,qa102-82.qa.lab:5181,qa102-83.qa.lab:5
+181",
+        impersonation: {
+          enabled: true,
+          max_chained_user_hops: 3
+        },
+        security: {
+                user.auth.enabled:true,
+                auth.mechanisms:["KERBEROS"],
+                auth.principal:"drill/<clustername>@<REALM>.COM",
+                auth.keytab:"/etc/drill/conf/drill.keytab"
+              }
+        security.bit: {
+                auth.enabled: true,
+                auth.mechanism: "Kerberos",
+                auth.use_login_principal: true
+               }
+        }
+
+        Example 4: Enabling Kerberos Authentication and Encryption Between
+                Drill Client and Drillbits and Between Drillbits
+
+      drill.exec: {
+        cluster-id: "drillbits1",
+        zk.connect: "qa102-81.qa.lab:5181,qa102-82.qa.lab:5181,qa102-83.qa.lab:5
+181",
+        impersonation: {
+          enabled: true,
+          max_chained_user_hops: 3
+        },
+        security: {
+                user.auth.enabled:true,
+                auth.mechanisms:["KERBEROS"],
+                auth.principal:"drill/<clustername>@<REALM>.COM",
+                auth.keytab:"/etc/drill/conf/drill.keytab",
+                user.encryption.sasl.enabled: true
+              }
+        security.bit: {
+                auth.enabled: true,
+                auth.mechanism: "Kerberos",
+                auth.use_login_principal: true,
+                encryption.sasl.enabled: true
+               }
+        }
+
+                Note: In examples 3 and 4 above, the Drillbit will use the
+                same logged in service principal as configured in
+                drill.exec.security.auth.principal.
+
+        Example 5: Enabling Kerberos Authentication and Encryption Between
+                Drill Client and Drillbits and Between Drillbits. For
+                Drillbit to Drillbit authentication, where the service
+                principal is created using the hostname from ZooKeeper for
+                a remote Drillbit as an instance name. The primary and the
+                realm component of the service principal is used from the
+                drill.exec.security.auth.principal parameter.
+
+      drill.exec: {
+        cluster-id: "drillbits1",
+        zk.connect: "qa102-81.qa.lab:5181,qa102-82.qa.lab:5181,qa102-83.qa.lab:5
+181",
+        impersonation: {
+          enabled: true,
+          max_chained_user_hops: 3
+        },
+        security: {
+                user.auth.enabled:true,
+                auth.mechanisms:["KERBEROS"],
+                auth.principal:"drill/<clustername>@<REALM>.COM",
+                auth.keytab:"/etc/drill/conf/drill.keytab",
+                user.encryption.sasl.enabled: true
+              }
+        security.bit: {
+                auth.enabled: true,
+                auth.mechanism: "Kerberos",
+                encryption.sasl.enabled: true
+               }
+        }
+
+                Note: For the configuration in example 5, if the hostname
+                of the remote Drillbit known to ZooKeeper is
+                host01.aws.lab, then the service principal used by a
+                Drillbit to authenticate with the remote Drillbit will be
+                drill/host01.aws.lab@<REALM>.COM.
+
+    3. Restart the Drillbit process on each Drill node.
+$ maprcli node services -name drill-bits -action restart -nodes <node host names
+ separated by a space>
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill_connectors.html#drill_connectors
+   2. https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html#Mapping_from_Kerberos_principal_to_OS_user_account
+   3. https://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-common/SecureMode.html

@@ -1,0 +1,50 @@
+Step 1: Set up a Kerberos Principal and keytab File
+
+   Each node running the HttpFS service must have a keytab file
+   (/opt/mapr/conf/mapr.keytab) and these two principals:
+     * HTTP/<fully.qualified.domain.name>
+     * mapr/<fully.qualified.domain.name>
+
+   Note: For complete instructions on generating a Kerberos principal and
+   keytab file, see [1]Configuring Kerberos.
+
+   To check whether the keytab already exists, and if it contains the two
+   necessary principals, run the klist command with the -k (keytab keys),
+   -e (encryption type) and -t (timestamp) options:
+$ klist -ket /opt/mapr/conf/mapr.keytab
+
+   The output from this command displays the following information:
+     * KVNO (key version number)
+     * Timestamp (the time the key was generated)
+     * Principal names
+     * Encryption types
+
+   If the keytab file does not exist, or does not contain both principals,
+   generate them by following these steps:
+    1. Generate a Kerberos principal for the mapr user. The principal is
+       of the form mapr/<fully.qualified.domain.name>@<your-realm>.com,
+       where <fully.qualified.domain.name> is unique for each HttpFS node.
+       In the following example, perfnode153.perf.lab@dev-maprtech.com is
+       used for the <fully.qualified.domain.name>@<your-realm>.com.
+$ kadmin
+kadmin: addprinc -randkey mapr/perfnode153.perf.lab@dev-maprtech.com
+    2. Generate a Kerberos principal for
+       HTTP/<fully.qualified.domain.name>. This is required for Kerberos
+       authentication of the HttpFS server using HTTP SPNEGO.
+$ kadmin
+kadmin: addprinc -randkey HTTP/perfnode153.perf.lab@dev-maprtech.com
+    3. If the current node does not already have a keytab file created for
+       another service, create one and name it mapr.keytab. Note that each
+       node references the same keytab file (usually located at
+       /opt/mapr/conf/mapr.keytab), and each keytab file can have multiple
+       principals.
+kadmin: ktadd -k /opt/mapr/conf/mapr.keytab mapr/perfnode153.perf.lab
+    4. Change the owner of the keytab file from the root user (the
+       default) to the mapr user.
+$ chown mapr:mapr /opt/mapr/conf/mapr.keytab
+    5. Set read-only permissions on the mapr.keytab file.
+$ chmod 600 mapr:mapr /opt/mapr/conf/mapr.keytab
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Configuring-Kerberos-User-Authentication.html#ConfiguringKerberosUserAuthentication

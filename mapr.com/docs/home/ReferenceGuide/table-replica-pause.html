@@ -1,0 +1,79 @@
+table replica pause
+
+   Pauses the replication of data from a source MapR-DB binary or JSON
+   table to a replica MapR-DB binary or JSON table during autosetup and
+   replication phases.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on both the source volume and the target
+       volume
+     * [3]lookupdir on directories in the paths of both tables
+     * replperm permissions on the source table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table replica pause
+  -path <table path>
+  -replica <replica table path>
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/replica/pause?path=<path>&replica=<path>'
+  -u <username>:<password>
+
+Parameters
+
+   Parameter Description
+   path
+
+   The path to the source table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named testsrc under a volume with a
+       mount point at /volume1, specify the following path:
+       /volume1/testsrc
+     * For a path on another cluster, you must also specify the cluster
+       name in the path. For example, for a table named customersrc under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customersrc
+
+   replica
+
+   The path to the replica that will receive updates from the source.
+     * For a table on the local cluster, start the path at the volume
+       mount point. For example, for a table named testdst under a volume
+       with a mount point at /volume1, specify the following path:
+       /volume1/testdst
+     * For a table on another cluster, you must also specify the cluster
+       name in the path. For example, for a table named customerdst under
+       volume1 in the sanfrancisco cluster, specify the following path:
+       /mapr/sanfrancisco/volume1/customerdst
+
+Example
+
+   Sets the replication state to paused:
+
+   CLI
+
+maprcli table replica pause -path /volume1/custAsrc -replica /volume2/custAdst
+
+   REST
+
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/replica/pause?path=%2Fvolume1%2FcustAsrc&r
+eplica=%2Fvolume2%2FcustAdst' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

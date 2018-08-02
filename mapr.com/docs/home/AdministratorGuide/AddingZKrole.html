@@ -1,0 +1,31 @@
+Adding a ZooKeeper Role
+
+   If you are increasing the number of ZooKeeper roles in the cluster, for
+   example from one to three, shut down the cluster before you add the
+   role to the nodes to prevent any problems and then start the cluster
+   upon completion.
+
+   Complete the following steps to add the ZooKeeper role to a node:
+    1. Install the ZooKeeper package corresponding to the new role.
+    2. Run configure.sh -Z on the node where you added the new ZooKeeper
+       role.
+       Using the -Z option provides the list of ZooKeeper nodes that
+       includes the new node.
+    3. Run configure.sh -Z on all other nodes in the cluster.
+       Using the -Z option to provide the list of ZooKeeper nodes that
+       includes the new node.
+    4. Issue the following command to start or restart ZooKeeper on the
+       node where you added the ZooKeeper role:
+% service mapr-zookeeper restart
+    5. Perform a rolling restart of ZooKeeper on all other ZooKeeper
+       nodes.
+       A rolling restart of ZooKeeper means restart ZooKeeper on each
+       node, one at a time, pausing until the last restart finishes before
+       beginning the next. Restart the ZooKeeper leader last.
+    6. Issue the following command to verify that the new node joined the
+       ZooKeeper quorum:
+% service mapr-zookeeper qstatus
+    7. Perform a rolling restart of Warden on all other nodes.
+       Warden picks up the new ZooKeeper node. Issue the following command
+       to restart Warden on the node where you installed the role:
+% service mapr-warden restart

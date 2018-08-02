@@ -1,0 +1,124 @@
+Step 1: Configure Drill
+
+   Drill configuration under Drill-on-YARN differs from Drill
+   configuration under Warden. You must create a site directory to contain
+   the site-specific files for Drill. Drill-on-YARN copies the site
+   directory to every node so that each node has the configuration
+   settings. Having a site directory also simplifies upgrades because you
+   can just delete the old Drill distribution and install the new one
+   while the site-specific files remain unchanged in the site directory.
+
+   The drill-env.sh file contains only custom configurations.
+   MapR-specific configuration settings reside in distrib-env.sh, a file
+   separate from the site-specific settings. When you migrate an existing
+   Drill installation to run under YARN, you must modify the drill-env.sh
+   to remove the Drill and MapR settings, leaving only your site-specific
+   settings.
+   When you finish configuring Drill, use the site directory to test
+   Drill, including starting, checking status, and stopping Drill.
+   Note: If you installed the mapr-drill-yarn package on nodes other than
+   the Drill-on-YARN client in order to make SQLLine accessible to users,
+   the site directory must be accessible from all nodes. You can copy the
+   configurations across all the nodes, as you did when you ran Drill
+   under the Warden service. Alternatively, you can put the site directory
+   in a shared file system nfs mount to extend the configuration. When
+   users launch SQLLine, they should provide the ZooKeeper connection
+   string to launch Drill.
+
+Create the Site Directory
+
+   To create the “site” directory, complete the following steps as the
+   same user that installed Drill and will run the Drill-on-YARN client
+   application:
+    1. Create the site directory and an environment variable for the
+       directory:
+export DRILL_SITE=/opt/mapr/drill/site
+mkdir $DRILL_SITE
+       Note: The variable is not required and used for convenience in the
+       documentation.
+    2. Copy the drill-env.sh, drill-override.conf, drill-on-yarn.conf, and
+       distrib-env.sh files from $DRILL_HOME/conf/ into the site
+       directory. In the following example, $DRILL_HOME is the location of
+       the new Drill installation (usually
+       /opt/mapr/drill/drill-<version>).
+cp $DRILL_HOME/conf/drill-override.conf $DRILL_SITE
+cp $DRILL_HOME/conf/drill-env.sh $DRILL_SITE
+cp $DRILL_HOME/conf/drill-on-yarn.conf $DRILL_SITE
+cp $DRILL_HOME/conf/distrib-env.sh $DRILL_SITE
+       Note: Copy any configuration changes from drill-env.sh file in the
+       previous Drill installation over to the drill-env.sh file in the
+       site directory. Do not include the memory settings when you copy
+       over your previous configurations. These changes must be made in
+       the drill-on-yarn.conf file described in Step 3: Configure YARN to
+       Run Drill.
+       Note: Never modify distrib-env.sh. The distrib-env.sh script
+       contains MapR settings that you should not change. You copy this
+       file to the site directory because it often contains values set
+       during Drill installation. When you upgrade Drill, replace the file
+       with the latest version from $DRILL_HOME/conf.
+    3. If you developed custom code (data sources or user-defined
+       functions), place the Java JAR files in $DRILL_SITE/jars. If you
+       have code from your prior Drill installation, copy the JAR files
+       from $PREV_DRILL/jars/3rdparty to $DRILL_SITE/jars.
+cp $PREV_DRILL/jars/3rdparty/yourJarName.jar $DRILL_SITE/jars
+       Note: Copy only the JAR files that you added. Do not copy JAR files
+       that shipped with the prior Drill version.
+    4. Add native libraries to the site directory. If you used a native
+       library, such as the JPAM library, in prior versions of Drill,
+       place the native libraries in $DRILL_SITE/lib to enable YARN to
+       automatically copy (localize) them to each node that runs Drill.
+cp native_libraries $DRILL_SITE/lib
+
+Modify the drill-env.sh File
+
+   Copy any configuration changes from drill-env.sh file in the previous
+   Drill installation over to the drill-env.sh file in the site directory.
+   Memory settings under Drill-on-YARN are now part of the
+   drill-on-yarn.conf file. Modify the memory settings in
+   $DRILL_SITE/drill-env.sh, as shown below, to ensure that the Drill
+   memory settings match the amount of memory that Drill-on-YARN requires.
+
+   To modify drill-env.sh, complete the following steps:
+    1. Review each line in $PREV_DRILL/conf/drill-env.sh for settings you
+       added, and copy them into the new $DRILL_SITE/drill-env.sh file.
+       Note: If you do not recall whether you customized settings, you can
+       compare your file with the original version of drill-env.sh that
+       shipped with the prior Drill version.
+    2. Locate the following lines in drill-env.sh and note the values:
+DRILL_MAX_DIRECT_MEMORY="<value>"
+DRILL_HEAP="<value>"
+       Replace those lines with the following lines, substituting the
+       values in the new lines with the values from the old lines:
+export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"<value>"}
+export DRILL_HEAP=${DRILL_HEAP:-"<value>"}
+       Note: If you do not intend to run Drill outside of YARN, you can
+       remove the two lines shown above from drill-env.sh.
+       Note: If you do not make this change, Drill ignores the memory
+       settings in the drill-on-yarn.conf file. If you are installing
+       Drill fresh, and do not have an existing file, you can skip this
+       step. Files in Drill 1.8 and later have the correct format.
+       Note: When you install Drill, the MapR installer automatically adds
+       the HADOOP_HOME variable, which points the current MapR-provided
+       Hadoop to your distrib-env.sh. If HADOOP_HOME is located elsewhere,
+       change this location in drill-env.sh
+
+Use the Site Directory to Test Drill
+
+   You will use the site directory each time you start Drill using the
+   --site or --config option. Use the option to verify that the
+   configuration works by starting Drill as a stand-alone service on a
+   single node.
+drillbit.sh --site $DRILL_SITE start
+
+   Wait a few seconds and then verify that Drill continues to run:
+drillbit.sh --site $DRILL_SITE status
+
+   You can also use the Drill Web Console for the Drillbit to verify that
+   Drill has the proper settings. Once satisfied that the configuration is
+   connect, stop Drill:
+drillbit.sh --site $DRILL_SITE stop
+
+   Note: If you find that specifying the --site option becomes tedious,
+   you can set the DRILL_CONF_DIR variable in your environment:
+export DRILL_CONF_DIR="$DRILL_SITE"
+drillbit.sh start

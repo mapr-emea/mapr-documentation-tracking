@@ -1,0 +1,68 @@
+Stream Topics
+
+   Topics are created in streams and contain logical collections of
+   messages. These collections of messages are published to partitions in
+   the topic.
+   Using MapR-ES with MapR-FS and MapR-DB in the MapR Converged Data
+   Platform, enables organizations to create a centralized, secure data
+   lake that unifies files, database tables, and message topics.
+   Note: Topics inherit security permissions, time-to-live data retention,
+   and data compression policies at the stream-level.
+
+   You can design topic usage in a variety of ways. For example, you might
+   have an application that monitors the logs for mission-critical
+   software. Your monitoring application could send informational messages
+   to a topic named info, warning messages to a topic named warnings, and
+   error messages to a topic named errors. Different downstream
+   applications might monitor each topic.
+   You can manage topics for different scenarios:
+     * Set security policies that apply all of the topics in that stream.
+       Security policies are set at the stream-level. See [1]Stream
+       Security for more information.
+     * Set a default number of partitions for each new topic that is
+       created in the stream. The default number partitions is set at the
+       stream-level, however, individual topics can override the default.
+       See [2]Topic Partitions for more information.
+     * Set a time-to-live for messages in every topic in the stream. Every
+       message in every topic in a stream expires after a duration of
+       time, unless you set the time-to-live to 0, meaning messages never
+       expire. Time-to-live is set at the stream-level. See
+       [3]Time-to-Live for Messages for more information.
+
+Restrictions
+
+     * After a topic is created in a stream, it is not possible to move
+       that topic to a different stream.
+       For example, suppose you create the topic
+       structural_integrity_sensors_us_western_region, one of a number of
+       topics that collect data from sensors that keep watch over various
+       measurements for bridges, buildings, and other structures. However,
+       you've mistakenly created the topic in the stream
+       ventilation_systems instead of the stream
+       structural_integrity_sensors.
+       Remember: There is no command that will move a topic from its
+       current stream to a different stream.
+       To rectify the mistake:
+          + You must delete the topic and recreate it in the other stream.
+          + Any producers that published messages to the topic and any
+            consumers that read messages from the topic must be modified
+            to point to the new location of the topic. This is because
+            producers and consumers refer to topics with a combination of
+            stream name and topic name.
+     * Only the following characters are allowed for stream topic names:
+          + Alphanumeric characters
+          + Period, underscore, and dash
+     * When producing or consuming stream topic messages, you must specify
+       the stream's path and name along with the topic name in the
+       following manner:
+/<stream name>:<topic name>
+       Note: If a topic is specified but the stream's path and name is
+       not, depending on the application's programming language, you might
+       get an error or nothing. If nothing happens and you are using Java,
+       the assumption is that you are publishing to Apache Kafka.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/security.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/topic-partitions.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/time_to_live_for_messages.html

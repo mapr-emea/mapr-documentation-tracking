@@ -1,0 +1,40 @@
+Working with a Logical Volume Manager
+
+   The Logical Volume Manager creates symbolic links to each logical
+   volume's block device, from a directory path in the form:
+/dev/<volume group>/<volume name>
+
+   MapR needs the actual block location, which you can find by using the
+   ls -l command to list the symbolic links.
+    1. Make sure you have free, unmounted logical volumes for use by MapR:
+          + Unmount any mounted logical volumes that can be erased and
+            used for MapR.
+          + Allocate any free space in an existing logical volume group to
+            new logical volumes.
+    2. Make a note of the volume group and volume name of each logical
+       volume.
+    3. Use ls -l with the volume group and volume name to determine the
+       path of each logical volume's block device. Each logical volume is
+       a symbolic link to a logical block device from a directory path
+       that uses the volume group and volume name:
+/dev/<volume group>/<volume name>
+       The following example shows output that represents a volume group
+       named mapr containing logical volumes named mapr1, mapr2, mapr3,
+       and mapr4:
+# ls -l /dev/mapr/mapr*
+lrwxrwxrwx 1 root root 22 Apr 12 21:48 /dev/mapr/mapr1 -> /dev/mapper/mapr-mapr1
+lrwxrwxrwx 1 root root 22 Apr 12 21:48 /dev/mapr/mapr2 -> /dev/mapper/mapr-mapr2
+lrwxrwxrwx 1 root root 22 Apr 12 21:48 /dev/mapr/mapr3 -> /dev/mapper/mapr-mapr3
+lrwxrwxrwx 1 root root 22 Apr 12 21:48 /dev/mapr/mapr4 -> /dev/mapper/mapr-mapr4
+    4. Create a text file /tmp/disks.txt containing the paths to the block
+       devices for the logical volumes (one path on each line). Example:
+$ cat  /tmp/disks.txt
+/dev/mapper/mapr-mapr1
+/dev/mapper/mapr-mapr2
+/dev/mapper/mapr-mapr3
+/dev/mapper/mapr-mapr4
+    5. Pass disks.txt to [1]disksetup.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disksetup.html#disksetup

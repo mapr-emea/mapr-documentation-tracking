@@ -1,0 +1,57 @@
+Impala SQL Dialect
+
+   Impala uses the SQL query language and is compatible with the Hive
+   query language, HiveQL. You can use other languages, such as Java, to
+   interact with Impala through ODBC and JDBC interfaces. The Impala SQL
+   dialect supports a subset of SQL and HiveQL functions, statements,
+   datatypes, operators, and built-in functions.
+
+   The Impala SQL dialect supports DML statements similar to the DML
+   component of HiveQL. The Impala SQL dialect does not support UPDATE and
+   DELETE statements, and it does not support the INSERT…VALUES syntax to
+   insert a single row.
+
+   Refer to [1]Supported and Unsupported SQL/HiveQL Language Features for
+   a list of supported and unsupported functions, statements, datatypes,
+   operators, and features.
+
+Example: Running an Impala SQL Query
+
+   In this example scenario, download a customer CSV file and use the Hive
+   shell to create a table and import customer data into the table and
+   then run an Impala query on the table.
+    1. Download the following CSV file to /root/customers.csv:
+       [2]customers.csv
+    2. Issue the following command from the hive-shell to import the CSV
+       file and create a table:
+hive> create table customers(FirstName string,
+LastName string,Company string,Address string,
+City string,County string,State string,Zip string,
+Phone string,Fax string,Email string,Web string)
+row format delimited fields terminated by ',' stored as textfile;
+    3. Issue the following command in the hive-shell to load the customer
+       data into the customers table:
+Hive> load data local inpath '/root/customers.csv' overwrite into table customer
+s;
+    4. Issue the following command to start the Impala shell:
+$ impala-shell
+    5. To connect to an instance of Impala, issue the following CONNECT
+       command, replacing impalad-host with the host name you have
+       configured on a node running Impala:
+[Not connected] > connect impalad-host
+[impalad-host:21000] >
+    6. Issue the following command to query the data to find the total
+       number of customers:
+select count(*) from customers
+
+   The query returns the following result:
++--------+
+| count(*) |
++--------+
+| 501 |
++--------+
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/SupportedandUnsupportedSQLHiveQL.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/attachments/customers.csv

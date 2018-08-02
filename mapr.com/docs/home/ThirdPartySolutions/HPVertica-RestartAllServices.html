@@ -1,0 +1,16 @@
+Restart All Services
+
+   In order for MapR to begin to manage the local HP Vertica services, you
+   must restart both systems.
+    1. On one of the nodes, as the HP Vertica DBA User, stop the database:
+/opt/vertica/bin/admintools -t stop_db -d <database_name>
+    2. On ALL nodes, as root, stop the vertica_agent (automatically
+       started), unmount the vertica volume, and restart the MapR warden:
+service vertica_agent stop
+umount /vertica
+service maprwarden restart
+    3. Validate that the HPVertica service is running on the file servers:
+maprcli node list -filter [service==fileserver] -columns configuredservice,healt
+hDesc
+    4. On one of the nodes, as your Vertica DBA User, start your database:
+/opt/vertica/bin/admintools -t start_db -d <your_db_name>

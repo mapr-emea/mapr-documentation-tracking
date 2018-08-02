@@ -1,0 +1,88 @@
+Saving Cursor Position
+
+   The MapR-ES server keeps track of the messages that consumers in
+   consumer groups have read by using cursors.
+
+   There is one cursor per partition per consumer group. There are two
+   different types of cursor: read cursors and committed cursors.
+
+   Figure: A topic partition and the cursors of a consumer group
+   [partition_3.png]
+
+   A consumer's read cursor is the offset of the most recent message that
+   MapR-ES has sent to a consumer from a partition.
+
+   Consumers that are part of a consumer group can save the current
+   position of their read cursor. Consumers can do this either
+   automatically or manually. The saved cursor is called a committed
+   cursor because it indicates that the consumer has processed all
+   messages in a partition up to and including the one with this offset.
+   There are two benefits to committing cursors:
+
+   Failover on consumer failure
+          One benefit is that if a consumer fails and MapR-ES reassigns
+          the consumer’s partitions to other consumers in a group, those
+          consumers can start reading from the next offset after the
+          committed cursor in each of those partitions.
+
+   Failover on cluster failure
+          When you backup a stream by replicating it to another cluster,
+          committed cursors are also replicated. If the main cluster
+          fails, consumers that are redirected to the standby copy of a
+          stream can start reading from the next offset after committed
+          cursors.
+
+   Read cursors
+          A consumer's read cursor is the offset of the most recent
+          message that MapR-ES has sent to a consumer from a partition.
+
+   Committed cursors
+          Consumers that are part of a consumer group can save the current
+          position of their read cursor. Consumers can do this either
+          automatically or manually. The saved cursor is called a
+          committed cursor because it indicates that the consumer has
+          processed all messages in a partition up to and including the
+          one with this offset.
+
+          There are two benefits to committing cursors:
+
+        Failover on consumer failure
+                One benefit is that if a consumer fails and MapR-ES
+                reassigns the consumer’s partitions to other consumers in
+                a group, those consumers can start reading from the next
+                offset after the committed cursor in each of those
+                partitions.
+
+        Failover on cluster failure
+                When you backup a stream by replicating it to another
+                cluster, committed cursors are also replicated. If the
+                main cluster fails, consumers that are redirected to the
+                standby copy of a stream can start reading from the next
+                offset after committed cursors.
+
+   How often a consumer should commit depends on how much read duplication
+   you are willing to tolerate. The more often a consumer commits, the
+   less read duplication the consumer must contend with.
+
+   The length of time since the failed consumer last committed determines
+   (together with the rate at which messages are published to its
+   partitions) how many messages are read a second time. For example,
+   suppose that the auto-commit interval is five seconds. A consumer saves
+   its commit cursor and then fails after three seconds. During those
+   three seconds, the consumer's read cursor has continued to move through
+   the messages. When its partitions are reassigned to other consumers in
+   the group, those consumers will read three seconds of messages that the
+   failed consumer already read.
+   There are two different ways of committing cursors:
+
+   Automatic commits
+          Whether the MapR-ES server commits the cursors for a consumer
+          that is in a consumer group is determined by the
+          enable.auto.commit configuration parameter. You can set it to
+          true, which enables autocommit, or false. The default is true.
+          The auto.commit.interval.ms configuration parameter determines
+          the frequency of the commits in milliseconds. The default is
+          value is 1000.
+
+   Manual commits
+          The Java API provides a method of committing cursors manually.

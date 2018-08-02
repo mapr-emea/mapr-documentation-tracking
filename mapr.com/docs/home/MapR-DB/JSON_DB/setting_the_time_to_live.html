@@ -1,0 +1,72 @@
+Setting TTL for Data
+
+   You can delete stale JSON documents in JSON tables automatically by
+   setting a time-to-live (TTL) value on the column family.
+
+   TTL is set only on the default column family in a JSON table. The
+   duration that you set applies to each entire JSON document in the JSON
+   table.
+   Note: Only the default column family can exist in order to set TTL; no
+   other column families can exist in the JSON table. You also cannot set
+   the TTL for a JSON table if it has secondary indexes.
+
+   Data can become stale. If the data in an JSON document has not been
+   updated within a certain period of time, you might want to delete the
+   document. In the case of a large amount of JSON documents, applications
+   should not have to track the time between updates and then delete the
+   expired documents.
+
+   Because the time-to-live that is set on a column family affects an
+   entire JSON table, only the default column family is allowed to have a
+   non-default time-to-live value. In addition, to prevent multiple column
+   families from having non-default time-to-live values, additional column
+   families can not be created in a table if the default column family has
+   a non-default value. This is because if more than one column family had
+   a non-default TTL value, fragments of documents would expire at
+   different times, leading to inconsistent views of data.
+
+Permission Required
+
+   The writeAce permission on the volumes where the JSON tables are
+   located. For information about how to set permissions on volumes, see
+   [1]Setting Whole Volume ACEs.
+
+Example: Setting the default column family to a non-default time-to-live
+value
+
+   If you set the time-to-live parameter for the default column family to
+   864,000 seconds, JSON documents in that table are considered to be
+   stale if the document's data has not been updated within 10 days and
+   are automatically deleted.
+
+   The following code example creates a JSON table, the default column
+   family and sets the TTL to a non-default value of 10 days (864,000
+   seconds).
+/* Create a TableDescriptor for the table to create,
+   passing in the path of the table. */
+TableDescriptor tableDescriptor = MapRDB.newTableDescriptor(tablePath);
+
+/* Create a FamilyDescriptor for the default column family.
+   When you create a table with the API, you must also create
+   the default column family.
+   Set the TTL to 10 days.
+   After creating the FamilyDescriptor, add it to
+   the TableDescriptor. */
+FamilyDescriptor defaultfamilyDesc = MapRDB.newDefaultFamilyDescriptor()
+   .setTTL(864000);
+tableDescriptor.addFamily(defaultfamilyDesc);
+
+
+// Pass the TableDescriptor to the Admin.createTable() method.
+public void createJSONTable(String tablePath, TableDescriptor tableDescriptor) t
+hrows DBException {
+  try (Admin admin = MapRDB.newAdmin()) {
+    if (!admin.tableExists(tablePath)) {
+      admin.createTable(tableDescriptor);
+    }
+  }
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html

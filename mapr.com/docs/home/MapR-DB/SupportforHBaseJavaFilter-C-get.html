@@ -1,0 +1,36 @@
+Filtering GET Operation Results Example
+
+   This example shows filtering on the results of a GET operation.
+{
+    bytebuffer rowKey = bytebuffer_strcpy("row_with_two_cells");
+    hb_get_t get = NULL;
+    hb_get_create(rowKey->buffer, rowKey->length, &get);
+    hb_get_add_column(get, FAMILIES[0], 1, NULL, 0);
+    hb_get_add_column(get, FAMILIES[1], 1, NULL, 0);
+    hb_get_set_table(get, table_name, table_name_len);
+    hb_get_set_num_versions(get, 10); // up to ten versions of each column
+    hb_get_set_filter(get, (byte_t *)filters[9], strlen(filters[9]));
+    get_done = false;
+    hb_get_send(client, get, get_callback, rowKey);
+    wait_for_get();
+ }
+
+   This example uses the following array of filters:
+static char filters[][200] = {"RandomRowFilter(0.5)",
+       "ColumnCountGetFilter(2)",
+       "ColumnPaginationFilter(1)",
+       "ColumnPrefixFilter('column-a')",
+       "FamilyFilter(=,'binaryprefix:f')",
+       "PrefixFilter('row_') AND QualifierFilter(<,'binaryprefix:g')",
+       "SKIP TimestampsFilter(1392222222222)",
+       "WHILE ValueFilter(=,'binaryprefix:cell2_value_v1')",
+       "FuzzyRowFilter('row00','00001')",
+       "TimestampsFilter(1430937732000,1431024132000)"};
+       }
+
+   Note: For more information about suppport for HBase Java Filters by the
+   MapR-DB C API, see [1]HBase Java Filters Support
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/SupportforHBaseJavaFilter-C.html

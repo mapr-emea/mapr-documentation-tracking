@@ -1,0 +1,34 @@
+Integrate Hue with Sentry
+
+   You can integrate Hue with Sentry 1.6 on a secure cluster that uses
+   kerberos authentication but the intergration is not supported on a
+   secure cluster that uses MapR-SASL authentication. Integrate Hue with
+   Sentry when you want to use the Hue Security application to manage
+   Sentry roles and privileges. When you integrate Hue with Sentry, Sentry
+   must use the database storage model.
+   Note: The Hue user that manages Sentry roles and privileges in Hue must
+   belong to a Hue group that is also part of the Sentry admin group.
+    1. In the [libsentry] section of the hue.ini
+       (/opt/mapr/hue/hue-<version>/desktop/conf/hue.ini), configure the
+       following properties:
+[libsentry]
+                        # Hostname or IP of server.
+                        hostname=localhost
+
+                        # Port the sentry service is running on.
+                        port=8038
+
+                        # Sentry configuration directory, where sentry-site.xml
+is located.
+                        sentry_conf_dir=/opt/mapr/sentry/sentry-<version>/conf/s
+entry-site.xml
+    2. If Sentry uses Kerberos authentication, edit the following property
+       in sentry-site.xml
+       (/opt/mapr/sentry/sentry-<version>/conf/sentry-site.xml) to enable
+       the Hue admin user (mapr) to connect to Sentry:
+<property>
+                        <name>sentry.service.allow.connect</name>
+                        <value>impala,hive,mapr</value>
+                        </property>
+    3. Restart Hue:
+maprcli node services -name hue -action restart -nodes <ip_address>

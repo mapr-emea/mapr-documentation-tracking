@@ -1,0 +1,135 @@
+Hue 3.7.0-1505 Release Notes
+
+   The notes below relate specifically to the MapR Distribution for Apache
+   Hadoop. You may also be interested in the [1]Hue github page and the
+   [2]release notes for Version 3.7.
+   Version                    3.7.0
+   Release Date               June 2, 2015
+   Source on GitHub           [3]https://github.com/mapr/hue.git
+   GitHub Release Tag         3.7.0-mapr-1505
+   MapR Version Compatibility See [4]Hue Support Matrix.
+   Maven Artifacts            [5]http://repository.mapr.com/maven/
+   Note: This version of Hue does not support Sentry.
+
+New in this Release
+
+   This release of Hue version 3.7 for the MapR Distribution for Apache
+   Hadoop includes the following features:
+     * MapR-SASL security support between Hue and the following
+       components:
+          + YARN on MapR 4.0.1 or greater
+          + HttpFS 1.0-1504 and greater on MapR 4.0.1 or greater
+          + Hive 0.13-1504 and Hive 1.0-1504 or greater on MapR 4.1 or
+            greater
+          + Oozie 4.0.1 or greater on MapR 4.0.1 or greater
+     * The ability to configure a file size restriction for the File
+       Browser. The file size is specified by the file_size property in
+       the hue.ini file. The default is 1.0 GB.
+     * In a new installation, Hue automatically determines the following
+       values that you would otherwise configure in the hue.ini file:
+          + resourcemanager_api_url
+          + proxy_api_url
+          + history_server_api_url
+          + security_enabled
+          + mechanism
+     * Support for multiple PAM modules. By default, Hue is configured to
+       use PAM authentication for new installations.
+     * Support for Hive 1.0
+     * The ability to configure Hue to display Hive 1.0 logs by setting
+       the use_get_log_api property to true in the [beeswax] section of
+       the hue.ini file.
+
+Patches
+
+   Commit Date (YYYY-MM-DD) Comment
+   3a912cc 2015-03-11 MAPR-13476: Support for SSL mutual certificate-based
+   authentication to HttpFS.
+   f78b5ef 2015-03-26 MAPR-17765: The following error no longer displays
+   while updating Hue: "IntegrityError: (1062, "Duplicate entry '1' for
+   key 'PRIMARY'")".
+   3cbc369 2015-04-03 MAPR-15976: secure.sh script auto-generates keys
+   required for security configuration.
+   b5ed618 2015-04-08 MAPR-17413: Added a property to restrict the size of
+   files that can be viewed from the File Browser.
+   e7d2328 2015-04-14 MapR-18179: Hue UI no longer throws an error after a
+   successful installation performed with the MapR Installer.
+   fd7696 2015-04-28 MAPR-17413: Changed API parameter len to length.
+   853e44e 2015-05-05 MAPR-18334: Added getTablesWithoutMemorize function
+   for loading list of tables without cache.
+
+Known Issues
+
+     * MapR-17229: The HBase examples provided in Hue 3.7 will not load in
+       HBase 0.94.x because HBase 0.94.x uses a different thrift version
+       than Hue 3.7.
+     * MapR-17314: When you run Hue 3.7 with a Hadoop version that is less
+       than 2.5.1, the Job Browser hangs if you attempt to kill running
+       YARN applications from the Job Browser window. This issue occurs
+       with MapR version 4.0.1 as it uses Hadoop 2.4.1.
+     * MapR-18668: Hue does not work on RedHat/CentOS 7 when it is
+       configured to use a MySQL database.
+       When this issue occurs, the MapR Control System (MCS) displays the
+       "Hue Down Alarm."
+       Workaround:
+         1. Run the following commands to install MariaDB and the Redhat 6
+            compatibility library:
+yum install mariadb
+rpm -ivh --nodeps http://yum.mariadb.org/$(rpm -qa mariadb|cut -d- -f2)/rhel7-am
+d64/rpms/MariaDB-5.5.41-centos7_0-x86_64-compat.rpm
+         2. Run the following command to create a symlink for the Cyrus
+            SASL library:
+ln -s /lib/64/libsasl2.so.3.0.0 /lib64/libsasl2.so.2
+         3. Run the following command to reconfigure Hue:
+bash -c "./opt/mapr/hue/hue-3.7.0/build/env/bin/activate; /opt/mapr/hue/hue-3.7.
+0/build/env/bin/hue syncdb --noinput; /opt/mapr/hue/hue-3.7.0/build/env/bin/hue
+migrate"
+         4. Run the following command to restart Hue:
+maprcli node services -name hue -action restart -nodes <space separated list of
+hostnames>
+     * MapR-18823: Hue is unable to communicate with Hive when the
+       hive-site.xml is empty and the hue.ini security settings are
+       automatically configured to use MapR-SASL.
+       Workaround: Add the following properties to hive-site.xml with
+       values based on the configuration you require:
+          + hive.metastore.sasl.enabled
+          + hive.metastore.uris
+          + hive.server2.authentication
+          + hive.server2.enable.doAs (optional)
+          + hive.server2.thrift.sasl.qop
+       For example:
+<property>
+<name>hive.metastore.sasl.enabled</name>
+<value>true</value>
+<description>if true, the metastore thrift interface will be secured with SASL.<
+/description>
+</property>
+
+<property>
+ <name>hive.server2.authentication</name>
+ <value>MAPRSASL</value>
+ <description>authentication type</description>
+</property>
+
+<property>
+ <name>hive.server2.enable.doAs</name>
+ <value>false</value>
+</property>
+
+<property>
+  <name>hive.server2.thrift.sasl.qop</name>
+  <value>auth</value>
+<property>
+
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://localhost:9083</value>
+  <description> URI where clients contact Hive metastore server </description>
+</property>
+
+References
+
+   1. https://github.com/cloudera/hue
+   2. http://cloudera.github.io/hue/docs-3.7.0/release-notes/release-notes-3.7.0.html
+   3. https://github.com/mapr/hue
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_hue_matrix.html#reference_jvd_tsb_t5
+   5. http://repository.mapr.com/maven/

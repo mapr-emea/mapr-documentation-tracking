@@ -1,0 +1,148 @@
+acl show
+
+   Displays the ACL associated with an object (cluster or a volume).
+
+Syntax
+
+   An ACL contains the list of users who can perform specific actions.
+
+   CLI
+
+maprcli acl show
+    [ -cluster <cluster> ]
+    [ -group <group> ]
+    [ -name <name> ]
+    [ -output long|short|terse ]
+    [ -perm ]
+    -type cluster|volume
+    [ -user <user> ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host>:<port>/rest/acl/show?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+
+   cluster
+
+   The name of the cluster on which to run the command.
+
+   group
+
+   The group for which to display permissions.
+
+   name
+
+   The cluster or volume name.
+
+   output
+
+   The output format:
+     * long
+     * short
+     * terse
+
+   perm
+
+   When this option is specified, acl show displays the permissions
+   available for the object type specified in the type parameter.
+
+   type
+
+   Value can be: cluster or volume. If type is volume, volume name is
+   required.
+
+   user
+
+   The user for whom to display permissions
+
+Output
+
+   The actions that each user or group is allowed to perform on the
+   cluster or the specified volume. For information about each allowed
+   action, see [1]acl.
+Principal   Allowed actions
+User root   [r, ss, cv, a, fc]
+Group root  [r, ss, cv, a, fc]
+All users   [r]
+
+Examples
+
+   Show the ACL for the cluster:
+
+   CLI
+
+# maprcli acl show -type cluster -json
+{
+        "timestamp":1525459529684,
+        "timeofday":"2018-05-04 11:45:29.684 GMT-0700 AM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "Principal":"User root",
+                        "Allowed actions":"[login, ss, cv, fc]"
+                }
+        ]
+}
+
+   REST
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/acl/show?type=cluster' --user mapr
+:mapr
+{"timestamp":1525459587701,"timeofday":"2018-05-04 11:46:27.701 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"Principal":"User root","Allowed actions":"[login,
+ ss, cv, fc]"}]}
+
+   Show the ACL for "test-volume":
+
+   CLI
+
+# maprcli acl show -type volume -name sampleVol1
+Allowed actions               Principal
+[dump, restore, m, a, d, fc]  User mapr
+[dump, restore, m, d, fc]     User foo
+[dump, restore, a]            User bar
+[m, d]                        User abc
+
+   REST
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/acl/show?type=volume&name=sampleVo
+l1' --user mapr:mapr
+{"timestamp":1525461068100,"timeofday":"2018-05-04 12:11:08.100 GMT-0700 PM","st
+atus":"OK","total":4,"data":[{"Principal":"User mapr","Allowed actions":"[dump,
+restore, m, a, d, fc]"},{"Principal":"User foo","Allowed actions":"[dump, restor
+e, m, d, fc]"},{"Principal":"User bar","Allowed actions":"[dump, restore, a]"},{
+"Principal":"User abc","Allowed actions":"[m, d]"}]}
+
+   Show the permissions that can be set on a cluster:
+
+   CLI
+
+# maprcli acl show -type cluster -perm
+Permissions  Description
+login        Login access
+ss           Start/stop services in the cluster
+cv           Create volumes
+a            Administrator
+fc           Full control
+
+   REST
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/acl/show?type=cluster&perm' --user
+ mapr:mapr
+{"timestamp":1525459863777,"timeofday":"2018-05-04 11:51:03.777 GMT-0700 AM","st
+atus":"OK","total":5,"data":[{"Permissions":"login","Description":"Login access"
+},{"Permissions":"ss","Description":"Start/stop services in the cluster"},{"Perm
+issions":"cv","Description":"Create volumes"},{"Permissions":"a","Description":"
+Administrator"},{"Permissions":"fc","Description":"Full control"}]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl.html

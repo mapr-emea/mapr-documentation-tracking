@@ -1,0 +1,44 @@
+Configure Impala to Use Sentry Authorization in File-Based Storage Model
+
+   When Impala starts, it reads the file and controls what objects that
+   users who connect to Impala can access and what operations they can
+   perform on the objects. Impala caches the security information from in
+   the policy file every five minutes. If you make significant changes to
+   security policies, restart Impala so that the changes become effective
+   immediately.
+
+    1. Edit env.sh located in /opt/mapr/impala/impala-<version>/conf/.
+    2. In the IMPALA_SERVER_ARGS declaration, add the following options:
+
+   Option Description
+   -server_name This option turns on Sentry authorization for Impala.
+   Specify the symbolic server name to use as the argument for this
+   option. You must also specify this server name as the value for the
+   sentry.hive.server property in the sentry-site.xml configuration file
+   for Hive.
+
+   For example: -server_name=<hive_server_2>
+   -authorization_policy_file You can store privileges in an authorization
+   policy file. When you specify this option, in addition to the
+   server_name option, Impala reads privilege information from the policy
+   file instead of a database. Specify the MapR-FS path to the policy file
+   that contains the privilege information.
+
+   For example: -
+   authorization_policy_file=file:///opt/mapr/sentry/sentry-/conf/.ini \
+
+   Note: If the policy file is stored in MapR-FS, indicate the MapR-FS
+   location using the following format:
+   -authorization_policy_file=maprfs:///<path_to_policy_file>
+    3. Restart the Impala server, statestore service, and catalog service.
+sudo -u mapr maprcli node services -name impalaserver -action restart -nodes <no
+dename>
+sudo -u mapr maprcli node services -name impalastore -action restart -nodes <nod
+ename>
+sudo -u mapr maprcli node services -name impalacatalog -action restart -nodes <n
+odename>
+       Note: Impala does not start if it detects any issues in the
+       authorization settings or the policy file.
+    4. When Impala is running, you can issue the following command to
+       start the impala-shell as a particular user:
+impala-shell -u <user_name>

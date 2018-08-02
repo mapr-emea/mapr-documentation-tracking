@@ -1,0 +1,74 @@
+Writing to Files
+
+   There are two APIs for writing to files: hdfsWrite() and hdfsPwrite().
+   With both APIs, you pass a buffer that contains the data to write. You
+   also pass the length of the buffer in bytes. There maximum length of
+   the buffer is the maximum size of the datatype that is used to specify
+   the buffer length. The datatype is a custom datatype: tSize, a signed
+   32-bit integer.
+
+   Both APIs return the number of bytes that were written. Flushes to the
+   server happen automatically at intervals during a write operation.
+   After a write operation is finished, either call hdfsFlush() explicitly
+   or call hdfsFlush() implicitly by calling hdfsCloseFile() to be sure
+   that any data remaining in the write buffer is flushed.
+
+   For an example of both APIs in action, see [1]hdfs_write_revised.c.
+   Note: The core-site.xml flags:
+     * fs.mapr.flush.unaligned default setting (false) enables flushes to
+       the server in 8K boundaries. Unaligned flushes can happen only if
+       idle flusher (fs.mapr.write.idleflush.timeout) is triggered. If
+       this behavior is not desired, set the value for
+       fs.mapr.flush.unaligned to true, which will enable flushing of
+       unaligned write buffers (so that even small writes can be flushed
+       on every subsequent write call).
+     * fs.mapr.write.idleflush.timeout automatically flushes the buffer,
+       by default, after 3 seconds for all the open files. This can be
+       disabled by setting the value to 0. If value is specified, buffer
+       is flushed automatically between n to n+1 seconds. For example, if
+       value is 3 seconds, the write buffer is not cached after 4 seconds.
+
+   See also: [2]Default core Parameters.
+
+Using hdfsWrite()
+
+   When a file is opened in write-only mode or read-write mode, the file
+   is truncated from offset 0, effectively deleting the content of the
+   file. Therefore, the initial write to the file begins at offset 0. You
+   can start subsequent writes anywhere in the file after first calling
+   hdfsSeek() to move to the desired offset. After a write operation, the
+   offset is located at the last written byte.
+
+   If the file is opened in append mode, data is appended to the end of
+   the file only.
+
+   If a call to hdfsSeek() moves the offset past the end of the file
+   before a call to hdfsWrite(), the result is a hole in the file between
+   the previous end of the file and the offset at which the write begins.
+
+   You can obtain the size of a file in bytes by calling
+   hdfsGetPathInfo.()
+
+   On error, pending write buffers are flushed to the server.
+
+Using hdfsPwrite()
+
+   Whereas hdfsWrite() increments the current offset by the amount of
+   bytes returned by the API (except in case of error), hdfsPwrite() does
+   not change the value of current offset. If the current offset before
+   the call to hdfsPwrite() is 0 and you specify the offset 10 for the
+   write operation, after the write the current offset remains 0.
+
+   If a call to hdfsPwrite() specifies an offset that is past the end of
+   the file, the result is a hole in the file between the previous end of
+   the file and the offset at which the write begins.
+
+   You can obtain the size of a file in bytes by calling
+   hdfsGetPathInfo().
+
+   On error, pending write buffers are flushed to the server.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/hdfs_write_revised.c.html#hdfs_write_revised.c
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/MapR-Parameters.html

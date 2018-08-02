@@ -1,0 +1,54 @@
+Containers and the CLDB
+
+   MapR-FS stores data in abstract entities called containers that reside
+   on storage pools. Each storage pool can store many containers. Blocks
+   enable full read-write access to MapR-FS and efficient snapshots.
+
+   An application can write, append, or update more than once in MapR-FS,
+   and can also read a file as it is being written. In other Hadoop
+   distributions, an application can only write once, and the application
+   cannot read a file as it is written.
+
+   On average, a container size is 10-30 GB. The default container size is
+   32GB. Large number of containers allow for greater scaling and
+   allocation of space in parallel without bottlenecks.
+   Described from the physical layer:
+     * Files are divided into chunks.
+     * The chunks are assigned to containers.
+     * The containers are written to storage pools, which are made up of
+       disks on the nodes in the cluster.
+
+   The following table compares the MapR-FS storage architecture to the
+   HDFS storage architecture:
+   Storage Architecture HDFS MapR-FS
+   Management layers Files, directories and blocks, managed by Namenode.
+   Volume, which holds files and directories, made up of containers, which
+   manage disk blocks and replication.
+   Size of file shard 64MB block 256MB chunk
+   Unit of replication 64MB block 32GB container
+   Unit of file allocation 64MB block 8KB block
+
+   MapR-FS automatically replicates containers across different nodes on
+   the cluster to preserve data. Container replication creates multiple
+   synchronized copies of the data across the cluster for failover.
+   Container replication also helps localize operations and parallelizes
+   read operations. When a disk or node failure brings a container’s
+   replication levels below a specified replication level, MapR-FS
+   automatically re-replicates the container elsewhere in the cluster
+   until the desired replication level is achieved. A container only
+   occupies disk space when an application or program writes to it.
+
+   The CLDB (Container Location Database) maintains information about the
+   location of every container in the cluster, defines the container
+   precedence in the replication chain, and organizes container content
+   updates across the replication chain. It runs as a system of
+   independent servers, only one of which is a master at any time.
+
+   The MFS and other services (such as NFS Gateway and POSIX) send
+   heartbeat (HB) messages to the master CLDB. The CLDB is registered with
+   ZooKeeper and the master CLDB to ZooKeeper connection is kept alive by
+   sending a probe message every few seconds. The CLDB service tracks the
+   location of every container and uses the HB messages to determine the
+   state of a container and thereby all containers on that node. The CLDB
+   actively participates in the failover of a node in the event of a node
+   failure.

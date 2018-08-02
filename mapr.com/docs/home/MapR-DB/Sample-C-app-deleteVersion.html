@@ -1,0 +1,44 @@
+Delete a specific version of a column in the row that was fetched
+
+APIs used
+
+   The APIs that are used are defined in the header file mutations.h.
+     * hb_delete_add_column(): Set the column criteria for hb_delete_t
+       object. Set the qualifier to NULL to delete all columns of a
+       family. Only the cells with timestamp less than or equal to the
+       specified timestamp are deleted. Set the timestamp to INT64_MAX to
+       delete all versions of the column. This API is optional for
+       deletes.
+     * hb_delete_create(): Creates a structure for delete operation and
+       return its handle.
+     * hb_mutation_set_table(): Sets the table name for the mutation.
+     * hb_mutation_send(): Queues the put operation for sending to the
+       server. Mutations are not performed atomically and can be batched
+       in a non-deterministic way on either the client side or the server
+       side. Any buffer attached to a mutation object (put or delete) must
+       not be altered until the callback has been received.
+
+Sequence of steps
+
+    1. Create a delete object for a row with a particular row key.
+    2. Add a column to the delete object.
+    3. Specify the name of the table from which to delete the cell
+       version.
+    4. Queue the delete.
+    5. Wait three seconds for the delete to be flushed, then wait for the
+       RPC call to complete.
+
+Code
+
+  // delete a specific version of a column
+  {
+    bytebuffer rowKey = bytebuffer_strcpy("row_with_two_cells");
+    hb_delete_t del = NULL;
+    hb_delete_create(rowKey->buffer, rowKey->length, &del);
+    hb_delete_add_column(del, FAMILIES[0], 1,
+        column_a->buffer, column_a->length, 1391111111112L);
+    hb_mutation_set_table(del, table_name, table_name_len);
+    delete_done = false;
+    hb_mutation_send(client, del, delete_callback, rowKey);
+    wait_for_delete();
+  }

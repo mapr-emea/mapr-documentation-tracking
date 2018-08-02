@@ -1,0 +1,114 @@
+Setting Environment Variables for NIC Segregation
+
+   The MAPR_SUBNETS and MAPR_EXTERNAL environment variables can be used to
+   segregate NICs for internal and external clients or to segregate NICs
+   for high-performance and low-performance clients.
+
+Setting the MAPR_SUBNETS Environment Variable
+
+   To specify the internal IP addresses of CLDB and MFS nodes:
+    1. Stop warden on all the nodes on the cluster.
+    2. Set the IP address range to use in the MAPR_SUBNETS environment
+       variable in the /opt/mapr/conf/env_override.sh file. For more
+       information about this file, see [1]About env_override.sh.
+       For example:
+export MAPR_SUBNETS=10.10.0.0/24
+       To specify multiple subnets for MapR, use comma to separate the IP
+       addresses.
+       Note: Before specifying the IP address, make sure the client and
+       cluster nodes can communicate via that IP address. That is, ensure
+       that the client can send packets and that they can be routed to all
+       the interfaces of the cluster nodes, and the cluster nodes all have
+       a route that reaches back to the client IP address.
+    3. Perform a rolling restart of warden on all the nodes for the
+       changes to take effect.
+    4. Add CLDB’s internal IP address (or IP address specified in the
+       MAPR_SUBNETS environment variable on the CLDB host) to the
+       mapr-clusters.conf file on the (internal or high-performance)
+       client host(s).
+       The mapr-clusters.conf file specifies IP addresses, on which the
+       CLDB nodes (for one or more clusters) can be reached. For more
+       information, see [2]mapr-clusters.conf.
+
+   When you restrict MapR to certain subnets, MapR clients have full
+   access to the MapR cluster on the designated subnets.
+
+Setting the MAPR_EXTERNAL Environment Variable
+
+   To specify the external IP addresses of CLDB and MFS nodes:
+    1. Stop warden on all the nodes on the cluster.
+    2. Set the IP addresses to use for external communication or for
+       low-performance clients in the MAPR_EXTERNAL environment variable
+       in the /opt/mapr/conf/env_override.sh file. For more information
+       about this file, see [3]About env_override.sh.
+       For example:
+export MAPR_EXTERNAL=10.11.0.0;
+       To specify multiple subnets for MapR, use comma to separate the IP
+       addresses.
+    3. Perform a rolling restart of warden on all the nodes for the
+       changes to take effect.
+    4. Add the following in the mapr-clusters.conf file on the (external
+       or low-performance) client host(s):
+          + CLDB’s external IP addresses, which is the IP addresses
+            specified in the MAPR_EXTERNAL environment variable on the
+            CLDB hosts
+          + CLDB’s external port, which is the value of the
+            CLDB_EXTERNAL_RPC_PORT environment variable if this is set on
+            the CLDB hosts. See [4]Specifying Ports for CLDB for more
+            information.
+       The mapr-clusters.conf file contains the IP addresses, on which the
+       CLDB nodes (for one or more clusters) can be reached. For more
+       information, see [5]mapr-clusters.conf.
+
+Examples
+
+   Suppose the value for the MAPR_EXTERNAL environment variable on MFS
+   node is the following:
+10.10.103.80,10.10.30.205
+
+   External clients can connect to MFS on IPs 10.10.103.80, 10.10.30.205
+   and the ports on which the MFS is reachable are the default ports. If
+   MFS is running 2 instances, then:
+     * Instance 1 is reachable on 10.10.103.80:<5660|5692|5724|5756>,
+       10.10.30.205:<5660|5692|5724|5756>
+     * Instance 2 is reachable on 10.10.103.80:<5661|5693|5725|5757>,
+       10.10.30.205:<5661|5693|5725|5757>
+
+   If MFS is running 3 instances:
+     * Instance 1 is reachable on 10.10.103.80:<5660|5692|5724|5756>,
+       10.10.30.205:<5660|5692|5724|5756>
+     * Instance 2 is reachable on 10.10.103.80:<5661|5693|5725|5757>,
+       10.10.30.205:<5661|5693|5725|5757>
+     * Instance 3 is reachable on 10.10.103.80:<5662|5694|5726|5758>,
+       10.10.30.205:<5662|5694|5726|5758>
+
+Specifying External IP Address of ZooKeeper Nodes
+
+   When each ZooKeeper has a different external IP address, the -EZ option
+   can be used to specify IP address of each ZooKeeper. To specify the
+   external IP address of ZooKeeper nodes, during cluster configuration:
+   Run the configure.sh utility as shown below:
+/opt/mapr/server/configure.sh -C <hostname|IP>[,<hostname|IP>,..] -Z <IP>[,<IP>.
+.]  -EZ <IP>[:<port>][,<IP>[:<port>]..] [-F <disk_list_file>] [-N <cluster_name>
+]
+
+   In the above command:
+     * When each ZooKeeper has a different external IP address, the -EZ
+       option can be used to specify IP address of each ZooKeeper and
+       optionally the port as well (separated by a colon); the IP address
+       can be different while the port number is the same.
+     * When there are multiple ZooKeepers listening on the same external
+       IP (such as in a Docker container), the -EZ option can be used to
+       specify IP address and port (separated by a colon); the port can be
+       different while IP address is the same.
+
+   For more information, see [6]Specifying Ports.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr-clusters.conf.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpPorts.html#cldb
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr-clusters.conf.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpPorts.html

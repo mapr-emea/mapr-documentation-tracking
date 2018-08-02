@@ -1,0 +1,138 @@
+Determining Index Use
+
+   Evaluate the query plan to analyze query performance and determine if
+   Drill uses indexes. You can view query plans in the Drill Web Console
+   or through the command line using the EXPLAIN command. You can also
+   disable the indexing option in Drill and compare an index-based plan to
+   a full table scan plan.
+
+   Drill leverages indexes during the physical planning phase of the
+   query. Drill estimates the cost of an index-based plan and a plan that
+   includes a full table scan. See [1]Selection and Execution of Secondary
+   Indexes for information about how Drill selects a query plan. In cases
+   where Drill does not select the index-based plan and instead selects a
+   full table scan plan, you may want to remove the indexes to free up
+   storage space and eliminate the overhead of the indexes.
+
+   The following example shows you how to determine if Drill selected an
+   index-based plan for a query through the query profile in the Drill Web
+   Console and the EXPLAIN PLAN FOR output.
+
+Example
+
+   The subsequent sections assume that an index exists on a table named
+   "lineitem." The index, l_single_c_5, is a single field index created on
+   the L_QUANTITY field. The index also covers the L_SUPPKEY, L_DISCOUNT,
+   L_SHIPDate, and L_SHIPMODE fields. If a query contains fields covered
+   by the index, the query is a covering query. If a query contains fields
+   not covered by the index, the query is non-covering and requires a
+   lookup back into the primary table to retrieve data.
+   The following list summarizes the assumptions:
+     * Table name: lineitem
+     * Index name: l_single_c_5
+     * Indexed field: L_QUANTITY
+     * Included fields: L_SUPPKEY, L_DISCOUNT, L_SHIPDate, L_SHIPMODE
+
+Query Profile
+
+   View the query plan on the Profiles tab in the Drill Web Console. See
+   [2]Starting the Web Console. Select the query you want to evaluate and
+   then select the Physical Plan tab. You can see the physical plan that
+   Drill used to execute the query.
+   The following image shows the physical plan that Drill used to execute
+   this simple equality query:
+SELECT L_SHIPDate FROM lineitem WHERE L_QUANTITY = 5;
+
+   [drill-si-query-plan-simple-rs.png]
+   In the plan, you can see that Drill scanned the index, l_single_c_5,
+   instead of the primary table. The query was completely covered by the
+   index because the index contains all fields referenced in the query and
+   the query filtered on the indexed field.
+
+EXPLAIN PLAN
+
+   Alternatively, you can issue the [3]EXPLAIN command to see how Drill
+   executes a query. To see the chosen physical execution plan for a query
+   without running the query, issue the [4]EXPLAIN PLAN FOR command. This
+   command shows you if Drill plans to use the index when executing the
+   query.
+   The following image shows the physical plan that Drill plans to use to
+   execute this simple equality query:
+EXPLAIN PLAN FOR SELECT L_SHIPDate FROM lineitem WHERE L_QUANTITY = 5 LIMIT 10;
++------+------+
+| text | json |
++------+------+
+| 00-00    Screen
+00-01      Project(L_SHIPDate=[$0])
+00-02        SelectionVectorRemover
+00-03          Limit(fetch=[10])
+00-04            Limit(fetch=[10])
+00-05              Project(L_SHIPDate=[$1])
+00-06                Scan(groupscan=[JsonTableGroupScan [ScanSpec=JsonScanSpec [
+tableName=maprfs:///drill/testdata/tpch/sf1/maprdb/json/lineitem, condition=(L_Q
+UANTITY = {"$numberLong":5}), indexName=l_single_c_5], columns=[`L_QUANTITY`, `L
+_SHIPDate`]]])
+
+   In the plan, you can see that Drill plans to use the index,
+   l_single_c_5, instead of performing a full table scan. The query is
+   completely covered by the index because the index contains all fields
+   referenced in the query and the query filters on the indexed field.
+
+Compare Plans
+
+   If you want to compare an index-based plan against a plan with a full
+   table scan, disable the planner.enable_index_planning option in Drill,
+   and run the EXPLAIN PLAN FOR command for the query. Running this
+   command with the planner.enable_index_planning option disabled forces
+   Drill to generate a plan that includes a full table scan. You can
+   compare the full table scan plan against the index-based plan to
+   compare the costs and resource consumption of each plan.
+   You can see in the following query, with the indexing feature turned
+   on, Drill generated a plan using the index:
+EXPLAIN PLAN FOR SELECT L_SHIPDate FROM lineitem WHERE L_QUANTITY = 5 LIMIT 10;
++------+------+
+| text | json |
++------+------+
+| 00-00    Screen
+00-01      Project(L_SHIPDate=[$0])
+00-02        SelectionVectorRemover
+00-03          Limit(fetch=[10])
+00-04            Limit(fetch=[10])
+00-05              Project(L_SHIPDate=[$1])
+00-06                Scan(groupscan=[JsonTableGroupScan [ScanSpec=JsonScanSpec [
+tableName=maprfs:///drill/testdata/tpch/sf1/maprdb/json/lineitem, condition=(L_Q
+UANTITY = {"$numberLong":5}), indexName=l_single_c_5], columns=[`L_QUANTITY`, `L
+_SHIPDate`]]])
+
+   If you turn the option off, as shown:
+ALTER SESSION SET planner.enable_index_planning = false
+
+   You can run the EXPLAIN PLAN FOR command again to see the plan with a
+   full table scan included:
+EXPLAIN PLAN FOR SELECT L_SHIPDate FROM lineitem WHERE L_QUANTITY = 5 LIMIT 10;
++------+------+
+| text | json |
++------+------+
+| 00-00    Screen
+00-01      Project(L_SHIPDate=[$0])
+00-02        SelectionVectorRemover
+00-03          Limit(fetch=[10])
+00-04            UnionExchange
+01-01              SelectionVectorRemover
+01-02                Limit(fetch=[10])
+01-03                  Project(L_SHIPDate=[$1])
+01-04                    Scan(groupscan=[JsonTableGroupScan [ScanSpec=JsonScanSp
+ec [tableName=maprfs:///drill/testdata/tpch/sf1/maprdb/json/lineitem, condition=
+(L_QUANTITY = {"$numberLong":5})], columns=[`L_QUANTITY`, `L_SHIPDate`]]])
+ |
+
+   Note: To see the cost of each plan, go to the Drill Web Console and
+   view the query profile for each EXPLAIN PLAN FOR command that you issue
+   through the command line.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/OverviewIndexSelectionExecution.html#concept_pc2_4ws_p1b
+   2. https://drill.apache.org/docs/starting-the-web-console/
+   3. https://drill.apache.org/docs/explain/
+   4. https://drill.apache.org/docs/explain/#explain-for-physical-plans

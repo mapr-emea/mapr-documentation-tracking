@@ -1,0 +1,229 @@
+Drill 1.13-1803 Release Notes
+
+   This section provides reference information, including new features,
+   improvements, resolved issues, known issues, and limitations for Drill
+   1.13.0-1803.
+
+   The following release notes apply to the 1.13.0 version of the Apache
+   Drill component included in the MapR Converged Data Platform.
+   Version 1.13.0
+   Release Date April 2018
+   MapR Version Interoperability See the [1]MEP Components and OS Support
+   , [2]Interoperability Matrix, and [3]Drill Support Matrix.
+   Package Names [4]Package Names for MapR Expansion Packs (MEPs)
+
+New in this Release
+
+   This release of Drill includes a fix for [5]CVE-2017-12197 and the
+   following new features:
+     * [6]Parquet planning improvements, including:
+          + (MD-3445, MD-1312) Performance improvements with support for
+            project push down, filter push down, and partition pruning on
+            star queries in common table expressions (CTEs), views, and
+            subqueries.
+     * [7]Parquet filter pushdown improvements, including:
+          + (MD-1264) Filtering on the IS [NOT] NULL and IS [NOT]
+            TRUE|FALSE operators.
+          + (MD-3821) Filtering on boolean values.
+          + (MD-1270) Casting between date, time, and timestamp values.
+          + (MD-1269) Support for files with multiple row groups.
+     * [8]Runtime filter pushdown support for queries with join conditions
+       on rowkeys.
+          + (MD-1293) Drill can push down rowkey join filters to MapR-DB
+            at runtime.
+     * (MD-1947) Upgrade to [9]Calcite version 1.15.
+     * (MD-1086) Ability to [10]configure cgroups to control Drill CPU
+       usage when Drill runs under YARN.
+     * (MD-2234) Ability to [11]gracefully shut down a Drillbit.
+     * (MD-2404) Support for [12]SPNEGO to extend the Kerberos-based
+       single sign-on authentication mechanism to HTTP.
+     * SQL [13]syntax highlighting for queries and snippets (SQL
+       templates).
+     * Ability to [14]define the maximum amount of cumulative memory
+       allocated to the Drill process during startup.
+
+   For a list of additional features and improvements, see the [15]Apache
+   Drill 1.13 Release Notes.
+
+Improvements
+
+   This release of Drill includes the following improvements:
+   MapR Tracking Numbers Improvements
+   MD-3836 DRILL-6174 Parquet pushdown planning improvements
+   MD-3711 Batch Sizing for Operators in MEP 5.0
+   MD-3657 DRILL-6071 Limit batch size for flatten operator
+   MD-3611 DRILL-6145 Implement Hive MapR-DB JSON handler
+   MD-3428 DRILL-6115 SingleMergeExchange is not scaling up when many
+   minor fragments are allocated for a query
+   MD-3340 DRILL-6147: Limit batch size for Flat Parquet Reader
+   MD-3312 Proposal Auto Mem Allocation
+   MD-3265 Query with union on empty directory on any side fails
+   MD-2920 Drill contains updated Hive libraries with Hive version
+   2.1.1-mapr-1710. With the update, Drill supports queries on
+   transactional (ACID) and non-transactional Hive bucketed ORC tables.
+   The updated libraries are backward compatible with earlier versions of
+   the Hive server and metastore.
+   MD-2074 Memory Fragmentation Fundamentals Completion
+   MD-1360 Projection push down using WITH clause needs to work on Parquet
+   files in addition to views
+   MD-1297 Improve Drill Join Performance on MapR-DB Tables On Primary
+   Indexes
+
+Resolved Issues
+
+   This release of Drill includes the following resolved issues:
+   MapR Tracking Numbers Resolved Issues
+   MD-4026 Drillbit failed to start after v6.0.0 -> v6.0.1 core upgrade.
+   MD-3997 DRILL-6250: Sqlline start command with password appears in the
+   sqlline.log.
+   MD-4110 OJAI query through Drill fails due to impersonation.
+   MD-4099 Fix protocol incompatibility between 1.12.0-mapr and
+   1.13.0-mapr client and bit.
+   MD-4049 Query with runtime filter pushdown returns incorrect results.
+   MD-4074 HashAggBatch.innerNext() OOM error.
+   MD-4108 Queries on wide column parquet dataset return incorrect
+   results.
+   MD-4101 Queries going to Drill fail with
+   java.lang.IllegalArgumentException:
+   org.apache.zookeeper.KeeperException$NoAuthException: KeeperErrorCode =
+   NoAuth for
+   /drill/cluster114-drillbits/2ffc1e3c-0ff7-490c-bf23-98365cc7eaf2.
+   MD-4100 Update the default Heap for Drill to 4GB.
+   MD-4098 Drillbit crashes when canceling a hash agg query.
+   MD-4082 Query fails with IndexOutOfBoundsException: Index: 0, Size: 0.
+   MD-4077 OJAI is unable to query QueryService (Drill) as root.
+   MD-4071 Update the Hadoop and MapR versions in the pom.xml file.
+   MD-4056 Drillbit startup fails with "No configuration setting found for
+   key 'drill.exec.options.store.parquet.reader.enableFSRetry'".
+   MD-4054 Queries with runtime filter pushdown fail with NPE when
+   subquery contains filter on nested fields.
+   MD-4039 Query encounters INTERNAL_ERROR ERROR: index: -25614, length: 0
+   (expected: range(0, 65536)).
+   MD-4017 DRILL-6254: IllegalArgumentException: the requested size must
+   be non-negative.
+   MD-4013 DRILL-6275: Drillbit direct_current memory usage is not
+   populated/updated.
+   MD-4002 Query is not honoring the batch size limit.
+   MD-3986 Queries are hanging.
+   MD-3984 DRILL-6241: Saffron properties config file still has the
+   excessive permissions.
+   MD-3957 Error in parquet record reader.
+   MD-3956 Query hangs.
+   MD-3948 Allocated batch size is larger than requested.
+   MD-3947 Record counts are the same but batch sizes are different.
+   MD-3946 Batch Sizes are inconsistent when record sizes are the same.
+   MD-3945 MapR Drill does not compile because JDBC driver JAR is too
+   large.
+   MD-3925 Query using index plan fails with "DrillRuntimeException: Join
+   only supports implicit casts between <types>. Add explicit casts to
+   avoid this error".
+   MD-3886 DRILL-6199: Filter push down doesn't work with more than one
+   nested subqueries
+   MD-3880 RowKeyJoin caused IndexOutOfBoundsException.
+   MD-3875 DRILL-6151 Fragment executors may terminate without sending
+   final batch to a downstream causing query to hang.
+   MD-3865 DRILL-6217: NaN/Inf: NestedLoopJoin processes NaN values
+   incorrectly.
+   MD-3864 Error is displaying while accessing query profiles via the
+   Web-UI.
+   MD-3863 DRILL-6187: Exception in RPC communication between data server
+   and data client.
+   MD-3857 NullPointerException occurs on HiveDrillNativeParquetScan.
+   MD-3824 dir0 does not work when the directory structure contains Avro
+   files(DRILL-4120).
+   MD-3822 DRILL-6216: Metadata mismatch for sys.options table.
+   MD-3802 DRILL-6023 Graceful shutdown hardening.
+   MD-3784 DRILL-6189: User credentials appear in the Drill logs if the
+   log level is set to ALL.
+   MD-3783 DRILL-6189: Drill config files have the excessive permissions.
+   MD-3726 Simple Order by queries (without limit) when an index is used
+   are showing regression.
+   MD-3670 Fix NPE during physical plan submission for various storage
+   plugins.
+   MD-3634 Find on a table using Dill fails with ClassNotFoundException:
+   org.ojai.store.QueryResult.
+   MD-3610 Drill query hanging.
+   MD-3598 Address bugs related to Nan / Inf w/ MD-2745.
+   MD-3455 Queries with GROUP BY w/o WHERE clause using index plans
+   returns rows with possible incorrect precision.
+   MD-3575 DRILL-6192: Drill is vulnerable to CVE-2017-12197.
+   MD-3208 Misleading message when multi-column subquery is projecting
+   within an IN clause.
+   MD-3188 DRILL-5903: Query encounters "Waited for 15000ms, but tasks for
+   'Fetch parquet metadata' are not complete."
+   MD-3187 DRILL-5902: Regression: Queries encounter random failure due to
+   RPC connection timed out.
+   MD-2922 Predicates joined by AND/OR do not return right results for
+   time and timestamp with millisec or higher precision.
+   MD-2790 DRILL-5902 Queries encounter random failure due to RPC
+   connection timed out.
+   MD-2684 DRILL-4708: connection closed unexpectedly.
+   MD-2544 Drillbit JVM dumps core when querying a table with SI.
+   MD-2041 Potential wrong result from spillable hash agg.
+   MD-1848 Drill not able to read MapR-DB when FQDN is longer than 64
+   characters.
+   MD-1575 Not able to set exec.impersonation.inbound_policies from web
+   interface.
+
+Known Issues
+
+   This release of Drill includes the following known issues:
+   MapR Tracking Numbers Known Issues
+   MD-4106 DRILL-6293: Unable to read Apache Hive(2.1.1) tables using
+   Drill 1.13.0.
+   MD-3988 Query runs out of memory.
+   MD-4153 Add support for runtime filter pushdown when _id occurs on the
+   right side of the join.
+   MD-4133 Excessive logging at INFO level.
+   MD-4109 Drillbit crashed when concurrency is high (48 clients ) and
+   -Dio.netty.buffer.bytebuf.checkAccessible=true not in the Drillbit
+   start-up command line.
+   MD-4107 Queries on Hive datasource fail with
+   UnsupportedOperationException:
+   org.apache.hadoop.hive.ql.io.parquet.convert.ETypeConverter$8$1.
+   MD-4102 NumberFormatException from UNION-ALL query.
+   MD-4086 Clean up messages going into drillbit.out.
+   MD-4065 HashAgg uses ~2X memory.
+   MD-4048 DRILL-6283: Excluding io.dropwizard.metrics dependencies.
+   MD-4047 Queries frequently fail with scan errors when performing
+   runtime filter pushdown.
+   MD-4046 Drill returns different query plans across runs for queries
+   performing runtime filter pushdown.
+   MD-4031 Drill does not pushdown runtime filters for queries with IN
+   subquery unless threshold is over 10%.
+   MD-4001 select count(*) the Count from sys.drillbits works fine from
+   sqlline but fails from drillSession.executeStatement().
+   MD-3981 Runtime filter pushdown does not happen for equality join with
+   scalar subquery.
+   MD-3929 DRILL-6219: Filter pushdown does not work with star operator if
+   there is a subquery with its own filter.
+   MD-3924 Query with a nested sub-query having a filter on a non-existent
+   field fails with NPE.
+   MD-3138 Invalid expected results for
+   Functional/table_function/positive/drill-3149_10.q.
+
+Patches
+
+   None
+
+Limitations
+
+   None
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_MEP_components.html#reference_pk5_5xb_tw
+   2. http://maprdocs.mapr.com/home/InteropMatrix/c_matrix_intro.html#concept_nym_4pb_t5
+   3. http://maprdocs.mapr.com/home/InteropMatrix/r_drill_matrix.html#reference_lv3_2sb_t5
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/MEPPkgNames.html#concept_zkc_jlh_hy
+   5. https://mapr.com/support/s/article/CVE-2017-12197-Drill-is-vulnerable-to-this-security-threat
+   6. https://drill.apache.org/docs/parquet-filter-pushdown
+   7. https://drill.apache.org/docs/parquet-filter-pushdown/#support
+   8. https://maprdocs.mapr.com/home/Drill/drill-si-config-options.html
+   9. https://calcite.apache.org/docs/history.html#v1-15-0
+  10. https://drill.apache.org/docs/configuring-cgroups-to-control-cpu-usage/
+  11. https://drill.apache.org/docs/starting-drill-in-distributed-mode/#shut-down-the-drill-process-on-a-node
+  12. https://drill.apache.org/docs/configuring-drill-to-use-spnego-for-http-authentication/
+  13. https://drill.apache.org/docs/query-data-introduction/#syntax-highlighting-and-sql-templates
+  14. https://drill.apache.org/docs/configuring-drill-memory/#modifying-memory-allocated-to-a-drillbit
+  15. http://drill.apache.org/docs/apache-drill-1-13-0-release-notes/

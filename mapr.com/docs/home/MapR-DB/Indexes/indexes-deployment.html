@@ -1,0 +1,111 @@
+Understanding the Secondary Index Workflow
+
+   Describes the overall workflow for using secondary indexes. This
+   includes the roles of different users and the workflow steps involved.
+
+   Before deploying secondary indexes, it is assumed that you have
+   [1]installed and configured MapR-DB and MapR-Drill to use secondary
+   indexes, and have [2]created and [3]populated your MapR-DB JSON tables.
+   Implementing secondary indexes on JSON tables in MapR-DB requires that
+   you understand indexing concepts, know which administrative tasks to
+   perform, and design your indexes to provide the most benefits for your
+   queries.
+
+   The following diagram depicts the workflow and identifies the roles and
+   order of tasks. Each step contains a link to a section in this page
+   with further details.
+   [4][USEMAP:deployment.png]
+
+   The following is a brief summary of each step:
+    1. Evaluate your queries to identify those that can benefit from
+       indexes.
+    2. Design your indexes by determining which fields need to be indexed.
+    3. Create your indexes using either the MapR Control System or
+       maprcli.
+    4. Execute your queries.
+
+How to Evaluate Queries that Benefit from Indexes
+
+   MapR-DB JSON supports indexes with various properties. Each property
+   benefits a certain class of queries. As part of deciding which of your
+   queries will benefit from indexes, it is important to have a general
+   understanding of these concepts. See [5]Types of Secondary Indexes and
+   [6]Queries that Benefit from Secondary Indexes for more information.
+
+How to Design Secondary Indexes
+
+   After you decide which queries can benefit from indexes, determine the
+   set of indexes that provide the maximum benefits. See [7]Designing
+   Secondary Indexes for more information.
+
+How to Create Secondary Indexes
+
+   You can create secondary indexes using either the [8]MapR Control
+   System (MCS) or the [9]maprcli table index command.
+   For example, to create a secondary index on the name field, use the
+   following maprcli command:
+maprcli table index add -path /Data/business -index newIndex -indexedfields name
+
+   See [10]Managing Secondary Indexes for other commands to manage
+   secondary indexes.
+
+How to Query MapR-DB JSON Tables
+
+   Depending on your use case, applications can access data in MapR-DB
+   through the following client interfaces:
+
+   [11]OJAI Client API
+          Use for user-facing Java applications that need very high
+          concurrency and ultra-low latency.
+
+   [12]MapR-DB JSON REST API
+          Use for applications in which you want to access MapR-DB JSON
+          with HTTP calls.
+
+   [13]MapR Drill SQL
+          Use for performing operational analytics or Business
+          Intelligence (BI) for medium-to-high complexity queries that
+          require low-to-medium concurrency and interactive response
+          times.
+
+   These APIs seamlessly select the optimal indexes to use. You do not
+   need to write explicit code or provide directives on which indexes to
+   use.
+
+   The following diagram summarizes the components involved in the
+   different scenarios.
+
+   [JSON_DBComponentFlow.png]
+
+   For OJAI applications, the MapR client chooses the more appropriate of
+   two possible execution paths, without user interaction. One of the
+   paths leverages the [14]OJAI Distributed Query Service, which supports
+   more advanced index selection and parallel query execution. It also
+   supports sorting large data sets. For example, if the sort order
+   specified in your OJAI query does not match the sort order of an index,
+   the MapR client automatically invokes the OJAI Distributed Query
+   Service to perform the sort.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/admin-prepCluster-for-indexingTables.html#admin-prepCluster-for-indexingTables
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/CreateTable.html#task_ujs_hcw_5y
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/loading_documents_into_json_tables.html#loading_documents_into_json_tables
+   4. LYNXIMGMAP:file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-deployment.html#d950767e84
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#indexes-types
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-types.html#concept_u1y_r3n_p1b
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient-mcs.html#SettingUptheClient-mcs
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-index.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-administration.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/UsingMapRDBJSONRESTAPI.html#UsingMapRDBJSONRESTAPI
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/ApacheDrillonMapR.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
+
+[USEMAP]
+file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-deployment.html#d950767e84
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-deployment.html#indexes-implementation__section_jpc_pnt_w1b TYPE="internal link"
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-deployment.html#indexes-implementation__section_eqz_pnt_w1b TYPE="internal link"
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-deployment.html#indexes-implementation__section_lv3_qnt_w1b TYPE="internal link"
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-deployment.html#indexes-implementation__section_j14_qnt_w1b TYPE="internal link"

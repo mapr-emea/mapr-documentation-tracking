@@ -1,0 +1,84 @@
+Enabling and Disabling Auditing of Data Access Operations
+
+   You can enable or disable auditing of data-access operations using MCS
+   and the CLI. See [1]Auditing Data Access Operations for the complete
+   list of data-access operations that can be audited.
+
+Enabling and Disabling Auditing of Data Access Operations Using MCS
+
+   To enable or disable auditing of data-access operations on a cluster:
+    1. Log in to MapR Control System and click Admin > Cluster Settings >
+       Auditing.
+    2. Set the following:
+
+   Enabled Move the slider to Yes to enable or toNo to disable data
+   auditing.
+   Maximum Size Set the size in GB, which when reached causes an alarm to
+   be sent to the dashboard in MCS. The alarm is to notify the cluster
+   administrator that the audit log size is large enough that the
+   administrator might want to take action. The audit log continues to
+   grow until the administrator takes action or until the retention period
+   ends.
+   Retain Logs for Set the period of time in days to keep the data in the
+   audit log. After this period elapses, the content of the file is
+   deleted and new entries are added to the file until the retention
+   period elapses.
+    3. Click Save Changes for the changes to take effect.
+       This action does not cause auditing to start for operations within
+       the volumes. It only sets a flag that says you allow auditing of
+       individual volumes to be enabled when volume is created or
+       modified.
+
+Enabling and Disabling Auditing of Data Access Operations Using the CLI or
+REST API
+
+    1. To enable or disable auditing of filesystem, table, and streams
+       operations on a cluster, run the [2]maprcli audit data command.
+       This command does not cause auditing to start for operations within
+       those volumes. It only sets a flag that says you allow auditing of
+       individual volumes to be enabled with the [3]maprcli volume audit
+       command. The audit logs for file operations, table operations, and
+       stream operations are affected by the value that you set for the
+       -retention parameter.
+    2. To enable or disable auditing for a particular volume, run the
+       [4]maprcli volume audit command. To verify that auditing is enabled
+       for a volume, run the [5]maprcli volume info command.
+       You can grep with the search term 'audited\|coalesce'.
+maprcli volume info -name <volume_name> -json | grep -i 'audited\|coalesce'
+       The output of the command should look like this, with a 1 for the
+       audited key and the value for the coalesceinterval key:
+       "audited":1, "coalesceInterval":2
+    3. To enable or disable auditing for a particular directory, file,
+       MapR-DB table, or streams that existed in a volume at the time that
+       you ran the [6]maprcli volume audit command, run the [7]hadoop mfs
+       command with the -setaudit parameter.
+hadoop mfs -setaudit <on|off> <directory|file|table>
+       Note: Wildcards are not supported for the names of filesystem
+       objects in this command.
+       Enabling auditing on a directory does not enable auditing on the
+       files that already exist in the directory, though new files and
+       directories created in the directory will have auditing enabled.
+       For example, if you run this command on the root directory of a
+       volume, all new files, directories, and tables that are
+       subsequently created in the volume are audited. The creation of
+       those objects is also audited.
+
+   After enabling auditing, if you create a:
+     * Snapshot of a volume, the snapshot inherits the audit settings of
+       the original volume.
+     * Local mirror or remote mirror of a volume, you must run the
+       [8]maprcli volume audit command to enable auditing on the mirror
+       volume. Auditing for particular directories, files, and MapR-DB
+       tables in a mirror volume is enabled automatically if auditing is
+       enabled for them in the source volume.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/audit-data.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-audit.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-audit.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-info.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-audit.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-audit.html

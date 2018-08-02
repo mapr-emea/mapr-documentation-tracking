@@ -1,0 +1,72 @@
+Installing OpenTSDB from Source Files
+
+   The following steps describe how to install OpenTSDB from source files.
+   Be sure to install the OpenTSDB version that is required for your
+   AsyncHBase version. AsyncHBase 1.6 requires OpenTSDB 2.0. AsyncHBase
+   1.7 requires OpenTSDB 2.2.
+    1. Clone the opentsdb.git project and check out the OpenTSDB branch
+       that you require.
+       Note:
+       For example:
+$ git clone https://github.com/OpenTSDB/opentsdb.git
+Cloning into 'opentsdb'...
+remote: Counting objects: 5625, done.
+remote: Compressing objects: 100% (76/76), done.
+remote: Total 5625 (delta 51), reused 64 (delta 30)
+Receiving objects: 100% (5625/5625), 27.15 MiB | 2.67 MiB/s, done.
+Resolving deltas: 100% (3755/3755), done.
+Checking connectivity... done.
+$ cd opentsdb
+$ git tag -l
+mapr-1.1.0-release+5
+v1.0.0
+v2.0.0
+...
+$ git checkout v2.0.0
+Switched to a new branch 'v2.0.0'
+    2. Install dependencies for graph generation:
+$ yum install autoconf automake gnuplot
+    3. Replace the asynchbase.jar file with the MapR version of that file:
+$ yum install mapr-asynchbase
+    4. Run the build script:
+./build.sh
+    5. If you want to use OpenTSDB with MapR-DB tables, open the
+       create_table.sh file
+       (<OPENTSDB_ROOT_INSTALL_DIR>/src/create_table.sh) and add "/"
+       before the table names so that MapR recognizes them as MapR-DB
+       tables: See [1]Example: create_table.sh.
+    6. Create tables:
+env COMPRESSION=NONE;HBASE_HOME=/opt/mapr/hbase/hbase-<version>
+<OPENTSDB_ROOT_INSTALL_DIR>/src/create_table.sh
+    7. Run the following command to verify that the tables are created
+       successfully:
+hadoop fs -ls /
+    8. Create a simple metric to store, such as “sys.cpu.user”:
+./build/tsdb mkmetric sys.cpu.user --table=/tsdb --uidtable=/tsdb-uid
+    9. Run the OpenTSDB daemon (tsd).
+./build/tsdb tsd --port=4242 --staticroot=build/staticroot
+--cachedir=/tmp/opentsdb_tmp --zkquorum=10.10.101.50:5181 --table=/tsdb
+--uidtable=/tsdb-uid
+       Note: Instead of providing these options on command line, you can
+       configure the values in the opentsdb.conf file. This file must be
+       in the root folder so the option settings are read when tsd is run.
+       Also note that the staticroot argument points to the static UI
+       files. You do not need to create cachedir because openstdb creates
+       it automatically. Specifying the destination cachedir argument is
+       enough. You do need to explicitly specify tsdb tables (tsdb,
+       tsdb-uid) and Zookeeper quorum nodes.
+   10. Log into the web UI: http://<TSD_Installed_Node_IP>:<Port>
+       For example: http://10.10.10.230:4242/
+   11. Run a simple test program that generates data and sends repeated
+       puts for the metric over a socket connection: <UI-IP>:<UI-Port> .
+       See [2]Data Generator Program.
+   12. Check the plot in the UI.
+         a. Select From date and check autoreload.
+         b. Fill in the metric (in this case, sys.cpu.user) and the Tag
+            keys (cpu, host) values (webserver 0, webserver 1). You should
+            see a graph with a random plot.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AsyncHBase/AsyncHbase_UsingOpenTSDB_Example_create_table.sh.html#UsingOpenTSDBwithAsyncHBa_28220871-d3e496
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AsyncHBase/AsyncHBase_UsingOpenTSDB_ExampleDataGenerator.html#UsingOpenTSDBwithAsyncHBa_28220871-d3e520

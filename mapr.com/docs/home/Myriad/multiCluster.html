@@ -1,0 +1,128 @@
+Using Multiple YARN Clusters
+
+   This topic describes how to create multiple YARN clusters and to run
+   Hadoop jobs in a multiple YARN cluster environment.
+
+   Multiple YARN clusters are created in the Mesos environment when
+   multiple Myriad frameworks are each running a Resource Manager. Where
+   there are multiple YARN clusters, clients must specify a cluster name
+   prefix to identify which cluster the Hadoop job should be run on.
+
+Creating Multiple YARN Clusters
+
+   The Resource Manager spawns Node Managers and Job History Service
+   processes which form a cluster. To create multiple YARN clusters, a
+   Resource Manager is run under the Myriad framework along with the
+   cluster name prefix. The cluster name prefix differentiates between
+   staging, system, and local volume MapReduce directories.
+   Note: The cluster name prefix setting is a value of the
+   cluster.name.prefix property in the yarn-site.xml file. Also, you must
+   set it an an envSettings variable for each service on a cluster. For
+   example, the following show the cluster.name.prefix setting for
+   jobHistoryServer:
+services:
+     jobhistory:
+     jvmMaxMemoryMB: 64
+     cpus: 0.5
+     ports:
+       myriad.mapreduce.jobhistory.admin.address: 10033
+       myriad.mapreduce.jobhistory.address: 10020
+       myriad.mapreduce.jobhistory.webapp.address: 19888
+     envSettings: -Dcluster.name.prefix=/framework1
+     taskName: jobhistory
+     serviceOptsName: HADOOP_JOB_HISTORYSERVER_OPTS
+     command: $YARN_HOME/bin/mapred historyserver
+     maxInstances: 1
+
+   Cluster name prefix and Resource Manager parameters:
+-Dyarn.resourcemanager.hostname=<RM appName>.marathon.mesos
+-Dcluster.name.prefix=/<clusterNamePrefix>
+
+   For example, the cluster.name.prefix and yarn.resourcemanager.hostname
+   properties are both framework1 in the yarn-site.xml file:
+env && export
+YARN_RESOURCEMANAGER_OPTS="-Dyarn.resourcemanager.hostname=framework1.marathon.m
+esos
+-Dcluster.name.prefix=/framework1"
+&&/opt/mapr/hadoop/hadoop-2.7.0/bin/yarn resourcemanager
+
+Running Jobs from the Client-side
+
+   When running Hadoop jobs from clients within a multiple YARN cluster
+   environment, additional parameters are required. In this scenario, one
+   client could submit jobs to a specific YARN cluster and a second client
+   could submit jobs to a completely different YARN cluster. The following
+   parameters are specified when multiple YARN clusters are implemented.
+
+   CAPTION: Table 1. Multi-cluster Parameters used from the Client-side
+
+   Parameter Parameter Values Description
+   cluster.name.prefix /<clusterNamePrefix> Prefix for each Myriad cluster
+   name. This is the top-level directory where all the staging and shuffle
+   data is written for a specific Myriad framework. Specified by the -MCL
+   parameter when running configure.sh. See [1]Configure Myriad for more
+   information.
+   yarn.resourcemanager.hostname <RM appName>.marathon.mesos Mesos
+   hostname for Resource Manager. Specified by the -RM parameter when
+   running configure.sh. See [2]Configure Myriad for more information.
+   yarn.resourcemanager.dir /var/mapr/cluster/yarn/<clusterNamePrefix>/rm
+   Directory for Resource Manager specific data. The directory is based on
+   the cluster name prefix specified by the -MCL parameter when running
+   configure.sh. See [3]Configure Myriad for more information. .
+   mapr.mapred.localvolume.root.dir.name /<clusterNamePrefix>/nodeManager
+   Directory for local volume MapReduce specific data. The directory is
+   based on the cluster name prefix.
+
+   Command-line Parameters
+-Dcluster.name.prefix=/<clusterNamePrefix>
+-Dyarn.resourcemanager.hostname=<RM appName>.marathon.mesos
+-Dyarn.resourcemanager.dir=/var/mapr/cluster/yarn/<clusterNamePrefix>/rm
+-Dmapr.mapred.localvolume.root.dir.name=/<clusterNamePrefix>/nodeManager
+
+   For example, where the cluster.name.prefix and
+   yarn.resourcemanager.hostname properties are both framework1:
+hadoop jar
+/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/mapreduce/hadoop-mapreduce-examples-2
+.7.0-mapr-1506-SNAPSHOT.jar wordcount
+-Dcluster.name.prefix=/framework1
+-Dyarn.resourcemanager.hostname=framework1.marathon.mesos
+-Dyarn.resourcemanager.dir=/var/mapr/cluster/yarn/framework1/rm
+-Dmapr.mapred.localvolume.root.dir.name=/framework1/nodeManager
+/test.log test.out
+
+   yarn-site.xml Properties
+
+   Alternatively, rather than specifying these parameters dynamically, add
+   them to the client-side yarn-site.xml file.
+
+   For example, where the cluster.name.prefix and
+   yarn.resourcemanager.hostname properties are both framework1:
+// Property example for cluster.name.prefix
+  <property>
+    <name>cluster.name.prefix</name>
+    <value>/framework1</value>
+  </property>
+
+// Property example for yarn.resourcemanager.hostname
+  <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>framework1.marathon.mesos</value>
+  </property>
+
+// Property example for yarn.resourcemanager.dir
+  <property>
+    <name>yarn.resourcemanager.dir</name>
+    <value>/var/mapr/cluster/yarn/framework1/rm</value>
+  </property>
+
+// Property example for mapr.mapred.localvolume.root.dir.name
+  <property>
+    <name>mapr.mapred.localvolume.root.dir.name</name>
+    <value>/framework1/nodeManager</value>
+  </property>
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Myriad/configureMyriad.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Myriad/configureMyriad.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Myriad/configureMyriad.html

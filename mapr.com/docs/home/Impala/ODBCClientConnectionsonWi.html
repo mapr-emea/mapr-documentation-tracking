@@ -1,0 +1,230 @@
+ODBC Client Connections on Windows
+
+   You can connect to Impala through an ODBC client tool, such as Tableau,
+   from a Windows operating system. Use the MapR Impala ODBC Driver for
+   SQL access to files and tables. Install the driver and configure it to
+   pass a SQL query to Impala. You can run 32- and 64-bit applications on
+   64-bit Windows operating systems. You can install both versions of the
+   driver on the same computer, however you should use the version of the
+   driver that matches the architecture of the client application running
+   the query.
+
+   Before you install the driver, verify that your system meets the
+   following system prerequisites:
+     * Administrator privileges on the machine.
+     * One of the following operating systems (32- and 64-bit editions are
+       supported):
+          + Windows 7
+          + Windows Server 2008 R2
+          + Windows Server 2012
+     * 25 MB of available disk space
+
+   To install and the configure the MapR Impala ODBC Driver, complete the
+   following steps:
+    1. Download the MapR Impala ODBC Driver:
+          + [1]MapRImpalaODBC32.msi (32-bit)
+          + [2]MapRImpalaODBC64.msi (64-bit)
+    2. Install the MapR Impala ODBC Driver on the machine that you connect
+       to the Impala service from. When you install the driver, the driver
+       program updates the system path to include the JVM directory. To
+       install the driver:
+         a. Double-click the file.
+         b. Click Next.
+         c. Accept the terms of the License Agreement, and click Next.
+         d. Select an installation location and then click OK. To accept
+            the installation location, click Next.
+         e. Click Install.
+         f. When the installation completes, click Finish.
+    3. Configure the MapR Impala ODBC Driver. To configure the driver:
+         a. Click the Windows Start button.
+         b. Click All Programs.
+         c. Select the MapR Impala ODBC Driver. If you installed both
+            versions of the driver, two options appear. Select the version
+            that matches the architecture of your application. For
+            example, a DSN that is defined for the 32-bit driver will only
+            be accessible from 32-bit applications.
+         d. Click 64-bit ODBC Administrator or 32-bit ODBC Administrator.
+            The ODBC Data Source Administrator window opens.
+         e. Click the Drivers tab, and verify that the MapR Impala ODBC
+            Driver appears in the list of ODBC drivers that are installed
+            on your system.
+         f. Click the System DSNtab to create a system DSN or click the
+            User DSN tab to create a user DSN. All users that login to a
+            workstation can see a system DSN. A user DSN is specific to a
+            user on the workstation. Only the user who creates a user DSN
+            can see it.
+         g. Click Add. The Create New Data Source window opens.
+         h. Select MapR Impala ODBC Driver and then click Finish. The MapR
+            Impala ODBC Driver DSN Setup dialog opens.
+         i. Enter the DSN information. Optionally, you can select Advanced
+            Options, and enter the following information in the Advanced
+            Options window:
+
+   Option Description
+   Use Native Query Select this option to disable translating ODBC SQL to
+   Impala SQL. By default, the driver applies transformations to the
+   queries produced by an application to convert the queries to an
+   equivalent form in Impala SQL. If the application produces Impala SQL,
+   you can turn off the translation to avoid additional overhead of query
+   transformation.
+   Rows Fetched Per Block Enter the number of rows to fetch per block. You
+   can enter any positive 32-bit integer as a value.
+   Socket Timeout Enter the number of seconds Impala waits to close an
+   idle connection with the client application. If you want to disable
+   this option, set the value to 0.
+   Allow Common Name Hostname Mismatch Select this option to allow the
+   common name of a CA-issued SSL certificate to mismatch the hostname of
+   the Impala server. Note: This setting only applies to the User Name and
+   Password (SSL) and No Authentication (SSL) authentication mechanisms.
+   Other authentication mechanisms ignore this setting.
+   Trusted Certificates field
+
+   Enter the path to the file that contains the trusted certificates in
+   this field to configure the driver to load trusted certificates (such
+   as the certificate from the Impala server) from a specific file when
+   authenticating the Impala server using SSL.
+   Note: This setting only apples to the User Name and Password (SSL) and
+   No Authentication (SSL) authentication mechanisms. Other authentication
+   mechanisms ignore this setting. SSL certificates in the trusted
+   certificates file must be in PEM format. If this setting is not set,
+   then the driver defaults to using the trusted CA certificates PEM file
+   installed by the driver.
+         j. Click OK.
+         k. Optionally, if the operations against Impala are to be done on
+            behalf of a user that is different than the authenticated user
+            for the connection, enter the user name of the user to be
+            delegated in the Delegation UID text box.
+         l. Click Test to test the connection.
+         m. Review the connection test results, and click OK in the Test
+            Results dialog.
+         n. In the MapR Impala ODBC Driver DSN Setup dialog, click OK.
+    4. Configure authentication. The Impala server supports multiple
+       authentication mechanisms. You must determine the authentication
+       type your server is using and configure your DSN accordingly. The
+       following table provides the authentication methods available with
+       configuration instructions:
+
+   Method Configuration
+   Kerberos
+
+   Kerberos must be configured before you can use this authentication
+   mechanism. For details, see [3]Configuring Kerberos Authentication for
+   Windows. After Kerberos is installed and configured, configure your DSN
+   to use Kerberos authentication.
+   To configure your DSN to use Kerberos authentication, complete the
+   following steps:
+         a. In the MapR Impala ODBC Driver DSN Setup dialog, click the
+            drop-down arrow next to the Mechanism field, and then select
+            Kerberos
+         b. If your Kerberos setup does not define a default realm or if
+            the realm of your Impala server is not the default, then type
+            the Kerberos realm of the Impala server host in the Realm
+            field. Otherwise, leave the field blank.
+         c. In the Host FQDN field, type the fully qualified domain name
+            of the Impala host.
+         d. In the Service Name field, type the service name of the Impala
+            server.
+            For example, if the principle for the Impala server is
+ impala/fully.qualified.domain.name@your-realm.com
+            , then the value in the service name field is impala. If you
+            are unsure of the correct service name to use for your
+            particular Hadoop deployment, contact your Hadoop
+            administrator.
+         e. In the Transport Buffer Size field, type the number of bytes
+            to reserve in memory for buffering unencrypted data from the
+            network.
+
+   Note: In most circumstances, the default value of 1000 bytes is
+   optimal.
+   No Authentication For this authentication mechanism, you do not need to
+   configure any additional settings. To configure your DSN for
+   connections that do not require authentication, click the drop-down
+   arrow next to the Mechanism field, and then select No Authentication in
+   the driver DSN Setup dialog.
+   No Authentication (SSL)
+
+   This authentication mechanism uses SSL but does not require a user name
+   or a password. The driver accepts self-signed SSL certificates.
+   To configure your DSN to use No Authentication (SSL) authentication,
+   complete the following steps:
+         a. In the MapR Impala ODBC Driver DSN Setup dialog, click the
+            drop-down arrow next to the Mechanism field, and then select
+            No Authentication (SSL)
+         b. Optionally, configure the driver to allow a mismatch between
+            the common name of a CA-issued certificate and the host name
+            of the Impala server by clicking Advanced Options and
+            selecting the Allow Common Name Host Name Mismatch check box.
+
+   Note: For self-signed certificates, the driver always allows the common
+   name of the certificate to not match the host name.
+   Optionally, configure the driver to load SSL certificates from a
+   specific file by clicking Advanced Options and typing the path to the
+   file in the Trusted Certificates field.
+   Note: By default, the driver uses the trusted CA certificates PEM file
+   that is installed with the driver.
+   User Name
+
+   This authentication mechanism requires a user name but does not require
+   a password. The user name labels the session, facilitating database
+   tracking.
+   To configure your DSN to use User Name authentication, complete the
+   following steps:
+         a. In the MapR Impala ODBC Driver DSN Setup dialog, click the
+            drop-down arrow next to the Mechanism field, and then select
+            User Name
+         b. In the User Name field, type a user name that is recognized by
+            the Impala server.
+         c. In the Transport Buffer Size field, type the number of bytes
+            to reserve in memory for buffering unencrypted data from the
+            network.
+
+   Note: In most circumstances, the default value of 1000 bytes is
+   optimal.
+   User Name and Password
+
+   This authentication mechanism requires a user name and a password.
+   Note: This authentication mechanism should not be used with an Impala
+   configuration that does not have LDAP enabled.
+   To configure your DSN for User Name and Password authentication,
+   complete the following steps:
+         a. In the MapR Impala ODBC Driver DSN Setup dialog, click the
+            drop-down arrow next to the Mechanism field, and then select
+            User Name and Password
+         b. In the User Name field, type a user name that is recognized by
+            the Impala server.
+         c. In the Password field, type the password corresponding to the
+            user name you typed in step 2.
+
+   User Name and Password (SSL)
+
+   This authentication mechanism uses SSL and requires a user name and a
+   password. The driver accepts self-signed SSL certificates.
+   Note: This authentication mechanism should not be used with an Impala
+   configuration that does not have LDAP enabled.
+   To configure your DSN to use User Name and Password (SSL)
+   authentication, complete the following steps:
+         a. In the MapR Impala ODBC Driver DSN Setup dialog, click the
+            drop-down arrow next to the Mechanism field, and then select
+            User Name and Password (SSL)
+         b. In the User Name field, type a user name that is recognized by
+            the Impala server.
+         c. In the Password field, type the password corresponding to the
+            user name you typed in step 2.
+         d. Optionally, configure the driver to allow a mismatch between
+            the common name of a CA-issued certificate and the host name
+            of the Impala server by clicking Advanced Options and
+            selecting the Allow Common Name Host Name Mismatch check box.
+
+   Note: For self-signed certificates, the driver always allows the common
+   name of the certificate to not match the host name
+   Optionally, configure the driver to load SSL certificates from a
+   specific file by clicking Advanced Options and typing the path to the
+   file in the Trusted Certificates field.
+   Note: By default, the driver uses the trusted CA certificates PEM file
+   that is installed with the driver.
+
+References
+
+   1. http://package.mapr.com/tools/MapR-ODBC/MapR_Impala/MapRImpala_odbc_1.2.1.1001/Windows/MapRImpalaODBC32.msi
+   2. http://package.mapr.com/tools/MapR-ODBC/MapR_Impala/MapRImpala_odbc_1.2.1.1001/Windows/MapRImpalaODBC64.msi
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/configuring_kerberos_authentication_for_windows.html

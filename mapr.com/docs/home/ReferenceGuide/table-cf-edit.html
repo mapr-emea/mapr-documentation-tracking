@@ -1,0 +1,227 @@
+table cf edit
+
+   Edits a column family in a binary table or JSON table.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * createrenamefamilyperm on the table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table cf edit
+  -path <Table path >
+  -cfname <Column family name>
+  [ -newcfname <New column family name> ]
+  [ -minversions <Min versions to keep> ]
+  [ -maxversions <Max versions to keep> ]
+  [ -ttl <Time to live> Enter 0 for forever, otherwise, enter time in seconds. D
+efault: 0 ]
+  [ -inmemory <In-memory> ]
+  [ -compression <off|lzf|lz4|zlib> ]
+  [ -versionperm <Version Permissions> ]
+  [ -compressionperm <Compression Permissions> ]
+  [ -memoryperm <Memory Permissions> ]
+  [ -readperm <Read Permissions> ]
+  [ -writeperm <Write Permissions> ]
+  [ -appendperm <Append Permissions> ]
+  [ -traverseperm <Traverse Permissions> ]
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/cf/edit?path=<path>&cfname=<name>&<paramet
+ers>'
+  -u <username>:<password>
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Parameters
+
+   Parameter
+
+   Description
+   path
+
+   The path to the table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under volume1 which has
+       a mount point at /volume1, specify the following path:
+       /volume1/test
+
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named test under volume1
+       in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customer
+
+   cfname
+
+   The name of the column family to edit.
+   newcfname The new name to give to the column family.
+   minversions Applies to binary tables only: Minimum number of versions
+   of column values to keep. The default is zero.
+   maxversions Applies to binary tables only: Maximum number of versions
+   of column values to keep. The default is one.
+   ttl Time to live in seconds. When the age of the data in this column
+   family exceeds the value of the ttl parameter, the data is purged.
+   Setting the value of ttl to 0 is equivalent to allowing data to remain
+   indefinitely. Default: 0
+   Note: If the value of -ttl for an existing column family in a JSON
+   table is not 0, you cannot add another column family. You also cannot
+   set the TTL for a JSON table if it has secondary indexes. See
+   [4]Setting TTL for Data.
+   inmemory
+
+   Boolean. Determines whether preference is given to values of this
+   column family for storage with row keys. Because row keys are cached in
+   memory in preference to row data, column-family data that is stored
+   inline with the row keys is also cached in memory.
+
+   For all column families in a table together, up to 200 bytes of row
+   data will be stored inline with each row key. Storing data inline with
+   a row key might speed retrieval of the data from a column family
+   because disk access can often be avoided. For each column family, up to
+   32 bytes can be stored inline with each row key even if its inmemory
+   parameter is set to false, but preference will be given to column
+   families where this parameter is set to true. A column family can have
+   more than 32 bytes stored inline if its inmemory parameter is set to
+   true.
+
+   If the total number of bytes for all column families together exceeds
+   200 for a row, then preference for inclusion within the inline storage
+   for that row is given to column families that have the inmemory
+   parameter set to true.
+   Note: All of the data for a column family will be stored in-line with
+   the row key, or none will be. If the contents in a column family for a
+   particular row are larger than the maximum number of bytes that are
+   allowed to be stored for that column family, no data at all will be
+   stored in-line for that column family.
+
+   The default value for the inmemory parameter is false.
+   compression The compression setting to use for the column family. Valid
+   options are off, lzf, lz4, and zlib. The default setting is equal to
+   the compression setting for the directory in which the table is
+   located. To find out whether a directory is compressed and the type of
+   compression, see [5]Turning Compression On or Off on Directories Using
+   the CLI.
+   versionperm Applies to binary tables only: The Access Control
+   Expression for changing the value of the maxversions and minversions
+   parameters. By default, permission is given to the value of
+   defaultversionperm for the table.
+   compressionperm Applies to binary tables only: The Access Control
+   Expression for changing the value of the compression parameter. By
+   default, permission is given to the value of defaultcompressionperm for
+   the table.
+   memoryperm The Access Control Expression for changing the value of the
+   inmemory parameter. Use single quotation marks around the ACE. By
+   default, permission is given to the value of defaultmemoryperm for the
+   table.
+   readperm
+
+   The Access Control Expression for column reads. Use single quotation
+   marks around the ACE.
+
+   Reads require permission both at the column-family level and at the
+   column level (for binary tables) or field level (for JSON tables). In
+   JSON tables, this permission is inherited by fields within the column
+   family.
+
+   By default, permission is given to the value of defaultreadperm for the
+   table.
+   writeperm
+
+   The Access Control Expression for column writes (puts and deletes). Use
+   single quotation marks around the ACE.
+
+   Writes require permission both at the column-family level and at the
+   column level (for binary tables) or field level (for JSON tables). In
+   JSON tables, this permission is inherited by fields within the column
+   family.
+
+   By default, permission is given to the value of defaultwriteperm for
+   the table.
+   appendperm
+
+   Applies to binary tables only: The Access Control Expression for column
+   appends. Use single quotation marks around the ACE.
+
+   Column appends require permission both at the column-family level and
+   at the column level. By default, permission is given to the value of
+   defaultappendperm for the table.
+   traverseperm
+   Applies to JSON tables only: The Access Control Expressions that
+   specifies who has permission to pass over fields in JSON documents. For
+   example, suppose that a JSON table contains documents of this general
+   structure:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" : "value",
+               "c" : "value"
+          }
+}
+
+   Suppose further that the user sjohnson has read permission on a.b, but
+   not on a. For sjohnson to read a.b, the user needs the traverse
+   permission on a. The user can then pass over field a to a.b.
+
+   This permission is inherited by fields within the column family. By
+   default, this permission is given to the value of defaulttraverseperm
+   for the JSON table.
+   Note: If a field is specified as a column family JSON path name, that
+   field cannot be defined as either an indexed or included field when
+   creating an index. For example, suppose you have the following JSON
+   table:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" :
+                   {
+                       "c" : "value",
+                       "d" : "value"
+                   },
+               "e" : "value"
+          }
+}
+
+   If you created a column family at field c in the JSON path a.b.c, when
+   creating an index, field a.b.c cannot be defined as an indexed or
+   included field. However, you can define, as either an indexed or
+   included field, fields a, a.b, a.b.d.
+
+Example
+
+   Changes the name of a column family in table mytable from mycf to
+   mynewcfname. Also changes the time to live setting.
+
+   CLI
+
+maprcli table cf edit -path /my.cluster.com/volume1/mytable -cfname mycf \
+  -newcfname mynewcfname -ttl 86400
+
+   REST
+
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/cf/edit?path=%2Fmy.cluster.com%2Fvolume1%2
+Fmytable&cfname=mycf&newcfname=mynewcfname&ttl=86400' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/setting_the_time_to_live.html#setting_the_time_to_live
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/TurningCompressionOnOff.html#concept_cxv_4k3_f5

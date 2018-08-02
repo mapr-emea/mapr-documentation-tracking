@@ -1,0 +1,290 @@
+Glossary
+
+   This section contains defintions for commonly used terms in MapR
+   Converged Data Platform environments.
+
+   Term
+
+   Definition
+
+   .dfs_attributes
+
+   A special file in every directory, for controlling the compression and
+   chunk size used for the directory and its subdirectories.
+
+   .rw
+
+   A special mount point in the root-level volume (or read-only mirror)
+   that points to the writable original copy of the volume.
+
+   .snapshot
+
+   A special directory in the top level of each volume, containing all the
+   snapshots for that volume.
+   access control expression (ACE) A Boolean expression that defines a
+   combination of users, groups, or roles that have access to an object
+   stored natively such as a directory, file, or MapR-DB table .
+
+   access control list (ACL)
+
+   A list of permissions attached to an object. An ACL specifies users or
+   system processes that can perform specific actions on an object.
+
+   accounting entity (AE)
+
+   A clearly defined economics unit that is accounted for separately.
+
+   advisory quota
+
+   An advisory disk capacity limit that can be set for a volume, user, or
+   group. When disk usage exceeds the advisory quota, an alert is sent.
+
+   application containers
+   Lightweight, stand-alone executables that include verything needed to
+   run an application. Application containers are typically available for
+   Linux and Windows applications.
+
+   bitmask
+
+   A binary number in which each bit controls a single toggle.
+
+   chunk
+
+   Files in MapR-FS are split into chunks (similar to Hadoop blocks) that
+   are normally 256 MB by default. Any multiple of 65,536 bytes is a valid
+   chunk size, but tuning the size correctly is important. Files inherit
+   the chunk size settings of the directory that contains them, as do
+   subdirectories on which chunk size has not been explicitly set. Any
+   files written by a Hadoop application, whether via the file APIs or
+   over NFS, use chunk size specified by the settings for the directory
+   where the file is written.
+
+   container
+
+   The unit of shared storage in a MapR cluster. Every container is either
+   a [1]name container or a [2]data container.
+   See also:
+     * application containers
+     * Docker containers
+     * YARN resource containers
+
+   container location database (CLDB)
+
+   A service, running on one or more MapR nodes, that maintains the
+   locations of services, containers, and other cluster information.
+
+   data container
+
+   One of the two types of containers in a MapR cluster. Data containers
+   typically have a cascaded configuration (master replicates to replica1,
+   replica1 replicates to replica2, and so on). Every data container is
+   either a master container, an intermediate container, or a tail
+   container depending on its replication role.
+
+   desired replication factor
+
+   The number of copies of a volume that should be maintained by the MapR
+   cluster for normal operation. When the number of copies falls below the
+   desired replication factor, but remains equal to or above the
+   [3]minimum replication factor, re-replication occurs after the timeout
+   specified in the [4]cldb.fs.mark.rereplicate.sec parameter.
+
+   disk space balancer
+
+   The disk space balancer is a tool that balances disk space usage on a
+   cluster by moving containers between storage pools. Whenever a storage
+   pool is over 70% full (or a threshold defined by the
+   cldb.balancer.disk.threshold.percentage parameter), the disk space
+   balancer distributes containers to other storage pools that have lower
+   utilization than the average for that cluster. The disk space balancer
+   aims to ensure that the percentage of space used on all of the disks in
+   the node is similar.
+
+   disktab
+
+   A file on each node, containing a list of the node's disks that have
+   been configured for use by MapR-FS.
+   Docker containers The application containers used by Docker software.
+   Docker is a leading proponent of OS virtualization using application
+   containers ("containerization").
+
+   dump file
+
+   A file containing data from a volume for distribution or restoration.
+   There are two types of dump files: full dump files containing all data
+   in a volume, and incremental dump files that contain changes to a
+   volume between two points in time.
+
+   entity
+
+   A user or group. Users and groups can represent [5]accounting entities.
+
+   full dump file
+
+   See [6]dump file.
+
+   epoch
+
+   A sequence number that identifies all copies that have the latest
+   updates for a container. The larger the number, the most up-to-date the
+   copy of the container. The CLDB uses the epoch to ensure that an
+   out-of-date copy cannot become the master for the container.
+
+   HBase
+
+   A distributed storage system, designed to scale to a very large size,
+   for managing massive amounts of structured data. Apache HBase is
+   deprecated.
+
+   heartbeat
+
+   A signal sent by each FileServer and NFS node every second to provide
+   information to the CLDB about the node's health and resource usage.
+
+   incremental dump file
+
+   See [7]dump file.
+   MapR Expansion Pack (MEP) A selected set of stable, interoperable, and
+   widely used components from the Hadoop Ecosystem that are fully
+   supported on the MapR platform. MEPs can include connectors and
+   developer APIs that provide common Hadoop Ecosystem interfaces to MapR
+   components (for example, Kafka Connect).
+
+   MapR-FS
+
+   The NFS-mountable, distributed, high-performance MapR data storage
+   system.
+
+   minimum replication factor
+
+   The minimum number of copies of a volume that should be maintained by
+   the MapR cluster for normal operation. When the replication factor
+   falls below this minimum, re-replication occurs as aggressively as
+   possible to restore the replication level. If any containers in the
+   CLDB volume fall below the minimum replication factor, writes are
+   disabled until aggressive re-replication restores the minimum level of
+   replication.
+
+   mirror
+
+   A read-only physical copy of a volume.
+
+   name container
+
+   A container in a MapR cluster that holds a volume's namespace
+   information and file chunk locations, and the first 64 KB of each file
+   in the volume.
+
+   Network File System (NFS)
+
+   A protocol that allows a user on a client computer to access files over
+   a network as though they were stored locally.
+
+   node
+
+   An individual server (physical or virtual machine) in a cluster.
+   Persistent Application Client Container (PACC) A Docker-based
+   application container image that includes a container-optimized MapR
+   client. The PACC provides seamless access to MapR Converged Data
+   Platform services, including MapR-FS, MapR-DB, and MapR-ES.
+   The PACC makes it fast and easy to run containerized applications that
+   access data in MapR.
+
+   quota
+
+   A disk capacity limit that can be set for a volume, user, or group.
+   When disk usage exceeds the quota, no more data can be written.
+
+   recovery point objective (RPO)
+
+   The maximum allowable data loss as a point in time. If the recovery
+   point objective is 2 hours, then the maximum allowable amount of data
+   loss that is acceptable is 2 hours of work.
+
+   recovery time objective (RTO)
+
+   The maximum allowable time to recovery after data loss. If the recovery
+   time objective is 5 hours, then it must be possible to restore data up
+   to the recovery point objective within 5 hours. See also [8]recovery
+   point objective
+
+   replication factor
+
+   The number of copies of a volume.
+
+   replication role
+
+   The replication role of a container determines how that container is
+   replicated to other storage pools in the cluster. A [9]name container
+   may have one of two replication roles: master or replica. A [10]data
+   container may have one of three replication roles: master,
+   intermediate, or tail.
+
+   replication role balancer
+
+   The replication role balancer is a tool that switches the replication
+   roles of containers to ensure that every node has an equal share of of
+   master and replica containers (for name containers) and an equal share
+   of master, intermediate, and tail containers (for data containers).
+
+   re-replication
+
+   Re-replication occurs whenever the number of available replica
+   containers drops below the number prescribed by that volume's
+   replication factor. Re-replication may occur for a variety of reasons
+   including replica container corruption, node unavailability, hard disk
+   failure, or an increase in replication factor.
+
+   schedule
+
+   A group of rules that specify recurring points in time at which certain
+   actions are determined to occur.
+
+   snapshot
+
+   A read-only logical image of a volume at a specific point in time.
+
+   storage pool
+
+   A unit of storage made up of one or more disks. By default, MapR
+   storage pools contain two or three disks. For high-volume reads and
+   writes, you can create larger storage pools when initially formatting
+   storage during cluster creation.
+
+   stripe width
+
+   The number of disks in a [11]storage pool.
+
+   super group
+
+   The group that has administrative access to the MapR cluster.
+
+   super user
+
+   The user that has administrative access to the MapR cluster.
+
+   volume
+
+   A tree of files and directories grouped for the purpose of applying a
+   policy or set of policies to all of them at once.
+
+   Warden
+
+   A MapR process that coordinates the starting and stopping of configured
+   services on a node.
+   YARN resource containers A unit of memory allocated for use by YARN to
+   process each map or reduce task.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html

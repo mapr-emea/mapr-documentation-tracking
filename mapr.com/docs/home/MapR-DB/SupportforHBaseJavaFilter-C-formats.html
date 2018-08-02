@@ -1,0 +1,41 @@
+Filter Format and Arguments
+
+   Filters are specified in the Thrift Filter Language and are in this
+   format: FilterName (argument, argument,... , argument). Arguments that
+   represent strings are enclosed in single quotation marks (‘). Arguments
+   that represent booleans, integers, or comparison operators (<, <=, =,
+   !=, >, >=) are not enclosed in single quotation marks.
+
+Binary Operators
+
+   You can combine filters by using the binary operators AND and OR. For
+   example, PrefixFilter ('Row') AND PageFilter (1) AND FirstKeyOnlyFilter
+   () returns all key-value pairs that match the following conditions:
+     * The row containing the key-value must start with the prefix "Row".
+     * The key-value must be located in the first row of the table.
+     * The key-value must be the first key-value pair in the row.
+
+   For another example, (RowFilter (=, 'binary:Row 1') AND
+   TimeStampsFilter (74689, 89734)) OR ColumnRangeFilter ('abc', true,
+   'xyz', false)) returns all key-value pairs that
+
+   Match both of the following conditions:
+     * The key-value is in a row for which the row key is "Row 1".
+     * The key-value has a timestamp of either 74689 or 89734.
+
+   Or match this condition:
+     * The key-value is located in a column that is lexicographically
+       greater than or equal to "abc" and less than "xyz".
+
+Unary Operators
+
+   You can also use the following unary operators with filters:
+     * SKIP
+       For a particular row, if any of the key-values don’t pass the
+       filter condition, the entire row is skipped. For example, SKIP
+       ValueFilter (0) omits rows in which any values are not 0.
+     * WHILE
+       Rows are tested in order against the filter condition. Rows that
+       meed the condition are included in the result set. When a row fails
+       to meet the condition, filter processing stops and no more rows are
+       tested.

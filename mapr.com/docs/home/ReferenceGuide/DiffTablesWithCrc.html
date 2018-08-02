@@ -1,0 +1,160 @@
+MapR-DB Binary DiffTablesWithCrc
+
+   This utility uses a cyclic redundancy check to detect differences
+   between sets of rows in the specified MapR-DB binary tables. Then, for
+   each set of non-identical rows, it performs a detailed comparison.
+   Finally, it generates one or more directories of sequence files. You
+   can use these files either to make a MapR-DB binary table identical to
+   its master or merge the rows from two MapR-DB binary tables.
+
+   Sequence files are binary flat files. You can learn more about them
+   [1]here. To convert a sequence file into a format that you can read,
+   use the [2]MapR-DB Binary FormatResult utility.
+
+   This utility requires less network bandwidth than the DiffTables
+   utility because it performs a detailed table comparison only on the
+   sets of rows where the CRC algorithm detected a difference. Therefore,
+   consider using this utility when the tables you compare are very
+   similar and you are concerned about the data transfer rate.
+
+Requirements
+
+     * When the cluster runs YARN, it must also use zero configuration
+       failover for the ResourceManager.
+
+   By default, the utility considers both the source table and the
+   destination table to be a master table. Therefore, it generates two
+   directories with sequence files. These sequence files contain the puts
+   required to update each table so that it can contain a superset of the
+   rows defined in both tables at the time at which the utility was run.
+
+   When you specify a master table, the mapr difftableswithcrc utility
+   generates one of the following output directories:
+     * opsForDst. A directory containing sequence files that correspond to
+       each put and delete required to make the destination table
+       identical to the source table.
+     * opsForSrc. A directory containing sequence files that correspond to
+       each put and delete required to make the source table identical to
+       the destination table.
+
+   A user with write permissions on a table can run the hbase
+   org.apache.hadoop.hbase.mapreduce.Import command to implement the puts
+   and deletes specified in the sequence files.
+
+Required Permissions
+
+   The user that runs the mapr difftableswithcrc utility must have the
+   following permissions:
+     * The permission readAce on the volumes where the tables are located.
+     * The permission for column reads (readperm) on each table.
+
+   For information about how to set permissions on volumes, see [3]Setting
+   Whole Volume ACEs.
+
+   For information about how to set permissions on tables, see [4]Enabling
+   Table and Stream Authorizations with ACEs.
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+hbase com.mapr.fs.hbase.tools.mapreduce.DiffTablesWithCrc
+-src <source table path>
+-dst <destination table path>
+-outdir <output directory>
+[-master src|dst ] The master table to use for the diff.
+[-first_exit] Exit when first difference is found.
+[-cf <comma separated list of column families>]
+[-starttime <start diff at timestamp>]
+[-endtime <end diff at timestamp>]
+[-maxVersions <max number of versions to copy>]
+[-cmpmeta <true|false> (default: true)]
+
+Parameters
+
+   Parameter Description
+   src
+
+   The path to the source table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named testsrc under a volume with a
+       mount point at /volume1, specify the following
+       path:/volume1/testsrc
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named customersrc under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customersrc
+
+   dst
+
+   The path to the destination table.
+     * For a table on the local cluster, start the path at the volume
+       mount point. For example, for a table named testdst under a volume
+       with a mount point at /volume1, specify the following path:
+       /volume1/testdst
+     * For a table on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named customerdst under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customerdst
+
+   master
+
+   The table that is considered to be the master table. The values are src
+   (the source table) and dst (the destination table). By default, both
+   the source table and the destination table are considered to be the
+   master.
+   first_exit
+
+   By default, the utility compares all the table cells in the specified
+   tables. Set this parameter if you want to exit after the first
+   difference is identified between the tables.
+   outdir The path to a directory for the sequence files. The utility will
+   create the specified directory. If the specified directory already
+   exists, the command will fail.
+   cf By default, the utility compares all columns from the master table.
+   If you do not want to compare all columns in the table, you can specify
+   specific columns to include in the comparison. Provide a
+   comma-separated list of column families or columns from a certain
+   column family (column family:qualifier). For example, use the following
+   syntax to include the column family purchases and the column stars in
+   the reviews column family: -columns purchases,reviews:stars
+   starttime By default, the utility compares all table values regardless
+   of their associated timestamp. You can specify a timestamp to indicate
+   the table cell version at which to start the comparison. The timestamp
+   is a long integer value that is either user-defined or system-defined
+   (epoch in milliseconds). Values with timestamps lower than the
+   specified timestamp will not be included in the comparison.
+   endtime By default, the utility compares all table values regardless of
+   their associated timestamp. You can specify a timestamp to indicate the
+   table cell version at which to end the comparison. The timestamp is a
+   long integer value that is either user-defined or system-defined (epoch
+   in milliseconds). Values with timestamps greater than or equal to the
+   specified timestamp will not be included in the comparison.
+   maxVersions By default, the utility compares all versions from the
+   master table. If you do not want to diff all versions, use this
+   parameter to specify the number of recent versions to include in the
+   comparison.
+   cmpmeta A Boolean value that specifies whether or not to compare table
+   metadata such as column families and ACEs. The default is to compare
+   metadata (true).
+
+Example
+
+   Compares two MapR-DB tables:
+[user@hostname ~]$ hbase com.mapr.fs.hbase.tools.mapreduce.DiffTablesWithCrc -sr
+c /customerTableA -dst /customerTableB -outdir /customerTableCompare
+2015-03-04 17:52:40,912 INFO  [main] Configuration.deprecation: hadoop.native.li
+b is deprecated. Instead, use io.native.lib.available
+DiffTablesMeta completed. Metadata of the two tables is same.
+....
+Mapreduce job completed. The tables mismatch.
+NUM_ROWS_MISMATCH_IN_SRC:32; NUM_ROWS_MISMATCH_IN_DST:30. Please check diff in /
+customerTableCompare
+
+References
+
+   1. http://wiki.apache.org/hadoop/SequenceFile
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/FormatResult.html#FormatResult
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html

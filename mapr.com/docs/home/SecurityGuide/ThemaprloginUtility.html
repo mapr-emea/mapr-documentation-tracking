@@ -1,0 +1,242 @@
+maprlogin
+
+   The /opt/mapr/bin/maprlogin command line tool enables users to log into
+   secure MapR clusters. Users authenticate themselves to the cluster with
+   a [1]maprticket that can be generated in the following ways:
+     * Run maprlogin password to authenticate with username and password.
+     * Run maprlogin generateticket to request a service, tenant, or
+       cross-cluster ticket for use by an external application or user
+       account (based on the current user's ticket).
+     * Run maprlogin kerberos after generating a Kerberos ticket with the
+       kinit command.
+
+   Note: Tickets contain keys, and are used to authenticate users and MapR
+   servers. Every user who wants to access a cluster must have a MapR user
+   ticket (maprticket_<uid>) and every node in the cluster must have a
+   MapR server ticket (maprserverticket).
+
+   For more details about different ways to generate tickets, see
+   [2]Tickets.
+
+Syntax
+
+/opt/mapr/bin/maprlogin <argument> <option>
+
+Arguments
+
+   Argument
+
+   Description
+   authtest Simulates runtime behavior during authentication. The
+   following is the syntax for running the maprlogin command with this
+   argument:
+/opt/mapr/bin/maprlogin password
+     [ -cluster <cluster name> ]
+     [ -user <UNIX user name> ]
+     [ -duration <ticket duration in seconds> ]
+     [ -out <ticket location> ]
+
+   For more information, see [3]Options.
+   end|logout Logs out of the cluster. The following is the syntax for
+   running the maprlogin command with this argument:
+/opt/mapr/bin/maprlogin end|logout
+     [ -cluster mapr cluster name ]
+
+   For more information, see [4]Options.
+   generateticket Generates a ticket for another user or application. The
+   user who runs the maprlogin command with this option must already have
+   a user ticket and must have fc (full control) ACL authorization on the
+   cluster. See [5]acl set.
+
+   The following is the syntax for running the maprlogin command with this
+   argument:
+/opt/mapr/bin/maprlogin generateticket
+        -type service|crosscluster|servicewithimpersonation|tenant
+        -user <UNIX user name>
+        [ -cluster <cluster name> ]
+        -out <ticket location>
+        [ -duration <[Days:]Hours:Minutes OR -duration Seconds> ]
+        [ -renewal <[Days:]Hours:Minutes OR -duration Seconds> ]
+        [ -impersonateduids <uids to impersonate> ]
+        [ -impersonatedgids <gids to impersonate> ]
+
+   For more information, see [6]Options.
+   kerberos Indicates the presence of a Kerberos ticket. The following is
+   the syntax for running the maprlogin command with this argument:
+/opt/mapr/bin/maprlogin kerberos
+        [ -cluster <cluster name> ]
+        [ -duration <ticket duration> ]
+
+   For more information, see [7]Options.
+   password The user's UNIX password. The following is the syntax for
+   running the maprlogin command with this argument:
+/opt/mapr/bin/maprlogin password
+        [ -cluster <cluster name> ]
+        [ -user <user name> ]
+        [ -duration <ticket duration> ]
+        [ -out <ticket location> ]
+
+   For more information, see [8]Options.
+   print Prints ticket of any type and contains information including the
+   cluster name, the user ID, the date when the ticket was created, the
+   ticket expiration date, and whether user can impersonate other users,
+   and whether the ticket is for a tenant.
+
+   In the service tickets, the value for CanImpersonate is true if
+   impersonation is enabled for user and false if impersonation is
+   disabled for the user. In the regular cluster ticket for the user, the
+   value of CanImpersonate is always false. In the tenant ticket, the
+   value for CanImpersonate is always true.
+
+   The following is the syntax for running the maprlogin command with this
+   argument:
+/opt/mapr/bin/maprlogin print
+      [ -ticketfile <location of ticket file> ]
+
+   For more information, see [9]Options.
+   renew Renews the ticket, given a duration that does not cause the
+   ticket to exceed its maximum lifetime. The original -renewal value for
+   the ticket determines its maximum lifetime. The following is the syntax
+   for running the maprlogin command with this argument:
+/opt/mapr/bin/maprlogin renew
+        [ -cluster <cluster name> ]
+        [ -duration <ticket renew duration> ]
+        [ -ticketfile <input ticket file> ]
+        [ -out <ticket location> ]
+
+   For more information, see [10]Options.
+
+Options
+
+   Option
+
+   Description
+
+   Default
+   -cluster Name of the cluster to log into. First cluster name in the
+   /opt/mapr/conf/mapr-clusters.conf file.
+   -duration Length of time before the ticket expires, specified in one of
+   the following formats:
+
+   -duration [Days:]Hours:Minutes
+
+   - duration Seconds
+
+   Password-generated tickets are bounded by the CLDB duration and renewal
+   properties that are set for the cluster:
+     * cldb.security.user.ticket.duration.seconds (default=1209600) is
+       used if duration is not specified while generating the ticket.
+     * cldb.security.user.ticket.max.duration.seconds (default=2592000) is
+       the maximum duration allowed for a ticket.
+
+   For password-generated tickets, if -duration is not set with the
+   maprlogin command, the CLDB duration property is used by default.
+
+   See [11]config.
+   Note: The service, servicewithimpersonation, tenant, and crosscluster
+   tickets may have a very long lifetime; their duration is not bounded by
+   these properties. For service and crosscluster tickets, the default
+   value is LIFETIME.
+     * 1209600 seconds (14 days) for user tickets
+     * LIFETIME for service and cross-cluster tickets
+
+   -impersonatedgids The comma-separated list of GIDs to impersonate. This
+   can only be specified when generating a servicewithimpersonation
+   ticket. If this is specified, the ticket owner can only impersonate the
+   specified groups or users belonging to the specified groups.
+
+   If impersonatedgids and impersonareduids are not specified, the ticket
+   holder can impersonate all users on the cluster.
+   No default
+   -impersonateduids The comma-separated list of UIDs to impersonate. This
+   can only be specified when generating a servicewithimpersonation
+   ticket. If this is specified, the ticket owner can only impersonate the
+   specified users.
+
+   If impersonatedgids and impersonareduids are not specified, the ticket
+   holder can impersonate all users on the cluster.
+   No default
+   -out A safe directory location where the ticket will be stored. Can be
+   used with generateticket, password, and renew commands.
+
+   You must specify a location when generating service and tenant tickets.
+   (This requirement ensures that other tickets are not overwritten.)
+   /tmp/maprticket_<uid>
+
+   (default applies to non-service tickets only)
+   -renewal Total lifetime of the ticket, specified in one of the
+   following formats:
+
+   -renewal [Days:]Hours:Minutes
+
+   -renewal Seconds
+
+   If -renewal is not set with the maprlogin command, the CLDB renewal
+   property is set by default
+   (cldb.security.user.ticket.renew.duration.seconds). You can also set
+   the cldb.security.user.ticket.renew.max.duration.seconds property,
+   which is the maximum duration (7776000, by default) allowed for a
+   ticket renewal.
+   Note: Service, tenant, and crosscluster tickets are not bounded by
+   these properties.
+
+   For example, assume that the maprlogin command passes the following
+   options for a service ticket:
+
+   -duration 30:0:0 -renewal 90:0:0
+
+   The ticket will expire after 30 days unless it is renewed. If a
+   maprlogin renew command is submitted for the ticket before the initial
+   30 days pass, the ticket's lifetime may be extended up to a total
+   maximum lifetime of 90 days. Tickets do not renew automatically;
+   administrators must renew them with the maprlogin renew command,
+   specifying a valid renewal period, and they must do this before the
+   duration period ends. The renewal period must be less than or equal to
+   the remaining amount of time allowed on the ticket.
+
+   Using the same example, if you renew a ticket on the 29th day of its
+   life, you can renew it for up to 61 days. You can renew a ticket
+   incrementally, for some number of days at a time, as long as you do not
+   exceed the original renewal value.
+   2592000 seconds (30 days)
+   -ticketfile Optional with print and renew commands. Specifies the path
+   to ticket file, if different from default. If this is not specified,
+   the command looks for the ticketfile (maprticket_<uid>) in the default
+   location, which is /tmp on Linux and %TEMP% on Windows systems or in
+   the location specified by the environment variable,
+   $MAPR_TICKETFILE_LOCATION.
+     * Linux: /tmp
+     * Windows: %TEMP%
+
+   -type Required ticket type for the generateticket command; value must
+   be service, servicewithimpersonation, tenant, or crosscluster:
+     * service is used to generate service tickets for regular cluster
+       operations.
+     * servicewithimpersonation is used to generate tickets for regular
+       cluster operations, including allowing user to impersonate other
+       users (except the mapr user).
+     * tenant is used to generate tickets for tenant users/hosts.
+     * crosscluster is used to generate tickets for inter-cluster
+       operations, such as remote mirroring. The crosscluster option only
+       works with the mapr user.
+
+   No default; -type must be set in the maprlogin generateticket command.
+   -user Required with the generateticket command. The UNIX user name of
+   the user on the MapR cluster.
+
+   For crosscluster tickets, the user must be mapr.
+   No default
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingMapRUserTicket.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Tickets.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility__options
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility__options
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl-set.html#aclset
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility__options
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility__options
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility__options
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility__options
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility__options
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config.html#config

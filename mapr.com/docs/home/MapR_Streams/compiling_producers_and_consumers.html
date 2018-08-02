@@ -1,0 +1,83 @@
+Compiling and Running MapR-ES Java Apps
+
+   For producer and consumer applications that use the MapR-ES Java API,
+   use Maven to compile and determine the application's dependencies.
+   Then, when you run the application, specify those dependencies in the
+   application's classpath.
+
+Compile and Determine Dependencies
+
+   See [1]MapR-ES Streams Sample Programs on GitHub for an example pom.xml
+   file.
+    1. Add MapR's Maven repository to your pom.xml file, if it is not
+       already added:
+<repositories>
+    <repository>
+      <id>mapr-releases</id>
+      <url>http://repository.mapr.com/nexus/content/repositories/releases</url>
+      <snapshots><enabled>true</enabled></snapshots>
+      <releases><enabled>true</enabled></releases>
+    </repository>
+  </repositories>
+    2. Add a dependency to the MapR Streams Java client (kakfa-clients)
+       project:
+<dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+      <version><version selected from the repository></version>
+    </dependency>
+       Note: The kafka-clients version mentioned above is an example. The
+       actual version that your application requires is based on the
+       current MEP and MapR version that you are running. The versions are
+       listed in the following location:
+       [2]http://repository.mapr.com/nexus/content/groups/mapr-public/org/
+       apache/kafka/kafka-clients/
+    3. Add a dependency to the MapR Streams project:
+<dependency>
+      <groupId>com.mapr.streams</groupId>
+      <artifactId>mapr-streams</artifactId>
+      <version><version selected from the repository></version>
+  </dependency>
+       Note: The MapR Streams project version mentioned above is an
+       example. The actual version that your application requires is based
+       on the current MEP and MapR version that you are running. The
+       versions are listed in the following
+       location:[3]http://repository.mapr.com/nexus/content/groups/mapr-pu
+       blic/com/mapr/streams/mapr-streams/
+    4. Use Maven to compile the application and resolve dependencies. For
+       example, you can run mvn clean package.
+
+Run the Application
+
+   When you develop a Java application, you can use a dependency
+   management tool such as Maven to compile your application. However, it
+   is recommended that do the following instead:
+    1. Compile the Java application without including dependencies
+    2. Specify the required classpath when you submit the application to
+       the cluster
+
+   If you choose to bundle the JAR file, and there is a mismatch between
+   the bundled JAR file and the version that your MapR cluster expects,
+   this can result in failures. The failures differ depending on the
+   version of MapR you are using. For more information, see [4]Using the
+   MapR-FS JAR to Connect to the Cluster.
+
+   When the cluster is secure, the node must also have a mapr ticket
+   configured for the user that runs the application.
+   You can use the following command to launch MapR-ES applications:
+java -cp <classpath>:. -Djava.library.path=/opt/mapr/lib <main class JAR> <comma
+nd line arguments>
+
+References
+
+     * [5]MapR-ES Streams Sample Programs on GitHub.
+     * [6]Getting Started with MapR Streams blog.
+
+References
+
+   1. https://github.com/mapr-demos/mapr-streams-sample-programs/blob/master/pom.xml
+   2. http://repository.mapr.com/nexus/content/groups/mapr-public/org/apache/kafka/kafka-clients/
+   3. http://repository.mapr.com/nexus/content/groups/mapr-public/com/mapr/streams/mapr-streams/
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/IncludeMFSjar.html#IncludeMFSjar
+   5. https://github.com/mapr-demos/mapr-streams-sample-programs/blob/master/pom.xml
+   6. https://mapr.com/blog/getting-started-sample-programs-mapr-streams/

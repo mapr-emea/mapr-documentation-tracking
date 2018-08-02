@@ -1,0 +1,45 @@
+Log Collection
+
+   Fluentd collects log events from each node in the cluster and stores
+   them in a centralized location so that administrators can search the
+   logs when troubleshooting issues in the cluster. The process that
+   fluentd uses to parse and send log events to Elasticsearch differs
+   based on the formatting of log events in each log file.
+   Fluentd uses one or both of the following mechanisms to parse logs:
+
+   multi-line matching
+          Using the log time stamp as a delimiter, multi-line matching
+          uses the tail plugin to read logs and determine the end of a log
+          event. Each log event is sent to Elasticsearch when the next log
+          event is written to the log file. This mechanism is often used
+          when each log event starts with a timestamp and then includes a
+          stack trace.
+
+   multi-pattern matching
+          Multi-pattern matching uses the grok plugin to parse logs events
+          using complex expressions. This mechanism is often used to parse
+          logs events that have non-uniform log formatting.
+
+   Before Fluentd sends the log entries to Elasticsearch, Fluentd assigns
+   the following columns to each log event:
+   Tag Description
+   level The message level of the log entry. For example, info, warning,
+   or error.
+   class Java or C++ process name associated with the log entry.
+   message The log message.
+   event_time The time, with millisecond precision, when the log entry was
+   written to the log file.
+   service_name The name of the service that generated the log entry.
+   @timestamp The time, with second precision, when fluentd read the
+   message.
+   fqdn The node on which the log entry was written.
+   clusterid The clusterid of the cluster on which the log was written.
+   Note: The log event contents differs based on the service that logs it
+   and the type of log. Therefore, the log events sent to Elasticsearch
+   may include empty columns.
+
+   For more information about OpenTSDB, see the [1]OpenTSDB website.
+
+References
+
+   1. http://opentsdb.net/

@@ -1,0 +1,108 @@
+Using Indexes to Optimize Range Conditions
+
+   Indexes can improve the performance of queries that have range
+   conditions. The range conditions can appear in combination with
+   equality conditions when the most significant index keys have equality
+   conditions. You can define indexes that optimize range conditions on
+   scalar data fields.
+
+   The following range condition operators benefit from indexes:
+     * Less than (or equal to)
+     * Greater than (or equal to)
+     * Pattern matching operator LIKE, provided the pattern in the
+       condition does not start with a wildcard character
+
+   Assume you have a MapR-DB JSON table with documents in the following
+   format:
+{
+   "_id": "10000",
+   "FullName": {
+      "LastName": "Smith",
+      "FirstName": "John"
+   },
+   "Address": {
+      "Street": "123 SE 22nd St.",
+      "City": "Oakland",
+      "State": "CA",
+      "Zipcode": "94601-1001"
+   },
+   "Gender": "M",
+   "AccountBalance": 999.99,
+   "Email": "john.smith@company.com",
+   "Phones": [
+        {"Type": "Home", "Number": "555-555-1234"},
+        {"Type": "Mobile", "Number": "555-555-5678"},
+        {"Type": "Work", "Number": "555-555-9012"}
+   ],
+   "Hobbies": ["Baseball", "Cooking", "Reading"],
+   "DateOfBirth": "10/1/1985"
+}
+
+   The examples in the following sections reference this sample JSON
+   document.
+
+Indexes on Scalar Data Fields
+
+   The following table provides examples of when MapR-DB can and cannot
+   use the index with range conditions on scalar data. Assume that a
+   [1]composite index exists on the Address.State and Address.City fields.
+   To use both indexed fields in the composite index, you must have an
+   equality condition on Address.State.
+   Filter Condition How MapR-DB Uses the Index
+{"$le":{"Address.State":"CA"}}
+
+   Reads from the beginning of the index up to and including the condition
+   Address.State <= "CA".
+{"$gt":{"Address.State":"CA"}}
+
+   Reads from the index starting at the condition Address.State > "CA"
+   through the end of the index.
+{"$like":{"Address.State":"C%"}}
+
+   Performs a simple prefix match starting at the condition Address.State
+   >= "C". Continues reading the index until the filter no longer
+   qualifies.
+{
+  "$and":[
+    {"$eq":{"Address.State":"CA"}},
+    {"$ge":{"Address.City":"Oak"}}
+  ]
+}
+
+   Reads from the index starting at the condition Address.State = "CA" and
+   Address.City >= "Oak". Continues reading from the index until the
+   condition Address.State = "CA" no longer qualifies.
+{
+  "$and":[
+    {"$in":{"Address.State":["CA","NY","MA"]}},
+    {"$gt":{"Address.City":"Spring"}}
+  ]
+}
+
+   Performs these three lookups and reads through the index:
+     * Address.State = "CA" and Address.City > "Spring"
+     * Address.State = "NY" and Address.City > "Spring"
+     * Address.State = "MA" and Address.City > "Spring"
+
+{
+  "$and":[
+    {"$gt":{"Address.State":"C"}},
+    {"$gt":{"Address.City":"Oak"}}
+  ]
+}
+
+   Reads from the index starting at the condition Address.State > "C"
+   through the end of the index.
+
+   Although Address.City is part of the index key, MapR-DB does not use
+   Address.City > "Oak" when initiating the index search. Applies that
+   filter while reading the index.
+{"$le":{"Address.City":"Oak"}}
+
+   Even if the query references the field Address.State, MapR-DB cannot
+   use the index unless there is also an equality condition on the prefix
+   key of the index, Address.State.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz

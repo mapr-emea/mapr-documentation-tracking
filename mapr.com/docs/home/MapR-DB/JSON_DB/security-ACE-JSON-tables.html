@@ -1,0 +1,57 @@
+Security on JSON Tables
+
+   By using access-control expressions (ACEs), you can grant or deny
+   access to fields and column families that are in
+
+   For an explanation of the syntax of ACEs, see [1]ACE Syntax.
+   There are three types of permission:
+     * Traverse (traverseperm)
+     * Read (readperm)
+     * Write (writeperm)
+
+Traverse (traverseperm)
+
+   This permission allows the grantee to descend a hierarchy of fields to
+   access the fields that the grantee has write or read permission on.
+
+   For example, suppose that a user has read and write access only on
+   field b in this document.
+   [traverse_1bb.png]
+
+   To access field b, the user would need to be able to traverse (pass
+   through) field a. In this case, because the entire document is in the
+   default column family, the user could be granted traverse permission on
+   the default column family. Field a would inherit the traverse
+   permission.
+
+   If traverse permission on the default column family were denied the
+   user, it would not be possible for the user to access field b. Granting
+   traverse permission on field a in this case would have no effect.
+
+   In the next example, field a is a column family named cf1.
+   [traverse_1bc.png]
+
+   To be able to read and write at field b, the user could be granted the
+   traverse permission on the column family.
+
+Read (readperm)
+
+   This permission allows the grantee to read from a field.
+
+   This permission extends to fields that are nested below the field that
+   the permission was granted on. However, grantees can be explicitly
+   denied the permission on any of the nested fields.
+
+Write (writeperm)
+
+   This permission allows the grantee to delete a field, insert a value
+   into a field, or overwrite a field's value.
+
+   As illustrated in the following two diagrams, deleting a field also
+   deletes all fields that are nested within that field, even those fields
+   on which the write permission is explicitly denied.
+   [delete_permission_1_c.png] [delete_permission_1_d.png]
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html

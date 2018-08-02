@@ -1,0 +1,44 @@
+Reading from Files
+
+   There are two APIs for reading from files: hdfsRead() and hdfsPread().
+   With both hdfsRead() and hdfsPRead(), you pass a pointer to a buffer
+   for the runtime to read bytes into and the length of the buffer. There
+   maximum length of the buffer is the maximum size of the datatype that
+   is used to specify the buffer length. The datatype is a custom
+   datatype: tSize, a signed 32-bit integer.
+
+   Both functions return the number of bytes that are actually read.
+
+   For an example of both APIs in action, see [1]hdfs_read_revised.c.
+
+Using hdfsRead()
+
+   Whenever you open a file, the file pointer is placed at offset 0. If
+   you want to start reading at an offset other than 0, call hdfsSeek() to
+   move the file pointer forward to that offset before you call
+   hdfsRead().
+
+   When you call hdfsSeek(), you specify the offset as a value of type
+   tOffset, which is a fixed-width, signed 64-byte integer type for
+   storing offsets. tOffset is defined in hdfs.h.
+
+   If a file is already open and you are not sure what the current offset
+   is, you can find out by calling hdfsTell().
+
+   After hdfsRead() finishes a read operation, the current offset is set
+   to the last byte read plus one.
+
+Using hdfsPread()
+
+   With hdfsPread(), you specify the offset at which you want to start
+   reading, so you don’t first have to call hdfsSeek() to move to that
+   offset.
+
+   However, the offset that you specify does not change the current offset
+   in the file. After hdfsPread() finishes the read operation, the current
+   offset is not set to the last byte read plus one. Instead, the current
+   offset remains as it was before the read operation.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/hdfs_read_revised.c.html#hdfs_read_revised.c

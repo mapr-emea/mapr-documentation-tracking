@@ -1,0 +1,104 @@
+Step 1: Select a Data Storage Format
+
+   Consider the data format options and determine how you want to use to
+   store your data.
+
+   Keep in mind that a single application can access data from a variety
+   of data formats. The following data formats are available.
+
+MapR-FS
+
+   MapR-FS is a random read-write distributed file system that allows
+   applications to concurrently read and write directly to files. This
+   data store is great for storing and scanning large data sets of
+   historical data, and for sharing files between various services and
+   applications. Any node with access to the MapR-FS can access files on
+   the file system.
+   Consider the following examples:
+     * Write large amounts of user click-stream data for a web site in a
+       simple directory structure based on the date, and then process that
+       data using tools like Spark, Drill, Hive or another MapReduce
+       application.
+     * Store various types of images, audio files, and video files in one
+       shared directory so that web or mobile applications can render the
+       content as required.
+     * Share configuration files or internationalized resources among
+       various applications by storing these files in a shared directory.
+     * Simplify the deployment of new applications by adding java
+       libraries (.jar files) to a shared directory and then including the
+       directory in the classpath of one or more applications.
+     * Store the docker files and images in a shared location which can be
+       accessed by various servers. This provides a single, shared
+       location from which users can launch containers.
+
+   When you store large data sets, use a file format in which the data can
+   be consumed efficiently. For example, Parquet, ORC, sequence files are
+   good for storing and scanning. Parquet, in particular, is great for
+   storing data on the MAPR-FS as it stores data in columnar format which
+   can be partitioned. Parquet also works well for use cases where you
+   query the data with Drill or process the data with Spark applications.
+   Note that you can use CSV or JSON formats, but they are less efficient
+   when your intention is to scan the data.
+
+   For more information about MapR-FS, see [1]MapR-FS
+
+MapR-DB
+
+   MapR-DB is an enterprise-grade, high performance, NoSQL database
+   management system that supports both binary and JSON tables. Consider
+   using MapR-DB tables when you want to query and organize large amounts
+   data. It also integrates with Drill, Apache Spark, Hive and other
+   MapReduce tools to provide applications the ability to scan or query
+   large data sets in an efficient, distributed way.
+   MapR-DB provides the following features:
+     * A flexible schema. Each row or document can have its own set of
+       attributes.
+     * Efficient random access. Applications can quickly access one or
+       more records using a row key, document ID, or a conditional
+       queries.
+     * Easy and efficient data mutation. Applications can insert, update,
+       and delete rows or documents.
+
+   MapR-DB Binary Tables
+          MapR-DB binary tables consist of rows that are identified by
+          primary keys and row data is identified by key/value pairs.
+          MapR-DB tables are similar to HBase tables in that MapR-DB does
+          not determine or store the datatype of each value in the table.
+          But, MapR-DB tables perform operations more efficiently than
+          HBase table. You might want to use binary tables when you want
+          to create or use an existing HBase application. However, on the
+          Converged Data Platform, JSON tables are usually preferred due
+          to their flexibility.
+
+   MapR-DB JSON Tables
+          A MapR-DB JSON tables provide a flexible, powerful schema that
+          you can customize based on the data that you want to represent.
+          Each row in a JSON table corresponds to an JSON document with an
+          unique _id and each JSON document can have a different set of
+          columns. MapR-DB JSON tables determine the datatype of each
+          value based on the type of data written to the document.
+          The following example lists three JSON documents from a single
+          JSON table. Note that the attributes associated with each
+          document varies.
+          [jsonTable.png]
+
+   For more information, see [2]MapR-DB
+
+MapR-ES
+
+   MapR-ES is a publish/subscribe messaging solution that uses the Apache
+   Kafka API. MapR-ES writes events as messages in a topic and topics are
+   part of a stream. Producer applications can publish events to a stream
+   and consumer applications can read all or a subset of the messages in a
+   stream. By default, messages are stored into a topic for 7 days and
+   after that point they are automatically purged by MapR. However, you
+   can shorten or extend the time-to-live (ttl) for messages in a stream
+   based on your use case.
+
+   For more information, see [3]MapR-ES.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/c_maprfs.html#concept_w2w_4vw_tt
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/maprDB-overview.html#maprDB-overview
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/c_mapr_streams.html#concept_wmw_xfv_hv

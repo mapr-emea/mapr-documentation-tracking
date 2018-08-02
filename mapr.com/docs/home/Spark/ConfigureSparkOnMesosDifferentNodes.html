@@ -1,0 +1,95 @@
+Configuring Spark on Mesos - Spark and Mesos Installed on Different Nodes
+
+   This topic describes the steps to configure Apache Spark on Apache
+   Mesos when Spark and Mesos are installed on different nodes.
+   Important: If you have not already done so, [1]run configure.sh -R.
+   To run Spark on Mesos, a Spark archive must be accessible by Mesos.
+   This topic outlines the steps to create that archive and the settings
+   needed for Spark jobs to connect to Mesos. If you have installed Spark
+   on a node where you have also installed a Mesos slave, there is no need
+   to create this archive. Instead, follow the steps at [2]Configuring
+   Spark on Mesos - Spark and Mesos Installed on Same Node.
+   Note: Follow the steps in the sequence noted. This ensures that the
+   Spark archive contains the updated configuration settings used by
+   Mesos.
+
+    1. Update SPARK_HOME/conf/spark-env.sh to point to the location of the
+       Mesos Java library.
+         a. Later in step 8, you will copy the Mesos library on to your
+            Spark node. Identify the location where you plan to copy that
+            library.
+         b. Export MESOS_NATIVE_JAVA_LIBRARY, setting it to the location
+            identified in the previous sub-step.
+            For example,
+export MESOS_NATIVE_JAVA_LIBRARY=/opt/mapr/mesos/mesos-1.2.0/build/src/.libs/lib
+mesos.so
+         c. Uncomment the following line from the file.
+#MAPR_MESOS_CLASSPATH=$MAPR_SPARK_CLASSPATH
+    2. Update SPARK_HOME/conf/spark-env.sh to point to the MapR-FS path
+       and filename of the Spark archive.
+         a. Identify the path and filename of the archive that you will
+            create in step 6.
+         b. Add an export in SPARK_HOME/conf/spark-env.sh. Set
+            SPARK_EXECUTOR_URI to the MapR-FS path and filename identified
+            in the previous sub-step.
+            For example,
+export SPARK_EXECUTOR_URI=maprfs:///user/mapr/spark-2.1.0.tar.gz
+    3. Set spark.executor.uri in SPARK_HOME/conf/spark-defaults.conf to
+       the MapR-FS path and filename from step 2a.
+       For example,
+spark.executor.uri    maprfs:///user/mapr/spark-2.1.0.tar.gz
+    4. Check that user 'mapr' is the owner of the spark folder in
+       /opt/mapr/spark. If not, run the following command:
+sudo chown -R mapr:mapr /opt/mapr/spark
+    5. If you plan to run [3]Streaming Producer Examples, add the
+       appropriate Spark streaming Kafka producer jar from the MapR Maven
+       repository to your Spark classpath.
+       For example,
+cp spark-streaming-kafka-producer_2.11-2.1.0-mapr-1707.jar /opt/mapr/spark/spark
+-<spark_version>/jars/
+    6. Create a Spark archive, and copy it to MapR-FS. The MapR-FS path
+       and filename you choose must match the one you specified in steps 2
+       and 3.
+cd /opt/mapr/spark
+tar -zcvf spark-<version>.tar.gz spark-<version>
+hadoop fs -put spark-<version>.tar.gz
+       To check the contents of the archive before copying it to MapR-FS,
+       run the following command:
+tar -tvf spark-<version>.tar.gz
+    7. If you plan to run Spark on Mesos in cluster deployment mode, copy
+       all application files to a MapR-FS location accessible by Mesos.
+       This includes jar and python files.
+       The Spark driver does not upload local jars. The following example
+       copies the Spark examples jar to /user/mapr in MapR-FS.
+hadoop fs -put /opt/mapr/spark/spark-2.1.0/examples/jars/spark-examples_2.11-2.1
+.0-mapr-SNAPSHOT.jar /user/mapr/
+       Use the following URI to specify the location of the jar file in
+       this example, when submitting your Spark job:
+maprfs:///user/mapr/spark-examples_2.11-2.1.0-mapr-SNAPSHOT.jar
+    8. Skip to step 9 if you have installed Spark on a node where you have
+       also installed the Mesos master. Otherwise, copy and install the
+       libraries used by Mesos by running the following commands on the
+       Spark node.
+         a. Copy the Mesos library from the Mesos node to the Spark node.
+            The path of the Mesos library on the Spark node must match the
+            path you specified earlier in step 1.
+sudo mkdir -p /opt/mapr/mesos/mesos-1.2.0/build/src/.libs/
+scp <mesos_node>:/opt/mapr/mesos/mesos-1.2.0/build/src/.libs/libmesos.so <spark_
+node>:/opt/mapr/mesos/mesos-1.2.0/build/src/.libs/
+sudo chown mapr:mapr /opt/mapr/mesos/mesos-1.2.0/build/src/.libs/libmesos.so
+         b. Install essential development tools.
+sudo yum groupinstall -y "Development Tools"
+    9. Start the Mesos master.
+sudo /path/to/mesos/mesos-<version>/build/bin/mesos-master.sh --ip=<mesos-master
+-node-ip> --work_dir=/var/lib/mesos
+   10. Start the Mesos agents.
+sudo /path/to/mesos/mesos-<version>/build/bin/mesos-agent.sh --master=<mesos-mas
+ter-node-ip>:5050 --work_dir=/var/lib/mesos
+       Note: You can specify resource options for agents using:
+       --resources="cpus:2;dfsio_spindles:3;mem:4192"
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SparkConfigureShR.html#concept_x2q_5dl_3bb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/ConfigureSparkOnMesosSameNodes.html#task_wzh_vqv_l1b
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/Spark_IntegrateMapRStreams_Produce.html#task_yyj_pvj_w5

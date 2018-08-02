@@ -1,0 +1,108 @@
+Configuring Drill Web UI and Web API Security
+
+   The Drill web client and web API communicate with web browsers or web
+   tools, like curl, through the HTTP or HTTPS. Drill uses HTTP by
+   default.
+
+   Drill supports [1]form-based (similar to Plain authentication) and
+   [2]SPNEGO authentication mechanisms to authenticate the communication
+   between the web client and web browser or web tools. Drill supports
+   SSL/TLS for encryption with form-based and SPNEGO authentication.
+   An administrator can configure security mechanisms and [3]set up Drill
+   Web UI administrators and administrator-user groups to control access
+   to the Drill Web UI and Web API client applications. For example,
+   limiting user access to Drill Web UI functionality, such as viewing or
+   canceling queries submitted by other users.
+   Note:
+     * The Drill web server does not support MAPR-SASL (tickets).
+     * With Drill Web UI security in place, users without administrator
+       privileges must execute the SHOW SCHEMAS command in the Drill Web
+       UI Query page to see storage plugin configuration information.
+
+Form-Based Authentication
+
+   As of Drill 1.13 and MapR 6.0.1 ([4]MEP 5.0), Drill supports form-based
+   authentication between the web client and Drillbit. Form-based
+   authentication is like [5]Plain Authentication in that a user is
+   presented with a web form where s/he enters a username and password to
+   access restricted web pages. Form-based authentication also uses the
+   Linux PAM (Pluggable Authentication Module).
+
+   [6]Configuring Drill to Use libpam4j provides configuration details.
+   When using form-based authentication, you can also configure Drill to
+   use [7]SPNEGO for HTTP Authentication and SSL/TLS for encryption.
+
+HTTPS Support
+
+   The Drill Web UI supports the HTTPS protocol for encryption. With the
+   default MapR security configuration, HTTPS is enabled for Drill and it
+   uses SSL trust- and keystore, which comes with MapR cluster
+   installation.
+
+   To use custom certificates, see [8]SSL Certificates in Secure and
+   Unsecure MapR Clusters.
+   The following example shows the default HTTPS configuration in
+   <DRILL_INSTALL_HOME>/conf/drill-distrib.conf for a secure MapR cluster
+   installation:
+drill.exec: {
+              http.ssl_enabled: true,
+              ssl.useHadoopConfig: true
+}
+
+   You can configure additional parameters:
+   Drill Property Name Hadoop Property Name System Property Name
+   Description Allowed Values Drill Default
+   drill.exec.http.ssl_enabled:     Enable or disable TLS for Web client -
+   Drill Web Server communication. You must set this option in
+   drill-override.conf. true/false false
+   Note: This option is set to "true" by default for a secure
+   installation.
+   drill.exec.ssl.keyStorePath ssl.server.keystore.location
+   javax.net.ssl.keyStore Location of the Java keystore file containing
+   the Drillbit’s own certificate and private key. On Windows, the
+   specified pathname must use forward slashes, /, in place of
+   backslashes.   The Drill web server generates a self-signed certificate
+   and stores the certificate in an in-memory keystore.
+   drill.exec.ssl.keyStorePassword ssl.server.keystore.password
+   javax.net.ssl.keyStorePassword Password to access the private key from
+   the keystore file. This password is used twice: To unlock the keystore
+   file (store password), and to decrypt the private key stored in the
+   keystore (key password) unless a key password is specified separately.
+
+   drill.exec.ssl.keyPassword ssl.server.keystore.keypassword   Password
+   to access the private key from the keystore file. May be different from
+   the keystore password.
+   drill.exec.ssl.trustStorePath ssl.server.truststore.location
+   javax.net.ssl.trustStore Location of the Java keystore file containing
+   the collection of CA certificates trusted by the Drill client. On
+   Windows, the specified pathname must use forward slashes, /, in place
+   of backslashes.
+   drill.exec.ssl.trustStorePassword ssl.server.truststore.password
+   javax.net.ssl.trustStorePassword Password to access the private key
+   from the keystore file specified as the truststore.
+   drill.exec.ssl.useHadoopConfig
+   Use the setting in the hadoop configuration file. The hadoop
+   configuration is specified in the file pointed to by the
+   hadoop.ssl.server.conf parameter in the core-site.xml file. Typically,
+   this parameter points to $HADOOP_CONF/ssl-server.xml which contains the
+   property names to configure TLS.
+   Note: Verify that $HADOOP_CONF/ssl-server.xml file is located in
+   Drill's classpath. If not, you can create a symbolic link to this file
+   in the Drill configuration directory, for example:
+<DRILL_INSTALL_HOME>/conf/ssl-server.xml
+
+   .
+   true/false
+
+   default:true
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-plain-authentication.html#drill-plain-authentication
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-spnego-http-authentication.html#drill-spnego-http-authentication
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-web-setup-admin.html#drill-web-setup-admin
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MEPs/MEP_reference.html#concept_rqz_nr4_qz
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-plain-authentication.html#drill-plain-authentication
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-pam-libpam4j.html#drill-pam-libpam4j
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-spnego-http-authentication.html#drill-spnego-http-authentication
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/ssl-certs-secure-unsecure.html#ssl-certs-secure-unsecure

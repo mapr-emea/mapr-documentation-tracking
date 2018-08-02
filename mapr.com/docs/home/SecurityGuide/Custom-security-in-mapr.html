@@ -1,0 +1,136 @@
+Custom Security in MapR
+
+   Describes the .customSecure file and how MapR 6.x handles custom
+   security settings.
+   This topic contains the following subsections:
+     * [1]What is Custom Security?
+     * [2]Identifying the Current Security State of the Cluster
+     * [3]About the .customSecure File
+     * [4]Forcing a Change to the Security Configuration
+     * [5]Custom Security and the MapR Installer
+     * [6]Adding a Node to a Cluster with Custom Security
+     * [7]Adding a Service to a Cluster with Custom Security
+
+   Note: Implementing custom security is not recommended unless your
+   installation demands it. Using the custom security option means that
+   MapR software does not ensure that your system is secure by default,
+   and all security configuration must be done manually by you.
+
+   In MapR 6.x, the [8]configure.sh script detects that a cluster is in
+   one of three security states:
+   Secure The cluster is configured with the default MapR security
+   settings.
+   Unsecure No security settings are configured for the cluster.
+   Custom secure The cluster has a mixture of MapR security settings and
+   custom settings.
+
+   Understanding how configure.sh handles custom security settings is
+   important when you upgrade a cluster, add services, add nodes, or
+   change security settings.
+
+What is Custom Security?
+
+   Any change to the default MapR configuration for authentication,
+   authorization, or encryption represents a "custom security" change.
+   Users who make such changes are encouraged to create a .customSecure
+   file to ensure that configure.sh does not remove these changes. Custom
+   security changes include any change to the keystore or trustore
+   paswords or the number of keys in those files or the names of the keys.
+   Other examples of custom security changes include:
+     * Implementing Kerberos security
+     * Changing the Hive authorization model
+     * Changing the Oozie authorization model
+
+Identifying the Current Security State of the Cluster
+
+   If the current security state of the cluster (secure, unsecure, or
+   custom secure) is unknown, you can use one of these checks to identify
+   which state the cluster is in:
+     * Check the security value in the /opt/mapr/conf/mapr-clusters.conf
+       file. For example:
+<clustername1> secure=true <CLDB> <CLDB> … <CLDB>
+       For more information, see [9]mapr-clusters.conf.
+     * Check for the presence of the .customSecure file:
+/opt/mapr/conf/.customSecure
+       If the file is present, configure.sh treats the cluster as custom
+       secure.
+
+About the .customSecure File
+
+   If you customized the security settings for your cluster and you want
+   to ensure that configure.sh does not change any of the settings, you
+   can create a .customSecure file. The file must be created in the
+   following location on every node:
+/opt/mapr/conf/.customSecure
+
+   The .customSecure file does not contain any information. The presence
+   of the file tells configure.sh that the cluster has security settings
+   that must not be changed by configure.sh.
+
+   Typically, you create the .customSecure file manually. However, in some
+   cases, configure.sh creates or removes the .customSecure file for you.
+   For example, if configure.sh detects that it is being run after an
+   upgrade from a MapR 5.x secure cluster, it creates the .customSecure
+   file automatically. If you use the -forceSecurityDefaults option and
+   -secure or -unsecure with configure.sh, the script removes the
+   .customSecure file because you are forcing the removal of custom
+   security settings.
+
+Forcing a Change to the Security Configuration
+
+   If your MapR 6.x cluster has custom security settings (the
+   .customSecure file is present), and you want to change to the default
+   MapR secure or non-secure settings, you can use the
+   -forceSecurityDefaults option of configure.sh to make the change. Note
+   these considerations:
+     * Using the -forceSecurityDefaults option removes the .customSecure
+       file. Note that you must specify the -secure or -unsecure option
+       with -forceSecurityDefaults. Otherwise, the command will have no
+       effect.
+     * The -forceSecurityDefaults option might not remove all of your
+       custom settings. Some manual editing might be necessary to return
+       the cluster to a usable state.
+     * When forcing a custom-secured cluster to be MapR secure, you still
+       need to include other configure.sh options that are required for
+       security. And you need to perform any steps required to add
+       security. For example, see [10]Enabling Wire-level Security.
+
+Custom Security and the MapR Installer
+
+   Using the MapR Installer or MapR Installer Stanzas is not supported on
+   clusters with custom security or customized configurations.
+
+Adding a Node to a Cluster with Custom Security
+
+   Adding a node to a cluster with custom security is similar to adding a
+   node to a cluster with MapR security, but there are some additional
+   steps:
+    1. Add the node with default MapR security as described in [11]Adding
+       Nodes to a Cluster.
+    2. To support your custom security mode, copy any custom resources or
+       settings as needed from existing nodes to the added node.
+    3. Create the /opt/mapr/conf/.customSecure file on the added node:
+/usr/bin/touch /opt/mapr/conf/.customSecure
+
+Adding a Service to a Cluster with Custom Security
+
+   If you add a new service (ecosystem component) to a secure or
+   custom-secure cluster, configure.sh configures the service for MapR
+   security automatically. If the cluster is custom secure, you need to
+   change the security settings for the service to be compatible with the
+   current cluster settings and restart the service. Any subsequent use of
+   configure.sh -R will leave the customization in place.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb__section_ehf_r31_gcb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb__section_xfw_x1q_sbb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb__section_c3j_jzp_sbb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb__section_vw5_1cq_sbb
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb__section_cfp_gkk_tbb
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb__section_p12_mjd_tbb
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb__section_im2_njd_tbb
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr-clusters.conf.html#mapr-clusters.conf
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html#enable-wire-level-security
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/t_add_nodes_to_clstr.html#AddingNodestoaCluster-ToA_26982474-d3e72

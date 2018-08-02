@@ -1,0 +1,38 @@
+Step 2: Apply the Patch to Data Nodes
+
+   When applying a patch manually, apply the patch to nodes dedicated to
+   storing and processing data prior to applying the patch on nodes that
+   run the CLDB. This includes nodes that run the Fileserver for storage
+   and processing components such as the Node Manager and the HBase
+   client.
+   Note: For clusters with more than 100 data nodes, it is a best practice
+   to apply the patch in batches. Also, wait a few minutes before
+   proceeding to the next batch of nodes.
+
+   Complete the following steps on each data node:
+    1. Stop the MapR Warden and ZooKeeper (if installed) services:
+         a. To stop MapR Warden , run the following command:
+sudo service mapr-warden stop
+         b. If Zookeeper is installed on the node, run this command:
+sudo service mapr-zookeeper stop
+    2. If there is already a patch installed on the cluster, run one of
+       the following commands to uninstall it:
+          + On CentOS/Redhat: sudo rpm -e mapr-patch
+          + On SUSE: sudo zypper remove mapr-patch
+          + On Ubuntu: sudo apt-get -y remove mapr-patch
+    3. Install the patch using one of the following commands:
+          + On CentOS/RedHat: sudo rpm -ivh
+            mapr-patch-<new_patch_number>.rpm
+          + On SUSE: sudo zypper install mapr-patch-<new_patch_number>.rpm
+          + On Ubuntu: sudo dpkg -i mapr-patch<new_patch_number>.deb
+    4. Start the MapR Warden and ZooKeeper (if installed) services:
+         a. If ZooKeeper is installed on the node, run this command to
+            start ZooKeeper:
+sudo service mapr-zookeeper start
+         b. To start Warden, run this command:
+sudo service mapr-warden start
+    5. To verify that the patch was installed successfully, run one of the
+       following commands:
+          + On CentOS/Redhat or SUSE: sudo rpm -ql
+            mapr-patch-<new_patch_number>
+          + On Ubuntu: sudo dpkg -l | grep mapr-patch-<new_patch_number>

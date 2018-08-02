@@ -1,0 +1,251 @@
+Planning the MapR Core Upgrade
+
+   This section describes how to develop a successful plan for your
+   upgrade process.
+
+   The key to a successful upgrade process is to plan the process ahead of
+   time. This page helps you develop an upgrade process that fits the
+   needs of your cluster and users.
+
+Choosing a Cluster Upgrade Method
+
+   Choose the upgrade method and form your upgrade plans based on this
+   choice. MapR provides an offline upgrade method, as well as a rolling
+   upgrade method for clusters that meet certain criteria. These methods
+   are defined later in this section. The method you choose affects the
+   flow of events while upgrading packages on nodes and the duration of
+   the maintenance window.
+   The following table summarizes the MapR Core upgrade paths supported
+   for each method:
+   Upgrade From   Upgrade To   Offline Rolling
+   3.x          6.0.0 or later Yes     No
+   4.x          6.0.0 or later Yes     No*
+   5.x          6.0.0 or later Yes     Yes
+
+   *Rolling upgrades from 4.x to 5.x are supported, after which you may do
+   another rolling upgrade from 5.x to 6.x.
+   The following table summarizes upgrade support for MapR Expansion Packs
+   (MEPs):
+   Upgrade From     Upgrade To     Offline Rolling
+   Pre-MEP      MEP 4.0.0 or later Yes     No
+   MEP 1.1.x    MEP 4.0.0 or later Yes     No
+   MEP 2.x      MEP 4.0.0 or later Yes     No
+   MEP 3.0.1+   MEP 4.0.0 or later Yes     Yes*
+
+   *Applicable for ecosystem components that support rolling upgrades.
+
+Offline Upgrade
+
+   The offline upgrade process is simpler than a rolling upgrade, and
+   usually completes faster. In an offline upgrade, MapR processes and the
+   jobs that depend on them are stopped on all nodes so that packages can
+   be updated. Offline upgrade is the default upgrade method when other
+   methods cannot be used.
+   Offline Upgrade Paths without the MapR Installer
+
+   You can perform an offline upgrade from the following MapR versions:
+     * 3.x
+     * 4.0.x
+     * 4.1
+     * 5.x
+
+   Note: After upgrading MapR Core to MapR 6.0 or later, you must upgrade
+   ecosystem components to a MEP that is compatible with your MapR 6.0 or
+   later release. To determine the compatible MEPs, see [1]MEP Support by
+   MapR Core Version. This must be done before you enable MapR 6.0 or
+   later features.
+   During the maintenance window, the administrator:
+     * Stops all jobs on the cluster.
+     * Stops all cluster services.
+     * Upgrades packages on all nodes (which can be done in parallel).
+     * Brings the cluster back online at once.
+
+   Offline Upgrade Path with the MapR Installer
+   You can perform an offline upgrade by using the MapR Installer or MapR
+   Installer Stanzas. Note these restrictions:
+     * Before performing the upgrade, you must update the MapR Installer
+       to version 1.7 or later.
+     * Upgrades using the MapR Installer are supported only from MapR
+       5.2.x with MEP 3.0.1 or later.
+     * If security is enabled on the cluster – either the MapR default
+       security or custom security settings – you cannot use the MapR
+       Installer or Stanzas to upgrade. You must perform the upgrade
+       manually. For more information about custom security, see [2]Custom
+       Security in MapR.
+
+   Note: When upgrading to MapR 6.0 or later using the MapR Installer or
+   Stanzas, MEP 3.0.1 or later is upgraded automatically to MEP 4.0.0 or
+   later. MEP 3.0.1 or later is supported on MapR 6.0 or later only for
+   upgrade purposes.
+
+Rolling Upgrade
+
+   In a manual rolling upgrade, you upgrade the MapR software one node at
+   a time so that the cluster as a whole remains operational throughout
+   the process. The fileserver service on each node goes offline while
+   packages are upgraded, but its absence is short enough that the cluster
+   does not raise the data-under-replication alarm.
+
+   The following restrictions apply to rolling upgrades:
+     * In MapR 6.0 or later, only manual rolling upgrades are supported.
+       Scripted rolling upgrades are not supported.
+     * Rolling upgrades only upgrade MapR packages, not ecosystem
+       components. In addition, some ecosystem components do not support
+       rolling upgrades.
+     * The administrator should block off a maintenance window, during
+       which only critical jobs are allowed to run and users expect
+       longer-than-average run times.
+
+   Rolling Upgrade Paths
+
+   You can perform a manual rolling upgrade from only the following MapR
+   versions:
+     * 5.2.x with MEP 3.0.1 or later
+
+   Note: After upgrading MapR Core, you must upgrade ecosystem components
+   to MEP 4.0.0 or later, and this must be done before you enable MapR 6.0
+   or later features. To determine the MEP required by your MapR release,
+   see [3]MEP Support by MapR Core Version.
+
+Updating the JDK
+
+   Check the JDK Support Matrix to verify that your JDK version is
+   supported by the MapR version to which you are upgrading. MapR 6.0 or
+   later requires JDK 8. See the [4]JDK Support Matrix for more
+   information.
+
+Planning for Security
+
+   Security is not enabled by default for upgrades. During an upgrade, the
+   security attributes of your cluster are preserved unless you decide to
+   change them. Note that if you have configured security on your cluster,
+   you cannot use the MapR Installer or Stanzas to upgrade. You must
+   upgrade manually. For information about custom security, see [5]Custom
+   Security in MapR.
+
+Scheduling the Upgrade
+
+   Consider the following factors when scheduling the upgrade:
+     * When will preparation steps be performed? How much of the process
+       can be performed before the maintenance window?
+     * What calendar time would minimize disruption in terms of workload,
+       access to data, and other stakeholder needs?
+     * How many nodes need to be upgraded? How long will the upgrade
+       process take for each node, and for the cluster as a whole?
+     * When should the cluster stop accepting new non-critical jobs?
+     * When (or will) existing jobs be terminated?
+     * How long will it take to clear the pipeline of current workload?
+     * Will other Hadoop ecosystem components (such as Hive) get upgraded
+       during the same maintenance window?
+     * When and how will stakeholders be notified?
+
+Planning Upgrades to MapR Clients
+
+   Determine if you need to upgrade MapR client nodes. You upgrade MapR
+   client nodes after you upgrade the MapR cluster nodes.
+
+   MapR Client Nodes
+
+   On each MapR client node, upgrade to the client version that is
+   compatible with the operations that you want to perform on the cluster.
+   The following table shows which supported client operations are
+   available based on the client version and the cluster version.
+   The following client operations are supported on 4.0.x and 5.x clusters
+   and clients.
+     * File system access
+     * Submit MapReduce (MR) v1 job
+     * Submit MapReduce v2 applications
+
+   The following client operation is supported on 4.0.2 and higher
+   clusters with 4.0.2 and higher clients. For example, this operation is
+   not available on a 5.1 cluster with a 4.0.1 client.
+     * Submit MapReduce version 2 applications with Resource Manager
+       zero-configuration failover
+
+   MapR POSIX Client Nodes
+
+   On MapR POSIX client nodes, the only supported client operation is file
+   system access. As of 5.1, MapR FUSE-based POSIX clients are available,
+   in addition to MapR loopback NFS clients.
+   Note: Only MapR clusters version 5.1 or higher support MapR FUSE-based
+   POSIX clients.
+
+   MapR POSIX loopback NFS clients can be upgraded or a fresh install can
+   be performed. Additionally, MapR POSIX loopback NFS clients can be
+   migrated to a FUSE-based POSIX Basic client. MapR POSIX loopback NFS
+   clients can not be migrated to FUSE-based Platinum POSIX clients.
+
+   See [6]Upgrade MapR POSIX loopbacknfs Client and [7]Migrating to
+   FUSE-based POSIX Clients for more information.
+   Note: Basic and Platinum POSIX client packages are recommended for
+   fresh installation and for all new clusters.
+
+   Upgrade to the client version supported by your cluster, as shown in
+   the following table. Upgrading to the 5.x client is recommended for 4.1
+   and 5.x clusters of MapR loopbacknfs POSIX nodes. If you plan on using
+   FUSE-based POSIX clients, ensure that the cluster has been upgraded to
+   MapR 5.1 or higher because the FUSE-based POSIX client can only connect
+   to clusters running MapR v5.1 or higher.
+
+   The following table shows which MapR loopback NFS client versions are
+   supported by which MapR clusters. For example, the MapR 6.0 cluster
+   supports 4.0.2, 4.1, 5.0, 5.1, and 5.2 Mapr loopback NFS clients.
+
+   CAPTION: Table 1. MapR loopback NFS POSIX Client Upgrades
+
+     6.x client 5.2 client 5.1 client 5.0 client 4.1 client 4.0.2 client
+   4.0.1 client
+   6.x cluster Yes Yes Yes Yes Yes Yes N/A
+   5.2 cluster Yes Yes Yes Yes Yes Yes N/A
+   5.1 cluster Yes Yes Yes (recommended) Yes Yes Yes N/A
+   5.0 cluster Yes Yes Yes (recommended) Yes Yes Yes N/A
+   4.1 cluster Yes Yes Yes (recommended) Yes Yes Yes N/A
+   4.0.2 cluster Yes Yes Yes Yes Yes Yes N/A
+
+Determining Cross-Cluster Feature Support
+
+   MapR supports features that operate on more than one cluster. Before
+   you upgrade, consider the impact of the following cross-cluster
+   features:
+
+   Volume Mirroring
+          Volume mirroring from a lower MapR version to higher MapR
+          version is supported. For example, you can mirror volumes from a
+          MapR 4.0.1 cluster to a MapR 5.2 cluster. However, mirroring
+          from higher version in source cluster to a lower version in
+          destination cluster is supported only if new features are not
+          enabled in the source cluster. For example, you can mirror
+          volumes from a MapR 6.0 cluster to a MapR 5.1 cluster (only) if
+          new features since MapR 5.1 are not enabled in the MapR 6.0
+          cluster.
+
+   Table Replication
+          Table replication works between clusters of different versions
+          as long as both versions support MapR-DB table replication. For
+          example, you can replicate MapR-DB binary tables from a MapR 5.1
+          cluster to a MapR 4.1 cluster.
+
+          Note: As of MapR 5.2, MapR-DB JSON table replication is also
+          supported. You cannot replicate MapR-DB JSON tables to cluster
+          that runs a version prior to 5.2.
+
+Planning for the MapR Expansion Pack
+
+   To plan for the MapR Expansion Pack (MEP), see [8]Planning MapR
+   Expansion Pack Upgrades.
+
+What's Next
+
+   Go to [9]Preparing to Upgrade MapR Core
+
+References
+
+   1. https://maprdocs.mapr.com/home/InteropMatrix/r_mep_support_core_version.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb
+   3. https://maprdocs.mapr.com/home/InteropMatrix/r_mep_support_core_version.html
+   4. http://maprdocs.mapr.com/home/InteropMatrix/r_jdk_matrix.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradeMaprPosixClient.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/MigrateToFuseBasedPosixClient.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Planning-MEP-Upgrades.html#concept_q3k_qkl_kx
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Preparing-to-Upgrade.html

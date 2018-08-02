@@ -1,0 +1,62 @@
+Shutting Down a Cluster
+
+   Verify that MapReduce processes are not active, and that no data is
+   being loaded to the cluster or being persisted within the cluster.
+
+   When you shut down a cluster, follow this sequence to preserve your
+   data and replication:
+    1. Verify that recent data has finished processing.
+    2. Shut down any NFS servers.
+    3. Shut down any ecosystem components that are running.
+    4. Shut down ResourceManager and NodeManager services if you are using
+       YARN
+    5. Shut down Warden on all nodes that are not running CLDB.
+    6. Shut down Warden on the CLDB nodes.
+    7. Shut down ZooKeeper on the ZooKeeper nodes.
+
+   Complete the following steps to shut down the cluster:
+    1. Change to the root user (or use sudo for the following commands).
+    2. Before shutting down the cluster, you will need a list of NFS
+       nodes, CLDB nodes, and all remaining nodes. Once the CLDB is shut
+       down, you cannot retrieve a list of nodes; it is important to
+       obtain this information at the beginning of the process. Use the
+       [1]node list command as follows:
+          + Determine which nodes are running the NFS gateway. Example:
+/opt/mapr/bin/maprcli node list -filter "[rp==/*]and[svc==nfs]" -columns id,h,hn
+,svc,rp
+id                   service                                             hostnam
+e             health  ip
+6475182753920016590  fileserver,nodemanager,nfs,hoststats                node-25
+2.cluster.us 0       10.10.50.252
+8077173244974255917  nodemanager,cldb,fileserver,nfs,hoststats           node-25
+3.cluster.us 0       10.10.50.253
+5323478955232132984  webserver,cldb,fileserver,nfs,hoststats,resourcemanager  no
+de-254.cluster.us 0       10.10.50.254
+          + Determine which nodes are running the CLDB. Example:
+/opt/mapr/bin/maprcli node list -filter "[rp==/*]and[svc==cldb]" -columns id,h,h
+n,svc, rp
+          + List all non-CLDB nodes. Example:
+/opt/mapr/bin/maprcli node list -filter "[rp==/*]and[svc!=cldb]" -columns id,h,h
+n,svc, rp
+    3. Shut down all NFS instances. Example:
+/opt/mapr/bin/maprcli node services -nfs stop -filter [svc=="nfs"]
+    4. If your cluster is running any ecosystem components, shut down
+       those components on all nodes.
+    5. Shut down all ResourceManager and NodeManager services on all
+       nodes. To shut down ResourceManager and NodeManager services
+       specify the maprcli node services command with the name parameter
+       and either the filter or the node parameter . Example:
+# maprcli node services -name resourcemanager -filter <filter> -action stop
+# maprcli node services -name nodemanager -nodes <node> -action stop
+    6. SSH into each node that is not running CLDB and stop Warden.
+       Example:
+# service mapr-warden stop
+    7. SSH into each CLDB node and stop Warden. Example:
+# service mapr-warden stop
+    8. SSH into each Zookeeper node and stop Zookeeper. Example:
+# service mapr-zookeeper stop
+    9. (Optional) Shut down the nodes using the Linux halt command.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#nodelist

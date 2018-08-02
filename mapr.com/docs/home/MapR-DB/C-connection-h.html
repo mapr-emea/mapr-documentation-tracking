@@ -1,0 +1,106 @@
+connection.h
+
+   libMapRClient also includes a function in the connection.h header file:
+   hb_connection_create_as_user(). This function provides support for
+   impersonation, so that you can connect to a MapR cluster and access
+   MapR-DB tables by using a specific username.
+
+   The user that is passed with the hb_connection_create_as_user() API
+   must have permissions on the tables that the application accesses. For
+   example, to read from a table, the user must have the readperm
+   permission. To write to a table, the user must have the writeperm
+   permission. See [1]Enabling Table and Stream Authorizations with ACEs.
+
+   For hb_connection_create() and hb_connection_create_as_user(), the
+   standard C APIs for HBase require a list of ZooKeeper nodes. For
+   MapR-DB, this list is interpreted as a list of CLDB nodes. The zk_root
+   parameter is ignored. If zk_quorum is NULL, then the connection will be
+   created to the default cluster that is listed in the mapr-clusters.conf
+   file.
+
+   The following is the full connection.h file for the libMaprClient
+   library.
+/**
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements. See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership. The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License. You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+#ifndef LIBHBASE_CONNECTION_H_
+#define LIBHBASE_CONNECTION_H_
+
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "types.h"
+
+/**
+ * Creates an hb_connection_t instance and initializes its address into
+ * the passed pointer.
+ */
+HBASE_API int32_t
+hb_connection_create(
+    const char *zk_quorum,            /* [in] NULL terminated, comma separated
+                                       *   string of CLDB servers. e.g.
+                                       *   "<server1[:port]>,...". If set to
+                                       *   NULL, IP addresses for CLDB nodes wil
+l be
+                                       *   taken from mapr-clusters.conf */
+    const char *zk_root,              /* [in] Ignored for MapR-DB. */
+    hb_connection_t *connection_ptr); /* [out] pointer to hb_connection_t */
+
+/**
+ * Creates an hb_connection_t instance for a specific user and initializes its
+ * address into the passed pointer.
+ */
+HBASE_API int32_t
+hb_connection_create_as_user(
+    const char *zk_quorum,            /* [in] NULL terminated, comma separated
+                                       *   string of CLDB servers. e.g.
+                                       *   "<server1[:port]>,...". If set to
+                                       *   NULL, IP addresses for CLDB nodes wil
+l be
+                                       *   taken from mapr-clusters.conf */
+    const char *zk_root,              /* [in] Ignored for MapR-DB. */
+    const char *user,                 /* [in] The user who is being
+                                       *   impersonated */
+    hb_connection_t *connection_ptr); /* [out] pointer to hb_connection_t */
+
+
+/**
+ * Destroy the connection and free all resources allocated at creation time.
+ */
+HBASE_API int32_t
+hb_connection_destroy(
+    hb_connection_t connection);  /* [in] hb_connection_t handle */
+
+// MapR Addition:
+HBASE_API int32_t
+hb_connection_create_as_user(const char *zk_quorum,
+                             const char *zk_root,
+                             const char *user,
+                             hb_connection_t *connection_ptr);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#endif /* LIBHBASE_CONNECTION_H_ */
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html

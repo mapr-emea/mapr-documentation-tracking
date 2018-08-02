@@ -1,0 +1,121 @@
+Drill Default Security
+
+   The default security configuration uses MapR-SASL (tickets) for
+   authentication, authorization, and encryption to automatically secure
+   the MapR cluster and ecosystem components when you install them
+   manually or using the MapR Installer.
+   The default security configuration automatically secures all Drill
+   communication paths with the following exceptions:
+     * The path between the web client and web server (W) uses [1]SSL/TLS
+       with form-based authentication.
+     * The path between the ODBC/JDBC client and ZooKeeper (Zn, Zo) is
+       unsecure.
+
+   The following diagram shows the secured communication paths:
+   [drill-security-architecture.PNG]
+   The following table describes the security support for each
+   communication path in the diagram, as well as the components involved
+   in the communication:
+   Type of Security Supported Communication Path
+
+   Component Communication
+   Authentication and encryption using MapR-SASL (tickets) C ODBC
+   client/C++ API to Drillbits
+     J JDBC client/Java API to Drillbits
+     D1, D2, Dn Drillbit to Drillbit
+     M Drillbit to MapR-DB/MapR-FS
+     H
+   Drillbit to Hive
+   Note: The Hive storage plugin is not secured by default and requires
+   that you manually modify the configuration to enable security. See
+   [2]Configuring the Hive Storage Plugin.
+
+   Plain authentication with SSL encryption (HTTPS enabled)
+   W
+   Web client/Web API to Web server
+   Note: The HTTPS channel (Web client) uses Plain authentication to
+   authenticate a Web client with SSL/TLS for encryption. This is
+   configured by default in a secure 6.x cluster with Drill 1.11 or later
+   installed. Plain authentication does not support encryption. You must
+   enable SSL to encrypt the communication channels when using Plain
+   authentication. See [3]Configuring Drill Web UI and Web API Security.
+   Authentication with MapR security (no encryption) Zj
+   Drillbit to ZooKeeper
+   Note: The Drillbit creates znodes, for which ZooKeeper ACLs provide
+   security. See [4]Security Between ZooKeeper and Drillbits for more
+   information.
+   No security support Zo, Zn ODBC/JDBC client to ZooKeeper
+   Note: Only znodes created for Drillbit endpoints in Zookeeper are
+   readable by the client. All other znodes (not required by the client)
+   are secured using ZooKeeper ACLs and are only readable by Drillbits.
+   Note: [5]Kerberos and [6]Plain authentication are not enabled or
+   configured as part of the default security configuration. However, you
+   can manually configure these security mechanisms in addition to the
+   defaults. Any time Plain authentication is enabled, you must use
+   [7]SSL/TLS for encryption.
+   Note: Drill clients running Drill 1.10 and earlier do not support
+   encryption and cannot connect to Drillbits installed with the default
+   MapR security configuration.
+
+Disabling Security
+
+   You can turn off the default MapR security configuration across the
+   entire MapR cluster.
+   Note: If you unsecure a cluster, you must backup the Drill znodes.
+   After the switch to unsecured, update the ACL on the Drill znodes so
+   that Drill in an unsecured cluster can access all Drill znodes. See
+   [8]Security Between ZooKeeper and Drillbits for more information.
+   To disable the default security configuration across an entire MapR
+   cluster, run configure.sh with the -unsecure parameter, as shown:
+/opt/mapr/server/configure.sh -forceSecurityDefaults [ -unsecure | -secure ]
+ -C <CLDB_node> -Z <ZK_node>
+
+   Alternatively, you can enable security across an entire MapR cluster
+   with the -secure parameter.
+
+   See [9]Drill Installation and [10]configure.sh for more information.
+
+Additional Notes
+
+   Performance
+          The default security configuration enables encryption for all
+          network channels, which can affect Drill performance. If
+          performance is your highest priority, install MapR and Drill
+          without security enabled and have your security expert manually
+          configure cluster security. Alternatively, you can install MapR
+          and Drill with security enabled, and then disable individual
+          Drill security settings. For example you can edit the
+          drill-override.conf file and disable encryption, leaving
+          authentication enabled.
+
+          Note: MapR does not recommend manually configuring security
+          settings when default security is enabled.
+
+   Drill Configuration Files
+          The default security configuration introduces new Drill
+          configuration files. In addition to drill-override.conf,
+          distrib-env.sh, and drill-env.sh, Drill includes a
+          drill-distrib.conf file. See [11]Drill Configuration Files for
+          more information. Note that modifying drill
+          distribution-specific files is highly discouraged. To customize
+          any Drill configuration, use drill-override.conf and
+          drill-env.sh.
+
+   HBase
+          As of MapR 6.0 and Drill 1.11, HBase is no longer supported,
+          therefore the communication path between Drill and HBase is also
+          not supported.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/ConfigWebConsolSecurity.html#ConfigWebConsolSecurity
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/configure_hive_storage_plugin.html#ConnectingApacheDrilltoDa_26986462-d3e302
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/ConfigWebConsolSecurity.html#ConfigWebConsolSecurity
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/zk-drillbit-security.html#zk-drillbit-security
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-kerberos.html#drill-kerberos
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-plain-authentication.html#drill-plain-authentication
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/config-ssl-encrypt.html#config-ssl-encrypt
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/zk-drillbit-security.html#zk-drillbit-security
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/drill_installation.html#installing_drill
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-config-files.html#drill-config-files

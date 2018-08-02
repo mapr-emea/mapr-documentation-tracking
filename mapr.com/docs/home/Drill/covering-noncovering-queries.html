@@ -1,0 +1,127 @@
+Covering and Non-Covering Queries
+
+   Drill uses a cost-based approach to determine an optimal query plan.
+   When queries are eligible for index planning, the queries are either
+   covering or non-covering.
+
+   For covering queries, only the index is needed to process the query.
+   Drill creates an index-based query plan that includes an index scan.
+   Covering queries avoid the overhead of fetching data from the primary
+   table.
+   For non-covering queries, the index only contains a subset of the data
+   required to process the query. Drill creates a query plan that includes
+   an index scan and a join back to the primary table. In some scenarios,
+   a full table scan is more cost efficient than an index scan and Drill
+   will not create an index plan.
+   Note: (Drill 1.11 only) You must enable the
+   planner.index.force_sort_noncovering option for Drill to return the
+   results of a non-covering query in sorted order. See [1]Index Planning
+   and Execution Configuration Options
+   .
+
+   Indexes for covering and non-covering queries can contain indexed
+   fields, or a combination of indexed and included fields. MapR-DB stores
+   included fields in the index. Each field added to the index increases
+   the storage requirement for the index. As the storage size increases,
+   the cost of reading the index also increases. Likewise, for the cost of
+   adding and updating documents. Consider the impact on storage and
+   updates when adding included fields to an index.
+     * For information about how Drill selects a query plan, see
+       [2]Selection and Execution of Secondary Indexes.
+     * For information about the types of queries that qualify for
+       index-based plans, see [3]Queries that Benefit from Secondary
+       Indexes.
+     * For index concepts, see [4]Secondary Index Concepts.
+
+Covering and Non-Covering Query Examples
+
+   A query can be covering or non-covering based on the fields referenced
+   in the query and the fields on which an index is created and/or
+   includes.
+
+   The following query examples use an index, l_comp_1, created on a
+   table, lineitem.
+   The l_comp_1 index was created using the maprcli table index add
+   command, as shown:
+maprcli table index add -path /drill/testdata/tpch/sf1/maprdb/json/range/lineite
+m -index l_comp_1 -indexedfields L_LINENUMBER,L_ORDERKEY -includedfields L_LINES
+TATUS,L_QUANTITY
+
+   Covering Query Example
+   The following query references the L_LINESTATUS, L_QUANTITY,
+   L_LINENUMBER, and L_ORDERKEY fields in the lineitem table:
+SELECT L_LINESTATUS, L_QUANTITY FROM lineitem WHERE L_LINENUMBER = 1 AND L_ORDER
+KEY BETWEEN 40 AND 75;
+
+   Because the l_comp_1 index includes all fields referenced in the query,
+   Drill creates a query plan that uses the index only.
+   Running the [5]EXPLAIN PLAN FOR command with the query shows that Drill
+   created a query plan that only uses the index to process the query:
+EXPLAIN PLAN FOR SELECT L_LINESTATUS, L_QUANTITY FROM lineitem WHERE L_LINENUMBE
+R = 1 AND L_ORDERKEY BETWEEN 40 AND 75;
+
+00-00    Screen
+00-01      Project(L_LINESTATUS=[$0], L_QUANTITY=[$1])
+00-02        Scan(table=[[si, tpch_sf1_maprdb_range, lineitem]], groupscan=[Json
+TableGroupScan [ScanSpec=JsonScanSpec [tableName=maprfs:///drill/testdata/tpch/s
+f1/maprdb/json/range/lineitem, condition=(((L_LINENUMBER = {"$numberLong":1}) an
+d (L_ORDERKEY >= {"$numberLong":40})) and (L_ORDERKEY <= {"$numberLong":75})), i
+ndexName=l_comp_1], columns=[`L_LINESTATUS`, `L_QUANTITY`]]])
+
+   Reading the query plan, you can see that the plan includes an index
+   scan, as indicated by groupscan=[JsonTableGroupScan and indexName.
+   Drill and MapR-DB can process this query using only the index.
+
+   Non-Covering Query Example
+   The following query references the L_RETURNFLAG, L_LINESTATUS,
+   L_QUANTITY L_LINENUMBER, and L_ORDERKEY fields in the lineitem table:
+SELECT L_RETURNFLAG, L_LINESTATUS, L_QUANTITY FROM lineitem WHERE L_LINENUMBER =
+ 1 AND L_ORDERKEY BETWEEN 40 AND 75;
+
+   Because the l_comp_1 index does not include the L_RETURNFLAG field,
+   Drill creates a query plan that uses the index, but also includes a
+   join on the primary table.
+   Running the EXPLAIN PLAN FOR command with the query shows that Drill
+   includes an index scan and a table scan:
+EXPLAIN PLAN FOR SELECT L_RETURNFLAG, L_LINESTATUS, L_QUANTITY FROM lineitem WHE
+RE L_LINENUMBER = 1 AND L_ORDERKEY BETWEEN 40 AND 75;
+
+00-00    Screen
+00-01      Project(L_RETURNFLAG=[$0], L_LINESTATUS=[$1], L_QUANTITY=[$2])
+00-02        Project(L_RETURNFLAG=[$2], L_LINESTATUS=[$3], L_QUANTITY=[$4])
+00-03          Project(L_LINENUMBER=[$0], L_ORDERKEY=[$1], L_RETURNFLAG=[$2], L_
+LINESTATUS=[$3], L_QUANTITY=[$4])
+00-04            RowKeyJoin(condition=[=($5, $6)], joinType=[inner])
+00-06              Scan(table=[[si, tpch_sf1_maprdb_range, lineitem]], groupscan
+=[RestrictedJsonTableGroupScan [ScanSpec=JsonScanSpec [tableName=maprfs:///drill
+/testdata/tpch/sf1/maprdb/json/range/lineitem, condition=(((L_LINENUMBER = {"$nu
+mberLong":1}) and (L_ORDERKEY >= {"$numberLong":40})) and (L_ORDERKEY <= {"$numb
+erLong":75}))], columns=[`L_LINENUMBER`, `L_ORDERKEY`, `L_RETURNFLAG`, `L_LINEST
+ATUS`, `L_QUANTITY`, `_id`], rowcount=60012.15000000001]])
+00-05              Scan(table=[[si, tpch_sf1_maprdb_range, lineitem]], groupscan
+=[JsonTableGroupScan [ScanSpec=JsonScanSpec [tableName=maprfs:///drill/testdata/
+tpch/sf1/maprdb/json/range/lineitem, condition=(((L_LINENUMBER = {"$numberLong":
+1}) and (L_ORDERKEY >= {"$numberLong":40})) and (L_ORDERKEY <= {"$numberLong":75
+})), indexName=l_comp_1], columns=[`_id`]]])
+
+   Reading the query plan, you can see that the plan includes an index
+   scan, as indicated by the groupscan=[JsonTableGroupScan and indexName,
+   and also a scan on the primary table, as indicated by the
+   groupscan=[RestrictedJsonTableGroupScan and the RowKeyJoin. To process
+   this query, Drill and MapR-DB can use the index, but MapR-DB must also
+   use the rowkey to perform a join on the primary table to fetch data in
+   the L_RETURNFLAG field.
+
+   If this query ran on a regular basis, you could remove the l_comp_1
+   index and create a new index that includes all fields referenced in the
+   query, including the L_RETURNFLAG field, to improve query performance.
+   However, running a query only once or a few times may not justify the
+   overhead of removing the old index and creating a new index.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-si-config-options.html#drill-si-config-options
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/OverviewIndexSelectionExecution.html#concept_pc2_4ws_p1b
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-types.html#concept_u1y_r3n_p1b
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-learning-about.html#concept_u1l_rhn_p1b
+   5. https://drill.apache.org/docs/explain/

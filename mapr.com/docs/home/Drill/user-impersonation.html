@@ -1,0 +1,70 @@
+User Impersonation
+
+   Impersonation allows a service to act on behalf of a client while
+   performing the action requested by the client. By default, user
+   impersonation is disabled in Drill. You can configure user
+   impersonation in the
+   /opt/mapr/drill/drill-<version>/drill-override.conf file.
+
+   When you enable impersonation, Drill executes all the client requests
+   as the user logged in to the client. Drill passes the user credentials
+   to the file system, and the file system checks to see if the user has
+   permission to access the data. When you enable authentication, Drill
+   uses the pluggable authentication module (PAM) to authenticate a user’s
+   identity before the user can access the Drillbit process.
+
+   If impersonation is disabled, Drill executes all of the client requests
+   against the file system as the user that started the Drillbit service
+   on the node. This is typically a privileged user. The file system
+   verifies that the system user has permission to access the data.
+
+User Impersonation Example
+
+   When impersonation is disabled and user Bob issues a query through the
+   SQLLine client, SQLLine passes the query to the connecting Drillbit.
+   The Drillbit executes the query as the system user that started the
+   Drill process on the node. For the purpose of this example, we will
+   assume that the system user has full access to the file system. Drill
+   executes the query and returns the results back to the client.
+   [user-impersonation-example.png]
+   When impersonation is enabled and user Bob issues a query through the
+   SQLLine client, the Drillbit uses Bob's credentials to access data in
+   the file system. The file system checks to see if Bob has permission to
+   access the data. If Bob has permission, Drill returns the query results
+   to the client. If Bob does not have permission, Drill returns an error.
+   [user-impersonation-example-2.png]
+
+Impersonation Support
+
+   Drill supports impersonation with the following clients, storage
+   plugins, and types of queries:
+     * Clients
+          + ODBC
+          + JDBC
+          + REST API
+          + Drill Web UI
+     * Storage plugins
+          + MapR-FS
+          + MapR-DB
+          + Hive
+     * Types of queries
+       Note: When you enable impersonation, the setting applies to queries
+       on data and metadata. For example, if you issue the SHOW SCHEMAS
+       command, Drill impersonates the user logged into the client to
+       access the requested metadata. If you issue a SELECT query on a
+       workspace, Drill impersonates the user logged in to the client to
+       access the requested data.
+       Drill applies impersonation to queries issued using the following
+       commands:
+          + SHOW SCHEMAS
+          + SHOW DATABASES
+          + SHOW TABLES
+          + CTAS
+          + SELECT
+          + CREATE VIEW
+          + DROP VIEW
+          + SHOW FILES.
+            Note: To successfully run the CTAS and CREATE VIEW commands, a
+            user must have write permissions on the directory where the
+            table or view will exist. Running these commands creates
+            artifacts on the file system.

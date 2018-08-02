@@ -1,0 +1,91 @@
+Configuring a Remote PostgreSQL Database for the Hive Metastore
+
+   Before you can run the Hive metastore with a remote PostgreSQL
+   database, you must configure a JDBC driver to the remote PostgreSQL
+   database, set up the initial database schema, and configure the
+   PostgreSQL user account for the Hive user.
+
+   After installing PostgreSQL, perform the following steps to configure
+   Hive Metastore on PostgreSQL.
+    1. Install the PostgreSQL JDBC driver. To install:
+          +
+
+              PostgreSQL JDBC Driver on a RHEL 6 system
+                      On the Hive Metastore server host, install
+                      postgresql-jdbc package and create symbolic link to
+                      the /usr/lib/hive/lib/ directory. For example:
+
+$ sudo yum install postgresql-jdbc
+$ ln -s /usr/share/java/postgresql-jdbc.jar /opt/mapr/hive//hive-<version>/lib/p
+ostgresql-jdbc.jar
+
+          +
+
+              PostgreSQL JDBC Driver on a SLES system
+                      On the Hive Metastore server host, install
+                      postgresql-jdbc and symbolically link the file to
+                      the /usr/lib/hive/lib/ directory. For example:
+
+$ sudo zypper install postgresql-jdbc
+$ ln -s /usr/share/java/postgresql-jdbc.jar /opt/mapr/hive//hive-<version>/lib/p
+ostgresql-jdbc.jar
+
+          +
+
+              PostgreSQL JDBC Driver on a Debian/Ubuntu system
+                      On the Hive Metastore server host, install
+                      libpostgresql-jdbc-java and symbolically link the
+                      file to the /usr/lib/hive/lib/ directory. For
+                      example:
+
+$ sudo apt-get install libpostgresql-jdbc-java
+$ ln -s /usr/share/java/postgresql-jdbc4.jar /opt/mapr/hive//hive-<version>/lib/
+postgresql-jdbc.jar
+
+    2. Create the Metastore database and user accounts.
+$ sudo -u postgres psql
+
+postgres=# CREATE USER hiveuser WITH PASSWORD 'mypassword';
+postgres=# CREATE DATABASE metastore;
+       To verify connection from the Metastore service host, run the
+       following command:
+psql -h myhost -U hiveuser -d metastore
+metastore=#
+    3. Configure the Metastore service to communicate with the PostgreSQL
+       database by setting the necessary properties (shown below) in the
+       /opt/mapr/hive//hive-<version>/conf/hive-site.xml file.
+       Suppose a PostgreSQL database running on host myhost under the user
+       account hive with the password mypassword, set the following
+       configuration properties in the hive-site.xml file:
+<property>
+  <name>javax.jdo.option.ConnectionURL</name>
+  <value>jdbc:postgresql://myhost/metastore</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionDriverName</name>
+  <value>org.postgresql.Driver</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionUserName</name>
+  <value>hiveuser</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionPassword</name>
+  <value>mypassword</value>
+</property>
+
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://<n.n.n.n>:9083</value>
+  <description>IP address (or fully-qualified domain name) and port of the metas
+tore host</description>
+  </property>
+       Note: Though you can use the same hive-site.xml properties on all
+       the hosts (client, metastore, HiveServer), hive.metastore.uris is
+       the only property that must be configured on all of the hosts; the
+       other properties are only needed on the Metastore host.
+    4. Run schemaTool to create the initial DB structure.
+/opt/mapr/hive/hive-<version>/bin/schematool -dbType postgres -initSchema

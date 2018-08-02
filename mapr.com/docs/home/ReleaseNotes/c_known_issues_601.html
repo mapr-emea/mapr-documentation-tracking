@@ -1,0 +1,412 @@
+Known Issues at Release (MapR 6.0.1)
+
+   You may encounter the following known issues after upgrading to Version
+   6.0.1. This list is current as of the release date. For a dynamic list
+   of all known issues for all MapR product releases, refer to [1]MapR
+   Support List of all known issues.
+
+   Where available, the workaround for an issue is also documented here.
+   MapR releases maintenance releasese and patches to fix issues. We
+   recommend checking the the release notes for any subsequent maintenance
+   releases to see if one or more of these issues are fixed.
+
+Installation and Configuration Issues
+
+   You can see generic installation issues here: [2]MapR Installer Known
+   Issues.
+
+Upgrade Issues
+
+   MD-4026
+          Issue: After an upgrade to MapR 6.0.1 or later, Drillbits can
+          fail to start if the cluster has Drill 1.11 or Drill 1.12 and
+          the Drill package is not upgraded as part of the upgrade. This
+          issue can also occur during a manual rolling upgrade. The issue
+          occurs because the upgrade process removes symlinks to MapR-FS
+          jar files in the /opt/mapr/lib directory.
+          Workaround: After upgrading MapR Core, paste the following
+          script into a Linux shell, and execute the script on each of the
+          upgraded nodes.
+
+MAPR_HOME=/opt/mapr
+DRILL_BASE=${MAPR_HOME}/drill
+DRILL_VERSION=`cat ${DRILL_BASE}/drillversion`
+DRILL_HOME=${DRILL_BASE}/drill-${DRILL_VERSION}
+
+find ${DRILL_HOME}/jars -type l -exec rm -f {} \;
+ln -sf ${MAPR_HOME}/lib/maprfs*.jar ${DRILL_HOME}/jars/3rdparty/.
+ln -sf ${MAPR_HOME}/lib/maprdb*.jar ${DRILL_HOME}/jars/3rdparty/.
+ln -sf ${MAPR_HOME}/lib/mapr-hbase*.jar ${DRILL_HOME}/jars/3rdparty/.
+rm -f ${DRILL_HOME}/jars/3rdparty/mapr*tests.jar
+rm -f ${DRILL_HOME}/jars/3rdparty/maprfs-d*
+rm -f ${DRILL_HOME}/jars/3rdparty/maprdb-c*
+rm -f ${DRILL_HOME}/jars/3rdparty/maprdb-s*
+
+          After invoking the script, drillbits should start successfully.
+          To confirm that there are symlinks to jar files in opt/mapr/lib,
+          use this command:
+
+ ls -ltr $DRILL_HOME/jars/3rdparty/mapr*
+
+   31038
+          Issue: During an upgrade to MapR 6.0.1 from any other MapR
+          release, the following file is not updated automatically:
+
+/opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/log4j.properties
+
+          Without the properties updates, you cannot use the scheduler
+          debug logger.
+
+          Workaround: This workaround is necessary only if you plan to use
+          the scheduler debug logger. After the upgrade to MapR 6.0.1, add
+          the following lines to the log4j.properties file:
+
+yarn.debug.controller.logger = INFO, ED
+yarn.debug.controller.log.file=yarn-mapr-scheduling-debug.log
+yarn.debug.controller.log.maxfilesize=256MB
+yarn.debug.controller.log.maxbackupindex=20
+
+log4j.logger.org.apache.hadoop.yarn.server.resourcemanager.scheduler.
+DebugController=${yarn.debug.controller.logger}
+log4j.additivity.org.apache.hadoop.yarn.server.resourcemanager.scheduler.
+DebugController=false
+
+log4j.appender.ED=org.apache.hadoop.yarn.WorldWritableLogAppender
+log4j.appender.ED.File=${hadoop.log.dir}/${yarn.debug.controller.log.file}
+log4j.appender.ED.MaxFileSize=${yarn.debug.controller.log.maxfilesize}
+log4j.appender.ED.layout=org.apache.log4j.PatternLayout
+log4j.appender.ED.layout.ConversionPattern=%d{ISO8601} : %m%n
+
+   29752
+          Issue: The Oozie process fails following a manual upgrade from
+          MapR 5.2.x (MEP 3.0.1) to MapR 6.0 if Oozie is not upgraded to
+          the MEP 4.0.0 version.
+          Workaround: Upgrading all ecosystem components to MEP 4.0.0 is
+          required before you can enable MapR 6.0 features. If you cannot
+          upgrade to MEP 4.0.0 immediately, use these steps to restart
+          Oozie:
+
+         1. Stop Oozie:
+maprcli node services -name oozie -action stop -nodes <nodes>
+         2. Recreate the Oozie war file by using one of the following
+            commands:
+               o If SSL was enabled for Oozie, use this command:
+/opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh -hadoop <version> /opt/mapr/h
+adoop/hadoop-<version> -secure
+               o If SSL was not enabled for Oozie, use this command:
+/opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh -hadoop <version> /opt/mapr/h
+adoop/hadoop-<version>
+         3. Start Oozie:
+maprcli node services -name oozie -action start -nodes <nodes>
+
+Indexing and Mapr Drill
+
+   28041
+          Running multiple queries in sequence can cause drillbits to run
+          out of direct memory. Limiting records in large batches to 5KB
+          may prevent this issue from occurring. Should Drill return an
+          out of memory exception, issue the following command to restart
+          the drillbits:
+
+$ maprcli node services -name drill-bits -action restart -nodes <node host names
+ separated by a space>
+
+   28096
+          If you use the Google Guava library in your application and
+          encounter the following error:
+
+Caused by: java.lang.NoSuchMethodError: com.google.common.base.Stopwatch.createS
+tarted()Lcom/google/common/base/Stopwatch;
+
+          You must use version 18.0 of the library. If you use Maven, you
+          can use the following dependency:
+
+            <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
+            </dependency>
+
+Mapr-DB
+
+   27057
+          When you issue a maprcli table changelog add command, during the
+          initial sync when the existing data is copied to the change log,
+          the end-to-end latency during the initial 5 minutes can be high.
+          After the initial sync, any latency will be small, specifically
+          2-4 seconds.
+
+MapR-ES
+
+   31074
+          MapR-ES APIs that make use of streams.rpc.timeout.ms are best
+          effort APIs, the timeout is not guaranteed.
+
+MapR Client
+
+   23624
+          The same MapR client can access both secure and nonsecure
+          clusters; however, a MapR client that is configured to access a
+          secure cluster can access a nonsecure cluster only if these
+          conditions are met:
+
+          + The secure cluster must be listed first in mapr-clusters.conf.
+          + A user must obtain a ticket for the secure cluster even if the
+            user wants to access only the nonsecure cluster.
+
+MapR Control System
+
+   MON-3476
+          Issue:In the MapR Control System, table permissions can only be
+          modified by the owner/creator of the table.
+          Workaround: User, who is not the owner but has table admin
+          permissions, must use the CLI to modify table permissions.
+
+   MON-3452
+          Issue: After selecting the Include System Volumes checkbox to
+          display system volumes in the Volumes list pane, if you set
+          quota (using the link in the Quota column), the system volumes
+          are no longer displayed in the list of volumes even though the
+          system volumes checkbox is still selected.
+          Workaround: Deselect and then re-select the Include System
+          Volumes checkbox to display the system volumes in the list of
+          volumes.
+
+   MON-3438
+          Issue: You may experience some latency in the Admin > Cluster
+          Settings > Alarms page when you click the name of an alarm to
+          display the Alarm Settings window for the alarm.
+
+   MON-3425
+          Issue: When you filter the list of alarms in the Alarms summary
+          page, the page does not refresh and display the correct list of
+          alarms if there are muted alarms.
+
+   MON-3407
+          Issue: If you are upgrading from a pre-6.0 version, the MapR
+          Control System might display 0 instances of webserver running in
+          the Services page. This is because starting from v6.0, the UI
+          static files are in mapr-webserver and the mapr-apiserver runs
+          the server that sends the queries. For more information on
+          webserver in v6.0, see [3]Setting Up the MapR Control System.
+
+   MON-3404
+          Issue: The topic search field in the Stream (detail) > Topic tab
+          does not display correctly in Firefox.
+          Workaround: Use Chrome (v58 and later) to perform a topic
+          search.
+
+   MON-3325
+          Issue: The MapR Control System does not display topologies with
+          hostname (in the topology). You cannot configure node-specific
+          topology for a volume from MCS.
+          Workaround: Use the CLI to set node-specific topology for a
+          volume.
+
+   MON-3248
+          Issue: The MapR Control System does not support filtering list
+          of nodes by services running on client nodes.
+          Workaround: Use the [4]node list command with the filter option
+          to retrieve the list of nodes, including client nodes, running a
+          service.
+
+   MON-3247
+          Issue: The MapR Control System does not display NFS edge nodes
+          and POSIX client nodes that are currently connected to the
+          cluster when you sort the list of nodes by topology.
+          Workaround: Use the [5]node list command to retrieve the list of
+          client nodes currently connected to the cluster.
+
+   MON-2409
+          Issue: When you try to navigate to another cluster by clicking
+          on the cluster name from the dropdown list at the top of the
+          page, the Overview page for the current cluster displays and it
+          takes a few minutes to display the MCS login page for the other
+          cluster.
+
+   MON-2219
+          Issue: If you add Streams license separately, you may not be
+          able to view the Streams page.
+          Workaround: Contact MapR Support.
+
+   MON-2218
+          Issue: When you preserve snapshots, there is no notification
+          (success message) or indication (Expires On column still does
+          not show No Expiration) even though the operation succeeded.
+          Workaround: Refresh the page after preserving a snapshot to see
+          the No Expiration setting in the Expires On column.
+
+   MON-2076
+          Issue: When you select topics to remove, deselect all the topics
+          in the Remove Topic confirmation window and click Cancel, then
+          select a topic in the page by clicking on the checkbox, the
+          Remove Topic window opens again even if you did not click on the
+          Remove Topic button.
+          Workaround: Refresh the page.
+
+   MON-2018
+          Issue: In the Add Change Log page, after entering field to add
+          in the Publish Selected Field Path text field, the Add Field
+          button is disabled.
+          Workaround: Click outside the text field to enable the Add Field
+          button.
+
+   MON-2011
+          Issue: When adding or editing the compression setting on a
+          replica, selecting Inherited does not have any effect. The
+          default value is lz4.
+          Workaround: Do not select Inherited as the compression setting
+          on a replica.
+
+   MON-2009
+          Issue: When modifying replica of a binary table with three or
+          more column families, if you select different set of columns to
+          replicate for different column families, the operation might
+          result in an error.
+
+   MON-1994
+          Issue: If you adjust the system time, the time stamp associated
+          with the alarm in the Active Alarms pane might show negative
+          value.
+
+   MON-1968
+          Issue: In the User Disk Usage page, you cannot remove the email
+          address after setting an email address for an entity by editing
+          the properties.
+
+   MON-1929
+          Issue: The Save Changes button in the Access Control Expression
+          builder page is disabled after entering user, group, or role
+          name in text field.
+          Workaround: Click outside the field to enable the Save Changes
+          button.
+
+   MON-1810
+          Issue: When editing multiple volumes, you cannot undo changes to
+          Auditing and Accountable Entity fields by clicking
+          [revertChange.png] .
+
+   MON-1755
+          Issue: When creating a mirror volume, after entering the name of
+          the source volume on the remote cluster and selecting the remote
+          cluster on which the volume resides, you may see an error that
+          the source volume does not exist.
+          Workaround: Re-enter the name of the source volume on the remote
+          cluster.
+
+   MON-1221
+          Issue: In the Alarm Settings window, if you click the cursor in
+          the Additional email recipients text field and then press the
+          return/enter key in the keyboard without entering an email
+          address, the Cluster Settings page displays once again.
+
+MapR Monitoring
+
+   ES-27
+          Issue: On a new installation of a secure cluster using the MapR
+          Installer, Elasticsearch fails to start, and logs indicate that
+          Elasticsearch key generation failed.
+          Workaround: Use the Incremental Install feature of the MapR
+          Installer to retry installation of the MapR Monitoring logging
+          components.
+
+   SPYG-916
+          Issue: On a non-secure cluster, the MapR Monitoring index fails
+          to load because Kibana tried to load the template before
+          Elasticsearch started.
+          Workaround: In MCS, click the Services tab, locate Kibana, and
+          click the restart button to restart Kibana.
+
+   OPTSDB-25
+          Issue: Purge scripts are disabled by default because
+          occasionally a purge process will not exit properly.
+          Workaround: Edit the crontab file in the /etc/crontab file in
+          the OpenTSDB installation directory, as follows:
+
+crontab -e mapr
+
+          In the file, remove the hashtag (#) at the beginning of the line
+          that refers to opentsdb. You should manage and monitor the
+          cronjob. Typically, the cronjob takes 30 - 45 minutes to run on
+          an idle system, but on a busy system could take much longer. In
+          most cases, it will not overlap with the next cronjob. Also,
+          monitor the jobs to ensure that OpenTSDB is not started or
+          stopped mid-job, which would cause a problem.
+
+   SPYG-934
+          Issue: On secure Ubuntu 14.04 or 16.04 clusters, Elasticsearch
+          fails to generate a keystore password if the uuid-runtime
+          package is not installed. uuid-runtime is one of the [6]MapR
+          Installer prerequisites.
+          Workaround: Install the uuid-runtime package from the default
+          Ubuntu repository:
+
+apt-get install uuid-runtime
+
+   KIB-12
+          Issue: Kibana versions prior to 5.6.1 have a cross-site
+          scripting (XSS) vulnerability in Timelion (CVE‌-2017-11479).
+          This is NOT a MapR vulnerability as MapR does not support (or
+          recommend) Timelion.
+
+MapR PACC
+
+   See [7]MapR PACC Known Issues.
+
+Oozie
+
+   29634
+          Issue: On a secure cluster, Oozie jobs can fail when the
+          timeline server for the Hive-on-Tez user interface is configured
+          with MapR-SASL.
+          Workaround: Restart the resource manager and timeline server.
+          For more information, see [8]Configuring the Timeline Server to
+          Use the Hive-on-Tez User Interface.
+
+   29657
+          Issue: If TimelineServer and Oozie Bootstrap exist on your
+          cluster, the following error message appears exactly every 10
+          seconds:
+
+Class com.sun.jersey.server.wadl.generators.WadlGeneratorJAXBGrammarGenerator$8
+can not access a member of class javax.ws.rs.core.Response with modifiers "prote
+cted" in at "resourcemenager.out log
+
+          This issue is caused by Jersey 1.9 minor bug.
+          Workaround: To suppress the message and keep the logs clean,
+          disable logging of WadlGeneratorJAXBGrammarGenerator class in
+          JRE_HOME/lib/logging.properties in the following way:
+
+com.sun.jersey.server.wadl.generators.WadlGeneratorJAXBGrammarGenerator.level =
+OFF
+
+PJDTest Suite Compliance
+
+   28912
+          Issue: When trying to open a FIFO on a FUSE mounted filesystem,
+          permissions to perform the operation are not checked.
+
+   29234
+          Issue: The FUSE-based POSIX can only trace at millisecond level
+          and the test suite utimensat in pjdtestsuite fails because the
+          test suite sets time in nanoseconds.
+
+   29237
+          Issue: Any user can set time using touch -t for any file on a
+          FUSE mounted filesystem.
+
+Timeline Server
+
+   See [9]Hive-on-Tez User Interface Known Issues.
+
+References
+
+   1. https://mapr.com/support/s/knownissues
+   2. http://maprdocs.mapr.com/home/MapRInstallerReleaseNotes/mapr_installer_known_issues.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient-mcs.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html
+   6. https://maprdocs.mapr.com/home/AdvancedInstallation/c_install_prerequisites.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/MapR_PACC_Known_Issues.html#concept_n3p_pfc_tbb
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Tez/ConfiguringHiveonTezUI.html#task_q4n_z23_nbb
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Tez/Timeline_server_known_issues.html#concept_oq4_3rx_vbb

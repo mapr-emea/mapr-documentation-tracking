@@ -1,0 +1,55 @@
+Recommended Settings for Planned Shutdown
+
+   The MapR stack improves the latencies for planned shutdowns by
+   implementing a fast failover mechanism where different services respond
+   to the intimation of a failure.
+
+Notifying CLDB to Allow Fast Failover
+
+   When planning to shutdown a node, notifying CLDB of an impending
+   shutdown allows CLDB to update the replication chain such that master
+   and intermediate containers, if any, are not on the node and re-assign
+   VIPs on the node when the node actually goes down. This, in turn,
+   allows clients to continue activities on available nodes.
+
+   MapR (v5.1) includes an argument, [1]node failover, to the [2]maprcli
+   command that notifies CLDB of impending node shutdown so that CLDB can
+   ensure that the specified node does not have any master containers and
+   intermediate containers (in a cascaded chain), and VIPs are
+   re-assigned.
+
+Shutting Down a Node
+
+   To notify CLDB of a planned shutdown of a node:
+    1. Enable the fast failover behavior.
+       Refer to [3]Enabling Fast Failover for more information.
+    2. Reset the value of tcp_syn_retries parameter.
+       Refer to [4]Tuning TCP for more information.
+    3. (Optional) Get the hostname of the node to put in maintenance mode
+       by running the following command:
+/opt/mapr/bin/maprcli node list -columns hostname
+    4. Run the failover command for that node.
+       For example:
+/opt/mapr/bin/maprcli node failover -nodes <node-hostname>
+       Wait for few minutes (to allow containers to failover) before
+       proceeding to the next step.
+    5. Stop warden on that node by running the following command:
+service mapr-warden stop
+    6. Notify MapR that the node is in maintenance mode and when the
+       maintenance task is complete, remove the node from maintenance
+       mode.
+       See [5]Performing Maintenance on a Node for the commands to run to
+       [6]put and [7]take a node out of maintenance mode.
+
+   Warning: Shut down only one node at a time. Do not take down multiple
+   nodes for maintenance at the same time.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-failover.html#reference_klf_pyt_q5
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax.html#maprcliandRESTAPISyntax
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/EnablingFastFailover.html#concept_yx3_j21_1v
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/TuningTCP.html#concept_q53_4d1_1v
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Performing-Maintenance-on-Node.html#Performing-Maintenance-on-Youcanplaceanodeinto-d3e72
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/t_put_node_into_maintenance_mode.html#PerformingMaintenanceonaN_26982477-d3e75
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/t_take_node_out_of_maintenance_mode.html#PerformingMaintenanceonaN_26982477-d3e100

@@ -1,0 +1,41 @@
+Setting Up a Hierarchy of Queues
+
+   CapacityScheduler uses a concept called a queue path to configure a
+   hierarchy of queues. The queue path is the full path of the queue's
+   hierarchy, starting at root. The following example has three top-level
+   child-queues a, b, and c and some sub-queues for a and b:
+
+   [27199876.png]
+
+   Queue paths are defined for each level under the root queue. A queue's
+   children are defined with the parameter
+   yarn.scheduler.capacity.<queue-path>.queues, where <queue-path> takes
+   the form root.<child>, root.<child>.<child>, and so on. For example,
+   the queue path to a2 is designated as root.a.a2.
+   Warning:
+
+   Children do not inherit properties directly from the parent unless
+   otherwise noted.
+
+   The corresponding queue definition block of the capacity-scheduler.xml
+   file is shown below.
+<property>
+  <name>yarn.scheduler.capacity.root.queues</name>
+  <value>a,b,c</value>
+  <description>The queues at this level (root is the root queue).
+  </description>
+</property>
+
+<property>
+  <name>yarn.scheduler.capacity.root.a.queues</name>
+  <value>a1,a2</value>
+  <description>The queues at this level (root is the root queue).
+  </description>
+</property>
+
+<property>
+  <name>yarn.scheduler.capacity.root.b.queues</name>
+  <value>b1,b2,b3</value>
+  <description>The queues at this level (root is the root queue).
+  </description>
+</property>

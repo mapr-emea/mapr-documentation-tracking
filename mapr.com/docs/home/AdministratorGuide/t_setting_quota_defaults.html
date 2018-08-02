@@ -1,0 +1,89 @@
+Setting Quota Defaults for Users and Groups
+
+   Quotas limit the disk space used by a volume or an entity (user or
+   group) on an Enterprise Edition-licensed cluster, by specifying the
+   amount of disk space the volume or entity is allowed to use. A volume
+   quota limits the space used by a volume. A user/group quota limits the
+   space used by all volumes owned by a user or group.
+
+   You can set hard quota and advisory quota defaults for users and
+   groups. When a user or group is created, the default quota and advisory
+   quota apply unless overridden by specific quotas. You can set an entity
+   quota that differs from the default using the [1]entity modify command
+   or through the MapR Control System.
+
+   The size of a disk space quota is expressed in terms of the actual data
+   stored from the user's point of view. Only post-compression data blocks
+   are counted, and snapshot and replica space does not count against
+   quotas. For example, a 10G file that is compressed to 8G and has a
+   replication factor of 3 consumes 24G (3*8G), but charges only 8G to the
+   user or volume's quota.
+
+   You can set an entity quota through the MapR Control System and using
+   the CLI.
+
+Setting Quotas Using MCS
+
+   Complete the following steps to set the entity quota in the MapR
+   Control System:
+    1. Go to Admin > Cluster Settings > Quotas.
+    2. Set the advisory and hard quotas for the:
+          + User under USER QUOTA.
+          + Group under GROUP QUOTA.
+       Hard quota prevents writes above the specified threshold. Advisory
+       quota does not enforce disk usage limit, but raises an alarm when
+       the specified threshold is exceeded:
+          + AE_ALARM_AEADVISORY_QUOTA_EXCEEDED - an entity exceeded its
+            advisory quota
+          + VOLUME_ALARM_ADVISORY_QUOTA_EXCEEDED - a volume exceeded its
+            advisory quota
+       In most cases, it is useful to set the advisory quota somewhat
+       lower than the hard quota, to give advance warning that disk usage
+       is approaching the allowed limit.
+    3. Set the cluster reserve limit, which is the amount of disk space
+       you wish to allocate for all volumes on the cluster.
+       When you set a reserve limit, you provision a certain amount of
+       space to the volumes as a percentage of the cluster capacity. This
+       allows you to free up space that could potentially be unused or
+       allocate more space for replication.
+       As data is written to the volume, available space is automatically
+       allocated. The volume reserve increases up to the reserve limit you
+       set here.
+    4. After setting the quota, click Save to exit save changes to the
+       entity.
+
+Setting Entity Quotas Using the CLI or the REST API
+
+   To set an entity (user or group) quota, run the following command:
+maprcli entity modify -name <entityname> -advisoryquota <advisory quota> -quota
+<quota>
+
+   To manage quotas, you must have a or fc permissions.
+
+   Quotas are expressed as an integer value plus a single letter to
+   represent the unit:
+     * B - bytes
+     * K - kilobytes
+     * M - megabytes
+     * G - gigabytes
+     * T - terabytes
+     * P - petabytes
+
+   Example: 500G specifies a 500-gigabyte quota. Do not use two-letter
+   abbreviations for units, such as MB or GB.
+
+   For complete reference information, see [2]entity modify.
+
+Setting Cluster Reserve Limit Using the CLI or REST API
+
+   To set the resource usage limit for the cluster's disk resource, run
+   the following command:
+maprcli rlimit set -resource disk -cluster <cluster name> -value <limit>
+
+   For complete reference information, see [3]rlimit set.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/entity-modify.html#entitymodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/entity-modify.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/rlimit-set.html

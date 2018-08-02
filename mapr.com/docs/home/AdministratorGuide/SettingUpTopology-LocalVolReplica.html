@@ -1,0 +1,28 @@
+Creating Replicas of Local Volumes in Custom Topology Using the CLI
+
+   To set the configuration parameter for placing replicas of volumes in a
+   topology relative to the local node, run the maprcli config save
+   command. The value can be a:
+     * Positive number to indicate the number of paths to keep from the
+       initial root (of the topology path). For example:
+maprcli config save -values {"cldb.local.volume.topology.trim.index":"1"}
+     * Negative number to indicate the number of paths to skip from the
+       end of the topology path. For example:
+maprcli config save -values {"cldb.local.volume.topology.trim.index":"-2"}
+
+   For example, suppose the local volume is created on a node that is
+   under the topology /data-center1/lab2/rack3/shelf4/10.10.20.30. To
+   create a local volume where the replicas are restricted to
+   /data-center1/lab2/rack3 topology, run the following command:
+maprcli config save -values {"cldb.local.volume.topology.trim.index":"3"}
+maprcli volume create -name egLocalVol -path /data-center1/lab2/rack3/shelf4/10.
+10.20.30 -localvolumehost 10.10.20.30
+
+   Alternatively, you can run the following command to specify the path
+   for the volume from the end of the topology path:
+maprcli config save -values {"cldb.local.volume.topology.trim.index":"-2"}
+maprcli volume create -name egLocalVol -path /data-center1/lab2/rack3/shelf4/10.
+10.20.30 -localvolumehost 10.20.30.40
+
+   The replicas for containers of the volume, egLocalVol, will be created
+   on nodes under /data-center1/lab2/rack3.

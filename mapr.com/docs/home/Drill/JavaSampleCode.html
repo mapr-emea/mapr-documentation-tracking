@@ -1,0 +1,101 @@
+Java Sample Code
+
+   To use the Drill JDBC driver in an application, you must include all of
+   the JAR files from the ZIP archive in the classpath for the Java
+   project.
+
+   The following Java code demonstrates how to use the JDBC API to:
+     * Register the driver for Drill
+     * Establish a connection to a Drill server
+     * Query the database
+     * Parse a result set
+     * Handle exceptions
+     * Clean up to avoid memory leakage
+
+// java.sql packages are required
+import java.sql.*;
+class DrillJDBCExample {
+     // Define a string as the fully qualified class name
+     // (FQCN) of the desired JDBC driver
+       private static final String JDBC_DRIVER =
+       "com.mapr.drill.jdbc4.Driver";
+     // Define a string as the connection URL
+        private static final String CONNECTION_URL =
+        "jdbc:drill:drillbit=192.168.1.1:31010";
+
+            public static void main(String[] args) {
+                Connection con = null;
+                Statement stmt = null;
+                ResultSet rs = null;
+    // Define a plain query
+       String query = "SELECT first_name, last_name, emp_id
+       FROM `hive`.`default`.`emp`";
+
+                try {
+
+                    // Register the driver using the class name
+                    Class.forName(JDBC_DRIVER);
+                    // Establish a connection using the connection
+                    // URL
+                    con = DriverManager.getConnection(CONNECTION_
+                    URL);
+                    // Create a Statement object for sending SQL
+                    // statements to the database
+                    stmt = con.createStatement();
+
+                    // Execute the SQL statement
+                    rs = stmt.executeQuery(query);
+                    // Display a header line for output appearing in
+                    // the Console View
+                    System.out.printf("%20s%20s%20s\r\n", "FIRST
+                    NAME", "LAST NAME" , "EMPLOYEE ID");
+
+                    // Step through each row in the result set
+                    // returned from the database
+                    while(rs.next()) {
+                        // Retrieve values from the row where the
+
+                        // cursor is currently positioned using
+                        // column names
+                        String FirstName = rs.getString("first_
+                        name");
+                        String LastName = rs.getString("last_name");
+                        String EmployeeID = rs.getString("emp_id");
+
+                    // Display values in columns 20 characters
+                    // wide in the Console View using the
+                    // Formatter
+                    System.out.printf("%20s%20s%20s\r\n",
+                    FirstName, LastName, EmployeeID);
+                    }
+                } catch (SQLException se) {
+                    // Handle errors encountered during interaction
+                    // with the data source
+                } catch (Exception e) {
+                    // Handle other errors
+                } finally {
+                    // Perform clean up
+                try {
+                    if (rs != null) {
+                        rs.close();
+                    }
+                } catch (SQLException se1) {
+                    // Log this
+                }
+                try {
+                    if (stmt != null) {
+                        stmt.close();
+                }
+                } catch (SQLException se2) {
+                    // Log this
+                }
+                try {
+                    if (con != null) {
+                        con.close();
+                    }
+                } catch (SQLException se3) {
+                    // Log this
+                } // End try
+            } // End try
+        } // End main
+    } // End DrillJDBCExample

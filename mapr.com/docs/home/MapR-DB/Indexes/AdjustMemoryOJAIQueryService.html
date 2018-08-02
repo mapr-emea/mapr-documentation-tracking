@@ -1,0 +1,62 @@
+Adjusting Memory Settings in the OJAI Distributed Query Service
+
+   This section describes how to verify, through log output, that your
+   OJAI query is running out of memory due to memory limits in the OJAI
+   Distributed Query Service. It then describes how to adjust the memory
+   settings in the service.
+    1. Before adjusting the OJAI Distributed Query Service memory
+       settings, first confirm that your query has run out of memory due
+       to limits in the service.
+       You should see output like the following in your client application
+       log:
+15:32:46.465 [Thread-21] - Error caused in scan Drill submissionFailed for "sele
+ct t.`$$ENC00FIAF62LE`,t.`$$document` from dfs.`/tables/business` t where ((t.`c
+ity` = 'Currie') and (t.`state` = 'PA') and (t.`review_count` > 5100)) limit 1
+org.ojai.exceptions.OjaiException: Drill submissionFailed for "select t.`$$ENC00
+FIAF62LE`,t.`$$document` from dfs.`/tables/business` t where ((t.`city` = 'Curri
+e') and (t.`state` = 'PA') and (t.`review_count` > 5100)) limit 128" please ch
+        at com.mapr.ojai.store.impl.DrillDocumentStream$DocumentResultsListener.
+submissionFailed(DrillDocumentStream.java:220)
+        at com.mapr.ojai.store.impl.DelegatingResultsListener$2.run(DelegatingRe
+sultsListener.java:84)
+        at com.mapr.ojai.store.impl.RunnableQueue$QueueRunner.run(RunnableQueue.
+java:59)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.
+java:1142)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor
+.java:617)
+        at java.lang.Thread.run(Thread.java:745)
+Caused by: org.apache.drill.common.exceptions.UserRemoteException: RESOURCE ERRO
+R: One or more nodes ran out of memory while executing the query.
+
+Failure trying to allocate initial reservation for Allocator. Attempted to alloc
+ate 5000000 bytes and received an outcome of FAILED_LOCAL.
+Fragment 0:0
+       In the OJAI Distributed Query Service, log files are in the
+       /opt/mapr/drill/<drill-version>/logs/drillbit.log on each node
+       where the Query Service is running.
+       You should see output like the following:
+2017-10-07 15:32:41,693 [BitServer-3] INFO  o.a.drill.exec.ops.FragmentContext -
+ User Error Occurred: One or more nodes ran out of memory while executing the qu
+ery. (Failure trying to allocate initial reservation for Allocator. Attempted
+org.apache.drill.common.exceptions.UserException: RESOURCE ERROR: One or more no
+des ran out of memory while executing the query.
+
+Failure trying to allocate initial reservation for Allocator. Attempted to alloc
+ate 7000000 bytes and received an outcome of FAILED_LOCAL.
+Fragment 1:1
+    2. After confirming, increase the Query Service memory settings by
+       editing the /opt/mapr/conf/conf.d/warden.drill-bits.conf file on
+       each Drillbit node. The file contains the following entries:
+service.env=DRILL_HEAP=3072m,DRILL_MAX_DIRECT_MEMORY=1024m,DRILLBIT_CODE_CACHE_S
+IZE=512m
+service.heapsize.min=4608
+service.heapsize.max=4608
+       Perform the following steps on each Drillbit node:
+         a. Modify DRILL_HEAP and DRILL_MAX_DIRECT_MEMORY in the
+            service.env entry based on your requirements.
+         b. Update service.heapsize.min and service.heapsize.max to
+            reflect the updates you made. The numbers sum to the 3 memory
+            settings in the service.env entry.
+         c. Restart warden on the node by running the following command:
+service mapr-warden restart

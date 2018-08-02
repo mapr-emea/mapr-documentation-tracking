@@ -1,0 +1,108 @@
+table changelog list
+
+Description
+
+   Lists changelog information.
+
+Syntax
+
+   CAPTION: Table 1.
+
+   CLI
+maprcli table changelog list -path <source table path>
+
+   REST
+http://<ipaddress>:8443/rest/table/changelog/list?path=<source-table-path>
+
+Parameters
+
+   CAPTION: Table 2.
+
+   Parameters Description
+   path (Required) Path of the source table in the MapR-DB cluster.
+   refreshnow Specifies if the user wants to trigger an immediate update
+   of the sink statistics.
+
+Example
+
+// CLI example
+maprcli table changelog list -path /tableVolume/cdcTable -json
+
+// REST example
+https://10.10.100.17:8443/rest/table/changelog/list?path=/tableVolume/cdcTable
+
+Output
+
+{
+        "timestamp":1505779365019,
+        "timeofday":"2017-09-18 05:02:45.019 GMT-0700",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "cluster":"my.cluster.com",
+                        "changelog":"/streamVolume/changelogStream:cdcTopic1",
+                        "changelogStream":"/streamVolume/changelogStream",
+                        "replicaState":"REPLICA_STATE_REPLICATING",
+                        "paused":false,
+                        "throttle":false,
+                        "idx":1,
+                        "networkencryption":false,
+                        "synchronous":false,
+                        "networkcompression":"lz4",
+                        "propagateExistingData":true,
+                        "isUptodate":true,
+                        "minPendingTS":0,
+                        "maxPendingTS":0,
+                        "bytesPending":0,
+                        "putsPending":0,
+                        "bucketsPending":0,
+                        "uuid":"76a3efd3-6357-8cd6-092f-0fca5dc05900",
+                        "copyTableCompletionPercentage":100
+                }
+        ]
+}
+
+Output Data Fields
+
+   The following fields display for each replica.
+   Field Description
+   cluster The cluster on which the replica resides.
+   changelog Identifies the destination stream topic for the changelog.
+   changelogstream Identifies the destination stream for the changelog.
+   replicaState The replication state. For information about the
+   replication states, see [1]Table Replication States.
+   paused A Boolean values that specifies if replication is paused.
+   throttle A Boolean value that specifies if replication is throttled.
+   idx The internal index value.
+   networkencryption A Boolean value that specifies if replication is
+   encrypted.
+   synchronous A Boolean value that specifies whether replication is
+   synchronous or asynchronous.
+   networkcompression The type of on-wire compression.
+   propagateExistingData Identifies whether existing data in the source
+   table is propagated to the destination stream topic.
+   isUptodate A Boolean value that specifies if the replica is up-to-date.
+   minPendingTS The epoch time in milliseconds of the oldest operation
+   that has yet to be replicated to the replica.
+   maxPendingTS The epoch time in milliseconds of the newest operation
+   that has yet to be replicated to the replica.
+   bytesPending The number of bytes that have yet to be replicated to the
+   replica.
+   putsPending The number of puts that have yet to be replicated to the
+   replica.
+   bucketsPending The number of buckets that have yet to be replicated to
+   the replica.
+   uuid The table UUID.
+   copyTableCompletionPercentage When propagation of existing data is in
+   progress, this value is the percentage of data from the source table
+   that has been propagated to the destination stream topic.
+   Note: When replicating MapR-DB data, the copyTablePercentageCompletion
+   data may re-adjust to a lower rate. This depends on table region (also
+   referred to as tablets) splits and merges as well as the rate of
+   incoming data to replicating data.
+   errors If applicable, an error is displayed.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/replication-states.html#reference_dmn_rn2_d1b

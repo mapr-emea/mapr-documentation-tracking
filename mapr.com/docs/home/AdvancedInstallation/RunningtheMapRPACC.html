@@ -1,0 +1,200 @@
+Running the MapR PACC Using Docker
+
+   This section describes and provides examples on how to use the docker
+   run command to run a pre-built MapR container image.
+
+   To run a pre-built MapR container image, you:
+    1. Select a PACC or an application built from the PACC.
+    2. Determine if your MapR cluster is secure by viewing the contents of
+       the file /opt/mapr/conf/mapr-clusters.conf. For example, the
+       following shows a non-secure cluster:
+my.cluster.com secure=false ip-172-24-11-84
+       If you cluster is secure, generate a MapR service ticket by
+       following the instructions at [1]Generating a Service Ticket.
+    3. Use the docker run command to run the container. You can run the
+       command from a Linux prompt, Windows command line, or Mac terminal.
+    4. Verify that the container was created and is connected to the
+       cluster.
+
+   Note: You run user-created MapR images from the mapr-client.sh script
+   file. See [2]Creating a MapR PACC Image Using mapr-setup.sh.
+
+Using the docker run Command
+
+   Here is the general syntax for the docker run command:
+docker run -it -e MAPR_CLUSTER=<cluster-name> -e MAPR_TZ=<time-zone> -e MAPR_CLD
+B_HOSTS=<cldb-list> -e MAPR_CONTAINER_USER=<user-name> -e MAPR_CONTAINER_PASSWOR
+D=<password> -e MAPR_CONTAINER_UID=<uid> -e MAPR_CONTAINER_GID=<gid> -e MAPR_CON
+TAINER_GROUP=<group-name> -e MAPR_TICKETFILE_LOCATION=/tmp/mapr_ticket -v <ticke
+t-file-host-location>:/tmp/mapr_ticket:ro -e MAPR_MOUNT_PATH=<path_to_fuse_mount
+_point> --cap-add SYS_ADMIN --cap-add SYS_RESOURCE --device /dev/fuse --security
+-opt apparmor:unconfined <image-name>
+
+   The following table describes the keys and variables used in the
+   syntax:
+   Note: If you neglect to specify all mandatory parameters, the docker
+   run command will fail.
+   Key Variable Mandatory/Optional Description
+   MAPR_CLUSTER <cluster-name> Mandatory The name of the MapR cluster that
+   the container will connect to.
+   MAPR_CLDB_HOSTS <cldb-list> Mandatory CLDB host IP addresses separated
+   by a comma. For example:
+(hostname[:port_no][,hostname[:port_no]...])
+
+   MAPR_CONTAINER_USER <user-name> Mandatory
+
+   The user that the user application inside the Docker container will run
+   as. This configuration is functionally equivalent to the Docker native
+   -u or --user. Do not use Docker -u or --user, as the container needs to
+   start as the root user to bring up FUSE before switching to the
+   MAPR_CONTAINER_USER.
+
+   The user specified here is the user that all storage operations on the
+   MapR cluster will be performed as. Therefore, MapR recommends not using
+   root or mapr.
+
+   For secure clusters, this user must match the user in the MapR ticket
+   passed via MAPR_TICKETFILE_LOCATION.
+
+   This user also owns the /opt/mapr directory tree.
+   MAPR_CONTAINER_PASSWORD <password> Optional The password of the user
+   running inside the container. If not specified, it defaults to the
+   <user-name>.
+   MAPR_TZ <time-zone> Optional The time zone inside the container. For a
+   list of time-zone settings, see [3]this website. The default is UTC.
+   MAPR_CONTAINER_UID <uid> Optional The UID that the application inside
+   the Docker container will run as. This is a companion to the
+   MAPR_CONTAINER_USER option. If a UID is not provided, the default is
+   UID 1000. Providing a UID is strongly recommended.
+
+   For secure clusters, this UID must match the UID specified in the MapR
+   ticket file.
+   MAPR_CONTAINER_GID <gid> Optional The GID that the application inside
+   the Docker container will run as. This is a companion to the
+   MAPR_CONTAINER_USER option. If a GID is not provided, the default is
+   GID 1000. Providing a GID is strongly recommended.
+
+   For secure clusters, this GID must match the GID specified in the MapR
+   ticket file.
+   MAPR_CONTAINER_GROUP <group-name> Optional The group that the
+   application inside the Docker container will run as. This is a
+   companion to the MAPR_CONTAINER_USER option. If a group name is not
+   provided, the default is users. Providing a group name is strongly
+   recommended.
+
+   For secure clusters, the group must match the group specified in the
+   MapR ticket file.
+   MAPR_TICKETFILE_LOCATION /tmp/mapr_ticket Optional (required only for a
+   secure cluster) The location inside the container where the ticket file
+   resides. For more information about MapR tickets, see [4]Tickets.
+   MAPR_MOUNT_PATH <path-to-fuse-mount-point> Optional (required only for
+   FUSE client use) The path to the FUSE mount point. If this parameter is
+   not specified, the FUSE client is disabled.
+   -v <ticket-file-host-location>:/tmp/mapr_ticket:ro Optional (required
+   only for a secure cluster) The location of the ticket on the host where
+   you are running the container, and the desired location of the ticket
+   file in the Docker container. The docker run command maps the location
+   on the host with the location inside the container. ro means read-only.
+   -v refers to a volume mount.
+
+   Make sure the owner and group on the host ticket file match the UID and
+   GID specified in the MapR ticket file.
+   --cap-add SYS_ADMIN Optional (required only for FUSE use) A parameter
+   that is needed for the FUSE process to start inside the container, as
+   root access to the FUSE device is required.
+   --cap-add SYS_RESOURCE Optional (required only for FUSE use) A
+   parameter that is required for the FUSE process to start.
+   --device /dev/fuse Optional (required only for FUSE use) A parameter
+   that is required to mount the FUSE device.
+     <image-name> Mandatory The name of the container image to run. This
+   is either the MapR Persistent Application Client Container (PACC) or a
+   custom application container built from the PACC.
+   --security-opt apparmor:unconfined Optional (required only on Ubuntu
+   hosts) A parameter that is required for FUSE on Ubuntu hosts. For more
+   information, see [5]Docker-16429.
+
+Example docker run Commands
+
+   Following are four examples for using the docker run command:
+     * Secure Cluster with FUSE-Based POSIX Client
+     * Secure Cluster without FUSE-Based POSIX Client
+     * Non-Secure Cluster with FUSE-Based POSIX Client
+     * Non-Secure Cluster without FUSE-Based POSIX Client
+
+   The following command generates a service ticket on the cluster or a
+   client that is valid for 30 days. (For more maprlogin command examples,
+   see [6]maprlogin Command Examples).
+maprlogin generateticket -type service -cluster cluster1 -duration 30:0:0 -out /
+tmp/bobs_ticket -user bob
+
+   The ticket can be copied from /tmp/bobs_ticket to
+   /user/tickets/bobs_ticket on the container host and used in the
+   following docker run commands for secure clusters:
+
+   Secure Cluster with FUSE-Based POSIX Client
+docker run -it -e MAPR_CLUSTER=cluster1 -e MAPR_CLDB_HOSTS=CLDB_1,CLDB_2 -e MAPR
+_CONTAINER_USER=bob -e MAPR_TICKETFILE_LOCATION=/tmp/mapr_ticket -v  /user/ticke
+ts/bobs_ticket:/tmp/mapr_ticket:ro -e MAPR_MOUNT_PATH=/mapr --cap-add SYS_ADMIN
+--cap-add SYS_RESOURCE --device /dev/fuse maprtech/pacc:5.2.1_3.0_centos7
+
+   Secure Cluster without FUSE-Based POSIX Client
+docker run -it -e MAPR_CLUSTER=cluster1 -e MAPR_CLDB_HOSTS=CLDB_1,CLDB_2 -e MAPR
+_CONTAINER_USER=bob -e MAPR_TICKETFILE_LOCATION=/tmp/mapr_ticket -v  /user/ticke
+ts/bobs_ticket:/tmp/mapr_ticket:ro maprtech/pacc:5.2.1_3.0_centos7
+
+   Non-Secure Cluster with FUSE-Based POSIX Client
+   In a non-secure cluster, specifying the MAPR_CONTAINER_USER,
+   MAPR_CONTAINER_GROUP, MAPR_CONTAINER_UID, and MAPR_CONTAINER_GID is
+   strongly recommended, and these values must match the user credentials
+   on the server:
+docker run -it --cap-add SYS_ADMIN --cap-add SYS_RESOURCE --device /dev/fuse -e
+MAPR_CLUSTER=cluster1 -e MAPR_CLDB_HOSTS=CLDB_1,CLDB_2 -e MAPR_CONTAINER_USER=bo
+b -e MAPR_CONTAINER_GROUP=dev -e MAPR_CONTAINER_UID=10000 -e MAPR_CONTAINER_GID=
+10000 -e MAPR_MOUNT_PATH=/mapr maprtech/pacc:5.2.1_3.0_centos7
+
+   Non-Secure Cluster without FUSE-Based POSIX Client
+   In a non-secure cluster, specifying the MAPR_CONTAINER_USER,
+   MAPR_CONTAINER_GROUP, MAPR_CONTAINER_UID, and MAPR_CONTAINER_GID is
+   strongly recommended, and these values must match the user credentials
+   on the server:
+docker run -it -e MAPR_CLUSTER=cluster1 -e MAPR_CLDB_HOSTS=CLDB_1,CLDB_2 -e MAPR
+_CONTAINER_USER=bob -e MAPR_CONTAINER_GROUP=dev -e MAPR_CONTAINER_UID=10000 -e M
+APR_CONTAINER_GID=10000 maprtech/pacc:5.2.1_3.0_centos7
+
+   Tip:
+
+   To re-launch a container, you can use these Docker commands:
+# docker ps -a
+# docker start <container-run-ID>
+
+   Use docker start -i if you need to start with an interactive shell.
+
+Verifying the Launch of the MapR PACC
+
+   After running the docker run command, you should see the Starting
+   services message. For example:
+Starting services (mapr-posix-client-container)...
+Started service mapr-posix-client-container
+...Success
+$
+
+   When the installation is successful, the client connects to the
+   cluster, storage is mounted, and the FUSE POSIX client is started
+   automatically. Use the ls $MAPR_MOUNT_PATH command to test the
+   connection to the cluster. This command should return the cluster name.
+   For example:
+$ ls $MAPR_MOUNT_PATH
+cluster1
+
+   To display some directories on the cluster, use this command:
+$ ls $MAPR_MOUNT_PATH/cluster1
+apps var user hbase opt tmp
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingServiceTicket.html#TicketsandCertificates-Ge_26281159-d3e299
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/CreatingPACCImage.html#concept_x3f_25n_3z
+   3. https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Tickets.html#tickets
+   5. https://github.com/docker/docker/issues/16429
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginExamples.html#maprlogin-examples

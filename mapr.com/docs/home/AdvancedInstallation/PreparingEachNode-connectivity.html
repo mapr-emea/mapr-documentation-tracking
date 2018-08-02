@@ -1,0 +1,104 @@
+Connectivity
+
+   This section outlines and troubleshoots connectivity requirements.
+
+Hostname
+
+   Each node in the cluster must have a unique hostname, resolvable
+   forward and backward with every other node with both normal and reverse
+   DNS name lookup.
+
+   Run hostname -f to check the node's hostname. For example:
+$ hostname -f
+node125.corp.example.com
+
+   If hostname -f returns a name, run getent hosts `hostname` to return
+   the node's IP address and fully-qualified domain name (FQDN).
+$ getent hosts `hostname`
+10.250.1.53     node125.corp.example.com
+
+   To troubleshoot hostname problems, edit the /etc/hosts file as root. A
+   simple /etc/hosts might contain:
+127.0.0.1     localhost
+10.10.5.10    mapr-hadoopn.maprtech.prv mapr-hadoopn
+
+   A common problem is an incorrect loopback entry (127.0.x.x) that
+   prevents the IP address from being assigned to the hostname. For
+   example, on Ubuntu, the default /etc/hosts file might contain:
+127.0.0.1     localhost
+127.0.1.1     node125.corp.example.com
+
+   A loopback (127.0.x.x) entry with the node's hostname will confuse the
+   installer and other programs. Edit the /etc/hosts file and delete any
+   entries that associate the hostname with a loopback IP. Only associate
+   the hostname with the actual IP address.
+   Note: For more information about Ubuntu's default /etc/hosts file, see
+   [1]https://bugs.launchpad.net/ubuntu/+source/cloud-init/+bug/871966.
+
+   Use the ping command to verify that each node can reach the others
+   using each node's hostname. For more information, see the [2]hosts(5)
+   man page.
+
+Common Users
+
+   A user that accesses the cluster must have the same credentials and
+   user ID (uid) on each node in the cluster. Every person or department
+   that runs MapR jobs must have an account and must also belong to a
+   common group ID (gid). The uid for each user, and the gid for each
+   group, must be consistent across all nodes.
+
+   A mapr user must exist, and have the same UID across all the cluster
+   nodes. The mapr user has full privileges to administer the cluster. If
+   you create the mapr user before you install MapR, you can test for
+   connectivity issues. If you do not create the mapr user, installing
+   MapR automatically creates the user for you. The mapr user ID is
+   automatically created on each node if you do not use a directory
+   service, such as LDAP.
+
+   To create a group, add a user to the group, or create the mapr user,
+   run the following command as root substituting a uid for m and a gid
+   for n. (The error "cannot lock /etc/passwd" suggests that the command
+   was not run as root.)
+$ useradd mapr --gid n --uid m
+
+   Example: $ groupadd -g 5000 mapr $ useradd -g 5000 -u 5000 mapr
+
+   To verify that the users or groups were created, su mapr. Verify that a
+   home directory was created (usually /home/mapr) and that the users or
+   groups have read-write access to it. The users or groups must have
+   write access to the /tmp directory, or Warden will fail to start
+   services.
+
+Optional: Passwordless ssh
+
+   Setting up passwordless ssh is straightforward. On each webserver node,
+   generate a key pair and append the key to an authorization file. Then
+   copy this authorization file to each node, so that every node is
+   available from the webserver node.
+
+   su mapr (if you are not already logged in as mapr) ssh-keygen -t rsa -P
+   '' -f ~/ filename
+
+   The ssh-keygen command creates filename , containing the private key,
+   and filename .pub, containing the public key. For convenience, you may
+   want to name the file for the hostname of the node. For example, on the
+   node with hostname "node10.10.1.1,"
+
+   ssh-keygen -t rsa -P '' -f ~/node10.10.1.1
+
+   In this example, append the file /home/mapr/node10.10.1.1.pub to the
+   authorized_keys file.
+
+   Append each webserver node's public key to a single file, using a
+   command like cat filename .pub >> authorized_keys. (The key file is
+   simple text, so you can append the file in several ways, including a
+   text editor.) When every webserver node's empty passphrase public key
+   has been generated, and the public key file has been appended to the
+   master "authorized_keys" file, copy this master keys file to each node
+   as ~/.ssh/authorized_keys, where ~ refers to the mapr user's home
+   directory (typically /home/mapr).
+
+References
+
+   1. https://bugs.launchpad.net/ubuntu/+source/cloud-init/+bug/871966
+   2. http://www.kernel.org/doc/man-pages/online/pages/man5/hosts.5.html

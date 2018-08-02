@@ -1,0 +1,85 @@
+mapr diffstreamswithcrc
+
+   This utility uses a cyclic redundancy check to detect differences
+   between sets of messages in the specified MapR streams. Then, for each
+   set of non-identical messages, it performs a detailed comparison.
+   Finally, it generates one or more directories of sequence files. You
+   can use these files either to make a MapR stream identical to its
+   master or merge the messages from two MapR streams.
+
+   Sequence files are binary flat files. You can learn more about them
+   [1]here. To convert a sequence file into a format that you can read,
+   use the [2]MapR-DB JSON FormatResult utility.
+
+   This utility requires less network bandwidth than the mapr diffstreams
+   utility because it performs a detailed table comparison only on the
+   sets of messages where the CRC algorithm detected a difference.
+   Therefore, consider using this utility when the streams you compare are
+   very similar and you are concerned about the data transfer rate.
+
+   This utility considers both the source stream and the destination
+   stream to be a master stream. Therefore, it generates two directories
+   with sequence files. These sequence files contain the puts required to
+   update each stream so that each stream can contain a superset of the
+   messages in both streams at the time at which the utility was run.
+   These are the directories that the utility generates:
+
+   opsForDst
+          A directory containing sequence files that correspond to each
+          put and delete required to make the destination stream identical
+          to the source stream.
+
+   opsForSrc
+          A directory containing sequence files that correspond to each
+          put and delete required to make the source stream identical to
+          the destination stream.
+
+Requirements
+
+     * When the cluster runs YARN, it must also use zero configuration
+       failover for the ResourceManager.
+     * To use this utility, you must have the following permissions:
+          + The permission readAce on the volumes where the tables are
+            located.
+          + On the source stream: either consumeperm or copyperm.
+          + On the destination stream: either consumeperm or copyperm.
+       For information about how to set permissions on volumes, see
+       [3]Setting Whole Volume ACEs.
+       For information about how to set permissions on streams, see
+       [4]Enabling Table and Stream Authorizations with ACEs.
+
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+   Run the mapr importstream command to implement the puts and deletes
+   specified in the sequence files.
+
+Syntax
+
+mapr diffstreamswithcrc
+-src <srcStream>
+-dst <dstStream>
+-outdir <output directory>
+[-first_exit] Exit when first difference is found
+
+Parameters
+
+   Parameter Description
+   src The path of the first stream to include in the comparison.
+   dst The path of the second stream to include in the comparison.
+   outdir The path to a directory in which to place the generated sequence
+   files. The utility creates the specified directory. If the specified
+   directory already exists, the command fails.
+   first_exit
+
+   By default, the utility compares all the data in the specified streams.
+   Use this parameter if you want to exit after the first difference is
+   identified between the streams. The parameter takes no value.
+
+References
+
+   1. http://wiki.apache.org/hadoop/SequenceFile
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_formatresult.html#mapr_formatresult
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html

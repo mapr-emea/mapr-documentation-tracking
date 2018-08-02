@@ -1,0 +1,62 @@
+Drill-on-YARN Limitations
+
+   The 1.8 release of the Drill-on-YARN feature has the following
+   limitations:
+
+   Reducing cluster size
+          Reducing the size of a cluster kills running queries. Drillbits
+          should shut down gracefully. (MD-1087, DRILL-4286)
+
+   Hanging requests
+          Drill-on-YARN and YARN “hang” if YARN cannot fulfill a container
+          request. YARN provides no information about why a request
+          “hangs.”
+
+   /tmp directory
+          The default MapR YARN settings cause Drillbits to become
+          unmanaged within a short amount of time due to a /tmp directory
+          issue. See the Exclude the YARN Container Directory from
+          tmpwatch section in [1]Step 3: Configure YARN to Run Drill for
+          information on how to resolve the issue.
+
+   Container size
+          The default MapR YARN settings do not allow a default Drill
+          cluster to run due to the default YARN container size. See the
+          Increase Maximum Container Size section in [2]Step 3: Configure
+          YARN to Run Drill for information on how to resolve the issue.
+
+   Drill CPU setting
+          You can specify Drill CPU usage to YARN, but Drill will always
+          use all cores regardless of the setting. (MD-1086)
+
+   Drill disk usage
+          You can specify Drill disk usage to YARN, but Drill will use all
+          disks regardless of the setting. There is no effective way to
+          manage a Drill cluster that:
+
+          + resizes based on load.
+          + is rack-aware in its smaller state.
+
+          YARN chooses arbitrary nodes perhaps resulting in large network
+          reads. (MD-1028, MD-1089)
+
+   Cgroups
+          Although the Apache YARN documentation states that you can use
+          Linux cgroups to limit CPU usage by a YARN application, such as
+          Drill, MapR has found that cgroups do not actually work in
+          practice.
+
+   Node Labels
+          Although the Apache YARN documentation states that you can
+          associate node labels with YARN container requests, MapR has
+          found that the feature does not work in practice. While
+          Drill-on-YARN configuration has settings to associate Drillbit
+          container requests with node labels, doing so is not supported
+          in the 1.8 release. To use node labels, associate node labels
+          with YARN queues as described in the YARN configuration step in
+          the Migrate Drill to Run Under YARN documenation.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/step_3_configure_yarn_to_run_drill.html#step_4_configure_yarn_to_run_drill
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/step_3_configure_yarn_to_run_drill.html#step_4_configure_yarn_to_run_drill

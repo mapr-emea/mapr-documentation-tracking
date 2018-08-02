@@ -1,0 +1,94 @@
+Using ACEs on Views to Limit Data Access
+
+   [1]Drill is a distributed SQL query layer that runs on the MapR
+   platform. You can enable [2]user impersonation and [3]create views in
+   Drill to control user access to data stored in the MapR platform at the
+   row and column levels. Access to data is based on file permissions set
+   on the data (source files) and on the view definition files.
+
+   In addition to standard POSIX permissions, MapR supports [4]ACEs
+   (access control expressions) to secure data in the distributed file
+   system. ACEs are a flexible access control mechanism that applies to
+   files, MapR tables, and MapR streams. [5]Setting an ACE (access control
+   expression) on a file modifies the file permission to honor the ACE
+   setting. Drill honors ACEs set on Drill view files and on the source
+   files that views access.
+
+   Each[6] Drill view created has an associated view definition file, with
+   a .view.drill extension, on which you can set ACEs to secure the view.
+
+Example
+
+   Frank creates a [7]workspace in the [8]dfs storage plugin configuration
+   in Drill that points to his home directory in the distributed file
+   system. He then uses Drill to create a table named “employees” that he
+   and the HR group can access:
+-rwxr----- frank:hr /user/frank/employees
+
+   Joe, a member of the HR and MGR groups, creates a view named
+   emp_mgr_view in his home directory to share a subset of the employees
+   data with managers that belong to the MGR group:
+-rwxr----- joe:mgr /user/joe/emp_mgr_view.drill.view
+
+   Managers in the MGR group have read permission on the
+   emp_mgr_view.drill.view file so they can query the emp_mgr_view that
+   Joe created and they can create new views from his view.
+
+   Setting ACEs on the underlying data source (the “employees” table) or
+   on the view file (emp_mgr_view.drill.view) that accesses the underlying
+   data source resets the POSIX mode bits to match the permissions granted
+   through ACE settings.
+   For example, if Frank issues the following command to apply an ACE to
+   the “employees” table, a user must be a member of the EXEC group to
+   read data in the “employees” table:
+hadoop mfs -setace -R -readfile 'g:exec' employees
+
+   Anyone in the HR group that previously had access to the table can no
+   longer access the table data unless they also belong to the EXEC group.
+   Running the –getace command on the table lists the ACE settings on the
+   table:
+hadoop mfs -getace /user/frank/employees
+Path: /user/frank/employees
+ readfile: g:exec
+ writefile:
+ executefile:
+ readdir:
+ addchild:
+ deletechild:
+ lookupdir:
+ inherit: true
+ mode: ---------
+
+   Similarly, if Joe issues the following command on the on the
+   emp_mgr_view.drill.view file, only members of the HR group can read the
+   file. Users that belong to the MGR group can no longer access the data
+   through the view, unless they also belong to the HR group.
+hadoop mfs -setace -R -readfile 'g:hr' emp_mgr_view.drill.view
+
+   Running the –getace command on view file shows the ACE settings on the
+   file:
+hadoop mfs -getace /user/joe/emp_mgr_view.drill.view
+Path: /user/joe/emp_mgr_view.drill.view
+ readfile: g:hr
+ writefile:
+  executefile:
+  readdir:
+  addchild:
+  deletechild:
+  lookupdir:
+  inherit: true
+  mode: ---------
+
+   You may also want to view another [9]File ACE Example.
+
+References
+
+   1. http://maprdocs.mapr.com/51/index.html#Drill/ApacheDrillonMapR.html
+   2. http://drill.apache.org/docs/configuring-user-impersonation/
+   3. http://drill.apache.org/docs/configuring-user-impersonation/#impersonation-and-views
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/FileDirACE.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditFileDirACE.html
+   6. http://drill.apache.org/docs/create-view/
+   7. https://drill.apache.org/docs/workspaces/
+   8. https://drill.apache.org/docs/plugin-configuration-basics/
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/FileACE-Example.html

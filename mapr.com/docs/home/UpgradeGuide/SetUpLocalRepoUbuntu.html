@@ -1,0 +1,43 @@
+Set Up a Local Repository: Ubuntu
+
+   To create a local repository, download your files from the Internet and
+   then add the repositories to each node in the cluster.
+
+   You create a local repository from files that you download from the
+   internet, and then add the repositories to each node in the cluster.
+   The files that you download differ from version to version. See the
+   [1]Release Notes for the URLs for all versions.
+    1. Login as root on the machine where you will set up the repository.
+    2. Change to the directory /root and create the following directories
+       within it:
+       [directory_structure.png]
+    3. On a computer that is connected to the Internet, download the
+       following files, substituting the appropriate <version> and
+       <datestamp>.
+       For example:
+http://package.mapr.com/releases/v<version>/ubuntu/mapr-v<version>GA-upgrade.deb
+.tgz
+    4. Copy the files to /root/mapr/mapr on the node, and extract them
+       there.
+       For example:
+tar -xvzf <product_package>.deb.tgz
+    5. Navigate to the /root/mapr/ directory.
+    6. Use dpkg-scanpackages to create Packages.gz in the binary-amd64
+       directory.
+dpkg-scanpackages . /dev/null | gzip -9c > ./dists/binary/optional/binary-amd64/
+Packages.gz
+    7. Move the entire /root/mapr directory to the default directory
+       served by the HTTP server (for example, /var/www) and make sure the
+       HTTP server is running.
+    8. Add the following line to /etc/apt/sources.list on each node,
+       replacing <host> with the IP address or hostname of the node where
+       you created the repository.
+       deb http://<host</mapr binary optional
+    9. On each node update the package indexes (as root or with sudo).
+       apt-get update
+   10. Use apt-get to install MapR software and Hadoop ecosystem
+       components from the local repository on each node.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_packages_and_deps_60.html

@@ -1,0 +1,56 @@
+Creating Volume-level ACLs
+
+   MapR provides volumes as a way to organize data and manage cluster
+   performance. For example, you might want to create a volume for each
+   user, department, or project. You can then create a volume-level ACL
+   that controls which users and groups have access to that volume, and
+   what actions they may perform.
+
+   You can create volume-level ACLs from the MapR Control System (MCS) or
+   from the command line.
+
+Creating Volume-level ACLs from the MCS
+
+   For:
+     * New volumes, see [1]Creating a Volume to set volume-level ACLs.
+     * Existing volumes, see [2]Modifying a Volume to modify volume-level
+       ACLs.
+
+Creating Volume-level ACLs from the Command Line
+
+   To create an ACL at the command line, use the [3]acl set command to
+   specify a list of authorized users (or groups) and the actions they are
+   allowed to perform.
+
+   The syntax is:
+maprcli acl set -type volume -name <volume name> [-user <username>:<action> -gro
+up <groupname>:<action>]
+
+   Include spaces between multiple entries, such as a list of usernames
+   and their associated permission levels (or actions). Each allowed
+   action has a permission code associated with it. The codes are
+   explained below.
+   Permission Code Allowed Action
+   dump Dump or back up the volume
+   restore Restore or mirror the volume
+   m Modify the volume's properties
+   d Delete the volume
+   a Administrator (can edit and view ACLs, but cannot perform volume
+   operations)
+   fc Full control over the volume (this enables all volume-related
+   administrative options with the exception of changing the volume ACLs)
+
+Example
+
+   This example shows how to create an ACL for a volume named test-volume
+   that allows full control over volume ACLs for user rjones. In addition,
+   all users in the developers group are given permission to dump,
+   restore, and modify volume properties.
+maprcli acl set -type volume -name test-volume -user rjones:fc
+-group developers:dump,restore,m
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl-set.html

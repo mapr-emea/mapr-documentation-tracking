@@ -1,0 +1,38 @@
+Table Replication
+
+   Data in one table can be replicated to another table that is in the
+   same cluster or in a separate cluster. This type of replication is in
+   addition to the automatic replication that occurs with table regions
+   within a volume.
+
+   You can replicate changes (puts and deletes), entire tables, specific
+   column families, and specific columns.
+   Note: MapR binary tables can only be replicated to binary tables; MapR
+   JSON tables can only be replicated to JSON tables.
+     * Tables that data is replicated from are called source tables, while
+       tables that data is replicated to are called replicas.
+     * Clusters that data is replicated from are called source clusters.
+       Clusters that data is replicated to are called destination
+       clusters. A single cluster can be both a source cluster and a
+       destination cluster, depending on the replication configuration in
+       which the cluster participates.
+     * Replication takes place between source and destination clusters.
+       However, source clusters do not send data to nodes in the
+       destination cluster directly. The replication stream (the data
+       being pushed to the replicas) is consumed by one or more MapR
+       gateways in the destination cluster. The gateways receive the
+       updates from the source cluster, batch them, and apply them to the
+       replica tables. Multiple gateways serve the purpose of both load
+       balancing and failover.
+
+   [gateway-simple.png]
+
+   For more information about gateways, see “[1]Administering MapR
+   Gateways.
+   Note: The maximum number of replicas that a source table can replicate
+   to is 64. The maximum number of source tables that a replica can accept
+   updates from is 64.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/MapRGateways.html

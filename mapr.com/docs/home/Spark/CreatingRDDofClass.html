@@ -1,0 +1,60 @@
+Creating an Apache Spark RDD of a Class
+
+   When loading data as an Apache Spark RDD, if you have a custom class in
+   your application, you can present the data as objects of your class.
+     * [1]Scala
+     * [2]Java
+
+   You must define the custom class using Jackson semantics for Scala
+   modules. The following example defines a custom User class:
+case class User (@JsonProperty("_id") id:String,
+            @JsonProperty("first_name") firstName:String,
+            @JsonProperty("last_name") lastName: String,
+            @JsonProperty("dob") dob: ODate,
+            @JsonProperty("interests") interests: List[String])
+
+   In the following example, by supplying User as a type parameter to the
+   function while loading the MapR-DB table, you can create an RDD of the
+   User class:
+val userprofilesRDD = sc.loadFromMapRDB[User]("/tmp/user_profiles")
+                      .where("condition")
+
+   When specifying a bean class, the SELECT clause is unnecessary and is
+   ignored.
+   You must define a custom bean class as follows:
+public static class Person implements Serializable {
+            private String _id;
+            private String firstName;
+            private String lastName;
+            private Date dob;
+            private Seq<String> interests;
+            public String get_id() { return _id; }
+            public void set_id(String _id) { this._id = _id; }
+            public String getFirstName() { return firstName; }
+            public void setFirstName(String firstName) { this.firstName = firstN
+ame; }
+            public String getLastName() { return lastName; }
+            public void setLastName(String lastName) { this.lastName = lastName;
+ }
+            public Date getDob() { return dob; }
+            public void setDob(Date dob) { this.dob = dob; }
+            public Seq<String> getInterests() { return interests; }
+            public void setInterests(Seq<String> interests) { this.interests = i
+nterests; }
+           }
+
+   In the following example, by supplying the User bean class as a type
+   parameter while loading the MapR-DB table, you can create a
+   MapRDBJavaRDD of the User class:
+import com.mapr.db.spark.api.java.MapRDBJavaSparkContext;
+
+MapRDBJavaSparkContext mapRDBSparkContext = new MapRDBJavaSparkContext(spark.spa
+rkContext());
+MapRDBJavaRDD userprofilesRDD = mapRDBSparkContext.loadFromMapRDB("/tmp/user_pro
+files",
+                                User.class).where(<condition>);
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/CreatingRDDofClass.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/CreatingRDDofClass.html#div1entry2

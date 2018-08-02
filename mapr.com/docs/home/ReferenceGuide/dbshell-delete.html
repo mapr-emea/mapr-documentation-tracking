@@ -1,0 +1,61 @@
+dbshell delete
+
+Description
+
+   The dbshell delete command deletes a single JSON document. To delete a
+   document, specify the path of the table where the document is located,
+   the ID of the document, and an optional condition. If the condition for
+   the specified document evaluates to true, the document is deleted.
+
+Parameters
+
+   delete Options Description
+
+   *, --t, --table
+
+   (Required)
+
+   Table path
+
+   --id
+
+   (Required)
+
+   ID of the document to delete
+   Note: You can specify this parameter only once.
+
+   --c, --where
+
+   OJAI condition, in JSON format
+
+   The condition must qualify to perform the delete. See [1]OJAI Query
+   Condition Syntax for a description of the syntax.
+
+Syntax
+
+delete <table path> --id <row-key> --c <condition>
+
+Example: Delete a Document if a Condition is Met
+
+   The following example deletes the document with the _id id1, if the
+   condition (a.b[0].boolean == false && (a.c.d != 5 || a.b[1].decimal >
+   1)) is met:
+delete /tbl --id id1
+    --c {
+        "$and":[
+            {"$eq":{"a.b[0].boolean":false}},
+            {"$or":[
+                {"$ne":{"a.c.d":5}},
+                {"$gt":{"a.b[1].decimal":1}}
+            ]}
+        ]}
+
+Example: Delete a Document
+
+   The following example deletes a document with _id movie0000002 from the
+   movies table:
+delete /data/movies --id movie0000002
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields

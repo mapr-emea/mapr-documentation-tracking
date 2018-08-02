@@ -1,0 +1,39 @@
+Selecting a Replication Type for High Availability
+
+   MapR volumes, stored as pieces called containers, are replicated,
+   typically three times, on separate nodes to protect data and provide
+   uninterrupted access to data in the event of a node failure. Since all
+   form of data is replicated, in the event of a node failure, after a
+   brief delay while the failure is being detected, clients are simply
+   directed to a replica, which serves as an alternative location for a
+   data object, to continue normally. The latency as a result of the
+   failure being detected can be reduced by adjusting the number of TCP
+   retries. Furthermore, selecting a container replication type that is
+   appropriate for your cluster layout allows for faster replication of
+   container state, which in turn allows for retrieval of the most current
+   data in the event of a node failure.
+
+   MapR supports two types of container replication -- high-throughput or
+   cascading replication, where volumes are replicated sequentially on
+   intermediate and tail containers and low-latency or star replication,
+   where volumes are replicated on multiple containers in parallel.
+   Note: For more information, see [1]How MapR-FS and Associated Services
+   Work.
+
+   The tradeoffs between the replication types is one of latency and
+   throughput. While the low-latency replication delivers relatively lower
+   throughput than the high-throughput replication, the high-throughput
+   replication suffers from relatively higher latencies than the
+   low-latency replication. Another advantage of low-latency replication
+   is that since the master container is connected to all other replica
+   containers, there is no need to failover a replica container in the
+   event of a failure thus reducing the duration of recovery, whereas with
+   high-throughput replication, in the event of a failure of an
+   intermediate container, clients may experience increased latency while
+   CLDB, after detecting the failure, attempts to update the replication
+   chain by making the next or tail container (whichever comes immediately
+   after the failed container) as the next container in the chain.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Best-Practices.html#concept_acv_z4m_s5

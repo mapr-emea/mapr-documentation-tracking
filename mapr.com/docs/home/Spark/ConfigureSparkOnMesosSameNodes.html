@@ -1,0 +1,39 @@
+Configuring Spark on Mesos - Spark and Mesos Installed on Same Node
+
+   This topic describes the steps to configure Apache Spark on Apache
+   Mesos when Spark and Mesos are installed on the same node.
+   Important: If you have not already done so, [1]run configure.sh -R.
+   If Spark is not installed on the same node as your Mesos slave, follow
+   the steps at [2]Configuring Spark on Mesos - Spark and Mesos Installed
+   on Different Nodes.
+    1. Make the following changes in SPARK_HOME/conf/spark-env.sh:
+         a. Export MESOS_NATIVE_JAVA_LIBRARY, setting it to the location
+            of the Mesos Java library.
+            For example,
+export MESOS_NATIVE_JAVA_LIBRARY=/opt/mapr/mesos/mesos-1.2.0/build/src/.libs/lib
+mesos.so
+         b. Uncomment the following line from the file:
+#MAPR_MESOS_CLASSPATH=$MAPR_SPARK_CLASSPATH
+    2. If you plan to run Spark on Mesos in cluster deployment mode, copy
+       all application files to a MapR-FS location accessible by Mesos.
+       This includes jar and python files.
+       The Spark driver does not upload local jars. The following example
+       copies the Spark examples jar to /user/mapr in MapR-FS.
+hadoop fs -put /opt/mapr/spark/spark-2.1.0/examples/jars/spark-examples_2.11-2.1
+.0-mapr-SNAPSHOT.jar /user/mapr/
+       Use the following URI to specify the location of the jar file in
+       this example, when submitting your Spark job:
+maprfs:///user/mapr/spark-examples_2.11-2.1.0-mapr-SNAPSHOT.jar
+    3. Start the Mesos master.
+sudo /path/to/mesos/mesos-<version>/build/bin/mesos-master.sh --ip=<mesos-master
+-node-ip> --work_dir=/var/lib/mesos
+    4. Start the Mesos agents.
+sudo /path/to/mesos/mesos-<version>/build/bin/mesos-agent.sh --master=<mesos-mas
+ter-node-ip>:5050 --work_dir=/var/lib/mesos
+       Note: You can specify resource options for agents using
+       --resources="cpus:2;dfsio_spindles:3;mem:4192"
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SparkConfigureShR.html#concept_x2q_5dl_3bb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/ConfigureSparkOnMesosDifferentNodes.html#task_c4v_m5v_l1b

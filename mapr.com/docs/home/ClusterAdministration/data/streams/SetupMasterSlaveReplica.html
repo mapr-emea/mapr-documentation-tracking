@@ -1,0 +1,69 @@
+Setting Up Master-Slave Stream Replication Manually
+
+   In this topology, you replicate in one direction. Replica streams can
+   be in a remote MapR cluster or in the MapR cluster where their source
+   streams are located. All updates from a source stream arrive at a
+   replica stream after having been authenticated at a gateway. Therefore,
+   the produceperm access control expressions on the replica stream is
+   irrelevant; gateways have the implicit authority to publish messages to
+   topics in replica streams.
+
+   To set up master-slave replication of streams:
+    1. Create the replica manually with the maprcli stream create command.
+       Use the -copyMetaFrom option to ensure that the metadata for the
+       replica is identical to the metadata for the source stream.
+maprcli stream create -path <path to replica>
+-copyMetaFrom <path to source stream>
+       For example, to create the replica activity in the newyork cluster
+       and use the metadata from the source stream in the sanfrancisco
+       cluster, you could use this command:
+maprcli stream create -path /mapr/newyork/activity
+-copymetafrom /mapr/sanfrancisco/activity
+    2. Register the replica as a replica of the source stream by running
+       the maprcli stream replica add command.
+maprcli stream replica add -path <path to source stream>
+-replica <path to replica> -paused true
+       For example, to register the activity stream in the newyork cluster
+       as a replica of the activity stream in the sanfrancisco cluster,
+       you could use this command:
+maprcli stream replica add -path /mapr/sanfrancisco/activity
+-replica /mapr/newyork/activity -paused true
+       The -paused parameter ensures that replication does not start
+       immediately after you register the source stream as a source for
+       this replica. You do this registration in step 4.
+    3. Verify that you specified the correct replica by running the
+       maprcli stream replica list command.
+maprcli stream replica list -path <path to source stream>
+       To verify that the activity stream in the newyork cluster is a
+       replica of the activity stream in the sanfrancisco cluster, you
+       could look at the output of this command:
+maprcli stream replica list -path /mapr/sanfrancisco/activity
+    4. Authorize replication between the streams by defining the source
+       stream as the upstream stream for the replica by running the
+       maprcli stream upstream add command.
+       Definition of the upstream stream ensures that a stream cannot
+       replicate updates to any replica. Replication depends on a two-way
+       agreement between the owners of the two streams.
+maprcli stream upstream add -path <path to replica> -upstream
+<path to source stream>
+       To add the activity stream in the sanfrancisco cluster as an
+       upstream source for the activity stream in the newyork cluster:
+maprcli stream upstream add -path /mapr/newyork/activity -upstream
+/mapr/sanfrancisco/activity
+    5. Verify that you specified the correct source stream by running the
+       maprcli stream upstream list command.
+maprcli stream upstream list -path <path to the replica>
+       To verify this in our example scenario, you could use this command:
+maprcli stream upstream list -path /mapr/newyork/activity
+    6. Load the replica with data from the source stream by using the
+       [1]mapr copystream utility.
+    7. Start replication with the command maprcli stream replica resume.
+maprcli stream replica resume -path <path to the source stream>
+-replica <path to the replica>
+       For our example scenario, you could use this command:
+maprcli stream replica resume -path mapr/sanfrancisco/activity
+-replica /mapr/newyork/activity
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_copystream.html#mapr_copystream

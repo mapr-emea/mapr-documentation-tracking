@@ -1,0 +1,48 @@
+Configure Kerberos for HBase REST Gateway
+
+    1. Add the following to the hbase-site.xml file for every REST
+       Gateway:
+<property>
+    <name>hbase.rest.keytab.file</name>
+    <value>$KEYTAB</value>
+</property>
+<property>
+    <name>hbase.rest.kerberos.principal</name>
+    <value>$USER/_HOST@HADOOP.LOCALDOMAIN</value>
+</property>
+       Substitute the appropriate credential and keytab for $USER and
+       $KEYTAB respectively.
+       The REST Gateway will authenticate with HBase using the supplied
+       credential.
+    2. In order to use the REST API principal to interact with HBase, it
+       is also necessary to add the hbase.rest.kerberos.principal to the
+       acl table. For example, to give the REST API principal,
+       rest_server, administrative access, a command such as this one will
+       suffice:
+grant 'rest_server', 'RWCA'
+    3. To enable REST Gateway Kerberos authentication for client access,
+       add the following to the hbase-site.xml file for every REST
+       Gateway:
+<property>
+    <name>hbase.rest.authentication.type</name>
+    <value>kerberos</value>
+</property>
+<property>
+    <name>hbase.rest.authentication.kerberos.principal</name>
+    <value>HTTP/_HOST@HADOOP.LOCALDOMAIN</value>
+</property>
+<property>
+    <name>hbase.rest.authentication.kerberos.keytab</name>
+    <value>$KEYTAB</value>
+</property>
+<!-- Add these if you need to configure a different DNS interface from the defau
+lt -->
+<property>
+    <name>hbase.rest.dns.interface</name>
+    <value>default</value>
+</property>
+<property>
+    <name>hbase.rest.dns.nameserver</name>
+    <value>default</value>
+</property>
+       Substitute the keytab for HTTP for $KEYTAB.

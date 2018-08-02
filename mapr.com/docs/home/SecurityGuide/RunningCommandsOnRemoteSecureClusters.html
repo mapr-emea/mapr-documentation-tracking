@@ -1,0 +1,117 @@
+Configuring Secure Clusters for Running Commands Remotely
+
+   You can configure a number of secure clusters to access them all from
+   one cluster. This way, you need not log into each secure cluster
+   separately and run maprcli commands locally on them.
+
+   For example, suppose you need to manage two secure clusters, clusterA
+   and clusterB. One method of doing so would be to log into each cluster
+   separately and run commands locally on each. However, it is possible to
+   log into clusterA only and manage both clusters from clusterA, running
+   commands locally for clusterA and remotely for clusterB. When you type
+   the maprcli commands, you would use the -cluster parameter in those
+   commands to specify which cluster you want the commands to run on.
+
+   You can configure the secure clusters for remote access manually (as
+   described below) or automatically by running the
+   configure-crosscluster.sh utility. If you run the
+   configure-crosscluster.sh utility, the utility configures the clusters
+   for running commands remotely in both directions. See
+   [1]configure-crosscluster.sh for more information.
+
+Setting Up Secure Clusters Manually for Cross-Cluster Access
+
+   To manually configure two secure clusters for remote access:
+    1. Log in to the secure cluster you want to run commands from.
+       In the rest of this procedure, this cluster is referred to as
+       clusterA and the remote cluster is referred to as clusterB.
+    2. Configure clusterA for communicating with the other clusters by
+       editing mapr-clusters.conf file on each node clusterA to specify
+       the hostname or IP address of the CLDB nodes on the other clusters.
+       For example, suppose:
+          + clusterA’s /opt/mapr/conf/mapr-clusters.conf file contains the
+            following:
+clusterA.cluster.com secure=true perfnode50.lab:7222
+          + clusterB’s /opt/mapr/conf/mapr-clusters.conf file contains the
+            following:
+clusterB.cluster.com secure=true perfnode100.lab:7222
+       Perform the following steps to configure the nodes on the clusters:
+         a. On any node in clusterA, append the first entry from
+            clusterB’s mapr-clusters.conf file, entry which is prefixed
+            with the cluster name, to the end of clusterA’s
+            mapr-clusters.conf file.
+            Note that clusterA’s entry must be the first line of the
+            mapr-clusters.conf file:
+clusterA.cluster.com secure=true perfnode50.lab:7222
+clusterB.cluster.com secure=true perfnode100.lab:7222
+            The clusterA’s mapr-clusters.conf file now contains two
+            entries.
+         b. Copy the updated /opt/mapr/conf/mapr-clusters.conf file to all
+            the other nodes in clusterA.
+         c. On any node in clusterB, append the first entry from
+            clusterA’s mapr-clusters.conf file, entry which is prefixed
+            with the cluster name, to the end of the remote cluster’s
+            mapr-clusters.conf file.
+            Note that clusterB’s entry must be the first line of
+            mapr-clusters.conf file:
+clusterB.cluster.com secure=true perfnode100.lab:7222
+clusterA.cluster.com secure=true perfnode50.lab:7222
+            The clusterB’s mapr-clusters.conf file now contains two
+            entries.
+         d. Copy the updated /opt/mapr/conf/mapr-clusters.conf file to all
+            the nodes in clusterB.
+       See [2]mapr-clusters.conf.
+    3. Perform the following steps on clusterA to ensure that the
+       ssl_truststore file has signers for all the clusters:
+         a. Copy the ssl_truststore from the /opt/mapr/conf directory of
+            clusterB into a temporary directory on clusterA.
+            For example:
+# scp mapr@<remote-ip>:/opt/mapr/conf/ssl_truststore /tmp/clusterB_ssl_truststor
+e
+         b. Merge the ssl_truststore of clusterB with the ssl_truststore
+            of clusterA using the /opt/mapr/server/manageSSLKeys.sh
+            utility.
+            For example, if you copied the ssl_truststore file of clusterB
+            as /tmp/clusterB_ssl_truststore, run the following command to
+            merge the files:
+/opt/mapr/server/manageSSLKeys.sh merge /tmp/clusterB_ssl_truststore /opt/mapr/c
+onf/ssl_truststore
+         c. Copy the merged ssl_truststore file to every node on clusterA.
+    4. Perform the following steps on clusterB only if you want to set up
+       access to clusterA from clusterB:
+         a. Copy the ssl_truststore from the /opt/mapr/conf directory of
+            clusterA into a temporary directory on clusterB.
+            For example:
+# scp mapr@<remote-ip>:/opt/mapr/conf/ssl_truststore /tmp/clusterA_ssl_truststor
+e
+         b. Merge the ssl_truststore of clusterB with the ssl_truststore
+            of clusterA using the /opt/mapr/server/manageSSLKeys.sh
+            utility.
+            For example, if you copied the ssl_truststore file of clusterA
+            as /tmp/clusterA_ssl_truststore, run the following command to
+            merge the files:
+/opt/mapr/server/manageSSLKeys.sh merge /tmp/clusterA_ssl_truststore /opt/mapr/c
+onf/ssl_truststore
+         c. Copy the merged ssl_truststore file to every node on clusterB.
+    5. Verify access by running remote commands on clusterA.
+       See [3]Verifying Access to run Remote Commands.
+
+Verifying Access to run Remote Commands
+
+    1. Log in to any node on clusterA and run the [4]maprlogin utility
+       from clusterA to obtain user ticket for accessing the remote
+       cluster.
+       For example, to obtain tickets for managing the remote cluster from
+       clusterA, run the following command::
+# /opt/mapr/bin/maprlogin password -cluster clusterB.cluster.com
+    2. Verify access by running remote commands on clusterA.
+       For example, the following command, executed from a node in
+       clusterA, lists the volumes on clusterB:
+# /opt/mapr/bin/maprcli volume list -cluster clusterB.cluster.com
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure-crosscluster.sh.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr-clusters.conf.html#mapr-clusters.conf
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/RunningCommandsOnRemoteSecureClusters.html#verify
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html

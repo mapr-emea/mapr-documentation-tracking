@@ -1,0 +1,59 @@
+Creating C Apps - Binary Tables
+
+   MapR provides a library of C APIs – libMapRClient – for performing
+   operations on MapR-DB binary tables.
+
+   The MapR-DB libMapRClient C API library is MapR's extension of the
+   libhbase C API library. The libMapRClient header files are in this
+   directory: /opt/mapr/include/hbase
+
+   libMapRClient uses the following conventions:
+     * All data types are prefixed with 'hb_'.
+     * All exported functions are annotated with HBASE_API, prefixed with
+       'hb_' and named using the following convention:
+       'hb_<subject>_<operation>_[<object>|<property>]'
+     * All asynchronous APIs take a callback which is triggered when a
+       request completes. This callback can be triggered in the caller's
+       thread or in another thread. To avoid any potential deadlock or
+       starvation, applications should not block in the callback routine.
+     * All callbacks take a void pointer for application developers to
+       supply their own data. This void pointer is passed when callback is
+       triggered.
+
+   Note: No explicit batching is supported for asynchronous APIs.
+   Warning: It is the responsibility of applications to free up all
+   backing data buffers. However, for asynchronous APIs, applications must
+   wait before freeing buffers until after receiving callbacks or
+   manipulating results. For better performance of asynchronous APIs,
+   libMapRClient does not copy data buffers that are allocated for
+   mutations, gets, and scans. These buffers hold table names, name space
+   identifiers, row keys, column-family names, and column names or
+   qualifiers. Instead, libMaprClient temporarily takes ownership of the
+   buffers and references them with pointers until the callback is
+   triggered. Therefore, applications should not free memory buffers
+   before receiving callbacks for mutations. Applications also should not
+   free memory buffers before receiving results for gets and scans. If
+   applications must read results, the applications should not free memory
+   buffers until the results are destroyed.
+
+   Note: When one of these asynchronous APIs is invoked, a work item is
+   created and queued for processing on the client:
+     * hb_client_destroy()
+     * hb_get_send()
+     * hb_mutation_send()
+     * hb_scanner_destroy()
+     * hb_scanner_next()
+
+   The work item is picked up as soon as possible by a thread in a thread
+   pool.
+
+   Client applications can often call these asynchronous APIs faster than
+   the work items are processed. To ensure that the queue of work items
+   does not grow without bound, the configuration parameter
+   fs.mapr.pool.queue.max_size is set by default to 10,000. You can modify
+   this parameter in the /opt/mapr/conf/dbclient.conf file for a client.
+
+   Whenever the number of work items in the queue reaches this limit,
+   libMapRClient returns the ENOBUFS error for each asynchronous call.
+   Client applications are expected to handle this error, and can try the
+   call again later.

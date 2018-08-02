@@ -1,0 +1,65 @@
+Integrate Spark-SQL (Spark 1.6.1) with Hive
+
+   You integrate Spark-SQL with Hive when you want to run Spark-SQL
+   queries on Hive tables. This information is for Spark 1.6.1 or earlier
+   users.
+
+   For information about Spark-SQL and Hive support, see [1]Spark Feature
+   Support.
+   Note: If you installed Spark with the MapR Installer, the following
+   steps are not required.
+    1. Copy the hive-site.xml file into the SPARK_HOME/conf directory so
+       that Spark and Spark-SQL recognize the Hive Metastore
+       configuration.
+    2. Configure the Hive version in the
+       /opt/mapr/spark/spark-<version>/mapr-util/compatibility.version
+       file:
+hive_versions=<version>
+    3. Add the following additional properties to the
+       /opt/mapr/spark/spark-<version>/conf/spark-defaults.conf file:
+
+   Property Configuration Requirements
+   spark.yarn.dist.files Option 1: For Spark on YARN, specify the location
+   of the hive-site.xml and the datanucleus JARs:
+/opt/mapr/hive/hive-<hive-version>/conf/hive-site.xml,/opt/mapr/hive/<version>/l
+ib/datanucleus-api-jdo-<version>.jar,/opt/mapr/hive/<version>/lib/datanucleus-co
+re-<version>.jar,/opt/mapr/hive/hive-1.2/lib/datanucleus-rdbms-<version>.jar
+
+   Option 2: For Spark on YARN, store hive-site.xml and datanucleus JARs
+   on MapR-FS, and use the following syntax:
+maprfs:///<path to hive-site.xml>,maprfs:///<path to datanucleus jar files>
+
+   spark.sql.hive.metastore.version Specify the Hive version that you are
+   using. For example, for Hive 1.2.x, set the value to 1.2.0.
+   spark.sql.hive.metastore.jars Specify the classpath to JARs for Hive,
+   Hive dependencies, and Hadoop. These files must be available on the
+   node from which you submit Spark jobs:
+/opt/mapr/hadoop/hadoop-<hadoop-version>/etc/hadoop:/opt/mapr/hadoop/hadoop-<had
+oop-version>/share/hadoop/common/lib/*:<rest of hadoop classpath>:/opt/mapr/hive
+/hive-<version>/lib/accumulo-core-<version>.jar:/opt/mapr/hive/hive-<version>/li
+b/hive-contrib-<version>.jar:<rest of hive classpath>
+
+   For example, when you run with Hive 1.2, you can set the following
+   classpath:
+/opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop:/opt/mapr/hadoop/hadoop-2.7.0/share/had
+oop/common/lib/*:/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/*:/opt/mapr/h
+adoop/./hadoop-2.7.0/share/hadoop/mapreduce/*:/opt/mapr/hadoop/hadoop-2.7.0/shar
+e/hadoop/yarn/*:/opt/mapr/hive/hive-1.2/lib/accumulo-core-1.6.0.jar:/opt/mapr/hi
+ve/hive-1.2/lib/hive-contrib-1.2.0-mapr-1607.jar:/opt/mapr/hive/hive-1.2/lib/*
+
+   For more information, see the [2]Apache Spark documentation.
+    4. To verify the integration, run the following command as the mapr
+       user or as a user that mapr impersonates:
+MASTER=<master-url> <spark-home>/bin/run-example sql.hive.HiveFromSpark
+       The master URL for the cluster is either spark://<host>:7077,
+       yarn-client, or yarn-cluster.
+
+   Note: The default port for both HiveServer 2 and the Spark Thrift
+   server is 10000. Therefore, before you start the Spark Thrift server on
+   a node where HiveServer 2 is running, verify that there is no port
+   conflict.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SparkFeatureSupport.html#concept_ig3_1pk_w5
+   2. http://spark.apache.org/docs/latest/sql-programming-guide.html#interacting-with-different-versions-of-hive-metastore

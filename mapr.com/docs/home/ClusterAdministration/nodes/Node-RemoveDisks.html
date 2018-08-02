@@ -1,0 +1,95 @@
+Removing Disks from MapR-FS
+
+   When you remove a disk from MapR-FS, other disks in the storage pool
+   are also removed automatically from MapR-FS and are no longer in use
+   (they are available but off-line). Their disk storage goes to 0%, and
+   they are eligible to be re-added to MapR-FS to build a new storage
+   pool. You can either replace the disk and re-add it along with the
+   other disks that were in the storage pool, or just re-add the other
+   disks if you do not plan to replace the disk you removed. See [1]Adding
+   Disks to MapR-FS for more information.
+   Warning: Removing a disk in the storage pool that contains Container ID
+   1 will shut down CLDB, triggering a CLDB failover. Container ID 1
+   contains CLDB data for the master CLDB. From the command-line, run the
+   maprcli disk remove command without the -force 1 option first and
+   examine the warning messages to make sure you aren't removing the disk
+   with Container ID 1. To safely remove such a disk, perform a [2]CLDB
+   Failover to make one of the other CLDB nodes the primary CLDB, then
+   remove the disk as normal.
+   Before removing or replacing disks, make sure the Replication Alarm
+   (VOLUME_ALARM_DATA_UNDER_REPLICATED) and Data Alarm
+   (VOLUME_ALARM_DATA_UNAVAILABLE) are not raised. These alarms can
+   indicate potential or actual data loss. If either alarm is raised, you
+   might be able to repair the problem using the /opt/mapr/server/fsck
+   utility before removing or replacing disks.
+   Note: Using the /opt/mapr/server/fsck utility with the -r flag to
+   repair a filesystem risks data loss. Call MapR support before using
+   /opt/mapr/server/fsck -r.
+
+Removing Disks from MapR-FS Using the MapR Control System
+
+   Complete the following steps to remove disks using the MapR Control
+   System:
+    1. Log in to MCS and go to the Summary tab in the [3]node information
+       page.
+    2. Select the disks to remove disks in the Disks pane and click Remove
+       Disk(s) from MapR-FS.
+       The Remove Disk(s) from MapR-FS confirmation dialog displays.
+       Warning: One or more disks you selected may have unreplicated data
+       on it and this action will forcefully remove the disks.
+    3. Review the list and click Remove Disk.
+       Wait several minutes while the removal process completes. After you
+       remove the disks, any other disks in the same storage pools are
+       taken offline and marked as available (not in use by MapR).
+    4. Remove the physical disks from the node or nodes according to the
+       correct hardware procedure.
+    5. From a command line terminal, remove the failed disk log file from
+       the /opt/mapr/logs directory.
+       These log files are typically named like this:
+diskname.failed.info
+
+Removing Disks from MapR-FS Using the CLI or REST API
+
+    1. On the node, determine which disk to remove/replace by examining
+       Disk entries in the /opt/mapr/logs/faileddisk.log file.
+    2. Run the following command, substituting the hostname or IP address
+       for <host> and a list of disks for <disks>
+maprcli disk remove -disks <disk names> -host <host>
+       Note: This command does not remove a disk containing unreplicated
+       data unless forced.
+       For complete reference information, see [4]disk remove.
+    3. Examine the screen output in response to the command you ran in
+       step 2.
+       For example:
+# maprcli disk remove -host `hostname -f` -disks /dev/sdd
+message   host   disk
+removed.  host1  /dev/sdd
+removed.  host1  /dev/sde
+removed.  host1  /dev/sdf
+       Make a note of the additional disks removed when the disk is
+       removed. For example, the disks /dev/sde and /dev/sdf are part of
+       the same storage pool and therefore removed along with the disk
+       (/dev/sdd).
+    4. Confirm that the removed disks do not appear in the disktab file.
+    5. Remove the disk log file from the /opt/mapr/logs directory.
+       For failed disks, these log files are typically named in the
+       pattern diskname.failed.info.
+
+   When a failed disk has been replaced, it should be [5]added back to
+   MapR-FS along with the other disks from the same storage pool that were
+   previously removed. If you add only the replacement disk to MapR-FS,
+   this will result in a non-optimal storage pool layout, which can lead
+   to degraded performance.
+
+   Once the disks are added to MapR-FS, the cluster allocates
+   properly-sized storage pools automatically. For example, if you add ten
+   disks, MapR allocates two storage pools of three disks each and two
+   storage pools of two disks each.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/nodes/Node-AddDisks.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/CLDB-Failover.html#CLDB-Failover-TheCLDBserviceautoma-d3e78
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/nodes/Node-ViewDetails.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disk-remove.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/nodes/Node-AddDisks.html

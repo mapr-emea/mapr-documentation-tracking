@@ -1,0 +1,143 @@
+Spyglass on Streams
+
+   The 6.0 release of the MapR Converged Data Platform introduces Spyglass
+   on Streams. When you install the the 6.0 version of MapR, Streams is
+   the default mechanism through which metrics flow from the collectd
+   service to OpenTSDB. Moving metrics through streams secures the data
+   and provides a mechanism to perform real-time data analytics.
+   Note: Currently, Spyglass on Streams is not available for logs. Fluentd
+   continues to use the REST API to send logs to ElasticSearch for the
+   indexing of logs.
+
+The Flow of Metrics via Streams
+
+   The collectd service collects node-level and service-level metrics from
+   each node in the cluster. The collectd service hashes metrics to a
+   stream and writes the metrics into topics in that stream.
+
+   Collectd creates two streams per cluster, Stream (0) and Stream (1).
+   Each stream contains approximately 100+ topics. Topic names are of the
+   format <hostname>_<metricname>, for example mfs81.qa.lab_cpu.percent.
+
+   Collectd maps the metric names to Stream (0) or Stream (1) using the
+   djb2 hash algorithm, as shown:
+static int hash(const char *str, int range)
+{ int hash = 5381; int c; while ((c = *str++) != 0) hash = ((hash << 5) + hash)
++ c; /* hash * 33 + c */ return abs(hash%range); }
+
+   The algorithm hashes the metric name to an integer, either 0 or 1.
+   The Streams server distributes metrics through streams to the available
+   OpenTSDB nodes and OpenTSDB consumes the metrics.
+   Note: Writing to an external OpenTSDB is not supported from release 6.0
+   onwards.
+
+Spyglass on Streams Performance
+
+   The performance of Streams for metrics depends on the size of the
+   cluster, the number of OpenTSDB nodes available to consume metrics
+   data, and the number of streams and partitions available to move the
+   metrics data from the collectd service to OpenTSDB.
+
+   Default collectd and OpenTSDB settings work well for clusters with up
+   to one-hundred nodes and three OpenTSDB nodes. If the number of nodes
+   increases or you notice that performance is sluggish, you can improve
+   performance by adding OpenTSDB nodes and modifying the number of
+   streams.
+
+   Evaluating Streams Performance
+
+   You can use the [1]stream cursor list and [2]stream topic info maprcli
+   commands to view the producer (collectd) and consumer (OpenTSDB)
+   statistics. Check the statistics to see if there is an increase in lag
+   time between producers and consumers. If you notice an increase in lag
+   time, increase the number of consumers (OpenTSDB nodes) or modify the
+   streams and partition settings, as explained in the following sections.
+   For more information, see [3]Monitoring Producers and [4]Monitoring
+   Consumers.
+
+Determining How Many OpenTSDB Nodes to Install
+
+   Having multiple OpenTSDB nodes in the cluster distributes the workload.
+   The number of partitions and OpenTSDB nodes determines the level of
+   parallelism for consumption.
+
+   Each OpenTSDB node can consume one partition at a time. By default,
+   metrics data is divided across five partitions in each topic and
+   optimal parallelism is reached if there are five OpenTSDB nodes to
+   consume the partitions. See [5]Parallelism When Consuming Messages and
+   note that the term “consumer” in the topic equates to an OpenTSDB node
+   in Spyglass on Streams.
+   A general guideline for the minimum number of OpenTSDB nodes in a
+   cluster is one for every 10x increase in nodes beyond ten, for example:
+     * 3 OpenTSDB nodes in a 10 node cluster
+     * 4 OpenTSDB nodes in a 100 node cluster
+     * 5 OpenTSDB nodes in a 1000 node cluster
+     * ...
+
+   Note: For every 10x nodes you install, you should increase the streams
+   number by 2.
+
+   If your cluster has ten or more nodes, at least three OpenTSDB nodes
+   should be available to consume metrics. Typically, for every 10x
+   increase in nodes, you should add another OpenTSDB node. For example,
+   if your cluster reaches a size of 100 nodes, have 4 OpenTSDB nodes
+   available for consumption. Note that an increase in the number of
+   OpenTSDB nodes may require an increase the number of streams and/or
+   partitions.
+   These guidelines do not guarantee optimal performance. Evaluate the
+   performance of the streams to determine if your cluster would benefit
+   from additional OpenTSDB nodes or tuning the number of streams or
+   partitions.
+   Note: If all configured OpenTSDB nodes have been offline for several
+   hours, you may notice an initial spike in memory and CPU usage by
+   OpenTSDB processes as they aggressively try to keep up with the
+   metrics. You can reduce the number of AsynchHBase threads to reduce the
+   CPU and memory usage. By default, AsynchHBase runs 128 threads. To
+   modify the number of threads, add/modify the following property in the
+   /opt/mapr/asynchbase/asynchbase-<version>/conf/asynchbase.conf file on
+   the OpenTSDB nodes:
+"fs.mapr.async.worker.threads=<value>"
+
+Increasing the Number of Streams
+
+   The default setting for the number of streams is two. As a general
+   guideline, for every 10x increase in the number of cluster nodes, add
+   two additional streams. For example, if your cluster has one-hundred
+   nodes, add two more streams, for a total of four.
+
+   To increase the number of streams, edit the streams-specific options in
+   the collectd and OpenTSDB configuration files. The streams option in
+   each file must have the same value. After you change streams
+   parameters, reconfigure MapR Monitoring, as shown in [6]Update the
+   Monitoring Storage Nodes.
+   The following table lists the streams parameters, the default setting,
+   suggested setting for 100 and 1000 nodes, and the file in which each
+   parameter is located:
+   Parameter Default Setting (up to 100 nodes) Number of Streams for 100
+   nodes Number of Streams for 1000 nodes File Location
+   StreamsCount 2 4 6
+   /opt/mapr/collectd/collectd-<version>/etc/collectd.conf
+   MAXSTREAMS 2 4 6
+   /opt/mapr/collectd/collectd-<version>/etc/init.d/collectd
+   tsd.streams.count 2 4 6
+   /opt/mapr/opentsdb/opentsdb-<version>/etc/opentsdb/opentsdb.conf
+   Note: The settings in the table are suggestions based solely on the
+   number of nodes in the cluster. The suggested settings do not guarantee
+   optimal performance.
+
+Changing the Automatic Stream Cursor Commits
+
+   You can adjust the frequency of automatic stream cursor commits for
+   OpenTSDB. Modify the tsd.streams.autocommit.interval in opentsdb.conf
+   The unit is thousands of seconds. The default value is '60000' which is
+   60 secs. For a system with heavy loads, consider changing the value to
+   something like 5 minutes.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_cursor_list.html#untitled6
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_info.html#stream_topic_info
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/monitoring_produc.html#monitoring_produc
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/monitoring_consumers.html#monitoring_consumers
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/parallelism_when_reading_.html#parallelism_when_reading_
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Monitoring_UpdateDataStore.html#task_qts_khv_lw

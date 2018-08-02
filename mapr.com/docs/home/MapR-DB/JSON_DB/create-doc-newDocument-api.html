@@ -1,0 +1,48 @@
+Create a Document Using a Document Object in Java OJAI
+
+   You can create a new JSON document in your Java OJAI client by first
+   calling the Connection.newDocument() method to create a Document
+   object, and then calling methods on the object to specify document
+   fields and values.
+
+   The following shows the detailed sequence of steps:
+    1. Create a new JSON document by calling the newDocument() method in
+       the Connection class.
+    2. Specify the ID of the document with the setId() method.
+    3. Specify field names and their values with the set() or setArray()
+       method.
+    4. Return the results in a Document object.
+
+   For example, suppose you want to create the following JSON document:
+{
+    "_id" : "movie0000001",
+    "title" : "OJAI -- The Documentary",
+    "studio" : "MapR Technologies, Inc.",
+    "release_date" : "2015-09-29",
+    "trailers" : {
+        "teaser" : "https://10.10.21.90/trailers/teaser",
+        "theatrical" : "https://10.10.21.90/trailers/theatrical"
+    },
+    "characters" : [
+        "Heroic Developer",
+        "Evil Release Manager",
+        "Mad Development Manager"
+    ],
+    "box_office_gross" : 1000000000L
+}
+
+   The following method creates the document:
+public Document buildDocument() {
+    return connection.newDocument()
+        .setId("movie0000001")
+        .set("title", "OJAI -- The Documentary")
+        .set("studio", "MapR Technologies, Inc.")
+        .set("release_date", Values.parseDate("2015-09-29"))
+        .set("trailers.teaser", "https://10.10.21.90/trailers/teaser")
+        .set("trailers.theatrical", "https://10.10.21.90/trailers/theatrical")
+        .setArray("characters",
+            ImmutableList.of(
+                "Heroic Developer", "Evil Release Manager", "Mad Development Man
+ager"))
+        .set("box_office_gross", 1000000000L);
+}

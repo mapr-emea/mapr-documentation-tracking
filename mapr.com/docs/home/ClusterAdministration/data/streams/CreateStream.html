@@ -1,0 +1,143 @@
+Creating a Stream
+
+   You can create a stream using the MapR Control System and the CLI.
+
+   Your decision about what streams to create should take into account
+   whatever topics you want to replicate. Replication is between streams,
+   not individual topics.
+
+   For example, suppose that you plan to create the stream
+   pollution_monitors to collect various measurements about pollution
+   levels in cities in Europe. However, during a planning session, the
+   representative from Amsterdam says that her country wants to perform
+   analyses of the data for its cities, and would like your company to
+   replicate the data to its own MapR cluster, where its own consumers can
+   read the replicated messages.
+
+   You would create a separate stream of topics that contain data from
+   only the pollution sensors in the cities in that country. You might
+   even decide to do the same for each center, in case other centers
+   eventually want to perform their own analyses, too. The streams you
+   might decide to create could be pollution_monitors_netherlands,
+   pollution_monitors_sweden, and so on.
+
+Creating a Stream Using MCS
+
+   To create a stream:
+    1. Log in to MCS and click Create Stream under Data > Streams.
+       The Create New Stream page displays.
+    2. Specify the following properties.
+
+   Property Description
+   Stream Path The path and name of the stream to create.
+
+   The path to the stream can include any character allowed by MapR. For
+   example, /my/path/with:/to/mystream:topic1 is valid, but
+   /my/path/with:/to/mystream:withcolon:topic1 is invalid.
+   The name of the stream cannot include a colon (:) or a forward slash
+   (/).
+   Time To Live The amount of time to elapse between the publication of a
+   message in a topic in this stream and the expiration of that message.
+   Choose:
+          + Forever to retain messages indefinitely
+          + Seconds to specify the number of seconds. A value of 0 causes
+            messages to be retained indefinitely.
+
+   Messages that have expired are deleted during the next purge process.
+   See [1]Time-to-Live for Messages for details.
+   Compression The compression setting to use for the stream. Producer
+   client libraries can bundle messages that are to be published on the
+   same partition and compress them. The messages are sent to the server
+   compressed, are stored compressed, are replicated to other containers
+   compressed, and (if stream replication is configured) replicated to
+   replica streams compressed. Consumer client libraries receive
+   compressed data, decompresses it, and passes it to client applications.
+
+   Choose one of the following:
+          + Inherited (to inherit from the directory where the stream is
+            stored), which is the default setting
+          + OFF (to disable compression)
+          + LZF
+          + LZF4
+          + ZLIB
+
+   Auto Create Topics Whether (Yes) or not (No) to create a topic
+   automatically when a producer tries to write the first message to it.
+   Default Partitions The default number of partitions to allocate to new
+   topics in the stream. When deciding how many partitions to create by
+   default for new topics in a stream, consider the expected volume of
+   messages that will be published to the topics in the stream. High
+   message volumes can be handled more efficiently by multiple consumers
+   in consumer groups reading from multiple partitions than by individual
+   consumers reading from a single partition.
+
+   Note: You can override the default and specify a different number of
+   partitions for each topic in the stream at the time of creating the
+   topic or after creating the topic.
+   Use for Change Log Whether (Yes) or not (No) to create the stream for
+   changed data records (as a result of inserts, updates, and deletes) in
+   a MapR-DB table.
+    3. Set up access to streams for users, groups, and roles.
+       For each user, group, and/or role, you can grant (by selecting the
+       associated check box) or block (by deselecting the associated
+       checkbox) the following types of access:
+
+   Administer Can modify the access-control expressions for the stream,
+   set up replication from the stream, and modify attributes of the
+   stream.
+
+   This permission includes the topic permission.
+   Copy Stream Can copy data from one MapR stream to another MapR stream
+   (using the mapr copystream utility) and compare the message IDs,
+   metadata, and data in two MapR streams (using the mapr diffstreams
+   utility).
+   Topic Can create, edit, or remove topics in the stream.
+   Producer Can publish messages to topics in the stream.
+   Consumer Can listen to topics in the stream.
+       By default, all permissions are given to the user creating the
+       stream. To grant or block access to other users, groups, and/or
+       roles, choose one of the following:
+          + Basic Settings: Select the type — public, (OR) user, group, or
+            role — from the drop-down list and grant read and/or write
+            permissions.
+            Tip: Click [cloneACE.png] to create a copy of the associated
+            access control setting. Click [deleteRow.png] to remove the
+            associated access control expression.
+            Click Add Another to add permissions for another user, group,
+            or role.
+          + Advanced Settings: Within empty strings (""), specify user
+            (u), group (g), role (r), or public (p) who have and do not
+            have read and/or write access using the following boolean
+            expressions and subexpressions:
+               o ! — Negation operator.
+               o & — AND operation.
+               o | — OR operation.
+            Use (), parentheses, for subexpressions.
+            Alternatively, click [editPencil.png] associated with the type
+            of access to use the Create Access Control Expression window
+            to define access for public or users, group, and/or role.
+       Note: If you switch from Basic to Advanced, the basic settings, if
+       any, will be carried over to the Advanced settings. If you switch
+       from Advanced to Basic, all the settings will be lost because the
+       subexpressions and AND (&) and negation (!) operations that are
+       supported by Advanced settings are not supported in the Basic
+       settings.
+       To add access control expressions for another user, group, or role,
+       click Add Another and repeat this step.
+    4. Click Create Stream to create the stream.
+
+Creating a Stream Using the CLI or REST API
+
+   The basic command to create a stream is:
+stream create -path <Stream Path>
+
+   To run this command, your user ID must have the following permissions:
+     * readAce and writeAce on the volume
+     * lookupdir on directories in the path
+
+   For complete reference information, see [2]stream create.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/time_to_live_for_messages.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html

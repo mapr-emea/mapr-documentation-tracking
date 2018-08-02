@@ -1,0 +1,147 @@
+warden.<servicename>.conf
+
+   The warden.conf configuration file is associated with standard services
+   provided by MapR. Warden supports service monitoring for additional
+   services.
+
+   Each of these supported services requires a configuration file,
+   warden.<servicename>.conf, which is included with the package for that
+   service. When you install one of these service packages, its
+   corresponding configuration file is stored in /opt/mapr/conf/conf.d.
+   The configuration files and their packages are shown below:
+   Service Name Configuration File Comments
+   collectd warden.collectd.conf Installed with the mapr-collectd package.
+   This package is only supported for internal MapR Monitoring uses cases.
+   drill warden.drill-bits.conf Installed with the mapr-drill package.
+   elasticsearch warden.elasticsearch.conf Installed with the
+   mapr-elasticsearch package. This package is only supported for internal
+   MapR Monitoring uses cases.
+   fluentd warden.fluentd.conf Installed with the mapr-fluentd package.
+   This package is only supported for internal MapR Monitoring uses cases.
+   gateway warden.gateway.conf Installed with the mapr-gateway package.
+   grafana warden.grafana.conf Installed with the mapr-grafana package.
+   This package is only supported for internal MapR Monitoring uses cases.
+   hue warden.hue.conf Installed with the mapr-hue package.
+   httpfs warden.httpfs.conf Installed with the mapr-httpfs package.
+   hbase thrift server warden.hbasethrift.conf Installed with the
+   mapr-hbasethrift package.
+   hbase rest gateway warden.hbase-rest.conf Installed with the
+   mapr-hbase-rest package.
+   historyserver warden.historyserver.conf Installed with the
+   mapr-historyserver package.
+   hive metastore warden.hivemeta.conf Installed with the
+   mapr-hivemetadata package.
+   hiveserver2 warden.hs2.conf Installed with the mapr-hiveserver2
+   package.
+   kibana warden.kibana.conf Installed with the mapr-kibana package. This
+   package is only supported for internal MapR Monitoring uses cases.
+   nodemanager warden.nodemanager.conf Installed with the mapr-nodemanager
+   package.
+   oozie warden.oozie.conf Installed with the mapr-oozie package.
+   opentsdb warden.opentsdb.conf Installed with the mapr-opentsdb package.
+   This package is only supported for internal MapR Monitoring uses cases.
+   resourcemanager warden.resourcemanager.conf Installed with the
+   mapr-resourcemanager package.
+   sentry warden.sentry.conf Installed with the mapr-sentry package,
+   however Sentry is not automatically monitored by the Warden. When
+   Sentry is configured to use the database storage model, you can
+   manually copy the
+   /opt/mapr/sentry/sentry-<version>/conf.d/warden.sentry.conf file to the
+   /opt/mapr/conf/conf.d directory to add Sentry to the list of services
+   that the Warden monitors.
+   spark master warden.spark-master.conf Installed with the spark-master
+   package.
+
+   The following properties can be in a warden.<servicename>.conf file:
+   Property Name Description
+   services Service name and number of nodes this service should run on,
+   along with service dependencies. Format is
+   serviceName:N[depServiceName].Values for N = 1 or all.
+   service.displayname Service display name to appear in UI
+   service.command.start Service start command
+   service.command.stop Service stop command
+   service.command.type Indicates whether the script runs in background
+   (and exits) or inline (script does not exit). Type is BACKGROUND or
+   INLINE.
+   service.command.monitor Monitors string (if the service monitor command
+   does not provide sufficient monitoring)
+   service.command.monitorcommand Specifies a command that checks whether
+   the service is running
+   service.port Port where the service is running (for example, hue
+   webserver runs on port 8888)
+   service.uri
+
+   To include a link to a user interface associated with this service in
+   the MCS, enter a Uniform Resource Identifier (URI) in this property and
+   also specify the port in the service.ui.port property. For example,
+   enter /service1 for this property and then enter 8080 in the
+   service.ui.port property to provide the following UI link for this
+   service in the MCS: http://<hostname>:8080/service1
+   service.ui.port If you want to include a link to the user interface
+   associated with this service in the MCS, enter the port in this
+   property and also specify the URI in the service.uri property.
+   service.logs.location Location of the service log files
+   service.depends.local Indicates whether service depends on a service
+   instance locally, or on the master. Values = 1 (local) or 0 (master).
+
+   service.alarm.tersename
+   Specifies the abbreviated alarm name for this service. This is the
+   alarm name that appears in the MCS. Once the service has been started
+   by Warden, you cannot edit this value.
+   service.alarm.label Specifies the alarm name for this service. This is
+   the alarm name that appears in the maprcli when you do not request a
+   terse output. Once the service has been started by Warden, you cannot
+   edit this value.
+   service.heapsize.percent Specifies heapsize percent.
+   service.heapsize.max Maximum heapsize in MB.
+   service.heapsize.min Minimum heapsize in MB.
+   service.env Specifies environment variables to be use by the service.
+   By default, it may include MAPR_MAPREDUCE_MODE=default. You can include
+   a comma-separated list of environment variables. For example,
+   service.env=MAPR_MAPREDUCE_MODE=default,ABC=1,XYZ=2
+
+Memory Management for Services
+
+   The following memory parameters are used to reserve memory for the
+   service:
+     * The service.<servicename>.heapsize.percent parameter controls the
+       percentage of system memory allocated to the named service.
+     * The service.<servicename>.heapsize.max parameter defines the
+       maximum heapsize used when invoking the service.
+     * The service.<servicename>.heapsize.min parameter defines the
+       minimum heapsize used when invoking the service.
+
+   For example, the service.command.gateway.heapsize.percent,
+   service.command.gateway.heapsize.max, and
+   service.command.gateway.heapsize.min parameters in the
+   warden.gateway.conf file controls the amount of memory that Warden
+   allocates to the gateway service before allocating memory to other
+   services.
+
+   The actual heap size used when invoking a service is a combination of
+   the three parameters according to the formula max(heapsize.min,
+   min(heapsize.max, total-memory * heapsize.percent / 100)).
+
+warden.hs2.conf Example
+
+   The hiveserver2 configuration file, warden.hs2.conf, looks like this:
+services=hs2:1
+service.displayname=HiveServer2
+service.command.start=/opt/mapr/hive/hive-0.13/bin/hive --start --service hivese
+rver2
+service.command.stop=/opt/mapr/hive/hive-0.13/bin/hive --stop --service hiveserv
+er2
+service.command.type=BACKGROUND
+service.command.monitorcommand=/opt/mapr/hive/hive-0.13/bin/hive --status --serv
+ice hiveserver2
+service.port=9083
+service.ui.port=9083
+service.uri=about
+service.logs.location=/tmp/mapr
+service.process.type=JAVA
+
+   When hiveserver2 is installed, the warden.hs2.conf file is placed in
+   the directory /opt/mapr/conf/conf.d. If Warden is running, it will
+   detect the file and start the service. If Warden is not running, the
+   file is picked up when Warden starts. Warden monitors the service and
+   displays the status on the MapR Control System UI.

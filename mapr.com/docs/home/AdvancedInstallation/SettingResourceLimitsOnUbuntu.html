@@ -1,0 +1,22 @@
+Setting Resource Limits on Ubuntu
+
+   While you can use Warden to automatically set resource limits, you may
+   want to set limits manually.
+
+   Rather than relying on Warden to set resource limits automatically
+   using ulimit, you can use the following procedure to set the limits
+   manually.
+    1. Edit /etc/security/limits.conf and add a line to set the resource
+       limits. For example, set the resource limits:
+<MAPR_USER> - nofile 65536
+<MAPR_USER> - nproc 64000
+    2. Edit /etc/pam.d/su and uncomment the following line.
+session required pam_limits.so
+    3. Edit the /etc/pam.d/common-session* files to make sure the
+       following entry is present:
+# end of pam-auth-update config
+session       required       pam_limits.so
+    4. Use ulimit to verify settings.
+    5. Reboot the system.
+    6. Run the following command as the MapR user (not root) at a command
+       line: ulimit -n

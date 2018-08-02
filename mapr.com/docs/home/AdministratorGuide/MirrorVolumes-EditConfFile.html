@@ -1,0 +1,65 @@
+Setting Up Cross-Mirroring Between Unsecure Clusters
+
+   To mirror volumes between unsecure clusters, start by editing the
+   [1]mapr-clusters.conf file on the source volume's cluster and create an
+   entry for each additional cluster that hosts a mirror of the volume.
+   The entry must list the cluster's name, followed by a space-separated
+   list of hostnames and ports for the cluster's CLDB nodes. In addition,
+   use the secure parameter to specify whether the clusters are secure or
+   non-secure. See [2]Configuring Secure Clusters for Cross-Cluster
+   Mirroring and Replication for more information about generating tickets
+   for secure clusters.
+   Note: When mirroring between clusters, servers in one cluster cannot
+   use the same IP addresses as servers in the other cluster. For example,
+   if node A in cluster A has a private IP address 10.10.20.29, no server
+   in cluster B can have the same private IP address. Also, all the
+   servers in one cluster must be able to reach all the servers in the
+   other cluster and vice versa. For example, suppose 10.10.20.29 is the
+   only IP address used by node A in cluster A; then all servers in
+   cluster B should be able to reach the IP address 10.10.20.29.
+   To set up cross-mirroring between unsecure clusters:
+    1. Review the requirements for [3]Creating Remote Mirrors before you
+       begin.
+    2. On each cluster, make a note of the cluster name and CLDB nodes
+       (the first line in [4]mapr-clusters.conf)
+    3. On each webserver and CLDB node, add the remote cluster's CLDB
+       nodes to /opt/mapr/conf/mapr-clusters.conf, using the following
+       format:
+clustername1  <CLDB> <CLDB> <CLDB>
+[ clustername2  <CLDB> <CLDB> <CLDB> ]
+[ ... ]
+       For example, suppose you have a cluster, clusterA, with two CLDB
+       nodes, nodeA and nodeB. Now you want to add a second cluster called
+       clusterB with CLDB nodes nodeC and nodeD. Edit the
+       mapr-clusters.conf file and add the line for clusterB as shown:
+clusterA nodeA:7222 nodeB:7222
+clusterV nodeC:7222 nodeD:7222
+       Warning: You must include the port number in the CLDB hostname
+       notation.
+       Here:
+         a. First line contains cluster name and CLDB nodes of cluster A
+            (the local cluster)
+         b. Second line contains cluster name and CLDB nodes of cluster B
+            (the remote cluster)
+       The mapr-clusters.conf file for cluster B with 2 CLDB nodes (nodeC
+       and nodeD) would look like this:
+clusterB nodeC:7222 nodeD:7222
+clusterA nodeA:7222 nodeB:7222
+       By creating additional entries in the mapr-clusters.conf file, you
+       can mirror from one cluster to several others.
+    4. Set secure=false if both clusters are not secure. If both the
+       clusters are secure, see [5]Configuring Secure Clusters for
+       Cross-Cluster Mirroring and Replication for more information.
+       Warning: Mirroring only works between two secure clusters or
+       between two non-secure clusters. Mirroring does not work when one
+       cluster is secure and the other is non-secure.
+    5. On each cluster, restart the mapr-apiserver service on all nodes
+       where it is running.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr-clusters.conf.html#mapr-clusters.conf
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MirrorVolumes-CreateRemoteMirrors.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr-clusters.conf.html#mapr-clusters.conf
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html

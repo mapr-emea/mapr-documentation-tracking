@@ -1,0 +1,63 @@
+Hue 3.8.1-1507 Release Notes
+
+   The notes below relate specifically to the MapR Distribution for Apache
+   Hadoop. You may also be interested in the [1]Cloudera Hue changelog or
+   the [2]Cloudera Hue homepage.
+   Version                    3.8.1
+   Release Date               August 5, 2015
+   Source on GitHub           [3]https://github.com/mapr/hue.git
+   GitHub Release Tag         3.8.1-mapr-1507
+   MapR Version Compatibility See [4]Hue Support Matrix.
+   Maven Artifacts            [5]http://repository.mapr.com/maven/
+   Important:
+     * MapR does not support integration between Hue 3.8.1 and the
+       following components: Sentry, Solr Search, and Zookeeper.
+     * Hue 3.8.1 supports Sqoop2 on a MapR 5.0.
+
+New in this Release
+
+   This release of Hue version 3.8.1 for the MapR Distribution for Apache
+   Hadoop includes the following features:
+     * MapR-SASL security support between Hue 3.8.1 and Sqoop2 1.99.6
+     * Livy server can be managed by warden. The warden.livy.conf file is
+       installed along with the mapr-hue-livy package.
+
+Patches
+
+   Commit Date (YYYY-MM-DD) Comment
+   a9b8e06 2015-07-17 MAPR-19601: The warden.livy.conf file is installed
+   along with the mapr-hue-livy package so that the Livy Server can be
+   managed by Warden.
+   781b2fc 2015-06-04 MAPR-18650: You no longer need to reload the HBase
+   Browser in order to see newly created MapR-DB tables. Instead, you need
+   to re-open the directory that contains the table.
+   d37d3d6 2015-05-19 MapR-18605: MapR-DB examples have been added.
+
+Known Issues
+
+     * MapR-18668: Hue does not work on RedHat/CentOS 7 when it is
+       configured to use a MySQL database.
+       Workaround:
+         1. Run the following commands to install MariaDB and the Redhat 6
+            compatibility library:
+yum install mariadb
+rpm -ivh --nodeps http://yum.mariadb.org/$(rpm -qa mariadb|cut -d- -f2)/rhel7-am
+d64/rpms/MariaDB-5.5.41-centos7_0-x86_64-compat.rpm
+         2. Run the following command to create a symlink for the Cyrus
+            SASL library:
+ln -s /lib64/libsasl2.so.3.0.0 /lib64/libsasl2.so.2
+         3. Run the following command to reconfigure Hue:
+bash -c "./opt/mapr/hue/hue-3.8.1/build/env/bin/activate; /opt/mapr/hue/hue-3.8.
+1/build/env/bin/hue syncdb --noinput; /opt/mapr/hue/hue-3.8.1/build/env/bin/hue
+migrate"
+         4. Run the following command to restart Hue:
+maprcli node services -name hue -action restart -nodes <space separated list of
+hostnames>
+
+References
+
+   1. https://github.com/cloudera/hue/blob/master/docs/release-notes/release-notes-3.8.0.txt
+   2. http://gethue.com/
+   3. https://github.com/mapr/hue
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_hue_matrix.html#reference_jvd_tsb_t5
+   5. http://repository.mapr.com/maven/

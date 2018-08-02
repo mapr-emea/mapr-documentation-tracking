@@ -1,0 +1,175 @@
+Apache Kafka Java APIs
+
+   MapR-ES supports these Apache Kafka Java APIs.
+
+Javadoc
+
+   See the following APIs for detailed information:
+     * [1]MapR-ES Java API Library (6.0.1)
+     * [2]Apache Kafka 1.0 APIs used with MapR-ES (6.0.1)
+     * [3]MapR-ES Java API Library (6.0.0)
+     * [4]Apache Kafka 0.90 APIs used with MapR-ES (6.0.0)
+
+     * [5]Admin APIs
+     * [6]Consumer APIs
+     * [7]Producer APIs
+     * [8]Common APIs
+
+   The following Admin APIs, org.apache.kafka.clients.admin package, are
+   applicable to MapR support of Apache Kafka. These APIs are supported as
+   of MapR 6.0.1.
+     * [9]AdminClient
+
+   Note: The AdminClient API options (CreateTopicsOptions,
+   DeleteTopicsOptions, DescribeTopicsOptions, ListTopicsOptions,
+   CreatePartitionsOptions, and DescribeTopicsOptions), are ignored. All
+   of the methods assume that a topic belongs to the default stream unless
+   a stream path is specified in the topic name.
+   If a default stream name is not specified and the topic path does not
+   contain a stream name, the an exception is reported via the Result
+   object. For example:
+     * If the topic name is specified as topic1, then the API assumes the
+       full topic path as /defaultStream:topic1.
+     * If the topic name is specified as /defaultStream:topic1, then that
+       will be the full topic path.
+
+   Note: The AdminClient default stream configuration parameter is
+   streams.admin.default.stream. See [10]Configuration Parameters for more
+   information.
+
+   CAPTION: Table 1. AdminClient API Summary
+
+   Modifier and Type Method
+   static [11]AdminClient create(java.util.Properties props)
+   static [12]AdminClient
+   create(java.util.Map<java.lang.String,java.lang.Object> conf)
+   void close()
+   [13]CreateTopicsResult createTopics(java.util.Collection<NewTopic>
+   newTopics)
+   [14]DeleteTopicsResult deleteTopics(java.util.Collection<NewTopic>
+   newTopics)
+   [15]DescribeTopicsResult
+   describeTopics(java.util.Collection<java.lang.String> topicNames)
+   [16]ListTopicsResult listTopics()
+   [17]ListTopicsResult listTopics((java.lang.String streamPath))
+   [18]CreatePartitionsResult
+   createPartitions(java.util.Map<java.lang.String,NewPartitions>
+   newPartitions)
+   [19]DescribeClustersResult describeCluster()
+
+   The following Consumer APIs, org.apache.kafka.clients.consumer package,
+   are applicable to MapR support of Apache Kafka 1.0. These APIs are
+   supported as of MapR 6.0.1.
+     * [20]Interface ConsumerInterceptor<K,V>
+     * [21]Class ConsumerRecord
+     * [22]Class KafkaConsumer
+
+   CAPTION: Table 2. ConsumerRecord Class
+
+   Modifier and Type      Method
+   long              timestamp()
+   long              timestamptype()
+
+   CAPTION: Table 3. KafkaConsumer Class
+
+   Modifier and Type Method
+   void pause(Collection<TopicPartition> partitions)
+   void resume(Collection<TopicPartition>partitions)
+   void seekToBeginning(Collection<TopicPartition>)
+   void seekToEnd(Collection<TopicPartition>)
+   void subscribe(Collection<String> topics);
+   void subscribe(Collection<String> topics, ConsumerRebalanceListener)
+   void assign(Collection<TopicPartition> partitions)
+
+   java.util.Map<TopicPartition,OffsetAndTimestamp>
+   offsetsForTimes(java.util.Map<TopicPartition,java.lang.Long>
+   timestampsToSearch)
+
+   java.util.Map<TopicPartition,java.lang.Long>
+   beginningOffsets(Collection<TopicPartition>)
+
+   java.util.Map<TopicPartition,java.lang.Long>
+   endOffsets(Collection<TopicPartition> partitions)
+
+   The following consumer interface and classes are applicable to MapR
+   support of Apache Kafka 0.9.0.
+     * org.apache.kafka.clients.consumer.ConsumerConfig
+     * org.apache.kafka.clients.consumer.ConsumerRebalanceCallback
+       (interface)
+     * org.apache.kafka.clients.consumer.ConsumerRecord<K,V>
+     * org.apache.kafka.clients.consumer.ConsumerRecords<K,V>
+     * org.apache.kafka.clients.consumer.KafkaConsumer<K, V> implements
+       Consumer<K, V>
+
+   The following producer interface and classes,
+   org.apache.kafka.clients.producer package, are applicable to MapR
+   support of Apache Kafka 1.0. These APIs are supported as of MapR 6.0.1.
+     * [23]Interface ProducerInterceptor<K,V>
+     * [24]Class RecordMetadata
+     * [25]Class ProducerRecord
+
+   CAPTION: Table 4. Producer API Summary
+
+   Modifier and Type Method
+   long timestamp()
+   long (java.lang.String topic, java.lang.Integer partition,
+   java.lang.Long timestamp, K key, V value)
+
+   The following producer interface and classes are applicable to MapR
+   support of Apache Kafka 0.9.0.
+     * org.apache.kafka.clients.producer.Callback (Interface)
+     * org.apache.kafka.clients.producer.KafkaProducer<K,V>
+     * org.apache.kafka.clients.producer.ProducerConfig
+     * org.apache.kafka.clients.producer.ProducerRecord<K,V>
+     * org.apache.kafka.clients.producer.RecordMetadata
+
+   The following common APIs, org.apache.kafka.clients.common packages,
+   are applicable to MapR support of Apache Kafka 1.0. These APIs are
+   supported as of MapR 6.0.1.
+     * [26]Interface Header
+
+   CAPTION: Table 5. Common API Summary
+
+   Modifier and Type Method
+   java.lang.String  key()
+   byte[]            value()
+
+   The following APIs are applicable to MapR support for Apache Kafka
+   0.9.0.
+     * org.apache.kafka.common.PartitionInfo
+       Supported methods in PartitionInfo:
+          + int partition()
+          + java.lang.String topic()
+          + java.lang.String toString()
+     * org.apache.kafka.common.serialization.Serializer<T> (Interface)
+     * org.apache.kafka.common.serialization.Deserializer<T> (interface)
+     * org.apache.kafka.common.TopicPartition
+
+References
+
+   1. http://maprdocs.mapr.com/apidocs/601/mapr-streams/
+   2. http://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/
+   3. http://maprdocs.mapr.com/apidocs/60/mapr-streams/
+   4. http://maprdocs.mapr.com/apidocs/60/mapr-streams-kafka/
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/kafka-java-apis.html#div1sect1
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/kafka-java-apis.html#div1sect2
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/kafka-java-apis.html#div1sect3
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/kafka-java-apis.html#div1sect4
+   9. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/AdminClient.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/configuration-parameters.html
+  11. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/AdminClient.html
+  12. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/AdminClient.html
+  13. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/CreateTopicsResult.html
+  14. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/DeleteTopicsResult.html
+  15. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/DescribeTopicsResult.html
+  16. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/ListTopicsResult.html
+  17. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/ListTopicsResult.html
+  18. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/CreatePartitionsResult.html
+  19. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/admin/DescribeClustersResult.html
+  20. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/consumer/ConsumerInterceptor.html
+  21. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/consumer/ConsumerRecord.html
+  22. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/consumer/KafkaConsumer.html
+  23. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/producer/ProducerInterceptor.html
+  24. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/producer/RecordMetadata.html
+  25. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/clients/producer/ProducerRecord.html
+  26. https://maprdocs.mapr.com/apidocs/601/mapr-streams-kafka/org/apache/kafka/common/header/Header.html

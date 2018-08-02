@@ -1,0 +1,91 @@
+Enabling and Configuring Disk Balancer
+
+   You can enable/disable disk space balancer and other settings using MCS
+   and the CLI.
+
+Enabling and Configuring Disk Balancer Using the MapR Control System
+
+   To enable and configure disk space balancer through MCS:
+    1. Log in to MCS and click Admin > Clusters Settings > Balancer.
+    2. Move the slider associated with Enabled to enable (Yes) or disable
+       (No) disk space balancer and:
+          + Proceed to step 3 if you enabled disk space balancer.
+          + Skip to step 4 if you disabled disk space balancer.
+       To enable disk space balancer from the command-line, see
+       [1]Configuring Disk Balancer Execution.
+    3. Select one of the presets or specify a custom percentage for
+       Threshold and Concurrent Disk Rebalancer settings. You can choose:
+          + Disk Balancer Preset:
+
+              Moderate (Default)
+
+                    # Threshold — 70%
+                    # Concurrent Disk Rebalancer — 10%
+
+              Rapid
+
+                    # Threshold — 50%
+                    # Concurrent Disk Rebalancer — 5%
+
+              Relaxed
+
+                    # Threshold — 90%
+                    # Concurrent Disk Rebalancer — 25%
+
+          + Custom, use the slider to set the threshold and concurrent
+            disk rebalancer percentages.
+       Here:
+
+   Threshold Specifies the minimum utilization threshold for a storage
+   pool to become eligible for rebalancing. Default value is 70%.
+   Concurrent Disk Rebalancer Specifies the maximum percentage of data
+   that can be rebalanced. The cluster will wait until the number of
+   rebalancing operations affects less than this percentage of total data
+   eligible for rebalancing. The default value is 10%.
+    4. Click Save Changes for the changes to take effect.
+
+Enabling and Configuring Disk Balancer Using the CLI
+
+   The disk space balancer checks every storage pool on a regular basis
+   and moves containers from a storage pool when that pool's utilization
+   meets the following conditions:
+     * The storage pool is over 70% full.
+     * The storage pool's utilization exceeds the average utilization on
+       the cluster by a specified threshold:
+          + When the average cluster storage utilization is below 80%, the
+            threshold is 10%.
+          + When the average cluster storage utilization is below 90% but
+            over 80%, the threshold is 3%.
+          + When the average cluster storage utilization is below 94% but
+            over 90%, the threshold is 2%.
+
+   You can use the [2]config save command to modify disk space balancer
+   parameter values.
+
+   Example: # maprcli config save -values
+   {"cldb.balancer.disk.max.switches.in.nodes.percentage":"20"}
+   The following table lists the disk space balancer configuration
+   parameters with their default values and descriptions:
+   Parameter Value Description
+   cldb.disk.balancer.enable 1
+
+   Specifies whether the disk space balancer runs:
+     * 0 - Disabled (does not perform any container moves)
+     * 1 - Enabled (normal operation)
+
+   By default, the disk balancer is disabled.
+   cldb.balancer.disk.threshold.percentage 70 Threshold for moving
+   containers out of a given storage pool, expressed as utilization
+   percentage. See also: [3]Balancing Overused and Above Average Bins.
+   cldb.balancer.disk.max.switches.in.nodes.percentage 10 This can be used
+   to throttle the disk balancer. If it is set to 10, the balancer will
+   throttle the number of concurrent container moves (minimum 1) to 10% of
+   the total nodes in the cluster rounded up. See [4]Configuring
+   Throttling.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DiskBalancer-EnableDisableConfig.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-save.html#configsave
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DiskBalancer-BalanceHighBins.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DiskBalancer-ConfigThrottling.html

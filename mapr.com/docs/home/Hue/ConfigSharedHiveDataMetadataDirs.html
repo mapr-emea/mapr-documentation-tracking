@@ -1,0 +1,67 @@
+Configure Shared Hive Data and Metadata Directories for Hue
+
+   To configure shared Hive data and metadata directories for Hue:
+    1. Change the hive.metastore.uris property as shown:
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://localhost:9083</value>
+  <description> URI where clients contact Hive metastore server </description>
+</property>
+       Note: The hive.metastore.warehouse.dir property can keep its
+       default value and does not need to be changed.
+    2. Enable Hue impersonation by setting the following property to true.
+<property>
+  <name>hive.metastore.execute.setugi</name>
+  <value>true</value>
+  <description> Set this property to enable Hive Metastore service impersonation
+ in unsecure mode.
+   In unsecure mode, setting this property to true causes the metastore to execu
+te DFS operations
+   using the client's reported user and group permissions. Note that this proper
+ty must be set on
+   BOTH the client and server sides. </description>
+</property>
+    3. Set the location of the sharelib.
+<property>
+  <name>oozie.service.WorkflowAppService.system.libpath</name>
+  <value>/oozie/share/lib</value>
+</property>
+    4. To enable the Hive Metastore service to share the embedded Derby
+       database, add the following property blocks to the hive-site.xml
+       file on the node running hiveserver2 to point to the location of
+       the Derby metastore:
+<property>
+  <name>javax.jdo.option.ConnectionURL</name>
+  <value>jdbc:derby:;databaseName=/<local dir>/metastore_db;create=true</value>
+  <description>JDBC connect string for a JDBC metastore</description>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionDriverName</name>
+  <value>org.apache.derby.jdbc.EmbeddedDriver</value>
+  <description>Driver class name for a JDBC metastore</description>
+</property>
+    5. To enable the Hive Metastore service to share a MySQL database, add
+       the following property blocks to the hive-site.xml file:
+<property>
+  <name>javax.jdo.option.ConnectionURL</name>
+  <value>jdbc:mysql://<ip_address>:3306/hive_11?createDatabaseIfNotExist=true</v
+alue>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionDriverName</name>
+  <value>com.mysql.jdbc.Driver</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionUserName</name>
+  <value><UserName></value>
+  <description>Substitute the actual username</description>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionPassword</name>
+  <value><Password></value>
+  <description>Substitute the actual password</description>
+</property>

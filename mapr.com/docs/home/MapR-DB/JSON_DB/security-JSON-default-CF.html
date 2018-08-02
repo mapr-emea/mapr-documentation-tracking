@@ -1,0 +1,97 @@
+Permissions on the Default Column Family
+
+   If a JSON document field is in the MapR-DB JSON default column family,
+   you must have readperm and writeperm permissions to perform read and
+   write operations on the field. You either receive the permissions from
+   the default column family, inherit them from the field's parent field,
+   or have the permissions from an explicit grant on the field.
+
+   The following diagram shows a JSON document where all fields are in the
+   default column family.
+   [read_write_permissions_1.png]
+
+Granting Read and Write Permissions on Field c
+
+   To perform both read and write operations on field c, when it is in the
+   default column family, you must have both readperm and writeperm access
+   on field c:
+     * If you have readperm and writeperm permissions on the default
+       column family, then you have access to field c.
+     * If you have readperm and writeperm permissions on field b, then you
+       have access to field c. You do not need any further permissions.
+       Field c inherits your readperm and writeperm permissions from field
+       b.
+     * If you have readperm and writeperm permissions on the default
+       column family but either field a or b denied you permissions:
+          + You must have traverseperm permission granted to you on the
+            field that denied you access (field a or b).
+          + You must have readperm and writeperm permissions explicitly
+            granted to you on field c.
+     * If you do not have readperm and writeperm permissions on the
+       default column family:
+          + You must have traverseperm permission granted to you on either
+            the default column family or field b.
+          + You must have readperm and writeperm permissions explicitly
+            granted to you on field c.
+
+   The following are examples of commands that grant these permissions:
+maprcli table cf colperm set
+  -path <path to JSON table >
+  -cfname default
+  -name a.b
+  -traverseperm u:<user ID> | <existing ACE for this field>
+maprcli table cf colperm set
+  -path <path to JSON table >
+  -cfname default
+  -name a.b.c
+  -readperm u:<user ID> | <existing ACE for this field>
+  -writeperm u:<user ID> | <existing ACE for this field>
+maprcli table cf edit
+  -path <path to JSON table >
+  -cfname default
+  -traverseperm u:<user ID> | <existing ACE for this field>
+maprcli table cf colperm set
+  -path <path to JSON table >
+  -cfname default
+  -name a.b.c
+  -readperm u:<user ID> | <existing ACE for this field>
+  -writeperm u:<user ID> | <existing ACE for this field>
+
+Granting Read or Write Permission on Field c
+
+   To perform either read or write operations on field c, when it is in
+   the default column family, you must have either readperm or writeperm
+   access on field c:
+     * If you have the same permission (readperm or writeperm) on the
+       default column family, then you have access to field c.
+     * If you have the same permission (readperm or writeperm) on field b,
+       then you have access to field c. You do not need any further
+       permissions. Field c inherits your readperm or writeperm permission
+       from field b.
+     * If you have the same permission (readperm or writeperm) on the
+       default column family but either field a or b denied you
+       permission:
+          + You must have traverseperm permission granted to you on the
+            field that denied you access (field a or b).
+          + You must have readperm or writeperm permission explicitly
+            granted to you on field c.
+     * If you do not have the same permission (readperm or writeperm) on
+       the default column family:
+          + You must have the traverseperm permission granted to you on
+            either the default column family or field b.
+          + You must have readperm or writeperm permission explicitly
+            granted to you on field c.
+
+   The following example grants traverseperm permission:
+maprcli table cf colperm set
+  -path <path to JSON table>
+  -cfname default
+  -name a.b
+  -traverseperm u:<user ID> | <existing ACE for this field>
+
+   The following example grants readperm permission:
+maprcli table cf colperm set
+  -path <path to JSON table>
+  -cfname default
+  -name a.b.c
+  -readperm u:<user ID> | <existing ACE for this field>

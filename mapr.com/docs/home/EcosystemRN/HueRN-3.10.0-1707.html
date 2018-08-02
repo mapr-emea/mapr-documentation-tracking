@@ -1,0 +1,84 @@
+Hue 3.10.0-1707 Release Notes
+
+   This section provides reference information, including new features,
+   patches, known issues, and limitations for Hue 3.10.0-1707.
+
+   The notes below relate specifically to the MapR Distribution for Apache
+   Hadoop. You can find additional information on this [1]changelog or the
+   [2]Hue homepage.
+   Version                       3.10.0
+   Release Date                  August 2017
+   MapR Version Interoperability See [3]MEP Components and OS Support
+   Source on GitHub              [4]https://github.com/mapr/hue.git
+   GitHub Release Tag            3.10.0-mapr-1707
+   Package Names
+
+   See [5]Package Names for MapR Expansion Packs (MEPs)
+
+New in This Release
+
+   No new features.
+
+Patches
+
+   This MapR release includes the following patches on the base release:
+   GitHub Commit Number Date (YYYY-MM-DD) MapR Patch Number and
+   Description
+   0bc600a 2017-05-26 MAPR-27488 [HUE-3.10] Unable to access saved
+   notebook after upgrade from HUE-3.9 to HUE-3.10
+   af99c1d 2017-06-13 MAPR-27616 User with read permissions for Notebook
+   can remove another permissions
+   ab82658 2017-06-19 MAPR-27973 [Hue 3.12] Hue error when execute migrate
+   to empty DB (fix for 3.10.0)
+
+   For complete details, refer to the commit log for this project in
+   GitHub.
+
+Known Issues and Limitations
+
+     * Hue integration with Spark is an experimental feature.
+     * The Livy version is a snapshot. Livy is supported only for use with
+       Hue. The Livy home directory is
+       /opt/mapr/hue-livy/hue-livy-3.10.0/.
+     * MapR does not support the integration between Hue 3.10.0 and the
+       following components:
+          + Solr Search
+          + ZooKeeper
+     * Integration between Hue 3.10.0 and Sentry 1.6 is supported on
+       secure clusters that use Kerberos authentication, but it is not
+       supported on secure clusters that use MapR-SASL authentication.
+     * MapR-18668: Hue does not work on RedHat 7 / CentOS 7 / SuSE 12 when
+       it is configured to use a MySQL database. When this issue occurs,
+       the MapR Control System (MCS) displays the "Hue Down Alarm." Use
+       this workaround:
+         1. Run the following commands to install MariaDB and the RedHat 6
+            compatibility library:
+yum install mariadb
+rpm -ivh --nodeps http://yum.mariadb.org/$(rpm -qa mariadb|cut -d-
+-f2)/rhel7-amd64/rpms/MariaDB-$(rpm -qa mariadb|cut -d-
+-f2)-centos7-x86_64-compat.rpm
+
+         2. Run the following commands to reconfigure Hue:
+cd /opt/mapr/hue/hue-3.12.0/
+source ./build/env/bin/activate
+hue syncdb --noinput
+hue migrate
+deactivate
+         3. Run the following command to restart Hue:
+maprcli node services -name hue -action restart -nodes <node_with_hue>
+
+   Note: Hue uses [6]python parquet lib to read the parquet files. This
+   library does not support all possible parquet formats.
+
+Resolved Issues
+
+   None.
+
+References
+
+   1. http://cloudera.github.io/hue/docs-3.9.0/release-notes/release-notes-3.9.0.html
+   2. http://gethue.com/
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_MEP_components.html#reference_pk5_5xb_tw
+   4. https://github.com/mapr/hue.git
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/MEPPkgNames.html#concept_zkc_jlh_hy
+   6. https://pypi.python.org/pypi/parquet/1.1

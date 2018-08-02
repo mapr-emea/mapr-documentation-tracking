@@ -1,0 +1,60 @@
+Streaming Audit Logs
+
+   Audit-streaming (available from v6.0.1) eliminates the need to process
+   the logs nightly using the [1]expandaudit utility and provides a way to
+   process the audit data real-time. The audit data is sent as a audit
+   stream as the audit data is generated, opening the possibility for
+   real-time processing of the audit data. You can use it to monitor data
+   access such as:
+     * Who accessed certain files, tables, and/or streams at certain times
+     * What type of action is/was performed on the files, tables, and/or
+       streams
+     * How many failed attempts on the files, tables, and/or streams in a
+       certain period
+     * When did a particular property or configuration change and who
+       changed it
+
+   Audit streaming is not enabled by default; you can [2]enable audit
+   streaming using the CLI. If the feature is enabled, MapR-FS, MapR-DB,
+   and MapR-ES operation-related audit logs and CLDB and auth audit logs
+   are available as MapR-ES topics. The audit-streaming consumer can view
+   all audited operations on a node in the cluster in near real time by
+   subscribing to one or more topics associated with a node.
+
+   The audit stream is created when the hoststats process starts. If the
+   hoststats process is restarted, the audit stream starts publishing to
+   topics from where it left off processing audit logs; some audit log
+   entries might be republished.
+
+   The audit log stream topic is available in the following location:
+/var/mapr/auditstream/
+
+   Topics named <clusterName>_<logType>_<nodeName> are published to the
+   stream
+   (/var/mapr/auditstream/auditlogstream:<clustername>_<logType>_<nodename
+   >). Here:
+     * <clustername> is the name of the cluster.
+     * <logType> is the type of log. Valid types are cldb, auth, fs, and
+       db (for both MapR-DB and MapR-ES logs).
+     * <nodeName> is the hostname of the node on which the operation was
+       logged.
+
+   The message is in JSON format and is identical to the the audit log
+   content, as in the following example:
+{"timestamp":{"$date":"2017-04-27T10:53:37.239Z"},"operation":"CREATE","uid":0,"
+ipAddress":"10.20.30.140","nfsServer":"10.20.30.140","parentFid":"2066.32.131358
+","childFid":"2066.33.262630","childName":"abc.txt","volumeId":106738640,"status
+":0}
+
+   Messages in the topics are stored by default for 7 days. Only the mapr
+   user can consume the stream. Refer to [3]Sample Cached Consumer
+   Application for Audit Stream and [4]Sample Uncached Consumer
+   Application for Audit Stream for information on consuming the messages
+   using the sample consumers.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/r_expand_audit_logs.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/EnableDisableAuditStream.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/SampleConsumer-java.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/SampleUncachedConsumer-java.html

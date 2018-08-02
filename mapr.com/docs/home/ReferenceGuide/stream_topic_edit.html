@@ -1,0 +1,72 @@
+stream topic edit
+
+   Allows you to increase the number of partitions that are in the
+   specified topic.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * topicperm permission on the stream
+
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+maprcli stream topic edit
+         -path <Stream Path>
+         -topic <Topic Name>
+        [ -partitions <Number of partitions> ]
+       [ -timestamptype Timestamp type: createtime | logappendtime default: crea
+tetime ]
+
+   REST
+   http[s]://<host>:<port>/rest/stream/topic/edit?path=<path>&topic=<name>
+   &partitions=<number>
+
+Parameters
+
+   Parameter Description
+   path The path and name of the stream in which the topic is located.
+   topic The name of the topic to edit.
+   partitions The number of partitions to use for the topic. You cannot
+   reduce the number of partitions.
+
+   To find out how many partitions a topic is currently using, run the
+   command maprcli stream topic info.
+   Important: A CDC changelog stream's default partitions can impact how
+   many partitions a stream topic can have. This is because once you
+   create a stream topic for a changelog stream, the number of topic
+   partitions is locked. The number of topic partitions cannot change and
+   the stream topic edit command can not modify the topic's partition
+   number.
+     * If the stream topic create command is used to create a stream
+       topic, then the number of topic partitions can be set at creation
+       time and then is locked.
+     * If the [4]table changelog add command is used to add a stream topic
+       (as well as establish a relationship between the source table and
+       the changelog stream), then the number of topic partitions is
+       inherited from the changelog stream and is locked.
+
+   timestamptype Specifies the type of timestamp stored in the topic's
+   message. Value: createtime | logappendtime Default: createtime. The
+   topic inherits the default value from the stream unless the topic sets
+   the timestamp type to a different value.
+
+   A createtime value is the time defined by the user or application (when
+   creating the message). If user or application does not define this
+   value (or passes null), the client uses the current system timestamp.
+
+   A logappendtime value is the time when the message (log) was appended
+   to the server.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-changelog-add.html

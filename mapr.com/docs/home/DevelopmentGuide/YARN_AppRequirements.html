@@ -1,0 +1,53 @@
+YARN Application Requirements
+
+   The following tables include the minimal node requirements for building
+   and running YARN applications.
+   Node Requirement Method(s) to Meet Requirement
+   A connection to the MapR cluster.
+   Select one of the following options:
+     * Install and configure the MapR client.
+     * Install the PACC and run an application container.
+
+   For more information, see [1]Connect to the Cluster.
+   Hadoop libraries are configured as an application dependency.
+
+   When you compile the application, use the Maven Repository to determine
+   the dependencies. The POM file should include the MapR Repository and
+   the hadoop-common dependency:
+<repositories>
+   <repository> <id>mapr-releases</id>   <url>http://repository.mapr.com/maven/<
+/url>  <snapshots><enabled>false</enabled></snapshots>      <releases><enabled>t
+rue</enabled></releases>
+      </repository>
+   </repositories>
+
+<dependencies>
+ <dependency>
+<groupId>org.apache.hadoop</groupId>
+   <artifactId>hadoop-common</artifactId>
+  <version>${hadoop.version}</version>
+</dependency>
+</dependencies>
+
+   When you run the application, include the following in the
+   application’s classpath: `hadoop classpath`
+
+   Note: Based on how you submit the application, the classpath locations
+   and requirements differ. See [2]External Applications and Classpath and
+   [3]Classpath Construction.
+
+   Other Items
+     * If an ecosystem component, such as Spark, runs or integrates with
+       the application, you may need to include additional dependencies in
+       the POM file.
+     * Any third-party library that is required by a MapReduce program
+       must be accessible to this node and the data node that processes
+       the job or application. For more information, see [4]Managing
+       Third-Party Libraries.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/connecttocluster.html#concept_zcx_xrm_zz
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/ConfigClasspathForExternalApps.html#ConfiguringtheClasspathfo_26983629-d3e59
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/ClasspathConstructionForMapReduce.html#ClasspathConstructionforM_27689662-d3e59
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/Manage3rdPartyLibsForMapReduce.html#ManagingThird-PartyLibrariesforMapReduce

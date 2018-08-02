@@ -1,0 +1,116 @@
+Installing Custom Packages for PySpark Using Conda (Version 1.0)
+
+   With version 1.0 of the MapR Data Science Refinery, to install custom
+   packages for PySpark (or PySpark3) using Conda, you create a custom
+   Conda environment, copy the environment to MapR-FS, and configure Spark
+   in your Zeppelin container to reference the environment. You can run
+   all of these commands in your Zeppelin container.
+   To install Conda, follow the instructions at
+   [1]https://conda.io/docs/user-guide/install/index.html.
+   Note: If you are using version 1.1 or later of the MapR Data Science
+   Refinery, the instructions for installing custom packages for PySpark
+   are at [2]Installing Custom Packages for PySpark Using Conda.
+    1. Log in to your Zeppelin docker container:
+         a. Determine your <container-id> using the output from the
+            following command:
+docker ps
+         b. Log in to your docker container as the user running the
+            container using the container-id:
+docker exec -it --user <MAPR_CONTAINER_USER> <container-id> bash -l
+    2. Create your custom Conda environment and archive it as a zip
+       archive.
+          + [3]PySpark
+          + [4]PySpark3
+       The following example creates a custom Conda environment with
+       Python 2 and three packages (matplotlib, numpy, and pandas):
+mkdir custom_pyspark_env
+conda create -p ./custom_pyspark_env python=2 numpy pandas matplotlib
+cd custom_pyspark_env
+zip -r custom_pyspark_env.zip ./
+       The following example creates a custom Conda environment with
+       Python 3 and three packages (matplotlib, numpy, and pandas):
+mkdir custom_pyspark_env3
+conda create -p ./custom_pyspark_env3 python=3 numpy pandas matplotlib
+cd custom_pyspark_env3
+zip -r custom_pyspark_env3.zip ./
+       Important: Do not create an archive named pyspark.zip. This name is
+       reserved for PySpark internals.
+    3. Create a directory on MapR-FS and copy the archive to that
+       directory.
+       The following example copies the archive directory to your home
+       directory on MapR-FS, assuming your user name is sampleuser:
+          + [5]PySpark
+          + [6]PySpark3
+hadoop fs -mkdir –p /user/sampleuser/zeppelin_envs/
+hadoop fs -put custom_pyspark_env.zip /user/sampleuser/zeppelin_envs/
+hadoop fs -mkdir –p /user/sampleuser/zeppelin_envs/
+hadoop fs -put custom_pyspark_env3.zip /user/sampleuser/zeppelin_envs/
+    4. Configure Spark in your Zeppelin container to use the custom
+       environment you created by editing the following properties in your
+       Spark configuration file
+       (/opt/mapr/spark/spark-<version>/conf/spark-default.conf):
+         a. Add the path to the archive you copied in Step 3 to
+            spark.yarn.dist.archives:
+               o [7]PySpark
+               o [8]PySpark3
+spark.yarn.dist.archives maprfs:///user/sampleuser/zeppelin_envs/custom_pyspark_
+env.zip
+spark.yarn.dist.archives maprfs:///user/sampleuser/zeppelin_envs/custom_pyspark_
+env3.zip
+         b. Configure Spark to use your custom environment by setting the
+            following property:
+               o [9]PySpark
+               o [10]PySpark3
+spark.yarn.appMasterEnv.PYSPARK_PYTHON ./custom_pyspark_env.zip/bin/python2
+spark.yarn.appMasterEnv.PYSPARK3_PYTHON ./custom_pyspark_env3.zip/bin/python3
+            Note: The archives specified in spark.yarn.dist.archives will
+            be extracted into the YARN job directory when jobs execute.
+    5. Restart the Livy service in your Zeppelin container:
+/opt/mapr/livy/livy-<version>/bin/livy-server stop
+/opt/mapr/livy/livy-<version>/bin/livy-server start
+    6. To verify that you have successfully installed the matplotlib
+       package, run the following code snippet in your Zeppelin UI:
+          + [11]PySpark
+          + [12]PySpark3
+%livy.pyspark
+
+import sys
+print(sys.version)
+
+import matplotlib
+print(matplotlib.__version__)
+%livy.pyspark3
+
+import sys
+print(sys.version)
+
+import matplotlib
+print(matplotlib.__version__)
+       Your output will look similar to the following:
+          + [13]PySpark
+          + [14]PySpark3
+2.7.14 |Anaconda, Inc.| (default, Oct 27 2017, 18:21:12)
+[GCC 7.2.0]
+2.1.0
+3.6.3 |Anaconda, Inc.| (default, Oct 27 2017, 19:41:01)
+[GCC 7.2.0]
+2.1.0
+       Note: The minor versions of Python and matplotlib may differ
+       depending on the versions you install.
+
+References
+
+   1. https://conda.io/docs/user-guide/install/index.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkCondaV1.1.html#task_u3l_trc_ybb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div1entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div1entry2
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div2entry1
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div2entry2
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div3entry1
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div3entry2
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div4entry1
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div4entry2
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div5entry1
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div5entry2
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div6entry1
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallPySparkConda.html#div6entry2

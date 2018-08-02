@@ -1,0 +1,181 @@
+dump containerinfo
+
+   Returns detailed information about one or more specified containers.
+
+   A container is a unit of sharded storage in a MapR cluster. Every
+   container in a MapR volume is either a name container or a data
+   container.
+
+   The name container is the first container in a volume and holds that
+   volume's namespace and file chunk locations. Depending on its
+   replication role, a name container may be either a master container
+   (part of the original copy of the volume) or a replica container (one
+   of the replicas in the replication chain).
+
+   Every data container is either a master container, an intermediate
+   container, or a tail container.
+
+Syntax
+
+   CLI
+
+maprcli dump containerinfo
+    [-cluster <cluster name>]
+    -ids <id1,id2,id3 ...>
+
+          Note: For best results, use the -json option from the command
+          line.
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster The cluster on which to run the command. If this parameter is
+   omitted, the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+   ids Specifies one or more container IDs. Container IDs are comma
+   separated. The maprcli dump containers command provides the container
+   ID required for -ids parameter.
+
+Output
+
+   The maprcli dump containerinfo command returns information about one or
+   more containers.
+# maprcli dump containerinfo -ids 1 -json
+{
+        "timestamp":1507024362685,
+        "timeofday":"2017-10-03 02:52:42.685 GMT-0700 AM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "ContainerId":1,
+                        "Epoch":9,
+                        "Master":"10.10.105.35:5660--9-VALID",
+                        "ActiveServers":{
+                                "IP":[
+                                        "10.10.105.35:5660--9-VALID",
+                                        "10.10.105.36:5660--9-VALID",
+                                        "10.10.105.37:5660--9-VALID"
+                                ],
+                                "ExtIP":[
+                                        "10.10.104.35:5660-10.10.104.35:5692",
+                                        "10.10.104.36:5660-10.10.104.36:5692",
+                                        "10.10.104.37:5660-10.10.104.37:5692"
+                                ]
+                        },
+                        "InactiveServers":{
+
+                        },
+                        "UnusedServers":{
+
+                        },
+                        "OwnedSizeMB":"0 MB",
+                        "SharedSizeMB":"0 MB",
+                        "LogicalSizeMB":"0 MB",
+                        "TotalSizeMB":"0 MB",
+                        "NameContainer":"true",
+                        "CreatorContainerId":0,
+                        "CreatorVolumeUuid":"",
+                        "UseActualCreatorId":false,
+                        "VolumeName":"mapr.cldb.internal",
+                        "VolumeId":1,
+                        "VolumeReplication":3,
+                        "NameSpaceReplication":3,
+                        "VolumeMounted":false,
+                        "AccessTime":"September 29, 2017"
+                }
+        ]
+}
+
+   Output fields
+
+   Field
+
+   Description
+
+   ContainerID
+
+   The unique ID number for the container.
+
+   Epoch
+
+   A sequence number that indicates the most recent copy of the container.
+   The CLDB uses the epoch to ensure that an out-of-date copy cannot
+   become the master for the container.
+
+   Master
+
+   The physical IP address and port number of the master copy. The master
+   copy is part of the original copy of the volume.
+
+   ActiveServers
+
+   The physical IP address and port number of each active node on which
+   the container resides.
+
+   InactiveServers
+
+   The physical IP address and port number of each inactive node on which
+   the container resides.
+
+   UnusedServers
+
+   The physical IP address and port number of servers from which no
+   "heartbeat" has been received for quite some time.
+
+   OwnedSizeMB
+
+   The size on disk (in MB) dedicated to the container.
+
+   SharedSizeMB
+
+   The size on disk (in MB) shared by the container.
+
+   LogicalSizeMB
+
+   The logical size on disk (in MB) of the container.
+
+   TotalSizeMB
+
+   The total size on disk (in MB) allocated to the container. Combines the
+   Owned Size and Shared Size.
+
+   Mtime
+
+   The time of the last modification to the contents of the container.
+
+   NameContainer
+
+   Indicates if the container is the name container for the volume. If
+   true, the container holds the volume's namespace information and file
+   chunk locations.
+
+   VolumeName
+
+   The name of the volume.
+
+   VolumeId
+
+   The unique ID number of the volume.
+
+   VolumeReplication
+
+   The replication factor, the number of copies of a volume excluding the
+   original.
+
+   VolumeMounted
+
+   Indicates whether the volume is mounted. If true, the volume is
+   currently mounted. If false, the volume is not mounted.
+
+Example
+
+   CLI
+
+maprcli dump containerinfo -ids 2049 -json

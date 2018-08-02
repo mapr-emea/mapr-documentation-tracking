@@ -1,0 +1,333 @@
+JDBC Configuration Options
+
+   Use the following parameters to configure the Kafka Connect for MapR-ES
+   JDBC connector; they are modified in the quickstart-sqlite.properties
+   file.
+
+Configuration Modes
+
+   In standalone mode, JDBC connector configuration is specified in the
+   quickstart-sqlite.properties file. Additional configurations such as
+   the offset storage location and the port for the REST interface are
+   specified in the connect-standalone.properties file. See [1]Configuring
+   in Standalone Mode.
+/opt/mapr/kafka-connect-jdbc/kafka-connect-jdbc-4.0.0/etc/kafka-connect-jdbc/qui
+ckstart-sqlite.properties
+/opt/mapr/kafka/kafka-1.0/config/connect-standalone.properties
+
+   In distributed mode, HDFS connector configuration is provided in the
+   POST and PUT requests when creating or modifying the connector. See
+   [2]POST /connectors and [3]PUT /connectors/(string:name)/config for
+   more information about using the REST API. Additional configurations
+   such as defining the topics that will store the connector state, task
+   configuration state, and connector offset state are specified in the
+   connect-distributed.properties file. See [4]Configuring in Distributed
+   Mode .
+/opt/mapr/kafka/kafka-1.0/config/connect-distributed.properties
+
+JDBC Source Configuration Options
+
+   CAPTION: Table 1. JDBC Source configuration parameters
+
+   Parameters Description
+
+   connection.url
+
+   JDBC connection URL for the database to load.
+     * Type: string
+     * Default: “”
+
+   connection.user
+
+   JDBC connection user.
+     * Type: string
+     * Default: NULL
+
+   connection.password
+
+   JDBC connection password.
+     * Type: password
+     * Default: NULL
+
+   connection.attempts
+   Maximum number of attempts to retrieve a valid JDBC connection.
+     * Type: int
+     * Default: 3
+
+   connection.backoff.ms
+   Backoff time in milliseconds between connection attempts.
+     * Type: long
+     * Default: 10000
+
+   table.whitelist
+
+   List of tables to include in copying. If specified, table.blacklist may
+   not be set.
+     * Type: list
+     * Default: []
+
+   table.blacklist
+
+   List of tables to exclude from copying. If specified, table.whitelist
+   may not be set.
+     * Type: list
+     * Default: []
+
+   numeric.precision.mapping
+
+   Whether or not to attempt mapping numeric values by precision to
+   integral types.
+     * Type: boolean
+     * Default: false
+
+   schema.pattern Schema pattern to fetch table metadata from the
+   database.
+
+   "" - Retrieves those without a schema.
+
+   * - NULL (default) means that the schema name should not be used to
+   narrow the search, all tables metadata would be fetched, regardless
+   their schema.
+
+   mode
+
+   The mode for updating a table each time it is polled. Options include:
+     * bulk - perform a bulk load of the entire table each time it is
+       polled.
+     * incrementing - use a strictly incrementing column on each table to
+       detect only new rows. Note that this will not detect modifications
+       or deletions of existing rows.
+     * timestamp - use a timestamp (or timestamp-like) column to detect
+       new and modified rows. This assumes the column is updated with each
+       write, and that values are monotonically incrementing, but not
+       necessarily unique.
+     * timestamp+incrementing - use two columns, a timestamp column that
+       detects new and modified rows and a strictly incrementing column
+       which provides a globally unique ID for updates so each row can be
+       assigned a unique stream offset.
+     * Type: string
+     * Default: “”
+
+   Valid Values: [, bulk, timestamp, incrementing, timestamp+incrementing]
+   The name of the strictly incrementing column to use to detect new rows.
+   Any empty value indicates the column should be autodetected by looking
+   for an autoincrementing column. This column may not be nullable.
+     * Type: string
+     * Default: “”
+
+   Note: If you are using Hive JDBC with incrementing or timestamp mode,
+   you should set the validate.non.null property to false because there
+   are no "not null" columns in Hive.
+
+   timestamp.column.name
+
+   The name of the timestamp column to use to detect new or modified rows.
+   This column may not be nullable.
+     * Type: string
+     * Default: “”
+
+   validate.non.null
+
+   By default, the JDBC connector will validate that all incrementing and
+   timestamp tables have NOT NULL set for the columns being used as their
+   ID/timestamp. If the tables don’t, JDBC connector will fail to start.
+   Setting this to false will disable these checks.
+     * Type: boolean
+     * Default: true
+
+   Note: If this parameter is false, specify exactly all columns that need
+   to be imported to MapR-ES in the query parameter. For example instead
+   of "query" : "select * from table", use "query" : "select col1, col2
+   from table"
+
+   incrementing.column.name
+
+   The name of the strictly incrementing column to use to detect new rows.
+   Any empty value indicates the column should be autodetected by looking
+   for an auto-incrementing column. This column may not be nullable.
+     * Type: string
+     * Default: “”
+
+   query
+
+   If specified, the query to perform to select new or updated rows. Use
+   this setting to join tables, select subsets of columns in a table, or
+   filter data. If used, this connector will only copy data using this
+   query – whole-table copying will be disabled. Different query modes may
+   still be used for incremental updates, but in order to properly
+   construct the incremental query, it must be possible to append a WHERE
+   clause to this query (i.e. no WHERE clauses may be used). If you use a
+   WHERE clause, it must handle incremental queries itself.
+     * Type: string
+     * Default: “”
+
+   poll.interval.ms
+
+   Frequency (milliseconds) to poll for new data in each table.
+     * Type: int
+     * Default: 5000
+
+   batch.max.rows
+
+   Maximum number of rows to include in a single batch when polling for
+   new data. This setting can be used to limit the amount of data buffered
+   internally in the connector.
+     * Type: int
+     * Default: 100
+
+   table.poll.interval.ms
+
+   Frequency (milliseconds) to poll for new or removed tables, which may
+   result in updated task configurations to start polling for data in
+   added tables or stop polling for data in removed tables.
+     * Type: long
+     * Default: 60000
+
+   topic.prefix
+
+   Prefix to prepend to table names to generate the name of the Kafka
+   topic to publish data to, or in the case of a custom query, the full
+   name of the topic to publish to. For example:
+   /path/to/stream:topic-prefix-.
+     * Type: string
+     * Default: “”
+
+   table.types By default, the JDBC connector will only detect tables with
+   type TABLE from the source Database. This config allows a command
+   separated list of table types to extract. Options include:
+     * TABLE
+     * VIEW
+     * SYSTEM TABLE
+     * GLOBAL TEMPORARY
+     * LOCAL TEMPORY
+     * ALIAS
+     * SYNONYM
+
+   Typically, TABLE or VIEW are used.
+     * Type: list
+     * Default: TABLE
+
+   timestamp.delay.interval.ms How long to wait after a row with certain
+   timestamp appears before it is included in the result. You may choose
+   to add some delay to allow transactions with earlier timestamp to
+   complete. The first execution fetches all available records (for
+   example, starting at timestamp 0) until the current time minus the
+   delay. Every following execution retrieves data from the last time data
+   was fetched until the current time minus the delay.
+     * Type: long
+     * Default: 0
+
+JDBC Sink Configuration Options
+
+   CAPTION: Table 2. JDBC Sink configuration parameters
+
+   Parameters Description
+
+   connection.url
+
+   JDBC connection URL.
+     * Type: string
+     * Default: “”
+
+   connection.user
+
+   JDBC connection user.
+     * Type: string
+     * Default: NULL
+
+   connection.password
+
+   JDBC connection password.
+     * Type: password
+     * Default: NULL
+
+   insert.mode The insertion mode to use.
+     * INSERT - Use standard SQL INSERT statements.
+     * UPSERT - Use the appropriate upsert semantics for the target
+       database if it is supported by the connector. For example: INSERT
+       or IGNORE
+     * UPDATE - Use the appropriate update semantics for the target
+       database if it is supported by the connector. For example: UPDATE
+
+     * Type: string
+     * Default: INSERT
+     * Valid Values: insert, upsert, update
+
+   batch.size Specifies how many records to attempt to batch together for
+   insertion into the destination table, when possible.
+     * Type: int
+     * Default: 3000
+     * Valid Values: 0,...
+
+   table.name.format A format string for the destination table name, which
+   may contain ${topic} as a placeholder for the originating topic name.
+   For example, table_${topic} for the topic orders maps to the table name
+   table_orders.
+     * Type: string
+     * Default: ${topic}
+
+   pk.mode The primary key mode, also refer to pk.fields documentation for
+   interplay. Supported modes are:
+     * none - No keys utilized.
+     * kafka - Kafka coordinates are used as the PK.
+     * record_key - Field(s) from the record key are used, which may be a
+       primitive or a struct.
+     * record_value - Field(s) from the record value are used, which must
+       be a struct.
+
+     * Type: string
+     * Default: non
+     * Valid Values: none, kafka, record_key, record_value
+
+   pk.fields List of comma-separated primary key field names. The runtime
+   interpretation of this config depends on the pk.mode:
+     * none - Ignored as no fields are used as primary key in thes mode.
+     * kafka - Must be a trio representing the Kafka coordinates. Defaults
+       to __connect_topic,__connect_partition,__connect_offset if empty.
+     * record_key - If empty, all fields from the key struct will be used,
+       otherwise used to extract the desired fields - for primitive key
+       only a single field name must be configured.
+     * record_value - If empty, all fields from the value struct will be
+       used, otherwise used to extract the desired fields.
+
+     * Type: list
+     * Default: ""
+
+   fields.whitelist List of comma-separated record value field names. If
+   empty, all fields from the record value are utilized, otherwise used to
+   filter to the desired fields. Note: pk.fields is applied independently
+   in the context of which field(s) form the primary key columns in the
+   destination database, while this configuration is applicable for the
+   other columns.
+     * Type: list
+     * Default: ""
+
+   auto.create Whether to automatically create the destination table based
+   on record schema if it is found to be missing by issuing CREATE.
+     * Type: boolean
+     * Default: false
+
+   auto.evolve Whether to automatically add columns in the table schema
+   when found to be missing relative to the record schema by issuing
+   ALTER.
+     * Type: boolean
+     * Default: false
+
+   max.retries The maximum number of times to retry on errors before
+   failing the task.
+     * Type: int
+     * Default: 10
+     * Valid Values: 0,..
+
+   retry.backoff.ms The time in milliseconds to wait following an error
+   before a retry attempt is made.
+     * Type: int
+     * Default: 3000
+     * Valid Values: 0,..
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/Connect-standalone-mode.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/Connect-rest-post-connectors.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/Connect-rest-put-connector-config.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/Connect-distributed-mode.html

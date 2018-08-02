@@ -1,0 +1,230 @@
+Altering Column Families
+
+   There are several methods that you can use to edit column families in
+   MapR-DB tables. These methods also let you change permissions on column
+   families.
+
+Modifying a Column Family Using the MapR Control System
+
+    1. Go to the table information page.
+       See [1]Viewing Table Information.
+    2. Click Column Families tab.
+       The page displays:
+          + Default column family permissions
+          + All the column families for the table
+    3. Click the name of the column family to modify.
+       The Edit Column Family page displays.
+    4. Make changes to the following properties (under PROPERTIES) as
+       desired.
+          + [2]JSON Table
+          + [3]Binary Table
+
+   Column Family Name The name of the column family.
+   Compression The compression setting to use for the column family. Valid
+   options are off, lzf, lz4, and zlib. The default setting is the same as
+   the compression setting for the directory where the table is located.
+   To find out whether a directory is compressed and the type of
+   compression, see [4]Turning Compression On or Off on Directories Using
+   the CLI.
+   In Memory Determines whether preference is given to values of this
+   column family for storage with row keys. Because row keys are cached in
+   memory in preference to row data, column-family data that is stored
+   inline with the row keys is also cached in memory.
+
+   For all column families in a table together, up to 200 bytes of row
+   data will be stored inline with each row key. Storing data inline with
+   a row key might speed retrieval of the data from a column family
+   because disk access can often be avoided. For each column family, up to
+   32 bytes can be stored inline with each row key even if this is
+   disabled (No), but preference will be given to column families where
+   this is enabled (Yes). A column family can have more than 32 bytes
+   stored inline if this is enabled.
+   If the total number of bytes for all column families together exceeds
+   200 for a row, then preference for inclusion within the inline storage
+   for that row is given to column families that have this enabled.
+   Note: All of the data for a column family will be stored in-line with
+   the row key, or none will be. If the contents in a column family for a
+   particular row are larger than the maximum number of bytes that are
+   allowed to be stored for that column family, no data will be stored
+   in-line for that column family.
+   By default, this is enabled.
+
+   Column Family Name The name of the column family.
+   Version
+          + Minimum — The minimum number of versions of column values to
+            keep. The default is zero.
+          + Maximum — Maximum number of versions of column values to keep.
+            The default is one.
+
+   Compression The compression setting to use for the column family. Valid
+   options are off, lzf, lz4, and zlib. The default setting is the same as
+   the compression setting for the directory where the table is located.
+   To find out whether a directory is compressed and the type of
+   compression, see [5]Turning Compression On or Off on Directories Using
+   the CLI.
+   Time-to-Live Specifies whether to purge data when the age of the data
+   in this column family exceeds the value specified here. Data can remain
+   forever or can be purged after specified amount of time (in seconds).
+   Setting the value to 0 is equivalent to allowing data to remain
+   indefinitely or forever.
+   In Memory Determines whether preference is given to values of this
+   column family for storage with row keys. Because row keys are cached in
+   memory in preference to row data, column-family data that is stored
+   inline with the row keys is also cached in memory.
+
+   For all column families in a table together, up to 200 bytes of row
+   data will be stored inline with each row key. Storing data inline with
+   a row key might speed retrieval of the data from a column family
+   because disk access can often be avoided. For each column family, up to
+   32 bytes can be stored inline with each row key even if this is
+   disabled (No), but preference will be given to column families where
+   this is enabled (Yes). A column family can have more than 32 bytes
+   stored inline if this is enabled.
+   If the total number of bytes for all column families together exceeds
+   200 for a row, then preference for inclusion within the inline storage
+   for that row is given to column families that have this enabled.
+   Note: All of the data for a column family will be stored in-line with
+   the row key, or none will be. If the contents in a column family for a
+   particular row are larger than the maximum number of bytes that are
+   allowed to be stored for that column family, no data will be stored
+   in-line for that column family.
+   By default, this is enabled.
+    5. Make changes to permissions as desired.
+         a. Modify USER ACCESS CONTROLs for the column family as desired.
+               o [6]JSON Table
+               o [7]Binary Table
+            Modify or set the following permissions for the column family:
+
+   Read Data Can do column reads. Reads require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Write Data Can do column writes. Writes require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Traverse Data Can pass over fields in JSON documents. For example,
+   suppose that a JSON table contains documents of this general structure:
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" : "value",
+               "c" : "value"
+          }
+}
+
+   Suppose further that the user sjohnson has read permission on a.b, but
+   not on a. For sjohnson to read a.b, the user needs the traverse
+   permission on a. The user can then pass over field a to a.b. This
+   permission is inherited by fields within the column family.
+   Set Compression Can set or change the compression setting for the
+   column family.
+            Modify or set the following permissions for the column family:
+
+   Read Data Can do column reads. Reads require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Write Data Can do column writes. Writes require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Append Data Can do column appends. Column appends require permission
+   both at the column-family level and at the column level.
+   Set Version Can set or change the maximum and minimum number of
+   versions of column values to keep.
+   Set Compression Can set or change the compression setting for the
+   column family.
+         b. Modify or set:
+               o [8]Field Permission (for JSON Tables)
+               o [9]Column Permission (for Binary Tables)
+            Modify permissions for the following on existing fields and/or
+            create new fields and set permissions for the following on the
+            new fields:
+
+   Read Data Can read from the field. This permission extends to fields
+   that are nested below as well unless explicitly denied on any of the
+   nested fields.
+   Write Data Can delete the field, insert a value into the field, or
+   overwrite the field's value.
+
+   Note: Deleting a field also deletes all fields that are nested within
+   that field, even those fields on which the write permission is
+   explicitly denied.
+   JSON Traverse Can descend a hierarchy of fields to access the fields to
+   read or write.
+            Modify following permissions for existing columns and/or
+            create new columns and set permissions for the following:
+
+   Read Data Can do column reads. Reads require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Write Data Can do column writes. Writes require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Append Data Can do column appends. Column appends require permission
+   both at the column-family level and at the column level.
+       To grant or block access to users, groups, and/or roles, from the:
+          + Basic settings, select the type — public, (OR) user, group, or
+            role — from the drop-down menu, specify the name of the user,
+            group, or role, and select one or more checkbox to grant
+            permissions.
+            Tip: Click [cloneACE.png] to create a copy of the associated
+            access control setting. Click [deleteRow.png] to remove the
+            associated access control expression.
+            To add access control expressions for another user, group, or
+            role, click Add Another and repeat this step.
+          + Advanced settings, or specify public (p) or user (u), group
+            (g), and/or role (r) who have and/or do not have the type of
+            access using the following boolean expressions and
+            subexpressions:
+               o ! — Negation operator.
+               o & — AND operation.
+               o | — OR operation.
+            Use (), parentheses, for subexpressions.
+            Note: You cannot specify user, group, or role individually if
+            access is granted to all users (public).
+            Alternatively, click [editPencil.png] associated with the type
+            of access to use the Access Control Expression window to
+            define access for public or users, group, and/or role. See
+            [10]Defining ACEs for more information.
+       Note: If you switch from Basic to Advanced, the basic settings, if
+       any, will be carried over to the advanced settings. If you switch
+       from Advanced to Basic, all the settings will be lost because the
+       subexpressions and AND (&) and negation (!) operations that are
+       supported by advanced settings are not supported in the basic
+       settings.
+    6. Click Save Changes for the changes to take effect.
+
+Modifying a Column Family Using the CLI or REST API
+
+   The basic command to edit a column family is:
+maprcli table cf edit -path <path> -cfname <name_of_column_family> options
+
+   For the full list of options for this command, see [11]table cf edit.
+
+   The format of the value of the -path parameter depends on whether you
+   are creating a table on a local cluster or a remote cluster:
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under a volume with a
+       mount point at /volume1, specify the following path: /volume1/test
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named customer under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customer
+
+Modifying a Column Family in a Binary Table Using HBase shell
+
+   After starting the HBase shell, run the alter command. Type help to see
+   a list of commands and their syntax.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ViewTableDetails.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/editing_column_families.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/editing_column_families.html#div1entry2
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/TurningCompressionOnOff.html#concept_cxv_4k3_f5
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/TurningCompressionOnOff.html#concept_cxv_4k3_f5
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/editing_column_families.html#div2entry1
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/editing_column_families.html#div2entry2
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/editing_column_families.html#div3entry1
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/editing_column_families.html#div3entry2
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/ACE-Builder.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-cf-edit.html#tablecfedit

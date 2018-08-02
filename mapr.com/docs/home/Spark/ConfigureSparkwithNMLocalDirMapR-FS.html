@@ -1,0 +1,36 @@
+Configure Spark with the NodeManager Local Directory Set to MapR-FS
+
+   This procedure configures Spark to use the mounted NFS directory
+   instead of the /tmp directory on the local file system:
+
+    1. Install the mapr-loopbacknfs and nfs-utils packages if they are not
+       already installed. For reference, see [1]Installing
+       mapr-loopbacknfs Packages and [2]Setting Up MapR NFS.
+    2. Start the mapr-loopbacknfs service by following the steps at
+       [3]Managing the mapr-loopbacknfs Service.
+    3. To configure Spark Shuffle on NFS, complete these steps on all
+       nodes:
+         a. Create a local volume for Spark Shuffle:
+sudo -u mapr maprcli volume create -name mapr.$(hostname -f).local.spark -path /
+var/mapr/local/$(hostname -f)/spark -replication 1 -localvolumehost $(hostname -
+f)
+         b. Point the NodeManager local directory to the Spark Shuffle
+            volume mounted through NFS by setting the following property
+            in the yarn-site.xml file on the NodeManager nodes:
+<property>
+    <name>yarn.nodemanager.local-dirs</name>
+    <value>/mapr/my.cluster.com/var/mapr/local/${mapr.host}/spark</value>
+</property>
+
+         c. Restart the NodeManager service (and the Resource Manager
+            service on the main node) to pick up the yarn-site.xml
+            changes:
+maprcli node services -name nodemanager -action restart -nodes <node 1> <node 2>
+ <node 3>
+maprcli node services -name resourcemanager -action restart
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/t_MapRPOSIXClient_installation.html#MapRPOSIXClient-Installin_28215883-d3e122
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_set_up_mapr_nfs.html#Setting-Up-MapR-NFS-TheMapRNFSservicelet-d3e72
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c-managing-mapr-loopbacknfs-service.html#concept_mx2_cry_kt

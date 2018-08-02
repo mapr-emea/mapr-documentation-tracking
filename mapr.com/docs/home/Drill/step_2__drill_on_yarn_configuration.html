@@ -1,0 +1,142 @@
+Step 2: Configure Drill-on-YARN
+
+   To configure Drill to run as a YARN application, modify the
+   $DRILL_SITE/drill-on-yarn.conf cluster configuration file to suit the
+   needs of your cluster. This file is a “starter” configuration file that
+   corresponds to the simplest Drill cluster. The drill-on-yarn.conf file
+   is in the same [1]HOCON format as drill-override.conf.
+   Consult the $DRILL_HOME/conf/drill-on-yarn-example.conf file as an
+   example. However, do not just copy the example file. Instead, copy only
+   the specific configuration settings that you need; the others will
+   automatically take the Drill-defined default values.
+   Note: Make sure that resources can accommodate the Drill memory, CPU,
+   and disk requirements.
+
+   The following sections list the configuration settings required to run
+   Drill under YARN:
+
+Drill Memory Settings
+
+   The following configuration sets the Java heap size and amount of
+   direct memory the node can allocate to Drill:
+drillbit: { heap: "<value>" max-direct-memory: "<value>" }
+
+   When you add the configuration, use the same values set in the
+   following parameters of the drill-env.sh file, if you did not remove
+   these lines when you modified drill-env.sh:
+export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"<value>"}
+export DRILL_HEAP=${DRILL_HEAP:-"<value>"}
+
+   Drill-on-YARN copies these values into the environment variables when
+   launching each drillbit. Drill also uses additional JVM memory. For
+   example, Drill uses a code cache to hold classes generated at runtime.
+   The default size of the cache is 1 GB:
+drillbit: { code-cache: "1G" }
+
+   Typically, you do not need to change the code cache size, but you must
+   account for it when computing the YARN container size.
+
+YARN Container Size
+
+   The following configuration sets the YARN container size required to
+   run Drill as a YARN application.
+drillbit: {
+   memory-mb: 14336
+ }
+
+   The default value is 14GB. Typically, this size is the sum of the heap
+   and direct memory. However, if you use custom libraries that perform
+   their own memory allocation, or launch sub-processes, you must account
+   for that memory usage as well. Note that YARN memory is expressed in
+   MB. To compute the container size, start with the values used for the
+   heap, direct memory, and code cache settings, as shown in the following
+   example:
+drillbit: {
+    heap: "4G"
+    max-direct-memory: "8G"
+    code-cache: "1G"
+    memory-mb: 14336
+  }
+
+   The values shown above are the Drill defaults. You may use larger
+   values. Although the three values account for the bulk of Drill memory,
+   the JVM itself also has a certain overhead. Assume that the overhead is
+   about 1 GB, though the amount varies depending on the workload.
+   Add the four values together to get a memory requirement in GB.
+Total memory = 8G + 4G + 1G + 1G = 14G
+
+   YARN sizes containers in megabytes. Convert GB to MB:
+Container size = 14G * 1024 = 14336 MB
+
+   Set this size in drill-on-yarn.conf:
+drillbit: { memory-mb: 14336 }
+
+CPU
+
+   The following configuration sets the CPU to allocate to Drill:
+drillbit: { vcores: <value> }
+
+   Drill is a CPU-intensive operation and greatly benefits from each
+   additional core. YARN does not limit the number of cores used by an
+   application. Rather, this number reports to YARN the average CPU usage
+   of Drill so that YARN can use the number when deciding how many other
+   applications to run on the same node.
+
+Drillbit Cluster Configuration
+
+   The following configuration sets the cluster group:
+cluster: [ { name: "drillbits" type: "basic" count: 1 } ]
+
+   Drill-on-YARN uses the concept of a “cluster group” of Drillbits to
+   describe the set of drillbits to launch. Currently, only the “basic”
+   type of group is supported. A basic group launches drillbits anywhere
+   in the YARN cluster where a container is available. For a basic group,
+   specify the group type and the number of drillbits to launch.
+   Note: The syntax says that cluster is a list that contains cluster
+   group objects contained in braces. Drill currently supports just one
+   group.
+
+   The name is optional. It appears in the Application Master web UI. Type
+   must be set to “basic.” Set the count to the number of hosts on which
+   Drill is to run at launch time. You can resize the Drill cluster after
+   the cluster is launched.
+
+YARN Queue Labels
+
+   The following configuration sets the YARN queue labels that identify
+   the cluster nodes that run Drill:
+yarn: { queue: "<queue_name>" }
+
+   The MapR distribution of YARN provides queue labels for assigning YARN
+   applications to specific queues. See [2]Label-Based Scheduling for YARN
+   Applications. You can use queue labels with Drill to identify the YARN
+   queue that should run Drill.
+
+   To use queue labels, complete the following steps:
+    1. Create a node label.
+    2. Assign the label to the nodes that are to run Drill.
+    3. Create a Drill-specific queue that uses the node label.
+    4. Configure Drill-on-YARN to use the queue.
+
+   Suppose you create a queue called “drill.” Setting the following
+   configuration causes Drill-on-YARN to launch through the drill queue:
+yarn: { queue: "drill" }
+
+   Set queue to the name a name of your choice. When Drill-on-YARN
+   launches, both the Application Master and drillbits run only on nodes
+   with the same node label as the queue.
+
+DFS Location
+
+   The following configuration sets the dfs location:
+dfs: { app-dir: "/user/drill" }
+
+   Drill copies the archive in to the MapR-FS in a location you provide.
+   The default is /user/drill, however you can specify a different
+   location. You do not have to specify the MFS connection information;
+   MapR defines this automatically.
+
+References
+
+   1. https://github.com/typesafehub/config/blob/master/HOCON.md
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Label-based-Scheduling-YARNApps.html#Label-based-Scheduling-fo-Label-basedschedulin-d3e75

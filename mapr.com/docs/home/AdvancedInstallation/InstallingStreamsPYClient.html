@@ -1,0 +1,83 @@
+Installing MapR-ES Python Client
+
+   The MapR-ES Python Client is a binding for librdkafka that is dependent
+   on the MapR-ES C client (MapR-ES C Client is a distribution of
+   librdkafka that works with MapR-ES).
+
+Prerequisites
+
+   Note: As of MapR 5.2.1, you can create Python client applications for
+   MapR-ES.
+   Verify that the following components are installed on the node:
+     * MapR-ES C Client (mapr-librdkafka)
+     * GNU Compiler Collection (GCC) is installed on the node.
+     * Python 2.7.1 and above or Python 3.x
+     * Python pip
+     * python-devel (This is required for nodes with the Linux operating
+       system.)
+
+   Note: For instructions on setting up the MEP repository, see [1]Step
+   10: Install Ecosystem Components Manually.
+   Important: Because the MapR-ES Python Client is dependent on the
+   MapR-ES C Client, you must configure the MapR-ES C Client before using
+   the MapR-ES Python Client. See [2]Configuring the MapR-ES C Client.
+
+Installation
+
+   Note: The Python client is available for Linux or Mac operating
+   systems.
+   To install the MapR-ES Python Client using the [3]Python Software
+   Foundation, run the following command as root or using sudo:
+     * On Linux:
+pip install --global-option=build_ext --global-option="--library-dirs=/opt/mapr/
+lib" --global-option="--include-dirs=/opt/mapr/include/" mapr-streams-python
+     * On Mac:
+pip install –-user --global-option=build_ext --global-option="--library-dirs=/op
+t/mapr/lib" --global-option="--include-dirs=/opt/mapr/include/" mapr-streams-pyt
+hon
+
+   Note: The referenced package works on nodes with the Linux or the Mac
+   operating system. The Python Client for MapR-ES is not supported on
+   Windows.
+   Alternatively, you can install the MapR-ES Python Client via the MapR
+   package repository:
+http://package.mapr.com/releases/MEP/<MEP version>/mac/mapr-streams-python-<vers
+ion>.tar.gz
+
+Troubleshooting Mac OS Installation
+
+   If you install the MapR-ES Python Client on a Mac without the --user
+   flag, you may encounter a "Not Permitted" error, signifying that you
+   don't have permission to create a LICENSE file. The error will look
+   similar to the following:
+Copying LICENSE -> /System/Library/Frameworks/Python.framework/Versions/2.7/
+                error: [Error 1] Operation not permitted:
+                '/System/Library/Frameworks/Python.framework/Versions/2.7/LICENS
+E'
+
+   To fix this issue, execute the following steps. These steps apply to
+   users with a new Mac OS Sierra version 10.12.5.
+    1. Reboot your Mac while simultaneously holding the Command and R keys
+       to go into Mac OS X Recovery mode.
+    2. Select Utilities, and then Terminal.
+    3. Type csrutil disable. A message will pop up, informing you that
+       your System Integrity Protection (SIP) has been sucessfully
+       disabled.
+    4. Reboot your Mac again.
+    5. Go into the Terminal and execute the following command as the root
+       user:
+pip install --global-option=build_ext  --global-option="--library-dirs=/opt/mapr
+/lib" --global-option="--include-dirs=/opt/mapr/include/" mapr-streams-python
+    6. Once the script runs successfully, reboot your Mac while holding
+       the Command and R keys. You will go into Mac OS X Recovery mode.
+    7. Select Utilities, and then Terminal.
+    8. Type csruntil enable to enable your SIP.
+
+   Note: To avoid this error, consider using a virtual Python environment
+   or the --user flag.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingEcoWithoutInstaller.html#concept_gtv_mp4_2w
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/MapRStreamCAPISetup.html
+   3. https://pypi.org/project/mapr-streams-python/

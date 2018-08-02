@@ -1,0 +1,59 @@
+Drill Configuration Files
+
+   The Drill installation includes configuration files with start-up
+   options that you can modify prior to starting Drill.
+
+   The configuration files reside in a [1]HOCON configuration file format,
+   which is a hybrid between a properties file and a JSON file. The files
+   have a nested relationship and a hierarchical structure, where one file
+   overrides another. You can locate the files in the
+   /opt/mapr/drill/drill-<version>/conf directory.
+   The configuration files are listed below in their hierarchical order.
+   The drill-distrib.conf file overrides the drill-module.conf file, and
+   the drill-override.conf file overrides the drill-distrib.conf file.
+     * drill-override.conf
+     * drill-distrib.conf
+     * drill-module.conf
+
+   Environment variables are also overridden in the same way, in the order
+   listed below:
+     * drill-env.sh (or explicitly defined in environment)
+     * distrib-env.sh
+     * drill-config.sh
+
+   The following table lists the configuration files with their
+   descriptions:
+   File Name Description Default Config with Secure Installation
+   drill-distrib.conf
+
+   Introduced in Drill 1.11, this file contains MapR distribution specific
+   configurations for Drill. Automatically updated by configure.sh when
+   you configure the MapR cluster.
+   Enables authentication, impersonation, and encryption with MapR-SASL as
+   the default mechanism. Enable TLS for the HTTPS channel. By default
+   HTTPS uses the SSL certificate provided by the MapR installation, which
+   can be updated, by the administrator, to use a specific certificate in
+   a key-store.
+   distrib-env.sh Contains distribution-specific defaults for various
+   environment variables. Enables authentication between the Drillbits and
+   ZooKeeper. Configures the location of the MapR security configuration
+   file, mapr.login.conf, used by Drill.
+   drill-env.sh The drill-env.sh file contains the cluster
+   admininstrator-specific environment variables that can differ from the
+   defaults. You can modify this file to override the default values of
+   system properties defined in the distrib-env.sh file or to define a new
+   system property. Empty upon installation.
+   drill-override.conf
+
+   Use the drill-override.conf file to override the default values
+   obtained from drill-module.conf and drill-distrib.conf. A cluster
+   administrator can update this file to configure a Drillbit as required
+   (different from default installation)
+   When you first install Drill, drill-override.conf contains ZooKeeper
+   and Drillbit configuration information, however after you run
+   configure.sh -R, the entries are removed and the file does not contain
+   any configurations.
+
+References
+
+   1. https://github.com/typesafehub/config/blob/master/HOCON.md

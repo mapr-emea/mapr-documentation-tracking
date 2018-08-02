@@ -1,0 +1,129 @@
+virtualip list
+
+   Lists the virtual IP addresses in the cluster.
+
+Syntax
+
+   CLI
+
+maprcli virtualip list
+    [ -cluster <cluster> ]
+    [ -columns <columns> ]
+    [ -filter <filter> ]
+    [ -limit <limit> ]
+    [ -nfsmacs <NFS macs> ]
+    [ -output <output> ]
+    [ -range <range> ]
+    [ -sortby <attribute> ]
+    [ -start <start> ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host>:<port>/rest/virtualip/list[?<parameters>]
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster The cluster on which to run the command.
+   columns The columns to display.
+   Note:
+     * The hostname and ip fields are always returned in the query.
+     * The value(s) for assignables are not returned as a column.
+
+   filter A filter specifying VIPs to list. See [1]Filters for more
+   information.
+   limit The number of records to return.
+   nfsmacs Specifies whether (1) or not (0) to return the MAC addresses of
+   servers running NFS. If value is 1, the command returns the MAC
+   addresses of the NFS servers.
+   output Whether the output should be terse or verbose.
+   range Specifies whether (1) or not (0) to return the VIP ranges. The
+   default value is 0, which returns all VIPs individually. If:
+     * The value is 0, the command returns the assignment of VIPs to hosts
+       (specified by hn, mac, and ip in the output).
+     * The value is 1, the command returns the VIP ranges and the
+       assignables, which is the group of nodes amongst which the VIP
+       range (specified by vip and vipe in the output) must be
+       distributed. If assignables is empty in the output, the range of
+       VIPs (specified by vip and vipe in the output) can be assigned to
+       any NFSv3 server.
+
+   Note: The assignables contains the list of MAC addresses only if the
+   VIP assignment is restricted to a group of nodes. You must specify
+   -json with the command to view the assignables.
+   sortby Specifies one of the following attributes to sort the list of
+   virtual IP addresses by: vipip, vipendip, vipnetmask, vipgateway,
+   vipnumdevices, viphealth, vipassigneddevname, vipassigneddevip,
+   vipassigneddevmac, vippreferredhostname, vippreferredip,
+   vippreferredmac.
+   start The index of the first record to return.
+
+Examples
+
+   Return the list of VIPs:
+     * [2]CLI
+     * [3]REST
+
+# maprcli virtualip list
+hn                     ip            vip          mac                nm
+
+atsqa4-164.nfs4ad.com  10.10.88.164  10.10.88.10  0c:c4:7a:1f:91:a5  255.255.255
+.0
+atsqa4-161             10.10.88.161  10.10.88.11  0c:c4:7a:1f:91:0a  255.255.255
+.0
+atsqa4-161             10.10.88.161  10.10.88.12  0c:c4:7a:1f:91:0a  255.255.255
+.0
+atsqa4-162             10.10.88.162  10.10.88.13  0c:c4:7a:1f:92:12  255.255.255
+.0
+atsqa4-164.nfs4ad.com  10.10.88.164  10.10.88.14  0c:c4:7a:1f:91:a5  255.255.255
+.0
+atsqa4-162             10.10.88.162  10.10.88.15  0c:c4:7a:1f:92:12  255.255.255
+.0
+atsqa4-161             10.10.88.161  10.10.88.17  0c:c4:7a:1f:91:0a  255.255.255
+.0
+atsqa4-164.nfs4ad.com  10.10.88.164  10.10.88.18  0c:c4:7a:1f:91:a5  255.255.255
+.0
+
+curl -k -X GET 'https://abc.sj.us:8443/rest/virtualip/list' --user mapr:mapr
+
+   Return 2 virtual IPs:
+     * [4]CLI
+     * [5]REST
+
+# maprcli virtualip list -limit 2
+hn                     ip            vip          mac                nm
+
+atsqa4-164.nfs4ad.com  10.10.88.164  10.10.88.10  0c:c4:7a:1f:91:a5  255.255.255
+.0
+atsqa4-161             10.10.88.161  10.10.88.11  0c:c4:7a:1f:91:0a  255.255.255
+.0
+
+curl -k -X GET 'https://abc.sj.us:8443/rest/virtualip/list?limit=2' --user mapr:
+mapr
+
+   Return a list of VIP ranges:
+     * [6]CLI
+     * [7]REST
+
+# maprcli virtualip list -range 1
+assignables  vip          vipe         nm
+...          10.10.88.10  10.10.88.13  255.255.255.0
+...          10.10.88.14  10.10.88.15  255.255.255.0
+...          10.10.88.17  10.10.88.18  255.255.255.0
+
+curl -k -X GET 'https://abc.sj.us:8443/rest/virtualip/list?range=1' --user mapr:
+mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html#concept_znz_qxz_5t
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-list.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-list.html#div1entry2
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-list.html#div2entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-list.html#div2entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-list.html#div3entry1
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-list.html#div3entry2

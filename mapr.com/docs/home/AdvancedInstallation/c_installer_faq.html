@@ -1,0 +1,323 @@
+MapR Installer FAQ
+
+   Review frequently asked questions about the MapR Installer.
+
+General
+
+   What is the difference between the MapR Installer and the Quick
+          Installer?
+          The MapR Installer is a robust, user-friendly replacement for
+          the Quick Installer. You can use the MapR Installer to install a
+          cluster with MapR services and ecosystem components. You can
+          also use the MapR Installer to update an existing cluster with
+          additional nodes, MapR services, and ecosystem components.
+          However, the MapR Installer does not install the MapR client.
+
+   Which versions of MapR can I install?
+          You can use the MapR Installer to install MapR 4.1, 5.0, 5.1,
+          5.2.x, and 6.x
+
+   Can I use the MapR Installer to upgrade my cluster?
+          Yes. The MapR Installer can be used to upgrade a cluster that
+          was installed using the MapR Installer or a MapR Installer
+          Stanza. See [1]Upgrading MapR Core With the MapR Installer for
+          information about how to upgrade with the MapR Installer.
+
+          If the cluster was manually installed, you can install the
+          installer and enable it to be used with subsequent installations
+          or upgrades by following the steps in [2]Using probe and import
+          to Generate the Installer Database.
+
+   Can I use the MapR Installer to install a patch?
+          Yes. See [3]Applying a Patch.
+
+Preparing to Install
+
+   What are the MapR Installer requirements?
+          See the [4]Prerequisites.
+
+   What information should I be prepared with before I start?
+          The mapr-setup.sh script requests the following information:
+
+          + The hostname and port number that other nodes in the cluster
+            can use to connect to the MapR Installer node.
+          + A user for the MapR Admin user account. If the user account
+            doesn't exist, the mapr-setup.sh script prompts for the UID,
+            GID, group name, and password so that it can create the
+            account.
+
+          The MapR installer requests the following information:
+
+          + The [5]MapR Expansion Pack (MEP) that you want to install on a
+            5.2.x or later cluster
+          + The MapR services that you want to install on the cluster
+          + Hostnames of the nodes that you want to include in the cluster
+          + Credentials for the root user or a user with sudo privileges
+            on each node in the cluster
+
+   What are the node requirements?
+          See the [6]Prerequisites.
+
+   What are my options if I don't want to use an Internet repository?
+          See [7]Using a Local, Shared Repository With the MapR Installer.
+
+   Can I install on nodes in the cloud?
+          Yes. See [8]Installation Options.
+
+Using the MapR Installer
+
+   Which license edition applies to my installation?
+          As of 5.1, MapR licenses are categorized by new editions and
+          modules that further define the features supported by an
+          edition.
+
+          See the following table for descriptions of the new license
+          options. For more information about licensing, see [9]MapR
+          Software Licensing.
+
+   License Edition Description
+   Converged Community Edition An unlimited, free, community-supported
+   MapR edition with one free NFS Gateway. This edition includes Hadoop,
+   MapR-DB, and MapR Streams. However, real-time global replication of
+   MapR-DB tables or MapR Streams is not included.
+   Converged Enterprise Edition MapR Edition that enables enterprise-class
+   features such as high availability, multi-tenancy, and disaster
+   recovery. Each of the following modules for the Converged Enterprise
+   Edition unlocks a portion of the total platform capabilities:
+
+        Hadoop
+                Enables enterprise-class features for analytic use cases,
+                such as highly-available NFS and support for Hadoop
+                services like YARN and MapReduce.
+
+        Database
+                Enables enterprise-class features for operational NoSQL
+                database, with MapR-DB JSON and binary tables, and
+                real-time global database replication.
+
+        Streams
+                Enables enterprise-class features for publish/subscribe
+                event streaming, with MapR Streams and real-time global
+                stream replication.
+
+   For more information about MapR editions, see [10]What's Included.
+
+   What happened to the M3, M5, M7, or Enterprise Edition licenses?
+          With the release of 5.1 and MapR Streams, the licensing model
+          has been simplified, allowing more choice in which specific
+          features are licensed on a cluster.
+
+          See the following table to understand how the new MapR licenses
+          correspond to the legacy license editions that you are familiar
+          with. For more information about licensing, see [11]MapR
+          Software Licensing. For more information about MapR editions,
+          see [12]What's Included.
+
+   Legacy Edition New Edition & Module(s)
+   M3 or Community Edition Converged Community Edition. Starting in 5.1,
+   the Converged Community Edition includes MapR Streams.
+   M5 or Enterprise Edition Converged Enterprise Edition with Hadoop
+   Module
+   M7 or Enterprise Database Edition Converged Enterprise Edition with
+   Hadoop and Database modules
+
+   What expressions can I use to specify multiple nodes?
+          You can enter the following types of expressions to specify
+          nodes:
+
+          + [0-99] => Expands hostnames to 0, 1, 2, ...99. The second
+            delimiter allows one or more digits.
+
+          + [00-99] => Expands hostnames to 00,01,02,...99. Allows two or
+            more digits of the same length
+
+          + [a-z] or [A-Z] => Expands hostnames to a,b,c,...z or
+            A,B,C,...Z
+
+          To group hosts based on racks for performance or reliability,
+          append ":" followed by the rack name to each expression.
+
+          Examples:
+
+          + host1, host2, host3
+          + host[A-Z][0-99] => hostA0, hostA1, hostA2 ,...hostZ99
+          + host[000-333] => host000, host001, host002, ... host333
+          + host[0-3],otherhost[00-05] => host0, host1, host2,...host3 and
+            otherhost00,...otherhost05
+          + host[0-5]:rack1,host[6-10]:rack2 => host1, host2,
+            host3,...host5 on rack1. host6, host7, host8,...host10 on
+            rack2
+
+   How do I change the service layout?
+          The MapR Installer uses groups to organize nodes and services. A
+          group is a set of services that you can run on one or more
+          nodes. A service can only be assigned to one group.
+
+          On the Configure Service Layout page, you can use the Advanced
+          Configuration option to drag and drop services between existing
+          groups to specify where the services are to be installed. You
+          can also create new groups or change the list of nodes assigned
+          to a group.
+
+          Note: Some services can only be assigned to one node.
+
+   Can I install a single-master service, such as Hive, on multiple nodes?
+          When you use the MapR Installer, single-master services are
+          added to the default MASTER group. By design, only one node can
+          be assigned to the MASTER group.
+
+          To install a single-master service on more than one node:
+
+         1. On the Configure Service Layout page, create a new group.
+         2. Assign multiple nodes to the new group.
+         3. Drag the single-master service to the new group.
+
+   Can I install a secure MapR cluster with the MapR Installer?
+          Yes. MapR Installer [13]versions 1.7 and later support
+          [14]built-in security.
+
+   Are there limitations to what you can do when you update an existing
+          cluster?
+          See the restrictions documented in [15]Using the Incremental
+          Install Function.
+
+   How do I uninstall the MapR Installer?
+          If the installer node is part of the cluster, the MapR Installer
+          packages can remain on the installer node after the cluster is
+          uninstalled
+
+          If you have uninstalled the cluster, you can run one of the
+          following commands to uninstall the MapR Installer packages from
+          the installer node:
+
+          + On CentOS / Red Hat:
+yum remove 'mapr-installer*'
+
+          + On Ubuntu:
+apt-get remove 'mapr-installer*'
+
+          + On SUSE
+zypper remove 'mapr-installer*'
+
+Troubleshooting
+
+   What can I do if I need to rerun mapr-setup.sh with a new repository
+          URL and the script still points to the old URL?
+          The /opt/mapr/installer/data/properties.json file stores
+          information such as the user ID of the cluster administrator,
+          the user ID of the MapR Installer, the OS type, Internet access
+          information, and the repository URLs for MapR core and the
+          ecosystem components. Once a repository URL has been stored in
+          properties.json, the MapR Installer assumes that the URL will
+          not change. Rerunning the setup script does not update the URL.
+          Even upgrading the installer packages does not update the
+          repository URL in properties.json. To pass a new repository
+          value into properties.json, you have two options:
+
+          Option 1
+
+          You can remove the installer files and rerun the setup script:
+
+mapr-setup.sh remove
+
+          Using the remove command removes properties.json, the installer
+          database, and the installer packages, but not the setup script.
+          After the files are removed, you can rerun the setup script to
+          specify the new repository URL. For more information about
+          options you can use with mapr-setup.sh, see [16]Using
+          mapr-setup.sh.
+
+          Option 2
+
+          If you need to retain the installer database and the cluster
+          state information (for example, because you need to do an
+          upgrade), you can:
+
+         1. Edit the properties.json file manually to change the
+            repo_core_url and the repo_eco_url entries to the correct
+            values.
+         2. Restart the MapR Installer:
+systemctl restart mapr-installer
+
+   What can I do if dropdown menus aren't working?
+          Try any or all of the following to correct the problem:
+
+          + Refresh the browser page.
+          + Clear the browser cache.
+          + Close and restart the browser or browser tab.
+
+   Why does the MapR Installer URL not work?
+          Check that the URL you are trying to access is external. For
+          example, if you install on a cluster that is in the cloud, the
+          URL that the MapR Installer lists may not work if it is an
+          internal URL. Try accessing the external URL that is associated
+          with the internal URL.
+
+   Why doesn't the MapR Installer list the ecosystem component that I want
+          to install?
+          The MapR Installer Definitions package contains the MapR
+          versions and services that you can install. Once you update the
+          MapR Installer Definitions, you can install ecosystem components
+          that were made available after you first configured the MapR
+          Installer. See [17]Update the MapR Installer.
+
+   On the Verify Nodes page, how can I get more information about a
+          warning or error?
+          Hold your cursor over the warning or error in the right pane to
+          see more information about the specific warning or error
+          condition.
+
+   Why are the nodes listed on the Verify Nodes page different from those
+          that I chose to install on?
+          If you abort an installation and then install on a different set
+          of nodes, you must use the Verify Nodes page to manually remove
+          nodes that were part of the aborted installation but are no
+          longer part of the current installation.
+
+   I can't log in to Hue. What credentials should I be using to log into
+          Hue for the first time?
+          Log in with cluster administrator username that you configured
+          while running mapr-setup.sh and the password mapr.
+
+   What should I do if rerunning mapr-setup.sh generates errors because
+          the properties.json file has incorrect information?
+          The properties.json file stores information such as the user ID
+          of the cluster administrator, the user ID of the MapR Installer,
+          the OS type, Internet access information, and the repository
+          URL. Once the repository URL has been stored in properties.json,
+          the MapR Installer assumes that the URL will not change.
+          Rerunning mapr-setup.sh does not update the URL. Even upgrading
+          the installer packages does not update the repository URL in
+          properties.json. To pass a new repository value into
+          properties.json, you must first remove the installer files:
+
+mapr-setup.sh -remove
+
+          Using the -remove command removes properties.json, the installer
+          database, and the installer packages, but not the setup script.
+          After the files are removed, you can rerun mapr-setup.sh to
+          specify the new repository URL. See [18]MapR Installer. For more
+          information about options you can use with mapr-setup.sh, see
+          [19]Using mapr-setup.sh.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingWithInstaller.html#upgradingwithmaprinstaller
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/UsingProbeImport.html#concept_oct_r3y_jz
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/applying_patches.html#concept_dwy_ddm_wy
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/c_install_prerequisites.html#concept_mt1_xzx_ft
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MEPs/MEP_reference.html#concept_rqz_nr4_qz
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/c_install_prerequisites.html#concept_mt1_xzx_ft
+   7. https://maprdocs.mapr.com/home/AdvancedInstallation/c_local_repo_install.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/c_get_started_install.html#concept_mt1_xzx_ft
+   9. https://mapr.com/products/whats-included/assets/mapr-customer-licensing-102017.pdf
+  10. https://mapr.com/products/whats-included/
+  11. https://mapr.com/products/whats-included/assets/mapr-customer-licensing-102017.pdf
+  12. https://mapr.com/products/whats-included/
+  13. https://maprdocs.mapr.com/home/InteropMatrix/r_installer_matrix.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/BuiltIn.html#BuiltIn
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Using_incremental_install_function.html#task_kdt_pjb_jbb
+  16. https://maprdocs.mapr.com/home/AdvancedInstallation/c_installer_how_it_works.html
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/c_installer_update.html
+  18. https://maprdocs.mapr.com/home/MapRInstaller.html
+  19. https://maprdocs.mapr.com/home/AdvancedInstallation/c_installer_how_it_works.html

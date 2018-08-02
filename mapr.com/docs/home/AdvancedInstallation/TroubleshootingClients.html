@@ -1,0 +1,57 @@
+Troubleshooting
+
+   Describes changes to core-site.xml file to troubleshoot issues.
+
+fs.mapr.bind.retries Parameter
+
+   If there are issues related to unavailability of port when, set the
+   value for fs.mapr.bind.retries configuration parameter in core-site.xml
+   file to true. If true, the client tries to bind during client
+   initialization for 5 minutes before failing. By default, the
+   fs.mapr.bind.retries configuration parameter is set to false.
+
+   For example, your entry in core-site.xml file should look similar to
+   the following:
+<property>
+  <name>fs.mapr.bind.retries</name>
+  <value>true</value>
+  <description>Bind during client initialization for 5 minutes</description>
+</property>
+
+fs.mapr.bailout.on.library.mismatch Parameter
+
+   When running any application with older versions of the MapR JARs, the
+   system could hang if the older JARs link to the native library
+   installed on cluster nodes that have been updated to a newer MapR
+   version. The fs.mapr.bailout.on.library.mismatch parameter detects
+   mismatched libraries, fails the job, and logs an error message. The
+   parameter is enabled by default. You can disable the parameter on all
+   the YARN nodes and resubmit the job for the job to continue to run. To
+   disable the parameter, you must set it to false in the core-site.xml
+   file.
+
+   For example, to disable, your entry in the core-site.xml file should
+   look similar to the following:
+<property>
+  <name>fs.mapr.bailout.on.library.mismatch</name>
+  <value>false</value>
+  <description>Disabling to continue running jobs</description>
+</property>
+
+libMapRClient.so Binary
+
+   The libMapRClient.so binary is in /opt/mapr/lib directory and also
+   bundled in maprfs-XXX.jar file. All the applications that include the
+   JAR also have libMapRClient.so binary. If there are multiple
+   libMapRClient.so on a machine and if you know the location of all the
+   JARs, you can run the following commands to check the mapr version of a
+   binary:
+# jar tvf mapr-<XXX>.jar | grep libMapRClient.so
+# jar xvf mapr-<XXX>.jar com/mapr/fs/native/Linux/x86_64/libMapRClient.so
+# cd com/mapr/fs/native/Linux/x86_64/
+# strings libMapRClient.so | grep mapr-version
+# cd /opt/mapr/lib
+# strings libMapRClient.so | grep mapr-version
+
+   This is useful in determining if there are old binaries installed on
+   the system.

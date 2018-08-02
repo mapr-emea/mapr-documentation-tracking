@@ -1,0 +1,45 @@
+MapR Monitoring Tips and Troubleshooting
+
+Monitoring a Secure Cluster
+
+   After regenerating the MapR user ticket, service failures occur for
+          collectd and OpenTSDB
+          If you delete or regenerate the MapR user ticket, the running
+          collectd and OpenTSDB services will fail. After updating the
+          MapR user ticket, restart the collectd and OpenTSDB services.
+
+Monitoring Logs
+
+   I notice a sudden increase in fluentd logs. What can I do?
+          A sudden increase in the log file for fluentd could mean that a
+          feedback loop is occurring where fluentd logs an error in the
+          log file for a fluentd issue and that log entry causes yet
+          another error when fluentd tries to parse it. In this case,
+          consider disabling the index of fluentd logs. See [1]Configure
+          Which Logs to Index.
+
+Monitoring Metrics
+
+   Where should I store the Elasticsearch index?
+          Elasticsearch requires a lot of disk space. Also, when you
+          upgrade Elasticsearch, the default index directory is removed
+          along with the package update. Therefore, it is recommended to
+          configure a separate file system for the index data. It is not
+          recommended to store index data under the / or the /var file
+          system.
+
+          Note: If you store the Elasticsearch index on a filesystem that
+          is locally hosted, you will be able to access logs in the event
+          that the MapR cluster is not available.
+          For more information about the Elasticsearch index and the
+          default index directory, see [2]Log Aggregation and Storage.
+
+Installation and Configuration Errors
+
+   See [3]Troubleshoot MapR Monitoring Installation Errors
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ConfigureLogsToIndex.html#task_dbw_mdp_cw
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LogAggregationAndStorage.html#concept_wzf_rwy_kw
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/TroubleshootMonitoringInstall.html#concept_k4r_y2h_qw

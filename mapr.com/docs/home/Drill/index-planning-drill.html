@@ -1,0 +1,55 @@
+Index Planning in Drill
+
+   Index planning reduces the I/O operation costs associated with full
+   table scans. If an index is available, Drill can use the index to
+   improve query performance.
+   Drill can use indexes to create query plans for queries that filter on
+   indexed fields or fields included in an index. Fields in COUNT, COUNT
+   DISTINCT, JOIN, GROUP BY, and ORDER BY also determine index use. Drill
+   can create index-based query plans for queries with and without filters
+   (WHERE clause).
+   Note: In Drill 1.11 and earlier, if a query does not have a filter, the
+   query must have an ORDER BY clause.
+   Drill can create index plans for queries with an ORDER BY clause
+   whether or not the query contains a filter, as shown in the following
+   example:
+SELECT L_LINENUMBER FROM lineitem ORDER BY L_LINENUMBER;
+
+   Note: In this example, L_LINENUMBER is an indexed field in the index
+   selected for the query plan.
+   As of Drill 1.12, Drill can also create index-based query plans for the
+   following types of queries when they do not have filters (WHERE
+   clause):
+     * GROUP BY queries, as shown in the following example where
+       L_COMMITDate is an indexed field in the index selected for the
+       query plan:
+SELECT L_COMMITDate FROM lineitem GROUP BY L_COMMITDate;
+     * JOIN queries, as shown in the following example where L_ORDERKEY
+       and O_ORDERKEY are indexed fields and L_LINESTATUS is an included
+       field in the index selected for the query plan:
+SELECT L.L_LINESTATUS FROM lineitem L, orders O WHERE L.L_ORDERKEY=O.O_ORDERKEY;
+       Note: If the planner picks two indexes, one for lineitem and one
+       for orders, a sort merge join is used instead of a hash join.
+     * Queries with DISTINCT projections, as shown in the following
+       examples where L_LINENUMBER is an indexed field in the index
+       selected for the query plan:
+SELECT DISTINCT L_LINENUMBER FROM lineitem;
+SELECT COUNT(DISTINCT L_LINENUMBER) FROM lineitem;
+
+   Drill can use indexes for queries that GROUP BY or ORDER BY the leading
+   fields in an index. Drill does not use indexes for queries that GROUP
+   BY or ORDER BY the trailing or included fields in an index.
+
+   When a query contains GROUP BY and ORDER BY operations on the leading
+   indexed column, Drill can use the sort order of the index to create
+   index-based query plans that use streaming aggregates and merge joins
+   to improve query performance.
+
+   You can run the [1]EXPLAIN PLAN FOR command with a query to see the
+   query plan that Drill creates. See [2]Covering and Non-Covering Queries
+   for more information about index planning in Drill.
+
+References
+
+   1. https://drill.apache.org/docs/explain/
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/covering-noncovering-queries.html#covering-noncovering-queries

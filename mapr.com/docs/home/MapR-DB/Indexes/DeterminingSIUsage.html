@@ -1,0 +1,42 @@
+Determining Secondary Index Usage
+
+   This section describes how to determine whether a query is using
+   secondary indexes, depending on the query execution path used.
+
+   Determine whether your query uses the OJAI Distributed Query Service by
+   following the steps outlined at [1]Determining the Query Execution Path
+   for OJAI Queries. The following sections describe next steps depending
+   on the execution path.
+
+Simple OJAI Queries
+
+   Using the tracing described at [2]Determining the Query Execution Path
+   for OJAI Queries, you will see the following in the log output:
+2017-07-17 17:35:59 TRACE MapRDBTableImplHelper:703 - Scan on Index:
+'testIndex', Primary Table is: '/tmp/testTable', Index Scan QueryCondition: '((f
+ield < {"$numberLong":101}))',
+Index Scan startRow: '\x0FZ', Index Scan stopRow: '\x0F\x89\xCA\x80\x00'
+
+   The "Scan on Index", highlighted in bold, indicates OJAI used a
+   secondary index to process the query.
+
+Queries Requiring the OJAI Distributed Query Service
+
+   The tracing output described at [3]Determining the Query Execution Path
+   for OJAI Queries contains a queryId, highlighted in bold:
+2017-07-17 18:51:14 DEBUG DrillDocumentStream:120 - DocumentResultsListener[1].q
+ueryIdArrived(queryId = 2692966d-0888-96e2-fa09-0d9befcd3173 ,
+sql string = select t.`$$ENC00NQYF6YJUL5UW45AAL5UWI`,t.`$$document` from dfs.`/t
+mp/testTable` t where (t.`l0_a4_int` = -92) order by t.`l0_a4_int` ASC,t.`_id` D
+ESC)
+
+   Use this queryId to retrieve more information through the Drill Web
+   Console, including the query plan selected by the OJAI Distributed
+   Query Service. See [4]Query Profile for details.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/DeterminingQueryExecutionPath.html#concept_sv1_dxd_pbb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/DeterminingQueryExecutionPath.html#concept_sv1_dxd_pbb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/DeterminingQueryExecutionPath.html#concept_sv1_dxd_pbb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/evaluating_queries.html#evaluating_queries__section_uqr_rfl_f1b

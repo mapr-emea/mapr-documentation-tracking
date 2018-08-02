@@ -1,0 +1,203 @@
+mapr-support-dump.sh
+
+   This script collects node and cluster-level information about the node
+   where the script is invoked. The information collected is used to help
+   MapR Support diagnose problems. Use [1]mapr-support-collect.sh to
+   collect diagnostic information from all nodes in the cluster.
+
+   The "mini-dump" option limits the size of the support output. When the
+   -m or --mini-dump option is specified along with a size,
+   mapr-support-dump.sh collects only a head and tail, each limited to the
+   specified size, from any log file that is larger than twice the
+   specified size. The total size of the output is therefore limited to
+   approximately 2 * size * number of logs. The size can be specified in
+   bytes, or using the following suffixes:
+     * b - bytes
+     * k - kilobytes (1024 bytes)
+     * m - megabytes (1024 kilobytes)
+
+Syntax
+
+ /opt/mapr/support/tools/mapr-support-dump.sh
+       [ -n| --name <name> ]
+       [ -l| --no-logs ]
+       [ --no-hadoop-logs ]
+       [ --hbase-logs ]
+       [ --sqoop-logs ]
+       [ --eco-logs ]
+       [ --oozie-logs ]
+       [ --spark-logs ]
+       [ --pig-logs ]
+       [ --impala-logs ]
+       [ --hue-logs ]
+       [ --hive-logs ]
+       [ --flume-logs ]
+       [ --drill-logs ]
+       [ -L| --libraries ]
+       [ -d| --output-dir <path> ]
+       [ -s| --no-statistics ]
+       [ -c| --no-conf ]
+       [ -i| --no-sysinfo ]
+       [ -o| --exclude-cluster ]
+       [ -O| --online ]
+       [ -z| --only-cluster ]
+       [ --collect-cores ]
+       [ --move-cores ]
+       [ --port <port> ]
+       [ --nfsport <port> ]
+       [ -m| --mini-dump <size> ]
+       [ -A| --logs-age <days> ]
+       [ -?| --help ]
+
+Parameters
+
+   Parameter
+
+   Description
+
+   -n or --name
+
+   Specifies the name of the output file. If not specified, the default is
+   a date-named file in the format YYYY-MM-DD-hh-mm-ss.tar
+   -l or --no-logs Does not include log files.
+   --no-hadoop-logs Does not include Hadoop log files
+   --hbase-logs Includes Hbase log files.
+   --sqoop-logs Includes Sqoop log files
+   --eco-logs Includes all ecosystem log files.
+   --oozie-logs Includes Oozie log files.
+   --spark-logs Includes Spark log files.
+   --pig-logs Includes Pig log files.
+   --impala-logs Includes Impala log files.
+   --hue-logs Includes Hue log files.
+   --hive-logs Includes Hive log files.
+   --flume-logs Includes Flume log files.
+   --drill-logs Includes Drill log files.
+
+   -L or --libraries
+
+   Includes libraries.
+
+   -d or --output-dir
+
+   The absolute path to the output directory. If not specified, the
+   default is /opt/mapr/support/collect/
+
+   -s or --no-statistics
+
+   Does not include statistics.
+
+   -c or --no-conf
+
+   Does not include configurations.
+
+   -i or --no-sysinfo
+
+   Does not include system information.
+
+   -o or --exclude-cluster
+
+   Does not collect cluster diagnostics.
+
+   -O or --online
+
+   Saves the support dump output file to the /var/mapr/cluster/support
+   directory in maprfs. When not specified, the output file is stored at
+   /opt/mapr/support/dump on the local machine file system.
+
+   Specifies a space-separated list of nodes from which to gather support
+   output, and uses the warden instead of ssh for transmitting the support
+   data.
+   -z or --only-cluster Collects diagnostic information at the cluster
+   level only.
+
+   --collect-cores
+
+   Collects cores of running mfs processes from all nodes (off by default)
+
+   --move-cores
+
+   Moves mfs and nfs cores from /opt/cores from all nodes (off by default)
+
+   --port
+
+   The port number used by the FileServer. Default: 5660
+
+   --nfs-port
+
+   The port used by the NFS server. Default: 9998
+
+   -m, --mini-dump <size>
+
+   For any log file greater than 2 * <size>, collects only a head and tail
+   each of the specified size. The <size> may have a suffix specifying
+   units:
+     * b - blocks (512 bytes)
+     * k - kilobytes (1024 bytes)
+     * m - megabytes (1024 kilobytes)
+
+   -A or --logs-age <days>
+
+   Collects logs newer than the specified number of days. The default
+   value for this parameter is 7. Specify a value of 0 to have the
+   mapr-support-dump.sh script collect logs of any age.
+
+   -? or --help
+
+   Displays usage help text
+
+Output
+
+   The example produces a tar file at
+   /opt/mapr/support/dump/mysupport-output.tar. To extract the tar file,
+   use tar -xf mysupport-output.tar. The directory structure is as
+   follows:
+$ ls
+mysupport-output    mysupport-output.tar
+
+$ ls mysupport-output
+MapRBuildVersion       hostid            mfsstate_commands
+cluster                hostname          roles
+cluster_summary.txt    linux-release     support_dump.log
+conf                   logs              system_info
+conf_file_metadata     mapr-clusters.conf
+     * mfsstate_commands - Contains all information collected about the
+       state of the filesystem are stored the the mfsstate_commands
+       directory.
+     * cluster - Contains information associated with maprcli_commands,
+       resourcemanager, and volume_dumps.
+     * system_info - Contains all information related to the system state
+       and configuration.
+     * support_dump.log - Contains console output of the individual
+       commands launched by the support dump script.
+     * Commonly required files - cluster_summary.txt, conf_file_metadata,
+       hostid, hostname, linux-release, MapRBuildVersion,
+       mapr-clusters.conf, and support_dump.log are place in the dump root
+       for easier access.
+
+Example
+
+   Collect support information and dump it to the file
+   /opt/mapr/support/collect/mysupport-output.tar:
+/opt/mapr/support/tools/mapr-support-dump.sh -n mysupport-output
+
+Example Output
+
+/opt/mapr/support/tools/mapr-support-dump.sh -n mysupport-output
+2015-06-25 11:51:38.397 INFO Starting Support dump collection. For diagnostics,
+refer to supportèdump.log inside the dump
+2015-06-25 11:51:38.402 INFO Collecting system information
+2015-06-25 11:51:49.596 INFO Collecting mapr logs
+2015-06-25 11:52:00.734 INFO Log collection from maprfs is succesful.
+2015-06-25 11:52:00.804 INFO Collecting cluster configuration
+2015-06-25 11:53:07.626 INFO Skipping /opt/mapr/logs/prerequisitecheck.log since
+ it does not exist
+2015-06-25 11:53:07.639 INFO Skipping /opt/mapr/hbase/hbase-0.94.17/conf since i
+t does not exist
+2015-06-25 11:53:10.436 INFO Collecting cluster summary information
+2015-06-25 11:53:19.183 INFO Collecting detailed cluster information
+2015-06-25 11:54:03.219 INFO Dump collection is succesful. Tar file: /opt/mapr/s
+upport/dump/mysupport-output.tar
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr-support-collect.sh.html

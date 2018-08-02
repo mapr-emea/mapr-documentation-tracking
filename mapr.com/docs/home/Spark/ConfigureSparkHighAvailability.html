@@ -1,0 +1,26 @@
+Configure High Availability for SparkMaster
+
+   You configure high availability for the Spark Master so that the master
+   does not become the single point of failure.
+
+   By using ZooKeeper to provide leader election and some state storage,
+   you can launch multiple masters in your cluster that are connected to
+   the same ZooKeeper instance. Zookeeper elects one master to be the
+   “leader,” and the others remain in standby mode. If the leader goes
+   down, Zookeeper elects another master, recovers the old master’s state,
+   and resumes scheduling.
+    1. Set SPARK_DAEMON_JAVA_OPTS in spark-env.sh with the appropriate
+       ZooKeeper information for the cluster.
+export SPARK_DAEMON_JAVA_OPTS="-Dspark.deploy.recoveryMode=ZOOKEEPER
+-Dspark.deploy.zookeeper.url=<zookeeper1:5181,zookeeper2:5181,...>
+-Djava.security.auth.login.config=/opt/mapr/conf/mapr.login.conf -Dzookeeper.sas
+l.client=false
+    2. Restart the Spark Master and Spark HistoryServer services:
+          + For Spark 2.0.1 and later:
+maprcli node services -nodes <node-ip> -name spark-master -action restart
+          + For Spark 1.6.1:
+maprcli node services -nodes <node-ip> -name spark-master -action restart
+maprcli node services -nodes <node-ip> -name spark-historyserver -action restart
+    3. On the master node, restart the Spark slaves as the mapr user:
+/opt/mapr/spark/spark-<version>/sbin/stop-slaves.sh
+/opt/mapr/spark/spark-<version>/sbin/start-slaves.sh

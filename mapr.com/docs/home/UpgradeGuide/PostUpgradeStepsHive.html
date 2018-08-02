@@ -1,0 +1,58 @@
+Post-Upgrade Steps for Hive
+
+   Complete the following steps after you upgrade Hive with or without the
+   MapR Installer.
+    1. Update the Hive Metastore.
+         a. Refer to the README file in the
+            /opt/mapr/hive/hive-<version>/scripts/metastore/upgrade/<metas
+            tore_database> directory for directions on updating your
+            existing metastore_db schema to work with the new Hive
+            version.
+            Tip: When you complete the step to run the schema upgrade
+            scripts, run the following scripts:
+
+              For upgrades from Hive 0.13 to 1.0:
+
+                   i. upgrade-0.13.0-to-0.14.0.<metastore_database>.sql
+                  ii. upgrade-0.14.0-to-1.1.0.<metastore_database>.sql
+
+              For upgrades from Hive 0.13 to 1.2.1:
+
+                   i. upgrade-0.13.0-to-0.14.0.<metastore_database>.sql
+                  ii. upgrade-0.14.0-to-1.1.0.<metastore_database>.sql
+                  iii. upgrade-1.1.0-to-1.2.0.<metastore_database>.sql
+
+              For upgrades from Hive 1.0 to 1.2.1
+
+                    # upgrade-1.1.0-to-1.2.0.<metastore_database>.sql
+
+            Note: Run the metastore upgrade scripts from the
+            /opt/mapr/hive/hive-<version>/scripts/metastore/upgrade/<metas
+            tore_database> directory. The script sources files from this
+            directory. If you run the script from another location, it
+            will fail.
+         b. Verify that the metastore database update completed
+            successfully. For example, use these diagnostic tests:
+               o Run the show tables command in Hive and make sure it
+                 returns a complete list of all your Hive tables.
+               o Perform simple SELECT operations on Hive tables that
+                 existed before the upgrade.
+               o Perform filtered SELECT operations on Hive tables that
+                 existed before the upgrade.
+    2. Migrate Hive Configuration (optional).
+       Migrate any custom configuration settings into the new default
+       files in the conf directory (/opt/mapr/hive/hive-<version>/conf/).
+    3. Restart Hive Services.
+         a. Make a list of nodes on which Hive Metastore and HiveServer2
+            Services are configured.
+         b. Issue the maprcli node services command, specifying the nodes
+            on which the Hive services are configured.
+maprcli node services -name hivemeta -action restart -nodes <space delimited lis
+t of nodes>
+maprcli node services -name hs2 -action restart -nodes <space delimited list of
+nodes>
+    4. Run configure.sh. If you installed the mapr-hivewebhcat package,
+       run configure.sh with the -R option on the node where you installed
+       the mapr-hivewebhcat package.
+/opt/mapr/server/configure.sh -R
+       This step enables Warden to recognize the newly installed service.

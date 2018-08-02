@@ -1,0 +1,156 @@
+yarn-site.xml
+
+   YARN configuration options are stored in the
+   /opt/mapr/hadoop/hadoop-2.x.x/etc/hadoop/yarn-site.xml file and are
+   editable by the root user. This file contains configuration information
+   that overrides the default values for YARN parameters. Overrides of the
+   default values for core configuration properties are stored in the
+   Default YARN Parameters file.
+
+   To override a default value for a property, specify the new value
+   within the <configuration> tags, using the following format:
+<property>
+ <name> </name>
+   <value> </value>
+ <description> </description>
+</property>
+
+   The following configuration tables describe the possible entries you
+   can place between the <name> tags and between the <value> tags. The
+   <description> tag is optional but recommended for maintainability.
+
+Configurations for Resource Manager
+
+   Parameter Description
+   yarn.resourcemanager.hostname The hostname of the ResourceManager.
+
+   The configure.sh command automatically sets this value to the IP
+   address that you provide with the -RM option.
+
+   Default value: {IP Address}
+   yarn.resourcemanager.scheduler.address hostname is the hostname of the
+   ResourceManager and port 8030 is the port on which the Applications in
+   the cluster talk to the ResourceManager.
+
+   Example value: ${yarn.resourcemanager.hostname}:8030
+   yarn.resourcemanager.resource-tracker.address Example value:
+   ${yarn.resourcemanager.hostname}:8031
+   yarn.resourcemanager.address The hostname of the ResourceManager and
+   the port on which the clients can talk to the Resource Manager.
+
+   Example value: ${yarn.resourcemanager.hostname}:8032
+
+Configurations for NodeManager
+
+   Parameter Description
+   yarn.nodemanager.container-executor.class Identifies who will launch
+   the containers.
+
+   Set to LinuxContainerExecutor so that jobs can run as the user that
+   submits the job.
+   Note: If a system user (a user with userID<500) wants to submit a job,
+   you must add the user in the container-executor.cfg file. The user mapr
+   is already configured as an allowed system user.
+   Default value:
+   org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor
+   yarn.nodemanager.aux-services Selects a shuffle service that needs to
+   be set for MapReduce to run.
+
+   This property, in conjunction with other properties, sets "direct
+   shuffle" as the default shuffle for MapReduce.
+   Default value: mapreduce_shuffle, mapr_direct_shuffle
+   yarn.nodemanager.aux-services.mapreduce_shuffle.class This property, in
+   conjunction with other properties, sets "direct shuffle" as the default
+   shuffle for MapReduce.
+
+   Default value: org.apache.hadoop.mapred.ShuffleHandler
+   yarn.nodemanager.aux-services.mapr_direct_shuffle.class This property,
+   in conjunction with other properties, sets "direct shuffle" as the
+   default shuffle for MapReduce.
+
+   Default value: com.mapr.hadoop.mapred.LocalVolumeAuxService
+
+Configuration for Timeline Server Security with MapR-SASL
+
+   Parameter Description
+   yarn.timeline-service.http-authentication.type Defines authentication
+   used for the timeline server HTTP endpoint.
+
+   Default value:
+   com.mapr.security.maprauth.MaprDelegationTokenAuthenticationHand ler
+
+Configuration for Timeline Server Security with Kerberos
+
+   Parameter Description
+   yarn.timeline-service.http-authentication.type This property sets the
+   authentication used for the timeline server HTTP endpoint.
+
+   Default value:
+   com.mapr.security.maprauth.MaprDelegationTokenAuthenticationHand ler
+   yarn.timeline-service.http-authentication.kerberos.principal This
+   property sets the Kerberos service prinicpal for the timeline server
+   HTTP endpoint.
+
+   Default value: principal(HTTP/nodex@NODEx)
+   yarn.timeline-service.http-authentication.kerberos.keytab This property
+   sets the Kerberos keytab for the timeline server HTTP endpoint.
+
+   Default value: path to keytab(/opt/mapr/conf/mapr.keytab)
+   yarn.timeline-service.principal This property sets the Kerberos service
+   principal for the timeline server.
+
+   Default value: mapr/nodex@NODEX
+   yarn.timeline-service.keytab This property sets the Kerberos service
+   keytab for the timeline server.
+
+   Default value: path to keytab(/opt/mapr/conf/mapr.keytab)
+
+Configurations for MapReduce
+
+   Parameter Description
+   mapreduce.job.shuffle.provider.services This property, in conjunction
+   with other properties, sets "direct shuffle" as the default shuffle for
+   MapReduce.
+
+   Default value: mapr_direct_shuffle
+
+Configurations for Container Logs
+
+   Parameter Description
+   yarn.nodemanager.log-dirs The location to store container logs on the
+   node. An application's log directory is
+   ${yarn.nodemanager.log-dirs}/application_${appid}. Individual
+   containers' log directories are named container_{$contid}. Each
+   container directory will contain the files stderr, stdin, and syslog
+   generated by that container.
+
+   By default the log files are located in the following directory:
+   /opt/mapr/hadoop/hadoop-<version>/logs/userlogs/<applicationID>/<contai
+   nerID>/<filename>.log
+   Note: You can find the application ID associated with your job in the
+   MCS.
+   yarn.log-aggregation-enable Determines whether the logs are aggregated.
+   Defaults to false.
+   yarn.nodemanager.log.retain-seconds When log aggregation is disabled,
+   this value determines the duration that user logs are maintained. The
+   default is 10800 or 3 hours.
+   yarn.log-aggregation.retain-seconds When log aggregation in enabled,
+   this property determines the number of seconds to retain logs. The
+   default, -1, disables the deletion of logs.
+   yarn.log-aggregation.retain-check-interval-seconds The interval between
+   aggregated log retention checks. If set to 0 or a negative value then
+   the value is computed as one-tenth of the aggregated log retention
+   time. Note: Setting this to a low value may cause unnecessary log
+   retention checks.
+   yarn.nodemanager.remote-app-log-dir The location on the filesystem
+   where the logs are aggregated. The default is /tmp/logs.
+   yarn.nodemanager.remote-app-log-dir-suffix The suffix for the directory
+   that will contain the aggregated logs for each user. The default is
+   logs.
+
+Configuration for Oozie
+
+   Parameter Description
+   yarn.resourcemanager.principal Set the value to administrative user if
+   you are not using the default administrative user (mapr). The default
+   value is mapr.

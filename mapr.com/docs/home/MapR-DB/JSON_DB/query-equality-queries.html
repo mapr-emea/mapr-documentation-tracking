@@ -1,0 +1,100 @@
+Using Indexes to Optimize Equality Conditions
+
+   Using indexes can help you improve the performance of queries that have
+   equality conditions. You can define indexes that optimize equality
+   conditions on scalar data fields.
+
+   If the index has a single key, the condition limits the index search to
+   only the keys matching the scalar value. If the index has more than one
+   key and there are equality conditions on all keys, the conditions limit
+   the search to the combined matching values. If there are conditions on
+   a subset of fields and the most significant keys have equality
+   conditions, MapR-DB limits the search to those scalar values.
+
+   Assume that you have a MapR-DB JSON table with documents in the
+   following format:
+{
+   "_id": "10000",
+   "FullName": {
+      "LastName": "Smith",
+      "FirstName": "John"
+   },
+   "Address": {
+      "Street": "123 SE 22nd St.",
+      "City": "Oakland",
+      "State": "CA",
+      "Zipcode": "94601-1001"
+   },
+   "Gender": "M",
+   "AccountBalance": 999.99,
+   "Email": "john.smith@company.com",
+   "Phones": [
+        {"Type": "Home", "Number": "555-555-1234"},
+        {"Type": "Mobile", "Number": "555-555-5678"},
+        {"Type": "Work", "Number": "555-555-9012"}
+   ],
+   "Hobbies": ["Baseball", "Cooking", "Reading"],
+   "DateOfBirth": "10/1/1985"
+}
+
+   The examples in the following sections reference this sample JSON
+   document.
+
+Indexes on Scalar Data Fields
+
+   The following table provides examples where MapR-DB can and cannot use
+   the index with equality conditions on scalar data. The last entry in
+   the table illustrates the case where you can use index to optimize an
+   equality condition in combination with a range condition.
+   Note: This example assumes that a [1]composite index exists on fields
+   Address.State and Address.City.
+   Query Condition How MapR-DB Uses the Index
+{
+  "$and":[
+    {"$eq":{"Address.State":"CA"}},
+    {"$eq":{"Address.City":"Oakland"}}
+  ]
+}
+
+   Performs a lookup on the specified state and city values, and reads the
+   index until the conditions no longer match.
+{"$eq":{"Address.State":"CA"}}
+
+   Performs a prefix lookup to find matching state values. The value of
+   the Address.City field is not relevant. Continues reading from the
+   index until the state field no longer matches "CA".
+{
+  "$and":[
+    {"$in":{"Address.State":["CA","NY","MA"]}},
+    {"$eq":{"Address.City":"Springfield"}}
+  ]
+}
+
+   Performs the following three lookups in the index:
+     * Address.State = "CA" and Address.City = "Springfield"
+     * Address.State = "NY" and Address.City = "Springfield"
+     * Address.State = "MA" and Address.City = "Springfield"
+
+{"$eq":{"Address.City":"Oakland"}}
+
+   Even if the query references the field Address.State, MapR-DB cannot
+   use the index unless there is also an equality condition on the leading
+   key of the index, Address.State.
+{"$in":{"Address.State":["CA","NY","MA"]}}
+
+   Performs three prefix lookups, one for each of the values in the IN
+   clause.
+{
+  "$and":[
+    {"$eq":{"Address.State":"CA"}},
+    {"$ge":{"Address.City":"Oak"}}
+  ]
+}
+
+   Reads from the index starting at the condition Address.State = "CA" and
+   Address.City = "Oak". Continues reading the index until the condition
+   Address.State = "CA" no longer qualifies.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz

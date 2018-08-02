@@ -1,0 +1,35 @@
+Removing a Fileserver Role
+
+   Removing the fileserver role from a node is more complex than removing
+   other roles. The CLDB tracks data precisely on all fileserver nodes,
+   and therefore you should direct the cluster CLDB to stop tracking the
+   node before removing the fileserver role. For a planned decommissioning
+   of a node, use node topologies to migrate data off the node before
+   removing the fileserver role. For example, you could move the node out
+   of a live /data topology into a /decommissioned topology that has no
+   volumes assigned to it, in order to force data off the node. Otherwise,
+   some data will be under-replicated as soon as the node is removed.
+   Refer to Node Topology.
+   Note: The following procedure involves halting all MapR services on the
+   node temporarily. If this will disrupt critical services on your
+   cluster, such as CLDB, migrate those services to a different node
+   first, and then proceed.
+
+   The following steps describe how to remove the fileserver role from a
+   node:
+    1. Stop the warden, which will halt all MapR services on the node.
+       Wait 5 minutes, after which the CLDB will mark the node as
+       critical.
+    2. Remove the node from the cluster, to direct the CLDB to stop
+       tracking this node.
+       You can do this in the MapR Control System GUI or with the maprcli
+       node remove command.
+    3. Remove the fileserver role by deleting the file
+       /opt/mapr/roles/fileserver on the node.
+    4. Run configure.sh on the node to reconfigure the node without the
+       fileserver role.
+    5. Issue the following command to restart Warden on the node:
+% service mapr-warden restart
+    6. Remove any volumes that were stored locally on the node.
+       You can do this in the MapR Control System GUI or with the maprcli
+       volume remove command.

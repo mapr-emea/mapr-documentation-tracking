@@ -1,0 +1,178 @@
+Getting Started with Hive and MapR-DB Integration
+
+   In this tutorial we will:
+     * Create a Hive table
+     * Populate the Hive table with data from a text file
+     * Query the Hive table
+     * Create a Hive-MapR-DB table
+     * Introspect the Hive-MapR-DB table from the HBase shell
+     * Populate the Hive-MapR-DB table with data from the Hive table
+     * Query the Hive-MapR-DB table from Hive
+     * Convert an existing MapR-DB table into a Hive-MapR table
+
+   Be sure that you have successfully completed all of the steps in
+   [1]Installing Hive and review the MapR-DB topics before beginning this
+   Getting Started tutorial.
+
+   This Getting Started tutorial is based on the Hive-HBase Integration
+   section of the Apache Hive Wiki. However, please note that there are
+   some significant differences.
+
+   Create a Hive table with two columns
+
+   Change to your Hive installation directory if you're not already there
+   and start Hive:
+$ cd $HIVE_HOME
+$ bin/hive
+
+   Execute the CREATE TABLE command to create the Hive pokes table
+hive> CREATE TABLE pokes (foo INT, bar STRING);
+
+   To see if the pokes table has been created successfully, execute the
+   SHOW TABLES command
+hive> SHOW TABLES;
+OK
+pokes
+Time taken: 0.74 seconds
+
+   The pokes table appears in the list of tables. Populate the Hive pokes
+   table with data:
+
+   The kv1.txt file is provided in the $HIVE_HOME/examples/files
+   directory. Execute the LOAD DATA LOCAL INPATH command to populate the
+   Hive pokes table with data from the kv1.txt file.
+hive> LOAD DATA LOCAL INPATH './examples/files/kv1.txt' OVERWRITE INTO TABLE pok
+es;
+
+   A message appears confirming that the table was created successfully,
+   and the Hive prompt reappears:
+Copying data from file:
+...
+OK
+Time taken: 0.278 seconds
+hive>
+
+   Execute a SELECT query on the Hive pokes table
+hive> SELECT * FROM pokes WHERE foo = 98;
+
+   The SELECT statement executes, runs a MapReduce application, and prints
+   the application output:
+OK
+98      val_98
+98      val_98
+Time taken: 18.059 seconds
+
+   The output of the SELECT command displays two identical rows because
+   there are two identical rows in the Hive pokes table with a key of 98.
+   Warning:
+
+   Hive tables can have multiple identical keys. As we will see shortly,
+   MapR-DB tables cannot have multiple identical keys, only unique keys.
+
+   Create a Hive-MapR-DB table
+
+   Enter these four lines of code at the Hive prompt:
+hive> CREATE TABLE mapr_table_1(key int, value string)
+    > STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+    > WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,cf1:val")
+    > TBLPROPERTIES ("hbase.table.name" = "/user/mapr/xyz");
+
+   After a brief delay, a message appears confirming that the table was
+   created successfully:
+OK
+Time taken: 5.195 seconds
+
+   Note: The TBLPROPERTIES command is not required, but those new to
+   Hive-MapR-DB integration may find it easier to understand what's going
+   on if Hive and MapR-DB use different names for the same table.
+
+   In this example, Hive will recognize this table as "mapr_table_1" and
+   MapR-DB will recognize this table as "xyz".
+
+   Start the HBase shell
+
+   Keeping the Hive terminal session open, start a new terminal session
+   for HBase, then start the HBase shell:
+$ cd $HBASE_HOME
+$ bin/hbase shell
+HBase Shell; enter 'help<RETURN>' for list of supported commands.
+Type "exit<RETURN>" to leave the HBase Shell
+Version 0.90.4, rUnknown, Wed Nov  9 17:35:00 PST 2011
+
+hbase(main):001:0>
+
+   Execute the list command to see a list of HBase tables
+hbase(main):001:0> list
+TABLE
+/user/mapr/xyz
+1 row(s) in 0.8260 seconds
+
+   HBase recognizes the Hive-MapR-DB table named xyz in directory
+   /user/mapr. This is the same table known to Hive as mapr_table_1.
+
+   Display the description of the /user/mapr/xyz table in the HBase shell
+hbase(main):004:0> describe "/user/mapr/xyz"
+DESCRIPTION                                          ENABLED
+ {NAME => '/user/mapr/xyz', FAMILIES => [{NAME => 'cf1', DATA_B true
+ LOCK_ENCODING => 'NONE', BLOOMFILTER => 'NONE', REP
+ LICATION_SCOPE => '0', VERSIONS => '3', MIN_VERSION
+ S => '0', TTL => '2147483647', KEEP_DELETED_CELLS =
+ > 'false', BLOCKSIZE => '65536', IN_MEMORY => 'fals
+ e', ENCODE_ON_DISK => 'true', BLOCKCACHE => 'true'}
+ ]}
+1 row(s) in 0.0240 seconds
+
+   From the Hive prompt, insert data from the Hive table pokes into the
+   Hive-MapR-DB table mapr_table_1
+hive> INSERT OVERWRITE TABLE mapr_table_1 SELECT * FROM pokes WHERE foo=98;
+...
+2 Rows loaded to mapr_table_1
+OK
+Time taken: 13.384 seconds
+
+   Query mapr_table_1 to see the data we have inserted into the
+   Hive-MapR-DB table
+hive> SELECT * FROM mapr_table_1;
+OK
+98      val_98
+Time taken: 0.56 seconds
+
+   Even though we loaded two rows from the Hive pokes table that had the
+   same key of 98, only one row was actually inserted into mapr_table_1.
+   This is because mapr_table_1 is a MapR-DB table, and although Hive
+   tables support duplicate keys, MapR-DB tables only support unique keys.
+   MapR-DB tables arbitrarily retain only one key, and silently discard
+   all of the data associated with duplicate keys.
+
+   Convert a pre-existing MapR-DB table to a Hive-MapR-DB table
+
+   To convert a pre-existing MapR-DB table to a Hive-MapR-DB table, enter
+   the following four commands at the Hive prompt.
+
+   Note that in this example the existing MapR-DB table is my_mapr_table
+   in directory /user/mapr.
+hive> CREATE EXTERNAL TABLE mapr_table_2(key int, value string)
+    > STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+    > WITH SERDEPROPERTIES ("hbase.columns.mapping" = "cf1:val")
+    > TBLPROPERTIES("hbase.table.name" = "/user/mapr/my_mapr_table");
+
+   Now we can run a Hive query against the pre-existing MapR-DB table
+   /user/mapr/my_mapr_table that Hive sees as mapr_table_2:
+hive> SELECT * FROM mapr_table_2 WHERE key > 400 AND key < 410;
+Total MapReduce jobs = 1
+Launching Job 1 out of 1
+Number of reduce tasks is set to 0 since there's no reduce operator
+...
+OK
+401     val_401
+402     val_402
+403     val_403
+404     val_404
+406     val_406
+407     val_407
+409     val_409
+Time taken: 9.452 seconds
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingHive.html#InstallingHive-ToinstallH_29655337-d3e180

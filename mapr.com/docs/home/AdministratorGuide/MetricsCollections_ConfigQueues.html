@@ -1,0 +1,156 @@
+Configure Queue Filters for mapr.rm.<value> Metrics
+
+   The YARN application metrics that are collected by JMX have the metric
+   name syntax mapr.rm.<metric_name> and the metric values are aggregated
+   among all the queues in the default queue. However, you can configure
+   collectd to create a filter for each queue. As an alternative, you can
+   use the REST API queue metrics (mapr.rm_queue.<metric_name>) which are
+   by default set up for filtering by queue.
+
+   To configure collectd to create queue filters for mapr.rm.* metrics,
+   define each queue that you want to create filters for in the
+   /opt/mapr/collectd/collectd-<version>/etc/collectd.conf file. You can
+   configure collectd to generate filters for every queue or only for
+   specific queues. Changes that you make to the collectd.conf file only
+   apply to metrics collected after you restart the collectd service.
+    1. Open the collectd.conf file and locate the MBean "QueueMetrics"
+       block.
+<MBean "QueueMetrics">
+      ObjectName "Hadoop:service=ResourceManager,name=QueueMetrics,q0=root"
+      InstancePrefix "rm"
+
+      <Value "AppsRunning">
+        Type "apps_running"
+        InstancePrefix "default-queue"
+      </Value>
+
+      <Value "ActiveApplications">
+        Type "active_applications"
+        InstancePrefix "default-queue"
+      </Value>
+
+      ...
+    </MBean>
+
+       This block specifies that there is one queue named root and that
+       the filter for this queue is named default-queue.
+    2. Create copy of the MBean "QueueMetrics" block.
+    3. Configure the ObjectName option in the MBean "QueueMetrics" block
+       copy, with the queue path for the queue that you want to create a
+       filter for.
+          + To define the a child queue named alpha under the root queue:
+ObjectName "Hadoop:service=ResourceManager,name=QueueMetrics,q0=root,q1=alpha"
+          + To define a child queue named beta which is under a child
+            queue named alpha:
+ObjectName "Hadoop:service=ResourceManager,name=QueueMetrics,q0=root,q1=alpha,q2
+=beta"
+    4. For each Value block within the MBean "QueueMetrics" block you are
+       defining, replace default-queue with the queue name that you want
+       to create a filter for.
+          + To define filter value alpha for the rm_queue tag, set the
+            InstancePrefix to alpha:
+ <MBean "QueueMetrics">
+      ObjectName "Hadoop:service=ResourceManager,name=QueueMetrics,q0=root,q1=al
+pha"
+      InstancePrefix "rm"
+<Value "AppsRunning">
+        Type "apps_running"
+        InstancePrefix "alpha"
+      </Value>
+<Value "ActiveApplications">
+        Type "active_applications"
+        InstancePrefix "alpha"
+      </Value>
+...
+    </MBean>
+
+          + To define a filter value beta for the rm_queue tag, set the
+            InstancePrefix to beta::
+ <MBean "QueueMetrics">
+      ObjectName "Hadoop:service=ResourceManager,name=QueueMetrics,q0=root,q1=al
+pha,q2=beta"
+      InstancePrefix "rm"
+<Value "AppsRunning">
+        Type "apps_running"
+        InstancePrefix "beta"
+      </Value>
+<Value "ActiveApplications">
+        Type "active_applications"
+        InstancePrefix "beta"
+      </Value>
+...
+    </MBean>
+
+    5. Repeat steps 2 and 3 for each queue that you want to create a
+       filter value for.
+    6. Save the collectd.conf file.
+    7. Repeat steps 1 through 6 on each ResourceManager node.
+    8. Restart the collectd service.
+maprcli node services -name collectd -nodes <space separated list of ResourceMan
+ager Nodes> -action restart
+
+   In the following example, rm_queue tag will have the following filter
+   values: alpha , beta (child of alpha), and highpriority (child of
+   root):
+<MBean "QueueMetrics">
+      ObjectName "Hadoop:service=ResourceManager,name=QueueMetrics,q0=root q1=al
+pha"
+      InstancePrefix "rm"
+
+      <Value "AppsRunning">
+        Type "apps_running"
+        InstancePrefix "alpha"
+      </Value>
+
+      <Value "ActiveApplications">
+        Type "active_applications"
+        InstancePrefix "alpha"
+      </Value>
+      ...
+      <Value "ReservedVCores">
+        Type "reserved_vcores"
+        InstancePrefix "alpha"
+      </Value>
+    </MBean>
+
+<MBean "QueueMetrics">
+      ObjectName "Hadoop:service=ResourceManager,name=QueueMetrics,q0=root q1=al
+pha q2=beta"
+      InstancePrefix "rm"
+
+      <Value "AppsRunning">
+        Type "apps_running"
+        InstancePrefix "beta"
+      </Value>
+
+      <Value "ActiveApplications">
+        Type "active_applications"
+        InstancePrefix "beta"
+      </Value>
+      ...
+      <Value "ReservedVCores">
+        Type "reserved_vcores"
+        InstancePrefix "beta"
+      </Value>
+    </MBean>
+
+<MBean "QueueMetrics">
+      ObjectName "Hadoop:service=ResourceManager,name=QueueMetrics,q0=root q1=hi
+ghpriority"
+      InstancePrefix "rm"
+
+      <Value "AppsRunning">
+        Type "apps_running"
+        InstancePrefix "highpriority"
+      </Value>
+
+      <Value "ActiveApplications">
+        Type "active_applications"
+        InstancePrefix "highpriority"
+      </Value>
+      ...
+      <Value "ReservedVCores">
+        Type "reserved_vcores"
+        InstancePrefix "highpriority"
+      </Value>
+    </MBean>

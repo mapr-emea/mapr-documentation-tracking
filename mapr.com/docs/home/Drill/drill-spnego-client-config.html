@@ -1,0 +1,80 @@
+Configuring SPNEGO on the Client
+
+   An administrator or user can configure SPNEGO on the client (web
+   browser or client tools, such as curl). To configure SPNEGO on the
+   client, a Kerberos Ticket Granting Ticket must exist for the user
+   accessing the web server. The Kerberos Ticket Granting Ticket generated
+   on the client side is used by the web client to get a service ticket
+   from the KDC. This service ticket is used to generate a SPNEGO token,
+   which is presented to the web server for authentication.
+
+   The client should use the same web server hostname (as configured in
+   the server-side principal) to access the Drill Web Console. If the
+   server hostname differs, SPNEGO authentication will fail. For example,
+   if the server principal is "HTTP/example.QA.LAB@QA.LAB", the client
+   should use http://example.QA.LAB:8047 as the Drill Web Console URL.
+
+   The following sections provide instructions for configuring the
+   supported client-side browsers:
+
+Firefox
+
+   To configure Firefox to use a negotiation dialog, such as SPNEGO to
+   authenticate, complete the following steps:
+    1. Go to About > Config, and accept the warnings.
+    2. Navigate to the network settings.
+    3. Set network.negotiate-auth.delegation-uris to
+       "http://,[1]https://".
+    4. Set network.negotiate-auth.trusted-uris to “http://,[2]https://”.
+
+Chrome
+
+   For MacOS or Linux, add the --auth-server-whitelist parameter to the
+   google-chrome command. For example, to run Chrome from a Linux prompt,
+   run the google-chrome command, as shown:
+ google-chrome --auth-server-whitelist = "hostname/domain"
+   Example: google-chrome --auth-server-whitelist = "example.QA.LAB"
+
+Safari
+
+   No configuration is required for Safari. Safari automatically
+   authenticates using SPNEGO when requested by the server.
+
+Internet Explorer
+
+   To configure Internet Explorer to use a negotiation dialog, such as
+   SPNEGO to authenticate, complete the following steps:
+    1. Go to Tools > Options > Security > Local Intranet > Sites, and
+       select all options.
+    2. Select Advanced, and add one or both of the following URLs to
+       server:
+          + http://
+          + https://
+            Note: Make sure you use the hostname of the Drillbit in the
+            URL.
+    3. Close the Advanced tab, and click OK.
+    4. Go to Tools > Options > Advanced > Security (in the checkbox list),
+       and enable the Integrated Windows Authentication option.
+    5. Click OK.
+    6. Close and reopen IE. You can browse to your Spengo protected
+       resource.
+
+REST API
+
+   You can use CURL commands to authenticate using SPNEGO and access
+   secure web resources over REST.
+   Issue the following curl command to log in using SPNEGO, and save the
+   authenticated session cookie to a file, such as cookie.txt, as shown:
+curl -v --negotiate -c cookie.txt -u : http://<hostname>:8047/spnegoLogin
+
+   Use the authenticated session cookie stored in the file, for example
+   cookie.txt, to access the Drill Web Console pages, as shown in the
+   following example:
+curl -v --negotiate -b cookie.txt -u : http://<hostname>:8047/query
+   Example: curl -v --negotiate -b cookie.txt -u : http://example.QA.LAB:8047/qu
+ery
+
+References
+
+   1. https://xn--ivg/
+   2. https://xn--ivg/

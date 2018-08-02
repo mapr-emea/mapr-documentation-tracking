@@ -1,0 +1,36 @@
+Configure Hive Metastore Clients to use Kerberos
+
+   When the Hive Metastore is configured to use Kerberos authentication,
+   you must also configure Hive Metastore Clients to use Kerberos when
+   authenticating with Hive Metastore.
+   Complete the following steps on each node where a Hive Metastore client
+   is installed:
+    1. Configure MAPR_HIVE_LOGIN _OPTS to " -Dhadoop.login=hybrid" in
+       /opt/mapr/conf/env.sh.
+    2. Configure the following property in hive-site.xml:
+
+   Property Value
+hive.metastore.kerberos.principal
+
+   The HiveMetastore principal. For example, mapr/<FQDN@REALM>.
+<property>
+  <name>hive.metastore.kerberos.principal</name>
+  <value>mapr/<FQDN@REALM></value>
+  <description>The service principal for the metastore thrift server. The specia
+l string _HOST will be replaced automatically with the correct hostname.</descri
+ption>
+</property>
+
+   See [1]Connecting to Hive for details on how to connect to
+   HiveMetastore once the server and client node are configured to use
+   Kerberos.
+   Note: The MAPR_HIVE_LOGIN_OPTS and MAPR_HIVE_SERVER_LOGIN_OPTS were
+   added in 1504 release of Hive 0.13 and Hive 1.0. If you have Hive 0.13
+   from a prior release, you do not need to configure these properties.
+   Instead, set MAPR_ECOSYSTEM_LOGIN_OPTS and
+   MAPR_ECOSYSTEM_SERVER_LOGIN_OPTS to "-Dhadoop.login=hybrid" in
+   /opt/mapr/conf/env.sh.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/ConnectingtoHive.html#ConnectingtoHive

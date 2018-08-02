@@ -1,0 +1,75 @@
+Creating Cluster-level ACLs
+
+   A cluster-level Access Control List (ACL) determines who has access to
+   a cluster and which actions they are allowed to perform. ACLs on a
+   secure MapR cluster are predicated on a locally managed OS registry.
+   Important: Before you create an ACL that applies to a particular group,
+   you must create that group and assign users to it.
+
+   For example, the Red Hat Linux commands for creating a group called
+   developers and adding a user named jsmith on a locally managed OS
+   registry are:
+groupadd developers
+useradd -g developers jsmith
+
+   Once users and groups have been defined, an administrator can create a
+   cluster-level ACL using MCS and the CLI.
+
+Creating an ACL from the MCS
+
+    1. Click Admin > User Settings > Permissions.
+    2. Follow steps for [1]Adding Cluster Permissions.
+       Each allowed action has a permission code associated with it. The
+       codes are explained below.
+
+   Permission Code Allowed Action
+   login Log in to the MapR Control System, use the API and command-line
+   interface, read access on cluster and volumes
+   ss Start/stop services
+   cv Create volumes
+   a Administrative access to cluster ACLs. Grants no other permissions.
+   fc Full control over the cluster. This enables all cluster-related
+   administrative options with the exception of changing the cluster ACLs.
+
+Creating an ACL from the Command Line
+
+   To create an ACL at the command line, use the acl set command. Include
+   spaces between multiple entries, such as a list of usernames and their
+   associated permission levels (or actions).
+
+   The syntax is:
+maprcli acl set -type volume -name <volume name>
+               [-group <groupname>:<action> -user <username>:<action>]
+
+   Note: The acl set command removes previously set permissions if they
+   are not explicitly called out in the command line.
+
+   Other ACL commands include:
+     * [2]acl edit - to modify permissions in an ACL (use this command
+       instead of acl set to change some permissions while leaving others
+       intact)
+     * [3]acl show - to display permissions in an ACL
+
+Example
+
+   To create an ACL for a cluster named my.cluster.com that allows
+   administration of cluster ACLs to user root and control over all other
+   aspects of the cluster to all users in the developers group, enter this
+   command:
+maprcli acl set -type cluster -cluster my.cluster.com -user root:a -group develo
+pers:fc
+
+   Now suppose you want to change the developers group permissions so they
+   can only log in and start or stop services. Use the acl edit command as
+   shown:
+maprcli acl edit -type cluster -cluster my.cluster.com -group developers:login,s
+s
+
+   Note that only the developers group's permissions change, while the
+   user named root retains control over the cluster's ACL settings.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUserPermissions-AddingClusterPermissions.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl-edit.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl-show.html

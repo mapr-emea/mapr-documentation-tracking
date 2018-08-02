@@ -1,0 +1,71 @@
+volume snapshot preserve
+
+   Preserves one or more snapshots from expiration.
+
+   Specify the snapshots by volumes, paths, filter, or IDs.
+     * License required: Enterprise Edition
+     * Permissions required: fc or m on the volume
+
+Syntax
+
+   CLI
+
+maprcli volume snapshot preserve
+    [ -cluster <cluster> ]
+    ( -filter <filter> | -path <volume path list> | -snapshots <snapshot list> |
+ -volume <volume list> )
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host>:<port>/rest/volume/snapshot/preserve[?<parameters>]
+
+Parameters
+
+   Specify exactly one of the following parameters: volume, path, filter,
+   or snapshots.
+   Parameter Description
+   cluster The cluster on which to run the command.
+   filter A filter specifying snapshots to preserve. See [1]Filters for
+   more information.
+   path A comma-separated list of paths for which to preserve snapshots.
+   snapshots A comma-separated list of snapshot IDs to preserve.
+   volume A comma-separated list of volumes for which to preserve
+   snapshots.
+
+Examples
+
+   Preserve two snapshots by ID:
+
+   First, use volume snapshot list to get the IDs of the snapshots you
+   wish to preserve. Example:
+# maprcli volume snapshot list
+creationtime   ownername  snapshotid  snapshotname
+     expirytime     diskspaceused  volumeid  volumename                 ownertyp
+e  volumepath
+1296788400768  dummy      363         ATS-Run-2011-01-31-160018.2011-02-03.19-00
+-00  1296792000001  1063191        362       ATS-Run-2011-01-31-160018  1
+   /dummy
+1296789308786  dummy      364         ATS-Run-2011-01-31-160018.2011-02-03.19-15
+-02  1296792902057  753010         362       ATS-Run-2011-01-31-160018  1
+   /dummy
+1296790200677  dummy      365         ATS-Run-2011-01-31-160018.2011-02-03.19-30
+-00  1296793800001  0              362       ATS-Run-2011-01-31-160018  1
+   /dummy
+
+   Use the IDs in the volume snapshot preserve command. For example, to
+   preserve the first two snapshots in the above list, run the commands as
+   follows:
+
+   CLI
+
+maprcli volume snapshot preserve -snapshots 363,364
+
+   REST
+
+https://r1n1.sj.us:8443/rest/volume/snapshot/preserve?snapshots=363,364
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html

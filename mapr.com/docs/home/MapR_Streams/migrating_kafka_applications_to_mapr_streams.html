@@ -1,0 +1,29 @@
+Migrating Apache Kafka Java Applications to MapR-ES
+
+   There are only two steps that you need to follow to migrate
+   applications written with the Apache Kafka Java API to MapR-ES.
+   The following steps assume that migration is from either:
+     * Apache Kafka 1.0 to MapR-ES 6.0.1 or higher
+     * Apache Kafka 0.9.0 to MapR-ES 6.0.0 or earlier
+
+   Important: For information on backward compatibility, see [1]MapR-ES
+   Java API Library
+    1. Change the names of topics to include the path and name of the MapR
+       Stream stream in which the topic is located.
+       Here is the syntax to use:
+/<path and name of stream>:<name of topic>
+       For example, you might have a stream in a MapR cluster that is
+       named stream_A, and the stream might be in a volume named IoT and
+       in a directory named automobile_sensors. You want to redirect a
+       producer application to a topic in that stream. The syntax of the
+       path to the topic might look like this:
+/mapr/IoT/automobile_sensors/stream_A:<name of topic>
+    2. If a producer application uses the Kafka interface Partitioner to
+       compute which partitions to publish messages to, revise the
+       application so that it uses the [2]StreamsPartitioner interface
+       instead.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/streams-java-api.html
+   2. http://maprdocs.mapr.com/apidocs/60/mapr-streams-kafka/org/apache/kafka/clients/producer/StreamsPartitioner.html

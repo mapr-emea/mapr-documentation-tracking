@@ -1,0 +1,23 @@
+How Messages are Published
+
+   To publish a message, a producer sends a record to the producer client
+   library, which batches the records before sending them to the server.
+
+   The producer client library sends the records to the server when any of
+   the following conditions are met:
+     * The producer client library has batched enough messages to make an
+       efficient remote procedure call (RPC) to the server.
+     * A message has been queued for the amount of time that is specified
+       for the streams.buffer.max.time.ms configuration parameter.
+       For the Java client, the default interval for flushes is 3000
+       milliseconds. For clients based on librdkafka (for example, C,
+       Python, and C#), the default interval for flushes is 0 (zero)
+       milliseconds.
+     * The producer client library has batched messages beyond the value
+       of the buffer.memory configuration parameter.
+     * The application explicitly flushes messages.
+
+   Tip: The default number of threads used for flushing messages is 64. In
+   most cases, this number provides excellent performance. However, you
+   can adjust this number by setting a value for the fs.mapr.threads
+   parameter in the core-site.xml file on your client node.

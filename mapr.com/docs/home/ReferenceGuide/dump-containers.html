@@ -1,0 +1,242 @@
+dump containers
+
+   Returns information about containers in a cluster.
+
+   This command provides information about containers based on the
+   following -type criteria:
+     * offline - Returns information about containers that have no valid
+       copies online. This command is useful when you need to find out
+       exactly what data is offline (for example, when a "volume data
+       unavailable" alarm is raised).
+     * resync - Returns information about containers that are
+       resynchronizing.
+     * bm - Returns information about containers that are becoming master
+       but are not yet master.
+     * unused - Returns information about containers that are unused.
+     * waiting - Returns information about containers that are waiting for
+       a role.
+
+   A container is a unit of sharded storage in a MapR cluster. Every
+   container in a MapR volume is either a name container or a data
+   container. The name container is the first container in a volume and
+   holds that volume's namespace and file chunk locations. Depending on
+   its replication role, a name container may be either a master container
+   (part of the original copy of the volume) or a replica container (one
+   of the replicas in the replication chain).
+
+   Every data container is either a master container, an intermediate
+   container, or a tail container.
+
+Syntax
+
+   CLI
+
+maprcli dump containers
+    [ -cluster <cluster_name> ]
+     -type offline|resync|bm|waiting|unused
+
+          Note: For best results, use the -json option from the command
+          line.
+
+   REST
+          N/A
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster
+
+   The cluster on which to run the command. If this parameter is omitted,
+   the command is run on the same cluster where it is issued. In
+   multi-cluster contexts, you can use this parameter to specify a
+   different cluster on which to run the command.
+
+   type
+
+   Specifies the type of information that is returned about the
+   containers:
+     * offline - Returns information about containers that have no valid
+       copies online.
+     * resync - Returns information about containers that are
+       resynchronizing.
+     * bm - Returns information about containers that are becoming master
+       but are not yet master.
+     * unused - Returns information about containers that are unused.
+     * waiting - Returns information about containers that are waiting for
+       a role.
+
+Output fields
+
+   Field
+
+   Description
+
+   ContainerID
+
+   The unique ID number for the container.
+
+   Epoch
+
+   A sequence number that indicates the most recent copy of the container.
+   The CLDB uses the epoch to ensure that an out-of-date copy cannot
+   become the master for the container.
+
+   Master
+
+   The physical IP address and port number of the master copy. The master
+   copy is part of the original copy of the volume.
+
+   ActiveServers
+
+   The physical IP address and port number of each active node on which
+   the container resides.
+
+   InactiveServers
+
+   The physical IP address and port number of each inactive node on which
+   the container resides.
+
+   UnusedServers
+
+   The physical IP address and port number of servers from which no
+   "heartbeat" has been received for quite some time.
+
+   OwnedSizeMB
+
+   The size on disk (in MB) dedicated to the container.
+
+   SharedSizeMB
+
+   The size on disk (in MB) shared by the container.
+
+   LogicalSizeMB
+
+   The logical size on disk (in MB) of the container.
+
+   TotalSizeMB
+
+   The total size on disk (in MB) allocated to the container. Combines the
+   Owned Size and Shared Size.
+
+   Mtime
+
+   The time of the last modification to the contents of the container.
+
+   NameContainer
+
+   Indicates if the container is the name container for the volume. If
+   true, the container holds the volume's namespace information and file
+   chunk locations.
+
+   VolumeName
+
+   The name of the volume.
+
+   VolumeId
+
+   The unique ID number of the volume.
+
+   VolumeReplication
+
+   The replication factor, the number of copies of a volume excluding the
+   original.
+
+   VolumeMounted
+
+   Indicates whether the volume is mounted. If true, the volume is
+   currently mounted. If false, the volume is not mounted.
+
+Example
+
+   CLI
+
+maprcli dump containers -type offline -cluster my.cluster -json
+
+Output Samples
+
+   The following maprcli dump containers -type offline command returns
+   information about all offline containers.
+# maprcli dump containers -type offline -json
+{
+        "timestamp":1348174731389,
+        "status":"OK",
+        "total":11,
+        "data":[
+                {
+                        "ContainerId":2060,
+                        "Epoch":3,
+                        "Master":"unknown ip (0)-0-VALID",
+                        "ActiveServers":{
+
+                        },
+                        "InactiveServers":{
+
+                        },
+                        "UnusedServers":{
+                                "IP:Port":"10.10.20.39:5660--3"
+                        },
+                        "OwnedSizeMB":"0 MB",
+                        "SharedSizeMB":"0 MB",
+                        "LogicalSizeMB":"0 MB",
+                        "TotalSizeMB":"0 MB",
+                        "NameContainer":"true"
+                },
+                {
+                        "ContainerId":2185,
+                        "Epoch":3,
+                        "Master":"unknown ip (0)-0-VALID",
+                        "ActiveServers":{
+
+                        },
+                        "InactiveServers":{
+
+                        },
+                        "UnusedServers":{
+                                "IP:Port":"10.10.20.39:5660--3"
+                        },
+                        "OwnedSizeMB":"0 MB",
+                        "SharedSizeMB":"0 MB",
+                        "LogicalSizeMB":"0 MB",
+                        "TotalSizeMB":"0 MB",
+                        "NameContainer":"false"
+                },
+...
+
+   The following maprcli dump containers -type resync command returns
+   information about containers that are resyncronizing.
+# maprcli dump containers -type resync -json
+{
+        "timestamp":1438666159569,
+        "timeofday":"2015-08-03 10:29:19.569 GMT-0700",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "InstanceCount":1,
+                        "ContainerId":2242,
+                        "Epoch":4,
+                        "Master":"10.10.103.30:5660--4-VALID",
+                        "ActiveServers":{
+                                "IP:Port":[
+                                        "10.10.103.30:5660--4-VALID",
+                                        "10.10.103.28:5660--4-VALID",
+                                        "10.10.103.29:5660--3-RESYNC"
+                                ]
+                        },
+                        "InactiveServers":{
+
+                        },
+                        "UnusedServers":{
+
+                        },
+                        "OwnedSizeMB":"0 MB",
+                        "SharedSizeMB":"0 MB",
+                        "LogicalSizeMB":"0 MB",
+                        "TotalSizeMB":"0 MB",
+                        "NameContainer":"true",
+                        "CreatorContainerId":0,
+                        "CreatorVolumeUuid":""
+                }
+        ]

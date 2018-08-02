@@ -1,0 +1,60 @@
+Configuring a Remote Oracle Database for the Hive Metastore
+
+   After installing Oracle, perform the following steps to configure Hive
+   Metastore on Oracle.
+    1. Install the Oracle JDBC Driver.
+         a. Download the Oracle JDBC Driver (ojdbc6.jar) from the Oracle
+            [1]website.
+         b. Move the ojdbc6.jar file to /opt/mapr/hive/hive-<version>/lib/
+            directory
+    2. Create the Metastore database and user account.
+       Connect to your Oracle database as administrator, create the user
+       that will use the Hive Metastore, and create the Metastore schema.
+       For example:
+$ sqlplus "sys as sysdba"
+SQL> create user hiveuser identified by mypassword;
+SQL> grant connect to hiveuser;
+SQL> grant all privileges to hiveuser;
+SQL>CREATE DATABASE metastore
+    3. Configure the Metastore service to communicate with the Oracle
+       database by setting the necessary properties (shown below) in the
+       /opt/mapr/hive//hive-<version>/conf/hive-site.xml file.
+       Suppose an Oracle database running on myhost and the user account
+       hiveuser with the password mypassword, set the following properties
+       (overwriting any existing values) in the hive-site.xml file:
+<property>
+  <name>javax.jdo.option.ConnectionURL</name>
+  <value>jdbc:oracle:thin:@//myhost/metastore</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionDriverName</name>
+  <value>oracle.jdbc.OracleDriver</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionUserName</name>
+  <value>hiveuser</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionPassword</name>
+  <value>mypassword</value>
+</property>
+
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://<n.n.n.n>:9083</value>
+  <description>IP address (or fully-qualified domain name) and port of the metas
+tore host</description>
+</property>
+       Note: Though you can set the same hive-site.xml properties on all
+       the hosts (client, Metastore, HiveServer), hive.metastore.uris is
+       the only property that must be configured on all the hosts; the
+       other properties are only needed on the Metastore host.
+    4. Run schemaTool to create the initial DB structure.
+/opt/mapr/hive/hive-<version>/bin/schematool -dbType oracle -initSchema
+
+References
+
+   1. http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html

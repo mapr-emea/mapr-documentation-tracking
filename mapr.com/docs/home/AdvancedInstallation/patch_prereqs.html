@@ -1,0 +1,91 @@
+Step 1: Verify Cluster Readiness for a Patch
+
+   Before you apply a patch, check that the cluster is ready for a patch
+   to be applied. In addition to the prerequisites, consider verifying
+   that the cluster utilizes best practices which will facilitate a more
+   optimal patch installation.
+
+Patch Install Prerequisites
+
+   Before you apply a patch on the cluster, verify that all CLDB nodes are
+   running and that container 1 is fully replicated on each CLDB node.
+
+   Run maprcli dump containerinfo -ids 1 -json. In the output, all CLDBs
+   should be listed under ActiveServers and each node should report a
+   VALID state.
+   For example:
+...
+      "data":[
+             {
+                "ContainerId":1,
+                "Epoch":3,
+                "Master":"<masterCLDB_IP>:5660--3-VALID",
+                "ActiveServers":{
+                  "IP:Port":[
+                      "<masterCLDB_IP>:5660--3-VALID",
+                      "<slaveCLDB_IP>:5660--3-VALID",
+                      "<slaveCLDB_IP>:5660--3-VALID"
+                   ]
+              },
+                  "InactiveServers":{
+                   },
+                  "UnusedServers":{
+              },
+...
+
+   Note: RESYNC state will display when container 1 is not fully
+   replicated on that node. You must wait until each CLDB node has a VALID
+   state for container 1 before proceeding with the patch installation.
+
+   For more information, see [1]dump containerinfo
+
+Best Practices for Patch Installation
+
+   Failure to follow the best practices may, in some cases, impact the
+   speed in which the patch installation completes. Check to see if your
+   cluster abides by the following best practices:
+
+   The volume min replication setting should be greater than or equal to 2
+          for CLDB volume.
+          This ensures that container 1 always has at least two valid
+          copies. Run the following command to list the current
+          replication setting:
+
+maprcli dump volumeinfo -volumename mapr.cldb.internal -json
+
+          In the output, the "VolumeMinReplication” parameter lists the
+          current replication setting for the named volume. For more
+          information, see [2]maprcli dump volumeinfo.
+
+   No under replicated volumes should exist on the cluster.
+          Run the following command to check for under-replicated volumes:
+
+maprcli alarm list
+
+          For more information, see [3]maprcli alarm list.
+
+   Each CLDB node should be configured to have a minimum of 3 disks in its
+          storage pool.
+          Run the following command on each CLDB node to get a list of the
+          disks configured for each storage pool:
+
+mrconfig sp list [-v]
+
+          In this example output, there are three disks associated with
+          SP1:
+
+ListSPs resp: status 0:2 No. of SPs (2), totalsize 4562260 MB, totalfree 4537550
+ MB
+SP 0: name SP1, Online, size 2736933 MB, free 2724749 MB, path /dev/sdb, log 200
+ MB, port 5660,
+guid a3055a6db41f285b005883bbd701c1e5, clusterUuid -5009075714600063565-10036751
+9220387605, disks /dev/sdb /dev/sdd /dev/sde
+
+          For more information, see [4]mrconfig sp list.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dump-containerinfo.html#dumpcontainerinfo
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dump-volumeinfo.html#dumpvolumeinfo
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/alarm-list.html#alarmlist
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mrconfig-sp-list.html#mrconfigsplist

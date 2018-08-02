@@ -1,0 +1,61 @@
+Multi-Tenancy
+
+   Since MapR-DB tables are created in volumes, when you restrict the
+   volume, you also restrict the table data. If a volume is restricted to
+   a subset of a cluster's nodes, then it allows you order to isolate
+   sensitive data or applications, and even use heterogeneous hardware in
+   the cluster for specific workloads.
+
+   For example, you can use data placement to keep personally identifiable
+   information on nodes that have encrypted drives, or to keep MapR-DB
+   tables on nodes that have SSDs. You can also isolate work environments
+   for different database users or applications and place MapR-DB tables
+   on specific hardware for better performance or load isolation
+
+   Isolation of work environments for different database users or
+   applications lets you set policies, quotas, and access privileges at
+   for specific users and volumes. You can run multiple jobs with
+   different requirements without conflict.
+
+   As an example, the diagram below depicts a MapR cluster storing table
+   and file data. The cluster has three separate volumes mounted at
+   directories /user/john, /user/dave, and /project/ads. As shown, each
+   directory contains both file data and table data, grouped together
+   logically. Because each of these directories maps to a different
+   volume, data in each directory can have different policy. For example,
+   /user/john has a disk-usage quota, while /user/dave is on a snapshot
+   schedule. Furthermore, two directories, /user/john and /project/ads are
+   mirrored to locations outside the cluster, providing read-only access
+   to high-traffic data, including the tables in those volumes.
+
+   [29229920.png]
+
+   Example: Restricting table storage with quotas and physical topology
+   This example creates a table with disk usage quota of 100GB restricted
+   to certain data nodes in the cluster. First, we create a volume named
+   project-tables-vol, specifying the quota and restricting storage to
+   nodes in the /data/rack1 topology, and mounting it in the local
+   namespace. Next, we use the HBase shell to create a new table named
+   datastore, specifying a path inside the project-tables-vol volume.
+$ pwd
+/mapr/cluster1/user/project
+
+$ls
+bin   src
+
+$ maprcli volume create -name project-tables-vol -path /user/project/tables \
+    -quota 100G -topology /data/rack1
+
+$ ls
+bin   src   tables
+
+$ hbase shell
+HBase Shell; enter 'help<RETURN>' for list of supported commands.
+Type "exit<RETURN>" to leave the HBase Shell
+hbase(main):001:0> create '/user/project/tables/datastore', 'colfamily1'
+0 row(s) in 0.5180 seconds
+hbase(main):002:0> exit
+
+$ ls -l tables
+total 1
+lrwxr-xr-x 1 mapr mapr 2 Oct 25 15:20 datastore -> mapr::table::2252.32.16498

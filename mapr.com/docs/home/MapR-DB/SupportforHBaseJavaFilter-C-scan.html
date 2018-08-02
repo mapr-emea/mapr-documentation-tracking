@@ -1,0 +1,33 @@
+Filtering SCAN Operation Results Example
+
+   This example shows filtering on the results of a SCAN operation.
+for (uint32_t i = 0; i < num_filters; ++i) {
+    hb_scanner_t scanner = NULL;
+    hb_scanner_create(client, &scanner);
+    hb_scanner_set_table(scanner, table_name, table_name_len);
+    hb_scanner_set_num_max_rows(scanner, 3);  // maximum 3 rows at a time
+    hb_scanner_set_num_versions(scanner, 10); // up to 10 versions of the cell
+    hb_scanner_set_filter(scanner, (byte_t *)filters[i], strlen(filters[i]));
+    hb_scanner_next(scanner, scan_callback, NULL); // dispatch the call
+    wait_for_scan();
+ }
+
+   This example uses the following array of filters:
+static char filters[][200] = {"RandomRowFilter(0.5)",
+       "ColumnCountGetFilter(2)",
+       "ColumnPaginationFilter(1)",
+       "ColumnPrefixFilter('column-a')",
+       "FamilyFilter(=,'binaryprefix:f')",
+       "PrefixFilter('row_') AND QualifierFilter(<,'binaryprefix:g')",
+       "SKIP TimestampsFilter(1392222222222)",
+       "WHILE ValueFilter(=,'binaryprefix:cell2_value_v1')",
+       "FuzzyRowFilter('row00','00001')",
+       "TimestampsFilter(1430937732000,1431024132000)"};
+       }
+
+   Note: For more information about suppport for HBase Java Filters by the
+   MapR-DB C API, see [1]HBase Java Filters Support
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/SupportforHBaseJavaFilter-C.html

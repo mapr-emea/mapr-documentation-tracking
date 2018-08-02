@@ -1,0 +1,34 @@
+Queue Access Control Lists
+
+   Queue Access Control Lists (ACLs) allow administrators to control who
+   may take actions on particular queues. They are configured with the
+   following properties:
+yarn.scheduler.capacity.root.support.acl_submit_applications
+yarn.scheduler.capacity.root.support.acl_administer_queue
+
+   These properties can be set per queue. Currently the only supported
+   administrative action is killing an application. Anyone who has
+   permission to administer a queue may also submit applications to it.
+   These properties take values in a format like user1,user2 group1,group2
+   or group1,group2. An action on a queue will be permitted if its user or
+   group is in the ACL of that queue or in the ACL of any of that queue's
+   ancestors. So if queue2 is inside queue1, and user1 is in queue1's ACL,
+   and user2 is in queue2's ACL, then both users may submit to queue2.
+
+   The root queue's ACLs are "*" by default which, because ACLs are passed
+   down, means that everyone may submit to and kill applications from
+   every queue. To restrict access, change the root queue's ACLs to
+   something other than "*".
+
+   By default, the yarn.admin.acl property in yarn-site.xml is also set to
+   "*", which means any user can be the administrator. If queue ACLs are
+   enabled, you also need to set the yarn.admin.acl property to the
+   correct admin user for the YARN cluster. For example:
+<property>
+<name>yarn.admin.acl</name> >
+<value>mapr</value> >
+</property>
+
+   If you do not set this property correctly, users will be able to kill
+   YARN jobs even when they do not have access to the queues for those
+   jobs.

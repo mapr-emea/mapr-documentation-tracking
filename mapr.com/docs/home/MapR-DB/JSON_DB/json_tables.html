@@ -1,0 +1,183 @@
+MapR-DB JSON Tables
+
+   JSON documents are stored in MapR-DB JSON tables. MapR-DB supports
+   schema flexibility in the documents and provides the tools to
+   efficiently access them. It optimizes the storage of the JSON
+   documents, providing high performance.
+
+   When a JSON document is added to a JSON table, it is put in a table
+   row. The table row is part of one column family (although you can
+   create more, as described in [1]Column Families in JSON Tables). The
+   value in the row is a single JSON document that is stored in a binary
+   format. The binary format allows MapR-DB to make a number of
+   optimizations to the document’s layout to make data access fast and
+   efficient. MapR-DB also maintains the data types associated with fields
+   in a JSON document.
+
+   The JSON documents in a table need not have identical structures. It is
+   possible to include in a table any number of JSON documents that have
+   no common fields or share only a subset of fields.
+
+   For example, an online retailer might have the following three
+   documents in a single JSON table. Only a subset of fields is common to
+   all three documents. These are key differences:
+     * Each document has a different nested document in a field named
+       specifications.
+     * Only two of the documents have arrays in the field features.
+     * The retailers field has different types in the first and third
+       documents.
+
+     * [2]Document 1
+     * [3]Document 2
+     * [4]Document 3
+
+{
+    "_id" : "ID1",
+    "product_ID" : "4GGC859",
+    "name" : "Thresher 1000",
+    "brand" : "Careen",
+    "category" : "Bicycle",
+    "type" : "Road bicycle",
+    "price" : 2949.99,
+
+    "specifications" : {
+        "size" : "55cm",
+        "wheel_size" : "700c",
+        "frameset" : {
+            "frame" : "Carbon Enduro",
+            "fork" : "Gabel 2"
+        },
+        "groupset" : {
+            "chainset" : "Kette 230",
+            "brake" : "Bremse FullStop"
+          },
+        "wheelset" : {
+                "wheels" : "Rad Schnell 10",
+                "tyres" : "Reifen Pro"
+        }
+    },
+
+    "retailers": {
+        "name" : "Eden Bicycles",
+        "location" : {
+            "city" : "Castro Valley",
+            "state" : "CA"
+        }
+    }
+}
+
+{
+    "_id" : "ID2",
+    "product_ID" : "2DT3201",
+    "name" : " Allegro SPD-SL 6800",
+    "brand" : "Careen",
+    "category" : "Pedals",
+    "type" : "Components",
+    "price" : 112.99,
+
+    "features" : [
+        "Low-profile design",
+        "Floating SH11 cleats included"
+    ],
+
+    "specifications" : {
+        "weight_per_pair" : "260g",
+        "color" : "black"
+    }
+}
+
+{
+    "_id" : "ID3",
+    "product_ID" : "3ML6758",
+    "name" : "Trikot 24-LK",
+    "brand" : "Careen",
+    "category" : "Jersey",
+    "type" : "Clothing",
+    "price" : 76.99,
+
+    "features" : [
+        "Wicks away moisture.",
+        "SPF-30",
+        "Reflects light at night."
+    ],
+
+    "specifications" : {
+        "sizes" : ["S","M","L","XL","XXL"],
+        "colors" : [
+            "white",
+            "navy",
+            "green"
+        ]
+    },
+
+    "retailers" : [
+        {
+            "name" : "Bespoke Cycles",
+            "city": "San Francisco",
+            "state" : "CA"
+        },
+        {
+            "name" : "Trek Bicycle",
+            "city" : "New York",
+            "state" : "NY"
+        }
+    ]
+}
+
+Table Paths
+
+   Tables are stored in the MapR file system. When providing the path to a
+   table in MapR tools and APIs, use these conventions:
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under a volume with a
+       mount point at /volume1, specify the following path: /volume1/test
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named customer in
+       volume1 in the sanfrancisco cluster, specify the following path:
+       /mapr/sanfrancisco/volume1/customer
+
+Tools for Creating and Administering JSON Tables
+
+   These are the tools available for creating and administering JSON
+   tables in MapR-DB:
+
+   MapR-DB Shell
+          This shell is a light-weight tool for manipulating JSON tables
+          and documents. Learn more about it at [5]MapR-DB Shell (JSON
+          Tables).
+
+   MapR-DB JSON Client API
+          This API allows you to manage MapR-DB JSON tables. The API
+          includes methods to create, alter, and drop tables and column
+          families. Learn more about these APIs at [6]Managing JSON
+          Tables.
+
+   MapR-DB JSON REST API
+          The REST API allows you to create and drop MapR-DB JSON tables
+          using HTTP calls. Learn more about it at [7]Using the MapR-DB
+          JSON REST API.
+
+   MapR-DB JSON utilities
+          MapR-DB JSON supports several utilities for loading tables.
+          Learn more about these utilities at [8]Loading Documents into
+          JSON Tables.
+
+   maprcli commands
+          The maprcli table commands fully support JSON tables. See
+          [9]table.
+
+   Note: For a list of tools available to query and manage documents in
+   MapR-DB JSON tables, see [10]Tools for Working with JSON Documents.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/introduction-to-column-families.html#introduction_to_column_families
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/json_tables.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/json_tables.html#div1entry2
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/json_tables.html#div1entry3
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_dbshell.html#mapr_dbshell
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/crud_with_maprdb_ojai_java_api.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/UsingMapRDBJSONRESTAPI.html#UsingMapRDBJSONRESTAPI
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/loading_documents_into_json_tables.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tablecommands.html#tablecommands
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ojai_documents.html#ojai_documents__section_ltt_wj1_gdb

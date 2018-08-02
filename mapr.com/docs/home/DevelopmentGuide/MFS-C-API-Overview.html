@@ -1,0 +1,45 @@
+Overview of the MapR-FS C APIs in libMapRClient
+
+   Although you can use the filesystem C APIs to perform other tasks, the
+   most common use of the filesystem C APIs is to write to and read from
+   files.
+
+   Review the following information for an overview of the steps required
+   to use MapR-FS C APIs in libMapRClient:
+    1. Create a connection to MapR-FS running on a MapR cluster. For
+       information about connections, see [1]Establishing Connections to
+       Filesystems.
+    2. Create or open a file. You can create explicitly or by calling one
+       of the hdfsOpen() APIs and specifying a file that doesn’t exist.
+       Opening a file sets the current offset to 0, the first byte in the
+       file. You can move file offset explicitly with the hdfsSeek() API.
+       Writes done by hdfsWrite() and reads done by hdfsRead() increment
+       the offset by the number of bytes written or read.
+       Use hdfsTell() to find out what the current offset is.
+       For information about how to specify the location of a file to
+       create or open, see [2]Specifying Paths to Files and Directories.
+    3. Write to or read from the file. When you write to a file, you pass
+       a buffer that contains the data that you want to write. Writes can
+       be done from the default offset, which is 0 when the file is
+       opened, appended to the end of the file, or done from an offset
+       that you specify. Write buffers are flushed to the server
+       periodically. For more information about writes, see[3]Writing to
+       Files.
+       When you read from a file, you pass a pointer to a buffer for
+       storing the data that is read. Reads can be done from the default
+       offset or from an offset that you specify. For more information
+       about reads, see [4]Reading from Files.
+    4. Close the file.
+       Closing a file implicitly flushes any remaining write buffers to
+       the server. It also frees resources that are associated with the
+       file.
+    5. Disconnect from the filesystem.
+
+   For more detailed information about these steps, see:
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/EstablishConnectionsToMFS.html#EstablishingConnectionstoMapR-FS
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/SpecifyingPathsToFiles.html#SpecifyingPathstoFilesandDirectories
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/WritingToFiles.html#WritingtoFiles
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/ReadingFromFiles.html#ReadingfromFiles

@@ -1,0 +1,133 @@
+MapR-DB JSON DiffTables
+
+   Compares the row keys, column families, and field values in two JSON
+   tables. Then, generates two directories that contain sequence files
+   that you can use to merge the rows from the two JSON tables.
+
+   Sequence files are binary flat files. For more detail, see [1]Sequence
+   File. To convert a sequence file into a format that you can read, use
+   the mapr formatresult utility.
+
+   This utility considers both the source table and the destination table
+   to be a master table. Therefore, it generates two directories with
+   sequence files. These sequence files contain the puts required to
+   update each table so that it contains a superset of the rows defined in
+   both tables at the time at which the utility was run.
+   This utility generates both of the following output directories in the
+   output directory that you specify:
+
+   opsForDst
+          A directory containing sequence files that correspond to each
+          put and delete required to make the destination table identical
+          to the source table.
+
+   opsForSrc
+          A directory containing sequence files that correspond to each
+          put and delete required to make the source table identical to
+          the destination table.
+
+   A user with write permissions on a table can run the mapr importtable
+   utility to implement the changes that are specified in the sequence
+   files.
+
+Required Permissions
+
+   The user that runs the mapr difftables utility must have the following
+   permissions:
+     * The permission readAce on the volumes where the tables are located.
+     * The permission for column reads (readperm) on each table.
+
+   For information about how to set permissions on volumes, see [2]Setting
+   Whole Volume ACEs.
+
+   For information about how to set permissions on tables, see [3]Enabling
+   Table and Stream Authorizations with ACEs.
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+mapr difftables
+-src <source table path>
+-dst <destination table path>
+-outdir <output directory>
+[-first_exit Exit when first difference is found. ]
+[-columns comma-separated list of field paths ]
+[-mapreduce] <true|false> (default: true)]
+[-numthreads <numThreads> (default:16, valid only when -mapreduce is false)]
+[-cmpmeta <true|false> (default: true)]
+
+Parameters
+
+   Parameter Description
+   src The path of the first table to include in the comparison.
+   dst The path of the second table to include in the comparison.
+   first_exit
+
+   By default, the utility compares all the table cells in the specified
+   tables. Use this parameter if you want to exit after the first
+   difference is identified between the tables. The parameter takes no
+   value.
+   outdir The path to a directory in which to place the generated sequence
+   files. The utility creates the specified directory. If the specified
+   directory already exists, the command fails.
+   columns By default, the utility compares all fields in JSON tables. If
+   you do not want to compare all fields, you can specify specific fields
+   to include in the comparison. For example, suppose that want to compare
+   a source table in table replication with a replica of that table. When
+   you set up replication, you chose to replicate the default column
+   family and two additional column families: cf1 and cf2. For the
+   -columns parameter, you would specify the value ",cf1,cf2", where the
+   default column family is represented by the empty string.
+   mapreduce
+
+   A Boolean value that specifies whether or not to use a MapReduce
+   program to perform the comparison. The default, preferred method is to
+   use a MapReduce program (true).
+
+   When this parameter is set to false, a client process uses multiple
+   threads to perform the comparison.
+   numthreads When -mapreduce is false, this parameter specifies the
+   number of threads allocated to perform the comparison. The default is
+   16. If additional CPU resources are available, you might want to
+   increase the number of thread to achieve better performance.
+   cmpmeta A Boolean value that specifies whether or not to compare table
+   metadata such as column families and ACEs. The default is to compare
+   metadata (true).
+
+Example
+
+   The following example shows a comparison of two JSON tables
+[user@hostname ~]$ mapr difftables -src /source_JSON_table -dst /destination_JSO
+N_table -outdir output/comparison1 -columns "dateRange.endYear","contributors.da
+te"
+Header: hostName: maprdemo, Time Zone: Pacific Standard Time, processName: null,
+ processId: null
+2015-10-01 14:46:22,537 INFO com.mapr.db.mapreduce.tools.DiffTables parseArgs ma
+in: Comparing dateRange.endYear,contributors.date column families from /source_J
+SON_table to /destination_JSON_table.
+DiffTablesMeta completed. Metadata of the two tables is same.
+2015-10-01 14:46:23,040 INFO com.mapr.db.mapreduce.tools.DiffTables parseArgs ma
+in: Comparing dateRange.endYear,contributors.date column families from /source_J
+SON_table to /destination_JSON_table.
+2015-10-01 14:46:23,910 INFO org.mortbay.log info main: Logging to org.slf4j.imp
+l.Log4jLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2015-10-01 14:46:24,100 INFO org.apache.hadoop.io.compress.zlib.ZlibFactory <cli
+nit> pool-4-thread-1: Successfully loaded & initialized native-zlib library
+2015-10-01 14:46:24,103 INFO org.apache.hadoop.io.compress.CodecPool getCompress
+or pool-4-thread-1: Got brand-new compressor [.deflate]
+2015-10-01 14:46:24,134 INFO org.apache.hadoop.io.compress.CodecPool getCompress
+or pool-4-thread-1: Got brand-new compressor [.deflate]
+tables '/source_JSON_table', and '/destination_JSON_table' didn't match
+Number of rows processed in '/source_JSON_table' : 100
+Number of rows processed in '/destination_JSON_table' : 100
+Mismatch row count in '/source_JSON_table' : 1
+Mismatch row count in '/destination_JSON_table' : 1
+Rows with mismatch are stored in output/comparison1
+
+References
+
+   1. http://wiki.apache.org/hadoop/SequenceFile
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html

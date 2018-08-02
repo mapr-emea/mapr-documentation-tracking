@@ -1,0 +1,38 @@
+Set the log level and specify the log stream
+
+APIs used
+
+   These two APIs are defined in the header file log.h:
+     * hb_log_set_level(): Sets the log output level. The levels are
+       defined in the header file types.h.
+     * hb_log_set_stream(): Sets the location of the log output. By
+       default, log messages are sent to stderr.
+
+Code
+
+hb_log_set_level(HBASE_LOG_LEVEL_DEBUG); // defaults to INFO
+const char *logFilePath = getenv("HBASE_LOG_FILE");
+if (logFilePath != NULL) {
+  FILE* logFile = fopen(logFilePath, "a");
+  if (!logFile) {
+    retCode = errno;
+    fprintf(stderr, "Unable to open log file \"%s\"", logFilePath);
+    perror(NULL);
+    goto cleanup;
+  }
+  hb_log_set_stream(logFile); // defaults to stderr
+}
+
+   Log levels are specified in the header file types.h.
+/**
+ *  Log levels
+ */
+typedef enum {
+  HBASE_LOG_LEVEL_INVALID = 0,
+  HBASE_LOG_LEVEL_FATAL   = 1,
+  HBASE_LOG_LEVEL_ERROR   = 2,
+  HBASE_LOG_LEVEL_WARN    = 3,
+  HBASE_LOG_LEVEL_INFO    = 4,
+  HBASE_LOG_LEVEL_DEBUG   = 5,
+  HBASE_LOG_LEVEL_TRACE   = 6
+} HBaseLogLevel;

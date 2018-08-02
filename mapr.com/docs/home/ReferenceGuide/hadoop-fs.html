@@ -1,0 +1,332 @@
+hadoop fs
+
+   The hadoop fs command runs a generic filesystem user client that
+   interacts with the MapR filesystem (MapR-FS).
+   Warning: On the Windows client, make sure that the PATH contains the
+   following directories:
+     * C:\Windows\system32
+     * C:\Windows
+
+   If they are not present, the hadoop fs command might fail silently.
+
+Syntax
+
+hadoop [ Generic Options ] fs
+        [-cat <src>]
+        [-chgrp [-R] GROUP PATH...]
+        [-chmod [-R] <MODE[,MODE]... | OCTALMODE> PATH...]
+        [-chown [-R] [OWNER][:[GROUP]] PATH...]
+        [-copyFromLocal <localsrc> ... <dst>]
+        [-copyToLocal [-ignoreCrc] [-crc] <src> <localdst>]
+        [-count[-q] <path>]
+        [-cp <src> <dst>]
+        [-df <path>]
+        [-du <path>]
+        [-dus <path>]
+        [-expunge]
+        [-get [-ignoreCrc] [-crc] <src> <localdst>]
+        [-getfattr [-R] {-n name | -d} [-e <encoding>] <path>]
+        [-getmerge <src> <localdst> [addnl]]
+        [-help [cmd]]
+        [-ls <path>]
+        [-lsr <path>]
+        [-mkdir <path>]
+        [-moveFromLocal <localsrc> ... <dst>]
+        [-moveToLocal <src> <localdst>]
+        [-mv <src> <dst>]
+        [-put <localsrc> ... <dst>]
+        [-rm [-skipTrash] <src>]
+        [-rmr [-skipTrash] <src>]
+        [-setfattr -n name [-v value] | -x name <path>]
+        [-stat [format] <path>]
+        [-tail [-f] <path>]
+        [-test -[ezd] <path>]
+        [-text <path>]
+        [-touchz <path>]
+
+Parameters
+
+   Command Options
+
+   The following command parameters are supported for hadoop fs:
+
+   Parameter
+
+   Description
+
+   -cat <src>
+
+   Fetch all files that match the file pattern defined by the <src>
+   parameter and display their contents on stdout.
+
+   -chmod [-R] <MODE[,MODE]... | OCTALMODE> PATH...
+
+   Changes permissions of a file. This works similar to shell's chmod with
+   a few exceptions. -R modifies the files recursively. This is the only
+   option currently supported. MODE Mode is same as mode used for chmod
+   shell command. Only letters recognized are rwxXt. That is,
+   +t,a+r,g-w,+rwx,o=r OCTALMODE Mode specifed in 3 or 4 digits. If 4
+   digits, the first may be 1 or 0 to turn the sticky bit on or off,
+   respectively. Unlike shell command, it is not possible to specify only
+   part of the mode E.g. 754 is same as u=rwx,g=rx,o=r If none of 'augo'
+   is specified, 'a' is assumed and unlike shell command, no umask is
+   applied.
+
+   -chown [-R] [OWNER][:[GROUP]] PATH...
+
+   Changes owner and group of a file. This is similar to shell's chown
+   with a few exceptions. -R modifies the files recursively. This is the
+   only option currently supported. If only owner or group is specified
+   then only owner or group is modified.The owner and group names may only
+   consists of digits, alphabet, and any of - .@/' i.e. [- .@/a-zA-Z0-9].
+   The names are case sensitive.
+   Warning: Avoid using '.' to separate user name and group though Linux
+   allows it. If user names have dots in them and you are using local file
+   system, you might see surprising results since shell command chown is
+   used for local files.
+
+   -chgrp [-R] GROUP PATH...
+
+   This is equivalent to -chown ... :GROUP ...
+
+   -copyFromLocal <localsrc> ... <dst>
+
+   Identical to the -put command.
+
+   -copyToLocal [-ignoreCrc] [-crc] <src> <localdst>
+
+   Identical to the -get command.
+
+   -count[-q] <path>
+
+   Count the number of directories, files and bytes under the paths that
+   match the specified file pattern. The output columns are: DIR_COUNT
+   FILE_COUNT CONTENT_SIZE FILE_NAME or QUOTA REMAINING_QUATA SPACE_QUOTA
+   REMAINING_SPACE_QUOTA DIR_COUNT FILE_COUNT CONTENT_SIZE FILE_NAME
+
+   -cp <src> <dst>
+
+   Copy files that match the file pattern <src> to a destination. When
+   copying multiple files, the destination must be a directory.
+
+   -df [<path>]
+
+   Shows the capacity, free and used space of the filesystem. If the
+   filesystem has multiple partitions, and no path to a particular
+   partition is specified, then the status of the root partitions will be
+   shown.
+
+   -du <path>
+
+   Show the amount of space, in bytes, used by the files that match the
+   specified file pattern. Equivalent to the Unix command du -sb <path>/*
+   in case of a directory, and to du -b <path> in case of a file. The
+   output is in the form name(full path) size (in bytes).
+
+   -dus <path>
+
+   Show the amount of space, in bytes, used by the files that match the
+   specified file pattern. Equivalent to the Unix command du -sb. The
+   output is in the form name(full path) size (in bytes).
+
+   -fs [local | <file system URI>]
+
+   Specify the file system to use. If not specified, the current
+   configuration is used, taken from the following, in increasing
+   precedence: core-default.xml inside the hadoop jar file core-site.xml
+   in $HADOOP_CONF_DIR. The local option means use the local file system
+   as your DFS. <file system URI> specifies a particular file system to
+   contact. This argument is optional but if used must appear appear first
+   on the command line. Exactly one additional argument must be specified.
+
+   -get [-ignoreCrc] [-crc] <src> <localdst>
+
+   Copy files that match the file pattern <src> to the local name. <src>
+   is kept. When copying multiple files, the destination must be a
+   directory.
+   getfattr [-R] -n <name> | -d [-e <encoding>] <path> Retrieve all the
+   extended attribute values (if any) for a file or directory. Here:
+
+   -R
+          Recursively list the attributes for all files and directories.
+
+   -n <name>
+          The name of the extended attribute to retrieve.
+
+   -d
+          Retrieve all extended attributes associated with the pathname.
+          Extended attributes to which the calling process does not have
+          access may be omitted from the list.
+
+   -e <encoding>
+          Encode values after retrieving them. Valid encodings are text
+          (enclosed in double quotes), hex (prefixed with 0x), and base64
+          (prefixed with 0s).
+
+   <path>
+          The file or directory.
+
+   -getmerge <src> <localdst>
+
+   Get all the files in the directories that match the source file pattern
+   and merge and sort them to only one file on local fs. <src> is kept.
+
+   -help [cmd]
+
+   Displays help for given command or all commands if none is specified.
+
+   -ls <path>
+
+   List the contents that match the specified file pattern. If path is not
+   specified, the contents of /user/<currentUser> will be listed.
+   Directory entries are of the form dirName (full path) <dir> and file
+   entries are of the form fileName(full path) <r n>. size where n is the
+   number of replicas specified for the file and size is the size of the
+   file, in bytes.
+
+   -lsr <path>
+
+   Recursively list the contents that match the specified file pattern.
+   Behaves very similarly to hadoop fs -ls, except that the data is shown
+   for all the entries in the subtree.
+
+   -mkdir <path>
+
+   Create a directory in specified location.
+
+   -moveFromLocal <localsrc> ... <dst>
+
+   Same as -put, except that the source is deleted after it's copied.
+
+   -moveToLocal <src> <localdst>
+
+   Not implemented yet
+
+   -mv <src> <dst>
+
+   Move files that match the specified file pattern <src> to a destination
+   <dst>. When moving multiple files, the destination must be a directory.
+
+   -put <localsrc> ... <dst>
+
+   Copy files from the local file system into fs. To copy files, user must
+   have write permission on the directory or the addchild, deletechild,
+   and writefile access set using [1]ACEs.
+
+   -rm [-skipTrash] <src>
+
+   Delete all files that match the specified file pattern. Equivalent to
+   the Unix command rm <src>. The -skipTrash option bypasses trash, if
+   enabled, and immediately deletes <src>
+
+   -rmr [-skipTrash] <src>
+
+   Remove all directories which match the specified file pattern.
+   Equivalent to the Unix command rm -rf <src> The -skipTrash option
+   bypasses trash, if enabled, and immediately deletes <src>
+   -setfattr -n <name> [-v <value>] | -x <name> <path> Set or remove an
+   extended attribute name and value. Here:
+
+   -n <name>
+          The name of the extended attribute to set.
+
+   -v <value>
+          The value of the extended attribute to set.
+
+   -x <name>
+          The name of the extended attribute to remove.
+
+   <path>
+          The file or directory.
+
+   -stat [format] <path>
+
+   Print statistics about the file/directory at <path> in the specified
+   format. Format accepts filesize in blocks (%b), filename (%n), block
+   size (%o), replication (%r), modification date (%y, %Y)
+
+   -tail [-f] <file>
+
+   Show the last 1KB of the file. The -f option shows appended data as the
+   file grows.
+
+   -touchz <path>
+
+   Write a timestamp in yyyy-MM-dd HH:mm:ss format in a file at <path>. An
+   error is returned if the file exists with non-zero length.
+
+   -test -[ezd] <path>
+
+   If file { exists, has zero length, is a directory then return 0, else
+   return 1.
+
+   -text <src>
+
+   Takes a source file and outputs the file in text format. The allowed
+   formats are zip and TextRecordInputStream.
+
+   Generic Options
+
+   The following generic options are supported for the hadoop fs command:
+   -conf <configuration file>, -D <property=value>, -fs <local|file system
+   URI>, -jt <local|jobtracker:port>, -files <file1,file2,file3,...>,
+   -libjars <libjar1,libjar2,libjar3,...>, and -archives
+   <archive1,archive2,archive3,...>. For more information on generic
+   options, see [2]Generic Options.
+
+Examples
+
+   Set an extended attribute on a file, file1.txt:
+hadoop fs -setfattr -n user.key1 -v val1 /xattrs/m7user1/file1.txt
+
+   Remove an extended attribute specified by name:
+hadoop fs -setfattr -x user.key1 /xattrs/m7user1/dir1
+
+   Retrieve an extended attribute for a file encoded in text:
+[root@qa-node110 ~]# hadoop fs -getfattr -n user.key1 -e text /xattr/file1
+# file: /xattr/file1
+user.key1="value1"
+
+   Retrieve an extended attribute for a file encoded in hex:
+[root@qa-node110 ~]# hadoop fs -getfattr -n user.key1 -e hex /xattr/file1
+# file: /xattr/file1
+user.key1=0x76616c756531
+
+   Retrieve an extended attribute for a file encoded in base64:
+[root@qa-node110 ~]# hadoop fs -getfattr -n user.key1 -e base64 /xattr/file1
+# file: /xattr/file1
+user.key1=0sdmFsdWUx
+
+   Retrieve an extended attribute specified by name:
+[root@qa-node110 ~]# hadoop fs -getfattr -n user.key1 /xattr/file2
+# file: /xattr/file2
+user.key1="value1"
+
+   Retrieve all the extended attributes associated with the given file:
+[root@qa-node110 ~]# hadoop fs -getfattr -d /xattr/file2
+# file: /xattr/file2
+user.key2="value2"
+user.key1="value1"
+
+   Retrieve extended attributes recursively:
+[root@qa-node110 ~]# hadoop fs -getfattr -R -d /xattr/
+# file: /xattr
+# file: /xattr/file1
+user.key2="value2"
+# file: /xattr/file2
+user.key2="value2"
+user.key1="value1"
+
+   Retrieve a specific extended attribute recursively on a directory:
+[root@qa-node110 ~]# hadoop fs -getfattr -R -n user.key1 /xattr/
+# file: /xattr
+user.key1="value1"
+# file: /xattr/file1
+getfattr: No such attribute
+# file: /xattr/file2
+user.key1="value1"
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ACEs.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/HadoopCommands-GenericOptions.html

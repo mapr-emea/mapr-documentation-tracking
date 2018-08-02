@@ -1,0 +1,60 @@
+mapr-clusters.conf
+
+   The configuration file /opt/mapr/conf/mapr-clusters.conf specifies the
+   CLDB nodes for one or more clusters that can be reached from the node
+   or client on which it is installed.
+
+   Format:
+<cluster-name1> secure=false  <CLDB> <CLDB> ... <CLDB>
+[ clustername2  <CLDB> <CLDB> <CLDB> ]
+[ ... ]
+
+   The <CLDB> string format can contain multiple space-separated instances
+   of the following:
+     * host;ip:port - Host, IP, and port (uses DNS to resolve hostnames,
+       or provided IP if DNS is down)
+     * host:port - Hostname and IP (uses DNS to resolve host, specifies
+       port)
+     * ip:port - IP and port (avoids using DNS to resolve hosts, specifies
+       port)
+     * host - Hostname only (default, uses DNS to resolve host, uses
+       default port)
+     * ip - IP only (avoids using DNS to resolve hosts, uses default port)
+
+   You can edit mapr-clusters.conf manually to add more clusters. For
+   example:
+<cluster-name3>  <CLDB> <CLDB> <CLDB>
+
+Security enabled, with and without Kerberos
+
+   With security enabled, without Kerberos, the format for the
+   mapr-clusters.conf file is:
+<clustername1> secure=true  <CLDB> <CLDB> ... <CLDB>
+            [ <clustername2>  <CLDB> <CLDB> ... <CLDB> ]
+            [ ... ]
+
+   With Kerberos enabled, the format for the mapr-clusters.conf file is:
+<clustername1> secure=true kerberosEnable=true <CLDB> <CLDB> ... <CLDB>
+            [ <clustername2>  <CLDB> <CLDB> ... <CLDB> ]
+            [ ... ]
+
+   Note: Before renaming a cluster using the mapr-clusters.conf file, stop
+   the warden on all the nodes.
+
+Adding multihomed CLDB entries to mapr-clusters.conf with configure.sh
+
+   In this example, the cluster my.cluster.com has CLDB servers at nodeA,
+   nodeB, nodeC, and nodeD. The CLDB servers nodeB and nodeD have two NICs
+   each at eth0 and eth1. The entries in mapr-clusters.conf are separated
+   by spaces for each server's entry. Within a server's entry, individual
+   interfaces are separated by semicolons (;).
+
+   The command
+
+   configure.sh -N my.cluster.com -C nodeAeth0,nodeCeth0 -M
+   nodeBeth0,nodeBeth1 -M nodeDeth0,nodeDeth1 -Z zknodeA
+
+   generates the following entry in mapr-clusters.conf:
+
+   my.cluster.com nodeAeth0 nodeBeth0;nodeBeth1 nodeCeth0
+   nodeDeth0;nodeDeth1

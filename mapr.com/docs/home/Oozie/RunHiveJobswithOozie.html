@@ -1,0 +1,129 @@
+Run Hive Jobs with Oozie
+
+   You run Hive jobs with Oozie by configuring a Hive workflow.
+    1. Configure a Hive workflow. You can configure Oozie to perform a
+       workflow by connecting to Hive Metastore or Hiveserver2.
+       Configure a Hive Workflow with Connection to Hive Metastore
+         a. To use a metastore server for the Hive job, add the following
+            parameter to the hive-site.xml file:
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://<IP address>:<port></value>
+  <description>IP address (or fully-qualified domain name) and port of the metas
+tore host</description>
+</property>
+
+         b. Copy the edited hive-site.xml file to the same location as
+            your workflow.xml file.
+         c. If you are using the Hive-on-Tez engine, and you have changed
+            the default tez-site.xml configuration, perform one of the
+            following steps:
+               o Copy the tez-site.xml file to the same location as your
+                 workflow.xml file:
+                   i. Remove the forbidden (forbidden for Oozie) property
+                      from tez-site.xml:
+<property>
+  <name>fs.defaultFS</name>
+  <value>maprfs:///</value>
+</property>
+
+                  ii. Make sure that you update the value for tez.lib.uris
+                      property after removing the fs.defaultFS property.
+                      For example:
+tez.lib.uris=maprfs:///apps/tez/tez-<version>,maprfs:///apps/tez/tez-<version>/l
+ib
+                  iii. Specify the tez-site.xml file in the job-xml
+                      parameter of your workflow.
+               o Update <OOZIE_HOME>/conf/action-conf/hive.xml with the
+                 new tez-site.xml properties.
+         d. Edit the workflow.xml file to include the following:
+              i. Specify the hive-site.xml in the job-xml parameter.
+             ii. Specify the name of the script (for example, script.q)
+                 that contains the hive query in the script parameter.
+             iii. Optionally, add properties used by the Oozie launcher
+                 job. Add the prefix oozie.launcher to the property names.
+<workflow-app xmlns="uri:oozie:workflow:0.2" name="hive-wf">
+    <start to="hive-node"/>
+    <action name="hive-node">
+        <hive xmlns="uri:oozie:hive-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/outp
+ut-data/hive"/>
+                <mkdir path="${nameNode}/user/${wf:user()}/${examplesRoot}/outpu
+t-data"/>
+            </prepare>
+            <job-xml>hive-site.xml</job-xml>
+            <!– Add this property if you copied tez-site.xml to the same locatio
+n as your workflow.xml file -->
+            <job-xml>tez-site.xml</job-xml>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+            <script>script.q</script>
+            <param>INPUT=/user/${wf:user()}/${examplesRoot}/input-data/table</pa
+ram>
+            <param>OUTPUT=/user/${wf:user()}/${examplesRoot}/output-data/hive</p
+aram>
+        </hive>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+
+    <kill name="fail">
+        <message>Hive failed, error message[${wf:errorMessage(wf:lastErrorNode()
+)}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>
+       Configure a Hive Workflow with Connection to HiveServer2
+         a. Copy the edited hive-site.xml file to the same location as
+            your workflow.xml file.
+         b. On a Kerberos secure cluster for Oozie 4.3.0, perform the
+            following steps:
+              i. Copy the hive-site.xml file to the
+                 ${OOZIE_HOME}/conf/action-conf/ directory.
+             ii. Rebuild the Oozie war file:
+/opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh
+-hadoop <version> /opt/mapr/hadoop/hadoop-<version>
+         c. Edit the workflow.xml file to include the following:
+              i. Specify the JDBC URL used by Beeline for connections to
+                 Hiveserver2 in the jdbc-url element. See Connecting to
+                 HiveServer2 for details.
+             ii. Specify the name of the script (for example, script.q)
+                 that contains the hive query in the script element.
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="hive2-wf">
+    <start to="hive2-node"/>
+    <action name="hive2-node">
+        <hive2 xmlns="uri:oozie:hive2-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/output-data/hive2"/>
+                <mkdir path="${nameNode}/user/${wf:user()}/output-data"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+            <jdbc-url>jdbc:hive2://localhost:10000/default</jdbc-url>
+            <script>script.q</script>
+            <param>INPUT=/user/${wf:user()}/input-data/table</param>
+            <param>OUTPUT=/user/${wf:user()}/output-data/hive2</param>
+        </hive2>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>Hive2 (Beeline) action failed, error message[${wf:errorMessage(
+wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

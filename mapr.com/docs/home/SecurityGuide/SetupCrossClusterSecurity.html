@@ -1,0 +1,63 @@
+Setting Up Cross-Cluster Security
+
+   In order for two or more MapR clusters to communicate with one another,
+   a secure trust relationship must exist between the clusters. A secure
+   trust relationship between clusters is required for running commands
+   remotely, creating remote replicas and mirror copies of volumes, and
+   accessing data using NFS on the other cluster. The following sections
+   describe the [1]quick way to configure both the clusters for mirroring,
+   replication, and remote access and the [2]advanced manual way to
+   configure the clusters for mirroring, replication, remote access,
+   and/or NFS server access.
+
+Quick Configuration
+
+   You can run the [3]configure-crosscluster.sh utility on any CLDB node
+   in a cluster to automatically set up a trust relationship between the
+   cluster and another cluster. To automatically configure two clusters
+   for remote access, mirroring, and replication in both directions:
+    1. Log in to the CLDB node on a cluster.
+    2. Run the [4]configure-crosscluster.sh utility with the all argument.
+       For example:
+# /opt/mapr/server/configure-crosscluster.sh create all -remoteip <remote_node_I
+P>
+       When the utility runs, it performs the following on all the
+       clusters:
+         a. Updates the /opt/mapr/conf/mapr-clusters.conf file to include
+            the first entry from the /opt/mapr/conf/mapr-clusters.conf
+            file on the other cluster.
+         b. Imports the other cluster's certificate in
+            /opt/mapr/conf/ssl_truststore file and copies the updated
+            /opt/mapr/conf/ssl_truststore file to all the other nodes on
+            the cluster.
+         c. Generates a cross-cluster ticket for the other cluster, copies
+            the ticket to the CLDB node on the other cluster, merges the
+            ticket with the /opt/mapr/conf/maprserverticket file on the
+            node in the other cluster, and copies the updated
+            /opt/mapr/conf/maprserverticket file to all other CLDB nodes
+            on the other cluster.
+       For more information on the arguments, syntax, and options, see
+       [5]configure-crosscluster.sh.
+    3. Verify access to remote cluster by:
+          + Running remote commands on a node in either cluster.
+          + Creating mirror volumes on any node in the destination
+            cluster.
+          + Setting up table and stream replication on tables and streams
+            in the source cluster.
+       To configure access over NFS, see [6]Configuring Secure Clusters
+       for Cross-Cluster NFS Access.
+
+Advanced Configuration
+
+   You can configure the clusters manually for unidirectional or
+   bidirectional remote access, mirroring, or replication only. The
+   following sections describe the manual steps for:
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetupCrossClusterSecurity.html#quick
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetupCrossClusterSecurity.html#advanced
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure-crosscluster.sh.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure-crosscluster.sh.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure-crosscluster.sh.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ConfigCrossClstrSecurityForMCSAndNFS.html

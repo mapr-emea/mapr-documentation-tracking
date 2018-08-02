@@ -1,0 +1,64 @@
+Installing the MapR Client on Windows
+
+   This section describes how to install the MapR Client on Windows.
+
+   Compatibility with Network Address Translation (NAT) Adapters
+
+   In VM environments, the MapR Client on Windows works with a single NAT
+   virtual adapter as long as it is the only virtual adapter configured
+   for the VM. If you want to use more than one adapter, you must use
+   other types of virtual adapters. If you use multiple NAT adapters in
+   your VM environment, your jobs and file-system operations will fail.
+    1. Make sure Java is installed on the computer and that the JAVA_HOME
+       environment variable is set correctly.
+       Note: The path that you set for the JAVA_HOME environment variable
+       must not include spaces.
+    2. Create the directory \opt\mapr on your c: drive (or another hard
+       drive of your choosing). You can use Windows Explorer, or type the
+       following at the command prompt: mkdir c:\opt\mapr
+    3. Set the MAPR_HOME environment variable to c:\opt\mapr
+    4. Open the command line.
+    5. Use the following command to navigate to MAPR_HOME: cd %MAPR_HOME%
+    6. Download the file for the version that you want to install into
+       MAPR_HOME:
+http://package.mapr.com/releases/<version>/windows/<package name>
+    7. Extract the archive by right-clicking on the file and selecting
+       Extract All...
+    8. From the command line, run configure.bat to configure the client.
+       For details about the syntax, parameters, and behavior of
+       configure.bat, see [1]configure.sh.
+
+        Non-secure cluster example
+                In the following example, the -N parameter specifies the
+                cluster name, the -c (lowercase) option specifies a client
+                configuration, the -C (uppercase) parameter specifies the
+                CLDB nodes, and -HS specifies the HistoryServer node:
+
+server\configure.bat -N my.cluster.com -c -C mynode01:7222 -HS nodeA
+
+        Secure cluster example
+                In the following example, the -N parameter specifies the
+                cluster name, the -C (uppercase) parameter specifies the
+                CLDB nodes, the -c (lowercase) option specifies a client
+                configuration, and -secure indicates that the cluster is
+                secure:
+
+server\configure.bat -N my.cluster.com -c -secure -C mynode01:7222
+
+    9. To use this client with a secure cluster or clusters, copy the
+       ssl_truststore file from the /opt/mapr/conf directory on the
+       cluster to the c:\opt\mapr\conf directory on the client.
+       If this client will connect to multiple clusters, merge the
+       ssl_truststore files with the c:\opt\mapr\server\manageSSLKeys.bat
+       tool.
+       See [2]Managing Secure Clusters for details on how to connect to a
+       secure cluster.
+
+   For information about running Hadoop commands on Windows, see
+   [3]Running Hadoop Commands on a Mac and Windows Client.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Secure-cluster-administration.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient-hadoop.html#SettingUptheClient-hadoop

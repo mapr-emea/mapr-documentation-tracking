@@ -1,0 +1,42 @@
+Enable Impersonation for HBase Thrift 1 Gateway
+
+   To configure the Thrift gateway to authenticate to HBase on the
+   client’s behalf, and to access HBase using a proxy user:
+    1. In the hbase-site.xml file for each cluster node running a Thrift
+       gateway, set the property hbase.thrift.security.qop to one of the
+       following three values:
+          + auth-conf - authentication, integrity, and confidentiality
+            checking
+          + auth-int - authentication and integrity checking
+          + auth - authentication checking only
+    2. Restart the Thrift gateway processes for the changes to take
+       effect. If a node is running Thrift, the output of the jps command
+       will list a ThriftServer process.
+          + To stop Thrift on a node, run the command bin/hbase-daemon.sh
+            stop thrift.
+          + To start Thrift on a node, run the command bin/hbase-daemon.sh
+            start thrift.
+    3. To allow proxy users, add the following to the hbase-site.xml file
+       for every HBase node:
+<property>
+    <name>hadoop.security.authorization</name>
+    <value>true</value>
+</property>
+<property>
+    <name>hadoop.proxyuser.$USER.groups</name>
+    <value>$GROUPS</value>
+</property>
+<property>
+    <name>hadoop.proxyuser.$USER.hosts</name>
+    <value>$GROUPS</value>
+</property>
+    4. To enable the doAs feature, add the following to the hbase-site.xml
+       file for every Thrift gateway:
+<property>
+    <name>hbase.regionserver.thrift.http</name>
+    <value>true</value>
+</property>
+<property>
+    <name>hbase.thrift.support.proxyuser</name>
+    <value>true/value>
+</property>

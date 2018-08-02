@@ -1,0 +1,129 @@
+How Impersonation Works
+
+   Introduces impersonation functionality, limitations, and core
+   requirements.
+
+   When a user attempts to impersonate another user to the MapR-FS or
+   MapR-DB systems and the configuration parameters for resolving the UID
+   and GIDs on the server (see [1]Resolving Username with UID and GIDs
+   During Impersonation) are disabled:
+    1. The MapR client looks for that user name in the local operating
+       system registry.
+    2. If the user name is:
+          + Found, MapR sends the user’s UID and GID to the server for
+            impersonation.
+          + Not found in the local operating system registry, the user
+            action is not processed.
+
+   When a user attempts to impersonate another user to the MapR-FS or
+   MapR-DB systems and if the configuration parameters for resolving the
+   UID and GIDs on the server (see [2]Resolving Username with UID and GIDs
+   During Impersonation) are enabled:
+    1. The MapR client asks CLDB to look for that user name and resolve
+       the UID and GIDs for that user on the server.
+    2. If the user name is:
+          + Found on the server, the server allows the user to proceed
+            with the impersonation.
+          + Not found, the user action is not processed.
+       Note: If the configuration property for resolving the username is
+       set on the client and the configuration property for resolving the
+       username is not set on CLDB, the operation will fail with an error.
+
+Limitations on Impersonation
+
+   Impersonation does not work in MapR when you are accessing MapR-FS or
+   MapR-DB through a MapR client running on Windows.
+
+Core Requirements for Impersonation
+
+   The mapr superuser is allowed to access to the MapR-FS and MapR-DB
+   systems. The following conditions must be met in order for the mapr
+   superuser to be able to impersonate another MapR user:
+    1. The hadoop.proxyuser.mapr.groups and hadoop.proxyuser.mapr.hosts
+       parameters must be set correctly in the core-site.xml file.
+       See [3]Enabling Impersonation for the mapr Superuser.
+       These settings are not always required. The hadoop proxy user
+       functionality is only applicable to ecosystem components included
+       in the MapR distribution for Apache Hadoop. If the MapR client
+       accesses an ecosystem component, such as HiveServer2, these
+       settings may be required. These settings are never needed when the
+       MapR client accesses MapR-FS or MapR-DB directly. Enabling
+       impersonation here ensures that the correct settings are in place
+       if they are needed.
+    2. The name of the MapR user that you want the mapr superuser to be
+       able to impersonate must appear in the local operating system
+       registry where the MapR client is running if server-side
+       [4]resolution of UID and GIDs is not enabled.
+    3. The UID and GUID of the user name under which the MapR client is
+       running must match exactly the UID and GUID for that user name on
+       the server.
+
+   For all other users with access to the MapR-FS and MapR-DB systems, the
+   following conditions must be met for the user to impersonate another
+   user.
+    1. A valid servicewithimpersonation ticket must be present for the
+       user who intends to impersonate on the system.
+    2. The name of the MapR user to impersonate must appear in the local
+       operating system registry where the MapR client is running if
+       server-side [5]resolution of UID and GIDs is not enabled.
+    3. The UID and GUID of the user name under which the MapR client is
+       running must match exactly the UID and GUID for that user name on
+       the server.
+
+   Note: If a user is not authorized to impersonate, then the operations
+   will proceed as the user, not the target user, and some operations will
+   succeed, and some will not even if the user has all the permissions for
+   these operations. Also, if a user with full access and impersonating
+   capability tries to impersonate another user, the operations will
+   succeed only if the target user has permissions on the directory.
+
+Component Requirements for Impersonation
+
+   Some MapR ecosystem components have additional requirements to enable
+   impersonation.
+
+   The following components must have settings that support impersonation
+   in the configuration files indicated, on each node where the component
+   resides:
+     * Drill: Edit the drill-env.sh file. See [6]Configuring User
+       Impersonation in the Apache Drill documentation.
+     * Flume: Edit the flume.conf file. See [7]Configure User
+       Impersonation for Flume.
+     * HBase: Edit the hbasesite.xml file. See [8]Impersonation via the
+       HBase REST Gateway.
+     * HiveServer2: Edit the hive-site.xml file. See [9]Hive User
+       Impersonation.
+     * Hue: Edit the hue.ini file. See [10]Configure Hue with Impala.
+     * Impala: Does not support impersonation.
+     * Oozie: Edit the oozie-site.xml file. See [11]User Impersonation for
+       Oozie.
+     * Spark: No special settings are required for Spark in MapReduce 2
+       (YARN) mode, since Spark automatically inherits the correct
+       behavior from YARN. When running standalone, Spark cannot perform
+       impersonation and should not be used if security is important.
+
+Application Development Requirements
+
+   You can set up impersonation in an application programmatically.
+     * C/C++: Use hb_connection_create_as_user(). See the “C API for
+       impersonation” section of [12]Creating C Apps - Binary Tables and
+       [13]Impersonation Example..
+     * Java: Use UserGroupInformation.doAs(). See [14]Class
+       UserGroupInformation in the Hadoop documentation.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ResolveUsernameWithUIDandGIDs.html#concept_z4r_bfh_jw
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ResolveUsernameWithUIDandGIDs.html#concept_z4r_bfh_jw
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/t_enable_impersonation_mapr.html#task_uvr_d2z_dt
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ResolveUsernameWithUIDandGIDs.html#concept_z4r_bfh_jw
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ResolveUsernameWithUIDandGIDs.html#concept_z4r_bfh_jw
+   6. https://drill.apache.org/docs/configuring-user-impersonation/
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/Flume/Config-ImpersonationForFlume.html#ConfiguringFlumeonaSecure_26281171-d3e158
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ImpersonationviatheHBaseREST-Gateway.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/HiveUserImpersonation.html#HiveUserImpersonation
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/ConfigureHuewithImpala.html#ConfigureHuewithImpala
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/Oozie/UserImpersonationforOozie.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Creating-C-apps-for-DB.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Sample-C-app-impersonation.html
+  14. https://hadoop.apache.org/docs/r1.0.4/api/org/apache/hadoop/security/UserGroupInformation.html

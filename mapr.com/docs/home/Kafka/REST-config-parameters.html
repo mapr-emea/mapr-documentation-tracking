@@ -1,0 +1,155 @@
+Configuration Parameters
+
+   This section provides the Kafka REST Proxy for MapR-ES parameters.
+   These parameters are configurable in the kafka-rest.properties file.
+/opt/mapr/kafka-rest/kafka-rest-<version>/config/kafka-rest.properties
+
+   CAPTION: Table 1. Configuration Parameters for Kafka REST Proxy
+
+   Parameter Description
+   streams.default.stream Defines the default stream for both the consumer
+   and producer. This allows you to use topics without having the stream
+   path included in the topic name.
+   id
+
+   Unique ID for this REST server instance. This is used in generating
+   unique IDs for consumers that do not specify their ID. The ID is empty
+   by default, which makes a single server setup easier to get up and
+   running, but is not safe for multi-server deployments where automatic
+   consumer IDs are used. Type: string. Default: empty
+
+   consumer.threads The number of threads to run consumer requests on.
+   Type: int. Default: 1
+   simpleconsumer.cache.max.records
+
+   Maximum number of records that can be stored in a single cache. Records
+   with higher offsets replace records with lower ones. The value must be
+   greater than 0. Type: int. Default: 1000.
+
+   simpleconsumer.max.caches.num
+
+   Maximum number topic-partition combinations for which records are
+   cached. If this parameter is set to 0, then caching is disabled and
+   extra records are thrown away. Cache improves performance if records
+   are fetched sequentially thus increasing offsets.
+
+   A pool of caches are available to store extra fetch records by a
+   KafkaConsumer for a particular TopicPartition. The cache increases
+   performance when records are fetched from a particular topic partition
+   in a sequential manner. For example, every next request will start with
+   the following offset after the offset of the latest fetched record in
+   the previous request. Type: int. Default: 0
+   simpleconsumer.max.poll.time
+
+   Specifies the maximum number of milliseconds that are spent for polling
+   records by a simpleconsumer. The greater the value means greater
+   latency but higher throughput. Type: int. Default: 1000
+
+   simpleconsumer.pool.size.max
+
+   Maximum number of SimpleConsumers that can be instantiated. If 0, then
+   the pool size is not limited. Type: int. Default: 25
+
+   simpleconsumer.pool.timout.ms
+
+   Amount of time to wait for an available SimpleConsumer from the pool
+   before failing. Use 0 for no timeout. Type: int. Default: 1000
+
+   consumer.instance.timeout.ms Amount of idle time (in milliseconds)
+   before a consumer instance is automatically destroyed. Type: int.
+   Default: 300000 (5 minutes)
+   consumer.iterator.backoff.ms
+
+   Amount of time (in milliseconds) to backoff when an iterator runs out
+   of data. If a consumer has a dedicated worker thread, this is
+   effectively the maximum error for the entire request timeout. This
+   parameter should be small enough to closely target the timeout, but
+   large enough to avoid busy waiting. Type: int. Default: 50
+
+   consumer.request.max.byte
+
+   Maximum number of bytes in unencoded message keys and values returned
+   by a single request. This can be used by administrators to limit the
+   memory used by a single consumer and to control the memory usage
+   required to decode responses on clients that cannot perform a streaming
+   decode. Note that the actual payload will be larger due to overhead
+   from base64 encoding the response data and from JSON encoding the
+   entire response. Type: long. Default: 6710884
+
+   consumer.request.timeout.ms
+
+   The maximum total time (in milliseconds) to wait for messages for a
+   request if the maximum number of messages has not yet been reached.
+   Type: int. Default: 1
+
+   producer.threads
+
+   Number of threads to run producer requests on. Type: int. Default: 5
+
+   request.logger.name
+
+   Name of the SLF4J logger to write the NCSA Common Log Format request
+   log. Type: string. Default: io.confluent.rest-utils.requests.
+
+   response.mediatype.default
+
+   The default response media type that should be used if no specify types
+   are requested in an Accept header. Type: string. Default:
+   application/vnd.kafka.v1+json
+
+   response.mediatype.preferred
+
+   An ordered list of the server's preferred media types used for
+   responses, from most preferred to least. Type: list. Default:
+   application/vnd.kafka.v1+json, application/vnd.kafka+json,
+   application/json
+
+   access.control.allow.methods
+
+   Sets the value to the Jetty Access-Control-Allow-Origin header for
+   specified methods. Type: string. Default: empty
+
+   access.control.allow.origin
+
+   Sets the value for the Jetty Access-Control-Allow-Origin header. Type:
+   string. Default: empty
+
+   host.name
+
+   The host name used to generate absolute URLs in responses. If empty,
+   the default canonical hostname is used. Type: string. Default: empty
+
+   debug
+
+   Boolean indicating whether extra debugging information is generated in
+   some error response entities. Type: Boolean. Default: false
+
+   shutdown.graceful.ms
+
+   Amount of time to wait after a shutdown request for outstanding
+   requests to complete. Type: int. Default: 1000
+
+   metric.reporters
+
+   A list of classes to use as metrics reporters. Implementing the
+   MetricReporterinterface allows plugging in classes that will be
+   notified of new metric creation. The JmxReporter is always included to
+   register JMX statistics. Type: list. Default: empty
+
+   metrics.jmx.prefix
+
+   Prefix to apply to metric names for the default JMX reporter. Type:
+   string. Default: kafka.rest
+
+   metrics.num.samples
+
+   The number of samples maintained to compute metrics. Type: int.
+   Default: 2
+
+   metrics.sample.window.ms
+
+   The metrics system maintains a configurable number of samples over a
+   fixed window size. This configuration controls the size of the window.
+   For example, used to maintain two samples each measured over a 30
+   second period. When a window expires, the oldest window is erased and
+   overwritten. Type: long. Default: 30000

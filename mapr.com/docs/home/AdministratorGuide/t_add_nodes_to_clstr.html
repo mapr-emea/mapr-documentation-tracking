@@ -1,0 +1,75 @@
+Adding Nodes to a Cluster
+
+   You can add nodes to a cluster using the web-based MapR Installer
+   (version 1.6 or later), the MapR Installer Stanzas, or manually. To add
+   nodes to your cluster using the MapR Installer or MapR Installer
+   Stanzas, see [1]Extending a Cluster by Adding Nodes. Complete the
+   following steps to add nodes manually to a cluster:
+    1. Prepare all nodes.
+       If you do not use the Domain Name System (DNS), ping the new node
+       from an existing node and vice versa. Use the host name instead of
+       an IP address. If you do not get a response, and if you rule out a
+       network problem, a possible fix is to edit the /etc/hosts files of
+       all nodes in the cluster. All nodes need to be listed in all
+       /etc/hosts files.
+    2. Plan which packages to install based on services you want to run on
+       the new nodes.
+       See [2]Select Services and [3]MapR Repositories and Packages for
+       more information.
+    3. Install MapR Software. That is:
+          + On all new nodes, add the MapR Repository.
+          + On each new node, install the planned packages.
+       See [4]Step 2: Prepare Packages and Repositories and [5]Step 3:
+       Install MapR Service Packages for more information.
+    4. Configure all new nodes by running configure.sh.
+       If you added a ZooKeeper role to a node, run the following command
+       on all nodes with the new ZooKeeper list: configure.sh
+       -no-autostart. See [6]configure.sh for more information.
+    5. On all new nodes, format disks for use by MapR if you plan to
+       re-use a node from another cluster.
+       Format the disks from a re-used node to remove data from the old
+       cluster.
+       Note: All the disks (for use by MapR) on a node must be of the same
+       type. That is, all the disks on a node must either be rotational or
+       SSDs; node with disks of both types is not supported.
+       See [7]Formatting Disks on a Node for more information.
+    6. If you manually modified configuration files on the existing nodes
+       and those changes apply to the new nodes, copy only those changes
+       to the respective files on the new nodes.
+    7. Start ZooKeeper on all new nodes that have ZooKeeper installed:
+       service mapr-zookeeper start
+    8. Start Warden on all new nodes:
+       service mapr-warden start
+    9. Restart services that you reconfigured.
+       Running configure.sh alone does not reconfigure services, such as
+       ZooKeeper. Reconfigured services also require a restart. For
+       example, restart ZooKeeper on each node, one at a time after
+       running configure.sh. Restart the lead ZooKeeper last. Restarting
+       ZooKeeper adds the new nodes into the existing ZooKeeper quorum.
+       Services that need to connect to CLDB do not always discover a
+       newly added CLDB node without restarting warden.
+   10. Set up node topology for the new nodes.
+   11. On any new nodes running NFS, set up NFS for HA.
+   12. Perform the following steps if you added the node(s) to a secure
+       cluster configured for cross-cluster operations (such as mirroring,
+       replication, etc).
+         a. Copy the /opt/mapr/conf/mapr-clusters.conf file and
+            /opt/mapr/conf/ssl_truststore file from another node to the
+            new node(s).
+         b. Copy the /opt/mapr/conf/maprserverticket file from:
+               o A CLDB node if the new node is a CLDB node.
+               o A non-CLDB node if the new node is not a CLDB node.
+            The /opt/mapr/conf/maprserticket file contains additional
+            entry for cross-cluster tickets. See [8]Configuring Secure
+            Clusters for Cross-Cluster NFS Access for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/ExtendCluster.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/PlanningtheCluster-services.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/MapR-Repositories-and-Packages.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingMapRSoftware-packages-repos.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingMapRSoftware-service-packages.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_ManagingNodes_formatting_disks.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ConfigCrossClstrSecurityForMCSAndNFS.html

@@ -1,0 +1,73 @@
+Step 3: Apply the Patch to CLDB Nodes
+
+   When applying a patch manually, apply the patch to CLDB slave nodes
+   prior to applying the patch on the master CLDB node. After you apply a
+   patch to a CLDB node, you must verify that container 1 is fully
+   replicated before proceeding to apply the patch to the next CLDB node.
+   For large clusters with many containers, when you do not patch CLDB
+   nodes in the prescribed order, there may be a considerable delay before
+   the cluster can process client operations. For smaller clusters, this
+   is not as critical as the cluster can generally start accepting client
+   operations in about 5 minutes.
+
+   Complete the following steps of each CLDB slave node and then on the
+   CLDB master node:
+    1. Stop the MapR Warden and ZooKeeper (if installed) services:
+         a. To stop MapR Warden , run the following command:
+sudo service mapr-warden stop
+         b. If Zookeeper is installed on the node, run this command:
+sudo service mapr-zookeeper stop
+    2. If there is already a patch installed on the cluster, run one of
+       the following commands to uninstall it:
+          + On CentOS/Redhat: sudo rpm -e mapr-patch
+          + On SUSE: sudo zypper remove mapr-patch
+          + On Ubuntu: sudo apt-get -y remove mapr-patch
+    3. Install the patch using one of the following commands:
+          + On CentOS/RedHat: sudo rpm -ivh
+            mapr-patch-<new_patch_number>.rpm
+          + On SUSE: sudo zypper install mapr-patch-<new_patch_number>.rpm
+          + On Ubuntu: sudo dpkg -i mapr-patch<new_patch_number>.deb
+    4. Start the MapR Warden and ZooKeeper (if installed) services:
+         a. If ZooKeeper is installed on the node, run this command to
+            start ZooKeeper:
+sudo service mapr-zookeeper start
+         b. To start Warden, run this command:
+sudo service mapr-warden start
+    5. To verify that the patch was installed successfully, run one of the
+       following commands:
+          + On CentOS/Redhat or SUSE: sudo rpm -ql
+            mapr-patch-<new_patch_number>
+          + On Ubuntu: sudo dpkg -l | grep mapr-patch-<new_patch_number>
+    6. Verify that the CLDB node that you patched is running and that
+       container 1 on that node is fully replicated.
+       Run maprcli dump containerinfo -ids 1 -json.
+       In the output, the CLDB node that you just patched should be listed
+       under ActiveServers and it should report a VALID state for
+       container 1.
+       For example:
+...
+      "data":[
+             {
+                "ContainerId":1,
+                "Epoch":3,
+                "Master":"<masterCLDB_IP>:5660--3-VALID",
+                "ActiveServers":{
+                  "IP:Port":[
+                      "<masterCLDB_IP>:5660--3-VALID",
+                      "<slaveCLDB_IP>:5660--3-VALID",
+                      "<slaveCLDB_IP>:5660--3-VALID"
+                   ]
+              },
+                  "InactiveServers":{
+                   },
+                  "UnusedServers":{
+              },
+...
+       Note: The RESYNC state will display when container 1 is not fully
+       replicated on that node. You must wait until the CLDB node that you
+       just patched has a VALID state for container 1.
+       For more information, see [1]dump containerinfo
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dump-containerinfo.html#dumpcontainerinfo

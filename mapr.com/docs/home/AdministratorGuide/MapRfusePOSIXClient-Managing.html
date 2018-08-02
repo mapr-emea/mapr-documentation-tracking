@@ -1,0 +1,198 @@
+Managing the FUSE-Based POSIX Client
+
+   This section describes how to start and manage the POSIX client.
+
+Verifying MapR POSIX Client Licenses
+
+   You can check how many MapR POSIX Client licenses are available in the
+   Licenses tab under Admin > Cluster Settings. Look under LICENSES to
+   find the number of POSIX Client nodes that can consume a MapR POSIX
+   Client license.
+
+Starting and Stopping the POSIX Client
+
+   To ensure that the service can be started and stopped and to run the
+   help option, set the shared LD_LIBRARY_PATH environment variable.
+   Update the shared library environment variable to include the paths to
+   the following:
+     * Full path to the directory containing libjvm.so file
+     * $MAPR_HOME/lib (that is, /opt/mapr/lib directory)
+
+   For example:
+Export LD_LIBRARY_PATH=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.79.x86_64/jre/lib/a
+md64/server/:/opt/mapr/lib
+
+   To allow a non-root user to start this service, as administrator or
+   root user, run the following command:
+chmod u+s /opt/mapr/bin/fusermount
+
+   Verify that permissions have been set for non-root user to start the
+   service. For example:
+ll /opt/mapr/bin/fusermount
+
+   Your output should look similar to the following:
+-rwsr-xr-x 1 root root 39704 Feb 16 19:41 /opt/mapr/bin/fusermount
+
+   Ensure that the non-root user has full permissions on the mount point
+   and log files.
+
+   To manually start or stop the service:
+service mapr-posix-client-* [start|stop|status]
+
+   When you run the command, replace * with basic or platinum, which
+   corresponds with the package that is installed on the system.
+   Note: The POSIX client service cannot be stopped or restarted if any
+   other process is accessing the mount point. With systemd (on CentOS/RH
+   7.x and Suse 12), the service will enter failed state (if you tried to
+   stop) or activating state (if you tried to restart) and you must
+   manually kill the client processes.
+
+Running the POSIX Client in Secure Mode
+
+   The POSIX client reads the mapr-clusters.conf file to determine whether
+   the process must start in secure or non-secure mode. If security is
+   configured, the mapr superuser's ticket file or the
+   servicewithimpersonation ticket file must be present in the default
+   /tmp directory. If the ticket file is not in the default /tmp
+   directory, specify the location of the ticket file using the
+   fuse.ticketfile.location configuration parameter in the fuse.conf file
+   Tip: See also: [1]Enabling Impersonation for the MapR Superuser and
+   [2]Enabling Impersonation for any User.
+
+   If the ticket expires after a connection has been established between
+   the POSIX client and the cluster, the connection can stay alive for up
+   to an hour. No new connections will be allowed. If the ticket was
+   blacklisted, restart POSIX client to refresh the ticket.
+
+Setting up a Ticket for the POSIX Client
+
+   The POSIX client can be accessed using user and service tickets. The
+   service tickets have long lifetimes, by default, for ease of
+   administration. This is useful for running application processes that
+   should not be bounded by the CLDB duration
+   (cldb.security.user.ticket.duration.seconds) and renewal
+   (cldb.security.user.ticket.max.duration.seconds) properties, which
+   limit the lifetime of user tickets. If you plan to use a user ticket,
+   ensure that the user has read permissions on the ticket file.
+
+   Irrespective of the ticket type, after generating the ticket, set the
+   fuse.ticketfile.location parameter value in the fuse.conf file to point
+   to the ticket file to use.
+
+   For more information, see:
+     * [3]Generating a MapR User Ticket
+     * [4]Generating a Service Ticket
+
+Mounting the MapR-FS
+
+   To mount MapR-FS at the mount point specified in the
+   /opt/mapr/conf/fuse.conf file, create the mountpoint specified in the
+   fuse.conf file and start the service. For example:
+mkdir /mapr
+service mapr-posix-client-* start
+
+   Note: When you run the command, replace * with basic or platinum, which
+   corresponds with the package that is installed on the system.
+
+   See also: [5]Enabling Soft Mount and Setting the Timeout
+
+Monitoring the POSIX Client
+
+   To determine whether the POSIX client is running, run the following
+   command:
+service mapr-posix-client-* status
+
+   Note: When you run the command, replace * with basic or platinum, which
+   corresponds with the package that is installed on the system.
+
+Adding and Removing Users
+
+   Before you add and/or remove users using the POSIX client, make a note
+   of the following:
+     * Invalid UID/GID cannot perform operations on the system.
+     * When you add or remove users, it may take up to 30 minutes for the
+       changes to take effect.
+
+   By default, the UID cache will expire in 30 minutes. To disable UID
+   cache, set the value (in seconds) for fs.mapr.uid.cache.timeout.seconds
+   parameter in the core-site.xml file. You can set the value to:
+     * 0 to fetch the GID information from the idstore directly
+     * >0 to specify the amount of time to keep the UID information in
+       cache
+
+   For example, your core-site.xml entry would look similar to the
+   following for:
+     * Disabling cache:
+<property>
+   <name>fs.mapr.uid.cache.timeout.seconds</name>
+   <value>0</value>
+   <description>disable UID cache</description>
+</property>
+     * Setting 3 minutes as the amount of time to keep the UID information
+       in cache:
+<property>
+   <name>fs.mapr.uid.cache.timeout.seconds</name>
+   <value>180</value>
+   <description>UID cached for 3 minutes</description>
+</property>
+
+Registering POSIX Client with Additional Clusters
+
+   To register the POSIX client with additional clusters, you must add
+   entries directly to the /opt/mapr/conf/mapr-clusters.conf file. The
+   clusters will be visible after few minutes.
+   Note: Each client supports up to 16 clusters.
+
+Setting the Log Level
+
+   The log level can be set in the
+   /opt/mapr/hadoop/hadoop-<version>/etc/hadoop/core-site.xml file. By
+   default, it is set to ERROR. If you want to change the log level to
+   another (such as FATAL, DEBUG, WARN, ERROR, CRITICAL, or OFF), open the
+   file, add the following, and save the file:
+<configuration>
+  <property>
+     <name>fs.mapr.trace</name>
+     <value>DEBUG | INFO | WARN | ERROR | CRITICAL | FATAL | OFF</value>
+  </property>
+</configuration>
+
+   Note: See [6]core-site.xml for more information.
+
+Configuring the Chunk Size
+
+   By default, sharding takes effect only if chunk size is >0 and <=2MB.
+   To increase the upper limit (up to 256MB) on the chunk size, set the
+   value (in bytes) for the fs.mapr.fuseshard.chunksize configuration
+   field in the [7]core-site.xml file. For example:
+<property>
+  <name>fs.mapr.fuseshard.chunksize</name>
+  <value>2097152</value>
+  <description>setting chunk size</description>
+</property>
+
+   Definining File/Directory Compression and Chunk Size
+          Each directory in MapR storage contains a hidden file called
+          .dfs_attributes that controls compression and chunk size. To
+          change these attributes, change the corresponding values in the
+          file. For more information, see [8].dfs_attributes.
+
+Unmounting the FUSE Mount
+
+   To unmount the mountpoint andkill the FUSE process, run the following
+   command:
+service mapr-posix-client-* stop
+
+   Note: When you run the command, replace * with basic or platinum, which
+   corresponds with the package that is installed on the system.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/t_enable_impersonation_mapr.html#task_uvr_d2z_dt
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnableImpersonationForAnyUser.html#task_jyb_z3h_jw
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingMapRUserTicket.html#TicketsandCertificates-Ge_26281159-d3e202
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingServiceTicket.html#TicketsandCertificates-Ge_26281159-d3e299
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/EnableSoftMountAndTimeout.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/core-site.xml.html#core-site.xml
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/core-site.xml.html#core-site.xml
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dfs_attributes.html#dfs_attributes

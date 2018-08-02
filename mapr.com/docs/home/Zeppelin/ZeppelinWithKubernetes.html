@@ -1,0 +1,106 @@
+Running Zeppelin as a Kubernetes Service
+
+   To run Zeppelin as a Kubernetes service, you must expose it to
+   Kubernetes by including it in your Kubernetes pod manifest file. The
+   following shows a sample file:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dsr-kube
+  labels:
+      app: dsr-svc
+spec:
+  containers:
+  - name: dsr
+    imagePullPolicy: Always
+    image: maprtech/data-science-refinery:v1.1_6.0.0_4.1.0_centos7
+    securityContext:
+      capabilities:
+        add: ["SYS_ADMIN" , "SYS_RESOURCE"]
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "500m"
+    env:
+    - name: MAPR_MOUNT_PATH
+      value: /mapr
+    - name: MAPR_CLUSTER
+      value: cluster1
+    - name: MAPR_CLDB_HOSTS
+      value: 10.10.102.95
+    - name: MAPR_CONTAINER_USER
+      value: mapr
+    - name: MAPR_CONTAINER_GROUP
+      value: mapr
+    - name: MAPR_CONTAINER_PASSWORD
+      value: mapr
+    - name: HOST_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.hostIP
+    - name: DEPLOY_MODE
+      value: kubernetes
+    volumeMounts:
+    - mountPath: /dev/fuse
+      name: fuse
+  volumes:
+  - name: fuse
+    hostPath:
+      path: /dev/fuse
+
+   Make sure you include the following lines in your manifest file:
+- name: DEPLOY_MODE
+      value: kubernetes
+
+Running with Kubernetes Secrets
+
+   If you want to use MapR tickets with Kubernetes Secrets, you must
+   create a secret and mount the secret in your Data Science Refinery
+   container.
+
+   Perform the following steps to do this:
+    1. Follow the instructions at [1]Configuring a Secret to create a
+       Kubernetes secret with your MapR ticket base64 encoded.
+       The following is a sample YAML file named dsr-ticket.yaml:
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dsr-ticket-secret
+type: Opaque
+data:
+  CONTAINER_TICKET: Y2x1c3RlcjMgMEpHTktQMWlBSU1td05wVWF4SXp5V0VLSjBvS080TndPSkU0
+SFVyazN6M3JVKzVhcllDaWhqZ3Q2TDZNMmg4UnF4VGEzMU9IaDMvUmplYytTM0F3WVRlNTdjQ2kzL1dK
+YTJTblJEWkE4M2h2UEFqZkwyVUlzaVcydDJXdVZhT2xtSVIydmNwa3pMNVlqYUtIbm55RlpvbmJ4SUdj
+QVRMTDJSaEdmL3JiY091Qk1wbzIxdlY3MnNYRHo5RXY5S1Fma0tKdElRTVNaK1JpTWwyZllCMWtHa2hh
+dHJ3dE5qd2tqRlB6dUpQUEU2N2hDSnRLN1pRM0NuN01KM1JhRVliWkJlRjRFVVVxUVVKSXV5T0VSV0RJ
+bFJORCt3PT0K
+    2. In your Kubernetes pod manifest file, specify the following lines
+       to mount the Kubernetes secret in your container.
+       The example below mounts the ticket in
+       /tmp/mapr_ticket/CONTAINER_TICKET:
+env:
+- name: MAPR_TICKETFILE_LOCATION
+      value: "/tmp/mapr_ticket/CONTAINER_TICKET"
+
+volumeMounts:
+- mountPath: /tmp/mapr_ticket
+      name: maprticket
+      readOnly: true
+
+volumes:
+  - name: maprticket
+    secret:
+      secretName: dsr-ticket-secret
+
+   The following table summarizes the parameters that you must set in your
+   YAML file and pod manifest. The values are highlighted in bold in the
+   examples:
+                Parameter Description               Value in Example
+   Name of ticket file in your container            CONTAINER_TICKET
+   Mount path for the ticket file in your container /tmp/mapr_ticket
+   Name of Kubernetes secret                        dsr-ticket-secret
+   Name of volume for mounting the secret           maprticket
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb

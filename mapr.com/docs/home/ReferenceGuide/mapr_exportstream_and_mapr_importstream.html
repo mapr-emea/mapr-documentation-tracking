@@ -1,0 +1,98 @@
+mapr exportstream and mapr importstream
+
+   Use these utilities together to export data from MapR streams into
+   binary sequence files, and then import the data from the binary
+   sequence files into other MapR streams. You can also use the mapr
+   importstream utility to import changes that are specified in sequence
+   files output by the mapr diffstreams utility.
+     * [1]Syntax of mapr exportstream
+     * [2]Parameters of mapr exportstream
+     * [3]Syntax of mapr importstream
+     * [4]Parameters of mapr importstream
+
+Required Permissions
+
+   To use the mapr exportstream utility, you must have the following
+   permissions:
+     * The readAce permission on the volume where the source stream for
+       mapr exportstream is located.
+     * The writeAce permission on the volume in which to save the output
+       from mapr exportstream.
+     * On the source stream: either consumeperm or copyperm
+     * On the destination directory: write permission
+
+   To use the mapr importstream utility, you must have the following
+   permissions:
+     * The readAce permission on the volume where the files output by mapr
+       exportstream is located.
+     * The writeAce permission on the volume in which the destination
+       stream is located.
+     * On the source directory: read permission on the directory and all
+       of the files within it
+     * On the destination stream: either copyperm or all three of the
+       following permissions: produceperm, consumeperm, topicperm
+
+   For information about how to set permissions on volumes, see [5]Setting
+   Whole Volume ACEs.
+
+   For information about how to set permissions on streams, see
+   [6]Enabling Table and Stream Authorizations with ACEs.
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run these utilities unless that user is given
+   the relevant permission or permissions with access-control expressions.
+
+Syntax of mapr exportstream
+
+mapr exportstream
+-src <srcStream>
+-dst <dstDir>
+[-mapreduce true/false default:false]
+
+Parameters of mapr exportstream
+
+   Description Parameter
+   src The stream to export data from.
+   dst The directory within the MapR filesystem to export the files to.
+   This directory must already exist before you run the utility.
+   mapreduce
+
+   A Boolean value that specifies whether or not to use a MapReduce
+   program to perform the operation. The default, preferred method is to
+   use a MapReduce program (true).
+
+   When this parameter is set to false, a client process uses multiple
+   threads.
+
+Syntax of mapr importstream
+
+mapr importstream
+-src Input binary file or directory path
+-dst Destination stream
+[-mapreduce true/false default:false]
+
+Parameters of mapr importstream
+
+   Description                    Parameter
+   src The path of the binary file or files to import.
+   Examples
+-src /temp/part0
+-src /temp/*
+
+   dst         The stream to import data into.
+   mapreduce
+
+   A Boolean value that specifies whether or not to use a MapReduce
+   program to perform the operation. The default, preferred method is to
+   use a MapReduce program (true).
+
+   When this parameter is set to false, a client process uses multiple
+   threads.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_exportstream_and_mapr_importstream.html#mapr_exportstream_and_mapr_importstream__se_syn
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_exportstream_and_mapr_importstream.html#mapr_exportstream_and_mapr_importstream__se_prm
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_exportstream_and_mapr_importstream.html#mapr_exportstream_and_mapr_importstream__si_syn
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_exportstream_and_mapr_importstream.html#mapr_exportstream_and_mapr_importstream__si_prm
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html

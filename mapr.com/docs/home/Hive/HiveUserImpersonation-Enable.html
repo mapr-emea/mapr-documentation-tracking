@@ -1,0 +1,94 @@
+Enable User Impersonation
+
+On non-secure clusters
+
+    1. Set the following properties in the
+       /opt/mapr/hive/<version>/conf/hive-site.xml file on the nodes where
+       HiveServer2 is installed:
+<property>
+  <name>hive.server2.enable.doAs</name>
+  <value>true</value>
+  <description>Set this property to enable impersonation in Hive Server 2</descr
+iption>
+</property>
+<property>
+  <name>hive.metastore.execute.setugi</name>
+  <value>true</value>
+  <description>Set this property to enable Hive Metastore service impersonation
+in non-secure mode. In non-secure mode, setting this property to true will cause
+ the metastore to execute DFS operations using the client's reported user and gr
+oup permissions. Note that this property must be set on both the client and serv
+er sides. If the client sets it to true and the server sets it to false, the cli
+ent setting will be ignored.</description>
+</property>
+    2. Set the following property
+       /opt/mapr/hive/<version>/conf/hive-site.xml file on the nodes where
+       Hive Metastore is installed:
+<property>
+  <name>hive.metastore.execute.setugi</name>
+  <value>true</value>
+  <description>Set this property to enable Hive Metastore service impersonation
+in non-secure mode. In non-secure mode, setting this property to true will cause
+ the metastore to execute DFS operations using the client's reported user and gr
+oup permissions. Note that this property must be set on both the client and serv
+er sides. If the client sets it to true and the server sets it to false, the cli
+ent setting will be ignored.</description>
+</property>
+
+On secure (MAPR-SASL and Kerberos) clusters
+
+    1. Set the following properties in the
+       /opt/mapr/hive/<version>/conf/hive-site.xml file on the nodes where
+       HiveServer2 is installed:
+<property>
+  <name>hive.server2.enable.doAs</name>
+  <value>true</value>
+  <description>Set this property to enable impersonation in Hive Server 2</descr
+iption>
+</property>
+<property>
+  <name>hive.metastore.execute.setugi</name>
+  <value>false</value>
+  <description>Set this property to enable Hive Metastore service impersonation
+in non-secure mode. In non-secure mode, setting this property to true will cause
+ the metastore to execute DFS operations using the client's reported user and gr
+oup permissions. Note that this property must be set on both the client and serv
+er sides. If the client sets it to true and the server sets it to false, the cli
+ent setting will be ignored.</description>
+</property>
+    2. Set the following property
+       /opt/mapr/hive/<version>/conf/hive-site.xml file on the nodes where
+       Hive Metastore is installed:
+<property>
+  <name>hive.metastore.execute.setugi</name>
+  <value>false</value>
+  <description>Set this property to enable Hive Metastore service impersonation
+in non-secure mode. In non-secure mode, setting this property to true will cause
+ the metastore to execute DFS operations using the client's reported user and gr
+oup permissions. Note that this property must be set on both the client and serv
+er sides. If the client sets it to true and the server sets it to false, the cli
+ent setting will be ignored.</description>
+<property>
+       Note: The hive.metastore.execute.setugi property is set to false
+       automatically after /opt/mapr/server/configure.sh -R is running.
+
+On both secure and non-secure clusters
+
+   On nodes where the Resource Manager and the Node Manager are installed,
+   set the following properties in the
+   /opt/mapr/hadoop/hadoop-<version>/etc/hadoop/core-site.xml file:
+<property>
+  <name>hadoop.proxyuser.mapr.groups</name>
+  <value>*</value>
+  <description>Allow the superuser mapr to impersonate any member of any group</
+description>
+</property>
+<property>
+  <name>hadoop.proxyuser.mapr.hosts</name>
+  <value>*</value>
+  <description>The superuser can connect from any host to impersonate a user</de
+scription>
+</property>
+
+   Warning: The impersonated user must have write permissions to
+   /user/hive/warehouse and /user/mapr-user/tmp/hive directories.

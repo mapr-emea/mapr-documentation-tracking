@@ -1,0 +1,38 @@
+Viewing Audit Logs for Cluster Administration
+
+   Entries for audit logs are initially held in memory until 128
+   operations have been logged or 10 seconds have elapsed, whichever
+   happens first. At that point, the new log entries are flushed to disk.
+
+   Audit logs are in JSON format, so they can be queried by Drill or
+   processed by other third-party tools or your own scripts.
+
+   Audit logs are readable only by the mapr and root users on the cluster
+   where the logs are located. These users can also copy and delete audit
+   logs.
+
+   The status field in every log entry shows the status of the attempted
+   operation. The status codes are taken from the Linux errno.h file. For
+   a list of these codes, see [1]Status Codes That Can Appear in Audit
+   Logs.
+
+   Audit logs use Coordinated Universal Time (UTC) in the records of
+   audited operations.
+
+   The cleanup of old audit log files is handled by Warden either when
+   they are older than 10 days (the default retention time) or when they
+   are older than the number of days set for the log.retention.time
+   parameter in the /opt/mapr/conf/warden.conf file. To prevent Warden
+   from removing the log files, by default, cldbaudit* and authaudit* are
+   listed under the log.retention.exceptions parameter in the warden.conf
+   file.
+
+   To enable Warden to automatically cleanup log files, remove cldbaudit*
+   and authaudit* from the log.retention.exceptions parameter in the
+   warden.conf file and, if you want a shorter cleanup time, set the value
+   for log.retention.time parameter in the warden.conf file. The value for
+   log.retention.time must be specified in milliseconds.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AuditLogs-StatusCodes.html

@@ -1,0 +1,99 @@
+Configuring Multiple Drill Clusters within a MapR Cluster and Designating a
+Drill Cluster as a OJAI Distributed Query Service Provider
+
+   As of MapR 6.0 and Drill 1.11, you can run operational queries through
+   the OJAI Distributed OJAI Distributed Query Service, as well as
+   analytical queries through Drill. If you want to run operational and
+   analytical workloads in your MapR cluster, you must configure multiple
+   Drill clusters within the MapR cluster and then configure a Drill
+   cluster as an OJAI Distributed OJAI Distributed Query Service provider.
+   Restricting each workload to its own cluster improves query
+   performance.
+   Note: Installing Drill and the OJAI Distributed OJAI Distributed Query
+   Service together through the MapR Installer is not currently supported.
+   MapR supports only one of these services running in the cluster unless
+   you manually install and configure multiple Drill clusters, as
+   instructed here.
+
+Data Distribution
+
+   If you install both Drill and the OJAI Distributed OJAI Distributed
+   Query Service through the MapR Installer, both workloads get processed
+   across the entire MapR cluster. When both services run together in the
+   cluster, the system replicates data across the entire cluster, causing
+   remote reads and impairing performance, which can cause missed SLAs and
+   memory issues.
+
+Memory Allocation
+
+   The amount of memory allocated to Drill and the OJAI Distributed Query
+   Service differ. By default, when you install Drill, 13 GB of memory is
+   allocated to the Drillbit service running on a node, as follows:
+     * 8 GB direct
+     * 4 GB heap
+     * 1 GB core cache
+
+   The OJAI Distributed Query Service requires much less memory than
+   Drill. By default, the OJAI Distributed Query Service is allocated ~ 5
+   GB of memory, as follows:
+     * 1 GB direct
+     * 3 GB heap
+     * 512 MB core cache
+
+   If you install using the MapR Installer and select both Drill and the
+   OJAI Distributed Query Service, memory is configured for Drill. If you
+   only run operational queries, which do not use as much memory as
+   analytical queries, you give up an additional 8 GB of memory
+   unnecessarily.
+
+How to Run Drill and the OJAI Distributed Query Service Together in a MapR
+Cluster
+
+   You can manually install Drill on several nodes and divide the nodes
+   into multiple topologies (Drill clusters). For each of the topologies
+   you create and mount a volume. You then create directories within each
+   volume to store your data. You configure these directories as
+   workspaces in the Drill dsf storage plugin. And finally, you can
+   configure any of the Drill clusters to run as a OJAI Distributed Query
+   Service provider.
+   The following table briefly describes each step required to configure
+   multiple Drill clusters and then configure a Drill cluster as a OJAI
+   Distributed Query Service provider:
+   Step Description
+   [1]1-Plan the cluster You can create multiple Drill clusters. Decide
+   which nodes to include in each cluster, and decide which cluster to use
+   as the cluster that you will ultimately configure as the OJAI
+   Distributed Query Service provider.
+   [2]2-Manually install Drill on all nodes This process does not work if
+   you install Drill or the OJAI Distributed Query Service using the MapR
+   Installer. You must manually install Drill on each node, regardless of
+   what cluster it will belong to. You can install Drill to run under
+   Warden or YARN.
+   [3]3-Define node topologies Define a node topology for each Drill
+   cluster.
+   [4]4-Create volumes Create a volume with a mount point for each
+   topology. Create a directory within each mount point and copy data into
+   the directories.
+   [5]5-Configure multiple Drill clusters On each node, update the
+   drill-override.conf configuration file to indicate the Drill cluster to
+   which the node belongs.
+   [6]6-Configure workspaces Create a workspace for each directory where
+   data is stored.
+
+   [7]7-Configure a Drill Cluster as a OJAI Distributed Query Service
+   Provider
+   Run a command to configure a Drill cluster as the OJAI Distributed
+   Query Service provider. This cluster will run all of the operational
+   queries.
+   The following topics provide instructions for each of the required
+   steps:
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/step-1-plan-cluster.html#step-1-plan-cluster
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/step-2-manually-install-drill.html#step-2-manually-install-drill
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/step-3-define-node-topology.html#step-3-define-node-topology
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/step-4-create-volumes.html#step-4-create-volumes
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/step-5-config-multiple-drill-clusters.html#step-5-config-multiple-drill-clusters
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/step-6-config-workspaces.html#step-6-config-workspaces
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/step-7-config-drill-cluster-as-qs.html#step-7-config-drill-cluster-as-qs

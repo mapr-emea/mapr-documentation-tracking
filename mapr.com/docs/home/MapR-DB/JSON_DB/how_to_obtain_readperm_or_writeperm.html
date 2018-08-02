@@ -1,0 +1,88 @@
+Obtaining readperm or writeperm on Fields
+
+   In this scenario, you want to perform an operation on a field, and the
+   operation requires that you have readperm or writeperm permissions on
+   that field. How you obtain either permission depends on whether the
+   field is in the default column family or a non-default column family.
+
+When the field is in the default column family
+
+   In the document below, you want to perform an operation on field c,
+   which is in the default column family. The operation requires you to
+   have readperm or writeperm on field c.
+
+   Figure: Schematic diagram of an JSON document in which all fields are
+   in the default column family
+   [read_write_permissions_1.png]
+
+   Case 1: You have the same permission (readperm or writeperm) on the
+          default column family
+          In this case, field c inherits the permission, assuming that the
+          permission was not denied on field a or b.
+
+          If you do not have readperm or writeperm on field a or b, you
+          need traverseperm on the field that denied you the permission
+          that you need. You also need readperm or writeperm explicitly
+          granted to you on field c.
+
+          Example commands to grant these permissions:
+
+maprcli table cf colperm set -path <path to JSON table> -cfname
+default -name a.b -traverseperm u:<user ID> | <existing ACE for this field>
+
+          The next example command grants readperm:
+
+maprcli table cf colperm set -path <path to JSON table> -cfname
+default -name a.b.c -readperm u:<user ID> | <existing ACE for this field>
+
+   Case 2: You do not have the same permission (readperm or writeperm) on
+          the default column family
+          In this case, you need the traverseperm permission on the
+          default column family. You also need readperm or writeperm
+          explicitly granted to you on field c.
+
+          Example commands to grant these permissions:
+
+maprcli table cf edit -path <path to JSON table> -cfname cf1
+-traverseperm u:<user ID> | <existing ACE for this field>
+
+          This next example command grants readperm:
+
+maprcli table cf colperm set -path <path to JSON table> -cfname cf1
+-name a.b.c -readperm u:<user ID> | <existing ACE for this field>
+
+When the field is in a non-default column family
+
+   Note: Non-default column families are an advanced feature of MapR-DB's
+   native JSON support. For information about them, see [1]Column Families
+   in JSON Tables.
+
+   In the document below, you want to perform an operation on field c,
+   which is in the column family that is defined at field b with the path
+   a.b. The operation requires you to have readperm or writeperm on field
+   c.
+
+   Figure: Schematic diagram of an JSON document in which fields b and c
+   are in a column family that has the path a.b
+   [read_write_permissions_2.png]
+
+   Case 1: You do not have the permission you need (readperm or writeperm)
+          on field b
+          You need traverseperm on field b, and you need readperm or
+          writeperm granted to you explicitly on field c.
+
+          Example commands to grant these permissions:
+
+maprcli table cf edit -path <path to JSON table> -cfname cf1
+-traverseperm u:<user ID> | <existing ACE for this field>
+maprcli table cf colperm set -path <path to JSON table> -cfname cf1
+-name a.b.c -readperm u:<user ID> | <existing ACE for this field>
+
+   Case 2: You do have the permission you need (readperm or writeperm) on
+          field b
+          You do not need any further permissions. Field c inherits your
+          readperm and writeperm permissions from field b.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/column_families_in_json_tables.html#column_families_in_json_tables

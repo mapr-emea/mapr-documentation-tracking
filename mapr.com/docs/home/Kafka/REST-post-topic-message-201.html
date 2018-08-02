@@ -1,0 +1,57 @@
+Kafka REST 2.0.1: POST /topics/{topic:string}
+
+   Produces messages into a topic with the following behavior.
+
+Description
+
+   Depending on the configuration, the type of information retrieved has
+   different behavior. See the streams.default.stream parameter in
+   [1]Kafka REST 2.0.1: Configuration Parameters
+
+   CAPTION: Table 1. Response Behavior
+
+            Parameters Defined           Response
+   streams.default.stream is defined
+
+   Produces messages into specific MapR-ES topics. If the topic name does
+   not contain a stream path, then the default stream path is used.
+   streams.default.stream is not defined
+
+   Produces messages into a MapR-ES topic. The topic name should contain a
+   stream path and be encoded.
+   Note: If the topic does not exist, the following error results:
+   [“error_code”:40401, “message”: ”Topic not found.”}. New topics are not
+   created by the POST operation.
+
+   CAPTION: Table 2. Parameters
+
+        Parameters                      Description
+   topic_name (string) Name of the topic to produce the messages to.
+
+Syntax
+
+http://<host>:8082/topics/<topic_string>
+
+Request Example
+
+   This example produces a message using binary embedded data with the
+   value, Kafka, to the topic, test.
+curl -X POST -H "Content-Type: application/vnd.kafka.binary.v1+json" --data '{"r
+ecords":[{"value":"S2Fma2E="}]}' "http://localhost:8082/topics/test"
+
+Response Example
+
+{"offsets":
+    [{
+        "partition":0,
+        "offset": 1,
+        "error_code":null,
+        "error":null
+      }],
+  "key_schema_id":null,
+  "value_schema_id":null
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/REST-config-parameters-201.html

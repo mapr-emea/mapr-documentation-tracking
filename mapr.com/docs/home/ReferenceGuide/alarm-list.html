@@ -1,0 +1,159 @@
+alarm list
+
+   Lists alarms in the system. Permissions required: login.
+
+   You can list all alarms, alarms by type (Cluster, Node or Volume), or
+   alarms on a particular node or volume. To retrieve a count of all alarm
+   types, pass 1 in the summary parameter. You can specify the alarms to
+   return by filtering on type and entity. Use start and limit to retrieve
+   only a specified window of data.
+
+Syntax
+
+   CLI
+
+maprcli alarm list
+    [ -alarm <alarm name> ]
+    [ -all ]
+    [ -cluster <cluster name> ]
+    [ -entity <host name or volume name or Ae name> ]
+    [ -history ]
+    [ -limit <limit> ]
+    [ -muted ]
+    [ -output (terse|verbose) ]
+    [ -sortby ]
+    [ -start <offset> ]
+    [ -summary (0 or false|1 or true) ]
+    [ -type (cluster|node|volume|AE) ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host>:<port>/rest/alarm/list?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   alarm The alarm name for which to return information.
+   all The list of all raised and muted alarms.
+   cluster The cluster on which to list alarms.
+   entity The name of the cluster, node, volume, user, or group to check
+   for alarms.
+   history The list of all alarms cleared in the last 30 days. Muted
+   alarms are not displayed in the output.
+   limit The number of records to retrieve. Default: 2147483647
+   muted The list of alarms that are muted.
+   output Whether the output should be terse or verbose. Default: verbose
+   sortby Specifies one of the following attributes to sort the list of
+   alarms by: alarmid, alarmname, alarmdescripton, alarmtype, alarmstate,
+   alarmraised, alarmcleared, alarmentity, alarmemail,
+   alarmaggregateemail, alarmindividualemail, alarmthreshold. By default,
+   the list of alarms are sorted by alarmtype.
+   start The list offset at which to start. Default: 0
+   summary Specifies the type of data to return:
+     * 1 = count by alarm type
+     * 0 = List of alarms
+
+   Default: false (0)
+   type The entity type:
+     * cluster
+     * node
+     * volume
+     * ae
+
+Output
+
+   Information about one or more named alarms on the cluster, or for a
+   specified node, volume, user, or group.
+
+   Output Fields
+
+   Field
+
+   Description
+
+   alarm state
+
+   State of the alarm:
+     * 0 = Clear
+     * 1 = Raised
+
+   description
+
+   A description of the condition that raised the alarm
+
+   entity
+
+   The name of the volume, node, user, or group.
+
+   alarm name
+
+   The name of the alarm.
+
+   alarm statechange time
+
+   The date and time the alarm was most recently raised.
+
+   Sample Output
+alarm state  description
+      entity                               alarm name                          a
+larm statechange time
+1            Volume desired replication is 1, current replication is 0
+      mapr.qa-node173.qa.prv.local.logs    VOLUME_ALARM_DATA_UNDER_REPLICATED  1
+296707707872
+1            Volume data unavailable
+      mapr.qa-node173.qa.prv.local.logs    VOLUME_ALARM_DATA_UNAVAILABLE       1
+296707707871
+1            Volume desired replication is 1, current replication is 0
+      mapr.qa-node235.qa.prv.local.mapred  VOLUME_ALARM_DATA_UNDER_REPLICATED  1
+296708283355
+1            Volume data unavailable
+      mapr.qa-node235.qa.prv.local.mapred  VOLUME_ALARM_DATA_UNAVAILABLE       1
+296708283099
+1            Volume desired replication is 1, current replication is 0
+      mapr.qa-node175.qa.prv.local.logs    VOLUME_ALARM_DATA_UNDER_REPLICATED  1
+296706343256
+
+Examples
+
+   List a summary of all alarms
+
+   CLI
+
+maprcli alarm list -summary 1
+
+   REST
+
+https://r1n1.sj.us:8443/rest/alarm/list?summary=1
+
+   List cluster alarms
+
+   CLI
+
+maprcli alarm list -type cluster
+
+   REST
+
+https://r1n1.sj.us:8443/rest/alarm/list?type=cluster
+
+   List all muted alarms
+
+   CLI
+
+# maprcli alarm list -muted
+mute duration muted time    mute upto     entity  alarm name
+15 mins       1495702964190 1495703864190 CLUSTER CLUSTER_ALARM_LICENSE_NEAR_EXP
+IRATION
+15 mins       1495702964192 1495703864192 vol3    VOLUME_ALARM_DATA_UNDER_REPLIC
+ATED
+10 mins       1495702899201 1495703499201 vol2    VOLUME_ALARM_DATA_UNDER_REPLIC
+ATED
+15 mins       1495702964188 1495703864188 vol1    VOLUME_ALARM_DATA_UNDER_REPLIC
+ATED
+
+   REST API
+
+https://r1n1.sj.us:8443/rest/alarm/list?muted

@@ -1,0 +1,99 @@
+Turning Compression On or Off on Directories Using the CLI
+
+   You can turn compression on or off for a given directory in two ways:
+     * Set the value of the Compression attribute in the
+       [1].dfs_attributes file at the top level of the directory.
+          + Set Compression=lzf|lz4|zlib to turn compression on for a
+            directory.
+          + Set Compression=false to turn compression off for a directory.
+     * Use the command [2]hadoop mfs -setcompression on|off/lzf/lz4/zlib
+       <dir|table>.
+
+   If you choose -setcompression on without specifying an algorithm, lz4
+   is used by default. This algorithm has improved compression speeds for
+   MapR's block size of 64 KB.
+
+   The symbols for the various compression settings are explained here:
+
+   Symbol
+
+   Compression Setting
+
+   Z
+
+   lz4
+
+   z
+
+   zlib
+
+   L
+
+   lzf
+
+   U
+
+   Uncompressed, or previously compressed by another algorithm
+
+Example
+
+   Suppose the volume test is NFS-mounted at
+   /mapr/my.cluster.com/projects/test. You can turn off compression by
+   editing the file /mapr/my.cluster.com/projects/test/.dfs_attributes and
+   setting Compression=false. To accomplish the same thing from the hadoop
+   shell, use the following command:
+hadoop mfs -setcompression off /projects/test
+
+   You can view the compression settings for directories using the
+   [3]hadoop mfs -ls command. For example,
+vrwxr-xr-x  Z U U   3 mapr mapr         11 2017-12-01 14:00  268435456 /.rw
+               p mapr.cluster.root writeable 2049.36.131352 -> 2049.16.2  doc24.
+lab:5660
+vrwxr-xr-x  Z U U   3 mapr mapr          0 2017-12-01 13:58  268435456 /abcd
+               p abcd default 2049.1143.264886 -> 2181.16.2  doc24.lab:5660
+vrwxrwxrwx  Z U U   3 root root          0 1969-12-31 16:00  268435456 /abcdMirr
+or
+               p abcdMirror default 2049.1144.264888 -> 2182.16.2  doc24.lab:566
+0
+vrwxr-xr-x  Z U U   3 mapr mapr          1 2017-11-28 08:13  268435456 /apps
+               p mapr.apps default 2049.33.131346 -> 2051.16.2  doc24.lab:5660
+vrwxr-xr-x  U U U   3 mapr mapr          0 2017-11-28 08:07   67108864 /hbase
+               p mapr.hbase default 2049.39.131358 -> 2064.16.2  doc24.lab:5660
+drwxr-xr-x  Z U U   - mapr mapr          4 2017-11-28 08:13  268435456 /installe
+r
+               p 2049.40.131360  doc24.lab:5660
+drwxr-xr-x  Z U U   - mapr mapr          1 2017-11-28 08:15  268435456 /oozie
+               p 2049.203.131686  doc24.lab:5660
+vrwxr-xr-x  Z U U   3 mapr mapr          0 2017-11-28 08:06  268435456 /opt
+               p mapr.opt default 2049.38.131356 -> 2061.16.2  doc24.lab:5660
+vrwxrwxrwx  Z U U   3 mapr mapr          0 2017-11-28 08:27  268435456 /tmp
+               p mapr.tmp default 2049.32.131344 -> 2050.16.2  doc24.lab:5660
+vrwxr-xr-x  Z U U   3 mapr mapr          2 2017-11-28 08:12  268435456 /user
+               p users default 2049.37.131354 -> 2060.16.2  doc24.lab:5660
+drwxr-xr-x  Z U U   - mapr mapr          1 2017-11-28 08:05  268435456 /var
+               p 2049.34.131348  doc24.lab:5660
+
+   Suppose three directories abc, klm, and xyz. You can turn on
+   compression and set different compression algorithm for the directories
+   by running the following commands:
+# hadoop mfs -setcompression on /ksTestVol1/abc
+# hadoop mfs -setcompression lzf /ksTestVol1/klm
+# hadoop mfs -setcompression zlib /ksTestVol1/xyz
+
+   You can then view the compression settings for the directories using
+   the [4]hadoop mfs -ls command. For example:
+# hadoop mfs -ls /ksTestVol1/
+Found 3 items
+drwxr-xr-x  Z U U   - root root    0 2017-12-11 08:41  268435456 /ksTestVol1/abc
+               p 2432.32.131194  doc24.lab:5660
+drwxr-xr-x  L U U   - root root    0 2017-12-11 08:42  268435456 /ksTestVol1/klm
+               p 2432.34.131198  doc24.lab:5660
+drwxr-xr-x  z U U   - root root    0 2017-12-11 08:42  268435456 /ksTestVol1/xyz
+               p 2432.33.131196  doc24.lab:5660
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dfs_attributes.html#dfs_attributes
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

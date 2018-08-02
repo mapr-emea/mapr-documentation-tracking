@@ -1,0 +1,20 @@
+Removing a ZooKeeper Role
+
+   The following steps describe how to remove the ZooKeeper role from a
+   node:
+    1. Issue the following command to stop ZooKeeper on the node:
+% service mapr-zookeeper stop
+    2. Purge the ZooKeeper package mapr-zookeeper.
+    3. Run configure.sh.
+       Use the -Z option and provide the list of ZooKeeper nodes that
+       excludes the node where you removed the role.
+    4. Perform a rolling restart of ZooKeeper on all other ZooKeeper
+       nodes.
+       A rolling restart of ZooKeeper means restart ZooKeeper on each
+       node, one at a time, pausing until the last restart finishes before
+       beginning the next. Restart the ZooKeeper leader last.
+    5. Issue the following command to verify that ZooKeeper is healthy and
+       that the expected nodes adopted the ZooKeeper node:
+% service mapr-zookeeper qstatus
+    6. Perform a rolling restart of Warden on all other nodes.
+       Warden picks up the revised quorum.

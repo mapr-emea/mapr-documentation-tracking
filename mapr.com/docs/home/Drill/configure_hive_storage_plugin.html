@@ -1,0 +1,88 @@
+Configuring the Hive Storage Plugin
+
+   Drill can work with only one version of Hive in a given cluster. To
+   access Hive tables using custom SerDes or InputFormat/OutputFormat, all
+   nodes running Drill must have the SerDes or InputFormat/OutputFormat
+   JAR files in the following location:
+   <drill_installation_directory>/jars/3rdparty.
+   To query across multiple versions of Hive from Drill, install each
+   version of Hive on a separate cluster. For example, you have Drill and
+   Hive 0.13 deployed in a production cluster, while a customer is testing
+   Hive 1.0 on a test cluster. Drill can query data from Hive tables on
+   the test cluster as well as Hive tables on the production cluster. You
+   must define separate storage plugins, each corresponding to a specific
+   Hive version of the metastore.
+   Note: As of Drill 1.13, Drill contains updated Hive libraries with Hive
+   version 2.1.1-mapr-1710. With this update, Drill supports queries on
+   transactional (ACID) and non-transactional Hive bucketed ORC tables.
+   The updated libraries are backward compatible with earlier versions of
+   the Hive server and metastore.
+
+   Configuring a Hive Remote Metastore
+   A remote Hive metastore configuration runs as a separate service
+   outside of Hive. The metastore service communicates with the Hive
+   database over JDBC. Point Drill to the Hive metastore service address,
+   and provide the connection parameters in the hive storage plugin
+   configuration to configure a connection to Drill. The hive storage
+   plugin (located on the Storage tab in the Drill Web Console) has the
+   following default configuration when you install Drill:
+{
+ "type": "hive",
+ "enabled": true,
+ "configProps": {
+  "hive.metastore.uris": "",
+  "javax.jdo.option.ConnectionURL": "jdbc:derby:;databaseName=../sample-data/dri
+ll_hive_db;create=true",
+  "hive.metastore.warehouse.dir": "/tmp/drill_hive_wh",
+  "fs.default.name": "file:///",
+  "hive.metastore.sasl.enabled": "false",
+  "datanucleus.schema.autoCreateAll": "true"
+ }
+}
+
+   Complete the following steps to modify the default hive storage plugin
+   configuration for your MapR-FS environment:
+    1. Verify that Hive is running.
+    2. Issue the following command to start the Hive metastore service on
+       the system specified in the hive.metastore.uris: hive --service
+       metastore
+    3. [1]Start the Drill Web Console.
+    4. Select the Storage tab. If [2]Web Console security is enabled, you
+       must have administrator privileges to perform this step.
+    5. In the list of disabled storage plugins in the Drill Web Console,
+       click Update next to hive.
+    6. Update the following hive storage plugin parameters to match the
+       system environment:
+          + "hive.metstore.uris"
+          + "jdbc:<database>://<host:port>/<metastore database>"
+          + Change the default location of files to suit your environment.
+            For example, change "fs.default.name": "file:///" to the
+            MapR-FS location: maprfs:///
+          + To run Drill and Hive in a secure MapR cluster, change the
+            "hive.metastore.sasl.enabled" parameter to "true".
+          + Change the "datanucleus.schema.autoCreateAll" property setting
+            for your system environment. When enabled,
+            "datanucleus.schema.autoCreateAll" initializes the Hive
+            metastore schema.
+               o In a production environment, remove the
+                 "datanucleus.schema.autoCreateAll" property from the hive
+                 storage plugin configuration; the property is not
+                 required because the preferred schema information is
+                 already created for the Hive metastore service.
+               o In a test environment with an embedded Hive metastore,
+                 you can disable (set to false) this property after the
+                 first query on the Hive data source that you submit from
+                 Drill. Alternatively, use the [3]Hive schema tool to
+                 initialize or upgrade the Hive metastore schema. Using
+                 the Hive schema tool is recommended for queries on
+                 transactional tables. Run the schematool command as an
+                 initialization step, as shown:
+/opt/mapr/hive/hive-<version>/bin/schematool -dbType <databaseType> -initSchema
+    7. Click Enable in the Web Console to enable the Hive storage plugin
+       configuration.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/start_the_web_console.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/ConfigWebConsolSecurity.html#ConfigWebConsolSecurity
+   3. https://cwiki.apache.org/confluence/display/Hive/Hive+Schema+Tool#HiveSchemaTool-MetastoreSchemaVerification

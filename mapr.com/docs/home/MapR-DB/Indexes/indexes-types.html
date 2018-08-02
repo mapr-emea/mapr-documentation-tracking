@@ -1,0 +1,155 @@
+Types of Secondary Indexes
+
+   MapR-DB JSON supports several index types, including simple indexes,
+   composite indexes, hashed indexes, and indexes with casting. This
+   section describes the properties of these indexes and the situations
+   where each provides value.
+
+   The following diagram illustrates the different properties of indexes
+   and index fields. Lines connecting properties represent properties that
+   can be used in combination with one another. Click on the text in the
+   diagram for a description of each property.
+   [1][USEMAP:IndexProperties.png]
+
+Indexed vs Included Fields
+
+   An index consists of indexed and included fields. Indexed fields are
+   also referred to as index keys. The following lists describe the
+   characteristics of each type of field:
+
+   Indexed Fields
+
+          + Determine the sort order of the index and the order of the
+            query result when used
+          + Allow filter conditions and ORDER BY conditions defined on
+            these fields to be optimized
+
+   Included Fields
+
+          + Do not affect the sort order of the index or the order of the
+            query result
+          + Prevent reads of the JSON table
+
+   In general, you should define indexed fields on fields you filter and
+   order on, and included fields on fields you reference but do not filter
+   and order.
+
+   The following example illustrates when you would define an indexed vs
+   an included field in your index. Assume you have a MapR-DB JSON table
+   with the following sample data that contains customer information.
+{
+   "_id": "10000",
+   "FullName": {
+      "LastName": "Smith",
+      "FirstName": "John"
+   },
+   "Address": {
+      "Street": "123 SE 22nd St.",
+      "City": "Oakland",
+      "State": "CA",
+      "Zipcode": "94601-1001"
+   },
+   "Gender": "M",
+   "AccountBalance": 999.99,
+   "Email": "john.smith@company.com",
+   "Phones": [
+        {"Type": "Home", "Number": "555-555-1234"},
+        {"Type": "Mobile", "Number": "555-555-5678"},
+        {"Type": "Work", "Number": "555-555-9012"}
+   ],
+   "Hobbies": ["Baseball", "Cooking", "Reading"],
+   "DateOfBirth": "10/1/1985"
+}
+
+   Your query does the following:
+    1. Filters on Address.Zipcode
+    2. Selects FullName.FirstName and FullName.LastName
+
+   Because your query filters on Address.Zipcode, you should include that
+   field as an indexed field. However because you are only selecting on
+   FullName.FirstName and FullName.LastName, it suffices to define the
+   FullName field as an included field.
+maprcli table index add -path /customerInfo -index zipCodeIdx \
+   -indexedfields Address.Zipcode \
+   -includedfields FullName
+
+   There are additional differences in how indexed and included fields
+   behave. The following table summarizes these differences:
+   Indexed Field Included Field
+   There are some restrictions in the data types of indexed fields. See
+   [2]Data Types and Secondary Index Fields for the complete list of
+   types. Data types of included fields can be any type. There is no data
+   type restriction.
+   The collective size of all indexed fields is a maximum of 32KB.
+   Included fields do not affect the size limit of an index.
+   Adding indexed fields increases the cost of key comparisons when
+   scanning the index, due to the increase in the index key size. Adding
+   included fields does not impact the index scan cost.
+
+   Included fields influence whether an index is a covering index for a
+   query. See [3]Covering Indexes for more information about this concept.
+
+Indexed Field Sort Order
+
+   You can define each field in your index key to sort in either ascending
+   or descending order. The default is ascending. Typically, you define
+   the sort order to match the ORDER BY clause in your query. This allows
+   MapR-DB to avoid performing an explicit sort. For example, if you issue
+   queries where you return AccountBalance in descending order, create the
+   following index.
+maprcli table index add -path /customerInfo -index BalanceIdx \
+   -indexedfields AccountBalance:-1
+
+Simple vs Composite Indexes
+
+   Simple indexes are indexes with a single indexed field (or key).
+   Composite indexes have more than one key. In both cases, you can define
+   zero or more included fields. See [4]Simple Indexes and [5]Composite
+   Indexes for additional details.
+
+Hashed vs Non-Hashed Indexes
+
+   By default, indexes are stored in sort order across the index key
+   values. This can lead to hotspots if the sort order of the index keys
+   match the order data is inserted into the JSON table. For example, if
+   the indexed field has monotonically increasing timestamp values, such
+   as the date a document is created, the tail end of the index becomes a
+   hotspot. Hashed indexes avoid hotspotting by evenly distributing index
+   writes across a number of logical partitions.
+   The following example creates a hashed index named idx on table, tab,
+   with a single key, idxKeyCol.
+maprcli table index add -path /tab -index idx -indexedfields idxKeyCol \
+    -hashed true
+
+   See [6]Hashed Indexes for further details.
+
+Casting
+
+   You can CAST individual indexed fields to a specific data type. This is
+   applicable when Drill SQL queries contain CAST expressions. The
+   following example creates an index that casts the age field to an INT
+   type and the height field to a FLOAT type.
+maprcli table index add -path /castTable -index castIdx \
+   -indexedfields '$CAST(age@INT)','$CAST(height@FLOAT)'
+
+   See [7]Using Casts in Secondary Indexes for further details.
+   Note: This feature only applies for queries issued through the Drill
+   SQL interface. The OJAI API does not have CAST support.
+
+References
+
+   1. LYNXIMGMAP:file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#d955014e46
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html#concept_qdg_p5j_t1b
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-singleField-index.html#reference_llf_y1n_pz
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/hashed-index.html#hashed-index
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-functional-index.html#concept_u1s_wll_f1b
+
+[USEMAP]
+file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#d955014e46
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#indexes-types__section_lhh_4pj_r1b TYPE="internal link"
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#indexes-types__section_h21_ppj_r1b TYPE="internal link"
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#indexes-types__section_ict_5fj_r1b TYPE="internal link"
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#indexes-types__section_ngp_npj_r1b TYPE="internal link"
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#indexes-types__section_hz1_qpj_r1b TYPE="internal link"

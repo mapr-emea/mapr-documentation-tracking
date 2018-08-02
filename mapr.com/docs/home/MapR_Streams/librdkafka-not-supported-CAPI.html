@@ -1,0 +1,215 @@
+librdkafka APIs NOT Supported by MapR-ES C Client
+
+   This topic lists the librdkafka APIs that are not supported by the
+   MapR-ES C Client.
+
+   These APIs are also documented in the [1]rdkafka.h as not support by
+   MapR-ES. If you want to see the list of supported librdkafka APIs, see
+   [2]librdkafka APIs Supported by MapR-ES C Client.
+   Note: This list of librdkafka APIs not supported is applicable to MapR
+   6.0.1 and librdkafka 0.11.3.
+
+   CAPTION: Table 1. Supported Apache Kafka librdkafka versions
+
+            MapR release          MEP Release Kafka librdkafka version
+   As of MapR 6.0.1               As of 5.0   0.11.3
+   As of MapR 5.2.1 through 6.0.0 As of 3.0   0.9.0
+RD_EXPORT
+const char *rd_kafka_version_str (void);
+
+RD_EXPORT
+const char *rd_kafka_get_debug_contexts(void);
+
+RD_EXPORT void
+rd_kafka_topic_partition_list_sort (rd_kafka_topic_partition_list_t *rktparlist,
+                                    int (*cmp) (const void *a, const void *b,
+                                                void *opaque),
+                                    void *opaque);
+
+RD_EXPORT
+int64_t rd_kafka_message_latency (const rd_kafka_message_t *rkmessage);
+
+RD_EXPORT
+rd_kafka_conf_t *rd_kafka_conf_dup_filter (const rd_kafka_conf_t *conf,
+                                           size_t filter_cnt,
+                                           const char **filter);
+
+RD_EXPORT
+void rd_kafka_conf_set_dr_cb(rd_kafka_conf_t *conf,
+                              void (*dr_cb) (rd_kafka_t *rk,
+                                             void *payload, size_t len,
+                                             rd_kafka_resp_err_t err,
+                                             void *opaque, void *msg_opaque));
+
+RD_EXPORT
+void rd_kafka_conf_set_throttle_cb (rd_kafka_conf_t *conf,
+                                    void (*throttle_cb) (
+                                            rd_kafka_t *rk,
+                                            const char *broker_name,
+                                            int32_t broker_id,
+                                            int throttle_time_ms,
+                                            void *opaque));
+
+RD_EXPORT
+void rd_kafka_conf_set_log_cb(rd_kafka_conf_t *conf,
+                          void (*log_cb) (const rd_kafka_t *rk, int level,
+                                          const char *fac, const char *buf));
+
+RD_EXPORT
+void rd_kafka_conf_set_stats_cb(rd_kafka_conf_t *conf,
+                                 int (*stats_cb) (rd_kafka_t *rk,
+                                                  char *json,
+                                                  size_t json_len,
+                                                  void *opaque));
+
+RD_EXPORT
+void rd_kafka_conf_set_socket_cb(rd_kafka_conf_t *conf,
+                                  int (*socket_cb) (int domain, int type,
+                                                    int protocol,
+                                                    void *opaque));
+
+RD_EXPORT void
+rd_kafka_conf_set_connect_cb (rd_kafka_conf_t *conf,
+                              int (*connect_cb) (int sockfd,
+                                                 const struct sockaddr *addr,
+                                                 int addrlen,
+                                                 const char *id,
+                                                 void *opaque));
+
+RD_EXPORT void
+rd_kafka_conf_set_closesocket_cb (rd_kafka_conf_t *conf,
+                                  int (*closesocket_cb) (int sockfd,
+                                                         void *opaque));
+
+RD_EXPORT
+void rd_kafka_conf_set_open_cb (rd_kafka_conf_t *conf,
+                                int (*open_cb) (const char *pathname,
+                                                int flags, mode_t mode,
+                                                void *opaque));
+
+RD_EXPORT
+const char **rd_kafka_conf_dump(rd_kafka_conf_t *conf, size_t *cntp);
+
+RD_EXPORT
+void rd_kafka_conf_dump_free(const char **arr, size_t cnt);
+
+RD_EXPORT
+void rd_kafka_conf_properties_show(FILE *fp);
+
+RD_EXPORT
+const char *rd_kafka_name(const rd_kafka_t *rk);
+
+RD_EXPORT
+rd_kafka_type_t rd_kafka_type(const rd_kafka_t *rk);
+
+RD_EXPORT
+char *rd_kafka_memberid (const rd_kafka_t *rk);
+
+RD_EXPORT
+char *rd_kafka_clusterid (rd_kafka_t *rk, int timeout_ms);
+
+RD_EXPORT rd_kafka_resp_err_t
+rd_kafka_pause_partitions (rd_kafka_t *rk,
+                           rd_kafka_topic_partition_list_t *partitions);
+
+RD_EXPORT rd_kafka_resp_err_t
+rd_kafka_resume_partitions (rd_kafka_t *rk,
+                            rd_kafka_topic_partition_list_t *partitions);
+
+RD_EXPORT
+void rd_kafka_mem_free (rd_kafka_t *rk, void *ptr);
+
+RD_EXPORT
+rd_kafka_queue_t *rd_kafka_queue_get_partition (rd_kafka_t *rk,
+                                                const char *topic,
+                                                int32_t partition);
+
+RD_EXPORT
+rd_kafka_resp_err_t rd_kafka_set_log_queue (rd_kafka_t *rk,
+                                            rd_kafka_queue_t *rkqu);
+
+RD_EXPORT
+int rd_kafka_consume_start(rd_kafka_topic_t *rkt, int32_t partition,
+                            int64_t offset);
+
+RD_EXPORT
+int rd_kafka_consume_start_queue(rd_kafka_topic_t *rkt, int32_t partition,
+                                  int64_t offset, rd_kafka_queue_t *rkqu);
+
+RD_EXPORT
+int rd_kafka_consume_stop(rd_kafka_topic_t *rkt, int32_t partition);
+
+RD_EXPORT
+rd_kafka_message_t *rd_kafka_consume(rd_kafka_topic_t *rkt, int32_t partition,
+                                      int timeout_ms);
+
+RD_EXPORT
+ssize_t rd_kafka_consume_batch(rd_kafka_topic_t *rkt, int32_t partition,
+                                int timeout_ms,
+                                rd_kafka_message_t **rkmessages,
+                                size_t rkmessages_size);
+
+RD_EXPORT
+int rd_kafka_consume_callback(rd_kafka_topic_t *rkt, int32_t partition,
+                               int timeout_ms,
+                               void (*consume_cb) (rd_kafka_message_t
+                                                   *rkmessage,
+                                                   void *opaque),
+                               void *opaque);
+
+RD_EXPORT
+rd_kafka_message_t *rd_kafka_consume_queue(rd_kafka_queue_t *rkqu,
+                                            int timeout_ms);
+
+RD_EXPORT
+ssize_t rd_kafka_consume_batch_queue(rd_kafka_queue_t *rkqu,
+                                      int timeout_ms,
+                                      rd_kafka_message_t **rkmessages,
+                                      size_t rkmessages_size);
+
+RD_EXPORT
+int rd_kafka_consume_callback_queue(rd_kafka_queue_t *rkqu,
+                                     int timeout_ms,
+                                     void (*consume_cb) (rd_kafka_message_t
+                                                         *rkmessage,
+                                                         void *opaque),
+                                     void *opaque);
+
+RD_EXPORT
+rd_kafka_resp_err_t rd_kafka_offset_store(rd_kafka_topic_t *rkt,
+                                           int32_t partition, int64_t offset);
+
+RD_EXPORT rd_kafka_resp_err_t
+rd_kafka_offsets_store(rd_kafka_t *rk,
+                       rd_kafka_topic_partition_list_t *offsets);
+
+RD_EXPORT
+rd_kafka_resp_err_t
+rd_kafka_metadata (rd_kafka_t *rk, int all_topics,
+                   rd_kafka_topic_t *only_rkt,
+                   const struct rd_kafka_metadata **metadatap,
+                   int timeout_ms);
+
+RD_EXPORT
+void rd_kafka_metadata_destroy(const struct rd_kafka_metadata *metadata);
+
+RD_EXPORT
+void rd_kafka_dump(FILE *fp, rd_kafka_t *rk);
+
+RD_EXPORT
+int rd_kafka_thread_cnt(void)
+
+RD_EXPORT
+int rd_kafka_unittest (void);
+
+RD_EXPORT
+int rd_kafka_event_log (rd_kafka_event_t *rkev,
+                        const char **fac, const char **str, int *level);
+
+RD_EXPORT
+const char *rd_kafka_event_stats (rd_kafka_event_t *rkev);
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/rdkafka.h.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/librdkafka-supported-CAPI.html

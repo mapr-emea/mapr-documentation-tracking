@@ -1,0 +1,77 @@
+Configuration Properties for MapR-ES C Client
+
+   This topic describes the configuration properties supported by the
+   MapR-ES C Client. This includes librdkafka configuration properties
+   that MapR-ES supports and additional properties that are specific to
+   MapR-ES.
+
+Global Configuration Properties
+
+   Property Name Behavior
+   client.id Same as librdkafka.
+   message.max.bytes Supports a value less than or equal to 10MB
+   (10000000). If this property is set to a value that is higher than
+   10MB, the client issues a warning and sets the configuration to 10MB.
+   Produce calls fail when the message size is greater than 10MB.
+   receive.message.max.bytes Same as librdkafka.
+   topic.blacklist Same as librdkafka.
+   error_cb Same as librdkafka.
+   opaque Same as librdkafka.
+   enable.partition.eof Same as librdkafka. Available as of librdkafka
+   0.11.3. Supported as of MapR 6.0.1.
+   queue.buffering.max.kbytes Same as librdkafka. Available as of
+   librdkafka 0.11.3. Supported as of MapR 6.0.1.
+
+Consumer Configuration Properties
+
+         Property Name             Behavior
+   default_topic_conf         Same as librdkafka.
+   group.id                   Same as librdkafka.
+   enable.auto.commit         Same as librdkafka.
+   auto.commit.interval.ms    Same as librdkafka.
+   rebalance_cb               Same as librdkafka.
+   offset_commit_cb           Same as librdkafka.
+   delivery.report.only.error Same as librdkafka.
+   dr_msg_cb                  Same as librdkafka.
+
+Topic Configuration
+
+   Property Name Behavior
+   partitioner_cb Same as librdkafka.
+   auto.offset.reset Supports the following values: beginning, end,
+   earliest, latest, none, smallest, and largest. As of MapR 6.0.1,
+   beginning and end are supported.
+   Note: librdkafka additionally supports error.
+
+MapR-Specific Configurations
+
+   Property Name Behavior
+   streams.consumer.default.stream Specifies the path and name of the
+   stream that the consumer subscribes to if, when subscribing to a topic,
+   the consumer does not specify a stream. For example, the consumer can
+   specify the name of a stream together with the name of a topic to write
+   to, like this: /<stream>:<topic>.
+   Note: rd_kafka_list groups API uses this consumer configuration to
+   obtain the consumer groups.
+   streams.parallel.flushers.per.partition Enables the producer to have
+   multiple parallel send requests to the server for each topic partition.
+   When this property is set to true, the default value, it is possible
+   for messages to be sent out of order.
+   streams.producer.default.stream Specifies the stream that the producer
+   will use by default if the producer does not provide the name of a
+   stream when specifying a topic to write to. For example, the producer
+   can specify the name of a stream together with the name of a topic to
+   write to, like this: /<stream>:<topic>. However, if the stream is not
+   specified, the value of this configuration parameter is assumed to be
+   the stream in which the topic is located. If the producer specifies the
+   name of a topic without also providing the path and name of the stream,
+   and there is no value for this configuration parameter, MapR-ES assumes
+   that the topic specified is in Apache Kafka and does nothing.
+
+Additional Information
+
+   For more information, see [1]rdkafka.h.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/rdkafka.h.html#concept_a5g_lpq_jz

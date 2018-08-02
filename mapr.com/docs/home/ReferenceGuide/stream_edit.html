@@ -1,0 +1,114 @@
+stream edit
+
+   Edits the values of parameters for the specified stream.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * adminperm permission on the stream
+
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+maprcli stream edit
+         -path Stream Path
+        [ -ttl <Time to live in seconds> ]
+        [ -autocreate true|false ]
+        [ -defaultpartitions <Default partitions per topic> ]
+        [ -compression off|lz4|lzf|zlib ]
+        [ -produceperm <Producer access control expression> default u:creator ]
+        [ -consumeperm <Consumer access control expression> default u:creator ]
+        [ -topicperm <Topic CRUD access control expression> default u:creator ]
+        [ -copyperm <Stream copy access control expression> default u:creator ]
+        [ -adminperm <Stream administration access control expression> default u
+:creator ]
+       [ -defaulttimestamptype timestamp type: createtime | logappendtime. defau
+lt: createtime ]
+
+
+
+
+
+
+
+   REST http[s]://<host>:<port>/rest/stream/edit?path=<path>
+
+Parameters
+
+   Parameter Description
+   path The path and name of the stream to create.
+   ttl Specifies the number of seconds to elapse between the publication
+   of a message in a topic in this stream and the expiration of that
+   message.
+
+   Consumers do not see messages that have expired.
+
+   Messages that have expired are deleted during the next purge process.
+   See [4]Time-to-Live for Messages for details.
+
+   A value of 0 causes messages to be retained indefinitely.
+   autocreate Specifies whether to create a topic automatically when a
+   producer tries to write the first message to it. Values are true and
+   false. The default is true.
+   defaultpartitions Specifies the default number of partitions to
+   allocate to new topics in the stream.
+   compression
+
+   Specifies the compression setting to use for the stream. Producer
+   client libraries can bundle messages that are to be published on the
+   same partition and compress them. The messages are sent to the server
+   compressed, are stored compressed, are replicated to other containers
+   compressed, and (if stream replication is configured) replicated to
+   replica streams compressed. Consumer client libraries receive
+   compressed data, decompresses it, and passes it to client applications.
+
+   Valid options are off, lzf, lz4, and zlib. The default setting is the
+   type of compression that is set for the directory in which the stream
+   is located.
+
+   For more information, see [5]Compression.
+   produceperm Specifies the access-control expression that controls who
+   can publish messages to topics in the stream. See [6]ACE Syntax.
+   consumeperm Specifies the access-control expression that controls who
+   can who can listen to topics in the stream. See [7]ACE Syntax.
+   topicperm Specifies the access-control expression that controls who can
+   create, edit, or remove topics in the stream. See [8]ACE Syntax.
+   copyperm Specifies the access-control expression that controls who can
+   use mapr copystream or mapr diffstreams on the stream. See [9]ACE
+   Syntax.
+   adminperm Specifies the access-control expression that controls who can
+   can modify the other access-control expressions for the stream, set up
+   replication from the stream, and modify attributes of the stream. See
+   [10]ACE Syntax.
+
+   This permission includes the topicperm permission.
+   defaulttimestamptype Specifies the type of timestamp stored in the
+   topic's message. Value: createtime | logappendtime Default: createtime.
+   The topic inherits the default value from the stream unless the topic
+   sets the timestamp type to a different value.
+
+   A createtime value is the time defined by the user or application (when
+   creating the message). If user or application does not define this
+   value (or passes null), the client uses the current system timestamp.
+
+   A logappendtime value is the time when the message (log) was appended
+   to the server.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/time_to_live_for_messages.html#time_to_live_for_messages
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Compression.html#Compression
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions

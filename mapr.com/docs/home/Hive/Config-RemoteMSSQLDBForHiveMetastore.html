@@ -1,0 +1,60 @@
+Configuring a Remote MS SQL SERVER Database for the Hive Metastore
+
+   After installing MS SQL, perform the following steps to configure Hive
+   Metastore on MS SQL.
+    1. Create hiveuser and Metastore schema.
+1>CREATE DATABASE metastore;
+2>GO
+1>CREATE LOGIN <hiveuser> with password='<mypassword>;
+2>CREATE USER <hiveuser> for login <hiveuser>;
+3>GRANT <PRIVILEGES> to <hiveuser>;
+4>GO
+    2. Download JDBC Driver from [1]here, untar the file, and follow
+       instructions in the install.txt file to install the driver.
+    3. Copy the JAR file to /opt/mapr/hive/hive-version>/lib/ directory.
+          + For Java 7
+cp ~/sqljdbc_6.0/enu/jre7/sqljdbc41.jar /opt/mapr/hive/hive-<version>/lib/
+          + For Java 8
+cp ~/sqljdbc_6.0/enu/jre8/sqljdbc42.jar /opt/mapr/hive/hive-<version>/lib/
+    4. Configure the Metastore service to communicate with the MS SQL
+       database by setting the necessary properties (shown below) in the
+       /opt/mapr/hive//hive-<version>/conf/hive-site.xml file.
+       Suppose an MS SQL database running on myhost and the user account
+       hiveuser with the password mypassword, set the following properties
+       (overwriting any existing values) in the hive-site.xml file:
+<property>
+  <name>javax.jdo.option.ConnectionURL</name>
+  <value>jdbc:sqlserver://<SERVER_NAME>:1433;DatabaseName=metastore;</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionDriverName</name>
+  <value>com.microsoft.sqlserver.jdbc.SQLServerDriver</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionUserName</name>
+  <value>hiveuser</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionPassword</name>
+  <value>mypassword</value>
+</property>
+
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://<n.n.n.n>:9083</value>
+  <description>IP address (or fully-qualified domain name) and port of the metas
+tore host</description>
+  </property>
+       Note: Though you can set the same hive-site.xml properties on all
+       the hosts (client, Metastore, HiveServer), hive.metastore.uris is
+       the only property that must be configured on all the hosts; the
+       other properties are only needed on the Metastore host.
+    5. Run schemaTool to create the initial DB structure.
+/opt/mapr/hive/hive-<version>/bin/schematool -dbType mssql -initSchema
+
+References
+
+   1. https://www.microsoft.com/en-us/download/details.aspx?displaylang=en&id=11774

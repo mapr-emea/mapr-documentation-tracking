@@ -1,0 +1,45 @@
+Examining the Cause of Failure
+
+   In the faileddisk.log file, you will see information on the cause of
+   failure. In the sample log output below, the failure reason is I/O
+   error. Notice that the log file also provides instructions for removing
+   disks and adding them back to MapR-FS.
+############################ Disk Failure Report ###########################
+Disk                :    /dev/sdd
+Vendor              :    [vendor]
+Model Number        :    [model]
+Serial Number       :    [serial]
+Firmware Revision   :    [firmware]
+Size                :    [total]
+Failure Reason      :    I/O error
+Time of Failure     :    Fri Jan 31 12:48:00 GMT 2014
+Resolution          :   Please refer to MapR's online documentation at [1]http:/
+/www.mapr.com/doc on how to handle
+        disk failures.
+In summary, run the following steps:
+a. If this appears to be a software failure, go to step
+b. Otherwise, physically remove the disk /dev/sdd. Optionally, replace it with a
+ new disk.
+b. Run the command "maprcli disk remove -host 127.0.0.1 -disks /dev/sdd" to remo
+ve
+        /dev/sdd from MapR-FS.
+c. In addition to /dev/sdd, the above command removes all the disks that belong
+to the same
+        storage pool, from MapR-FS.      Note down the names of all removed disk
+s.
+d. Add all the above removed disks (exclude /dev/sdd) and the new disk to MapR-F
+S by
+   running the command:
+   "maprcli disk add -host 127.0.0.1 -disks <comma separated list of
+      disks>"
+   For example, If /dev/sdx is the new replaced disk, and /dev/sdy, /dev/sdz wer
+e removed in
+        step c), the command would be:
+   "maprcli disk add -host 127.0.0.1 -disks /dev/sdx,/dev/sdy,/dev/sdz"      If
+there is no new disk, the command would just be:                   "maprcli disk
+ add -host 127.0.0.1 -disks
+    /dev/sdy,/dev/sdz"
+
+References
+
+   1. http://www.mapr.com/doc

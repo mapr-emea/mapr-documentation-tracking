@@ -1,0 +1,66 @@
+Including and/or Excluding Operations
+
+   Including or excluding specific operations from auditing requires
+   running the [1]maprcli command.
+
+Include or Exclude Operations During Volume Creation
+
+   During volume creation, the specified list of operations must either be
+   included for auditing or excluded from auditing. You cannot specify a
+   mixed list of included and excluded operations.
+
+   By default, all other operations other than the specified operations
+   are:
+     * Included for auditing if the specified list is a list of excluded
+       operations.
+     * Excluded from auditing if the specified list is a list of included
+       operations.
+
+   Examples
+   The following example shows how to enable auditing and exclude specific
+   operations (such as lookup, read, and write) from auditing:
+maprcli volume create -name test-volume -path /test/test-volume -auditenabled tr
+ue -dataauditops --lookup,-read,-write
+
+   In the above example, operations other than the ones specified are
+   included for auditing.
+   The following example shows how to include all operations except lookup
+   for auditing:
+maprcli volume create -name test-volume -path /test/test-volume -dataauditops --
+lookup
+
+   The following example shows how to include only chown operation for
+   auditing and exclude all other operations from auditing:
+maprcli volume create -name test-volume -path /test/test-volume -dataauditops +c
+hown
+
+Include and Exclude Operations After Volume Creation
+
+   After volume creation, you can include and exclude certain operations
+   from auditing using the [2]volume modify or [3]volume audit command.
+   When you modify a volume (by running the volume modify command) or when
+   you enable volume auditing (by running the volume audit command), you
+   can specify a mixed list of included and excluded operations. There are
+   no changes to operations that are not specified with the command.
+
+   For the list of operations that can be included and/or excluded from
+   auditing, see [4]Auditing of Filesystem Operations and Table
+   Operations.
+
+   Examples
+   The following example shows how to include create operation for
+   auditing and exclude lookup operation from auditing:
+maprcli volume modify -name test-volume -path /test/test-volume -dataauditops +c
+reate,-lookup
+
+   The following example shows how to include all operations except lookup
+   for auditing:
+maprcli volume audit -name test-volume -path /test/test-volume -dataauditops +al
+l,-lookup
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume.html#volume
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-audit.html#volumeaudit
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html#AuditingofFilesystemOperationsandTableOperations

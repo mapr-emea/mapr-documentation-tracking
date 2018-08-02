@@ -1,0 +1,23 @@
+Changing the Limit for Concurrent Mirror Operations Using the CLI
+
+   The system allows a maximum of 50 concurrent mirroring operations by
+   default. Mirroring operations include both mirroring and promoting from
+   read-only mirrors to read-write standard volumes. The system parameter
+   that controls this limit is mapr.mirror.concurrent.ops.
+
+   For large-scale mirror operations involving many volumes, a script
+   automates the process. For example, if a script queues 100 volumes for
+   mirroring operations, and the mapr.mirror.concurrent.ops limit is set
+   to 50, the mirroring operations start on the first 50 volumes in the
+   queue. As soon as one volume completes, another volume is processed
+   from the queue until all 100 are completed. Since volumes are processed
+   from the queue in first-in first-out (FIFO) order, the script should
+   specify the most critical volumes first.
+
+   If you want to process more volumes at a time, you can raise the limit
+   of the mapr.mirror.concurrent.ops parameter. To tune this parameter for
+   maximum efficiency, consider the number of containers per volume. A
+   higher number of containers per volume requires a lower limit than a
+   lower number of containers per volume. To raise the limit to 500 for
+   example, run the following command:
+maprcli config save -values {"mapr.mirror.concurrent.ops":"500"}

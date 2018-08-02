@@ -1,0 +1,40 @@
+Configuring Hive 2.1 and Tez 0.8
+
+   To configure Hive on Tez, repeat the following steps on each node where
+   you want to configure Hive on Tez. Tez mode for MR jobs is not
+   compatible with all MR jobs and so, do not set up the whole cluster to
+   work on Tez.
+    1. Install Tez 0.8 if it is already not installed.
+       To install, run the following command:
+
+       On CentOS / RedHat yum install mapr-tez
+       On SUSE            zypper install mapr-tez
+       On Ubuntu          apt-get install mapr-tez
+    2. Create the /apps/tez directory on MapR-FS.
+       To create, run the following commands:
+hadoop fs -mkdir /apps
+hadoop fs -mkdir /apps/tez
+    3. Upload the Tez libraries to the tez directory on MapR-FS.
+       To upload, run the following commands:
+hadoop fs -put /opt/mapr/tez/tez-0.8 /apps/tez
+hadoop fs -chmod -R 755 /apps/tez
+    4. Verify the upload.
+       To verify, run the following command:
+hadoop fs -ls /apps/tez/tez-0.8
+    5. Set the Tez environment variables. To set, open the
+       /opt/mapr/hive/hive-2.1/conf/hive-env.sh file, add the following
+       lines, and save the file:
+export TEZ_CONF_DIR=/opt/mapr/tez/tez-0.8/conf
+export TEZ_JARS=/opt/mapr/tez/tez-0.8/*:/opt/mapr/tez/tez-0.8/lib/*
+export HADOOP_CLASSPATH=$TEZ_CONF_DIR:$TEZ_JARS:$HADOOP_CLASSPATH
+       Note: Repeat this step on each node where you want Hive on Tez to
+       be configured.
+    6. Configure Hive for Tez engine. To configure, open the
+       /opt/mapr/hive/hive-2.1/conf/hive-site.xml file, add the following
+       lines, and save the file.
+<property>
+  <name>hive.execution.engine</name>
+  <value>tez</value>
+</property>
+       Note: Repeat this step on each node where you want Hive on Tez to
+       be configured.

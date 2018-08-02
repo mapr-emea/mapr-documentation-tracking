@@ -1,0 +1,306 @@
+Configure the MapR Impala ODBC Driver for Linux and Mac OS X
+
+   The configuration files reside in the the home directory. You can use
+   the two environment variables, ODBCINI and ODBCSYSINI, to specify
+   different locations for the odbc.ini and odbcinst.ini configuration
+   files. Set ODBCINI to point to your odbc.ini file. Set ODBCSYSINI to
+   point to the directory containing the odbcinst.ini file. For example,
+   if your odbc.ini file is located in /etc and your odbcinst.ini file is
+   located in /usr/local/odbc, set the environment variables as follows:
+     *
+export ODBCINI=/etc/odbc.ini
+     *
+export ODBCSYSINI=/usr/local/odbc
+
+Sample Files
+
+   The driver installation contains the following sample configuration
+   files in the Setup directory:
+     *
+odbc.ini
+     *
+odbcinst.ini
+     *
+mapr.impalaodbc.ini
+
+   The sample files appear in the directory listings by default because
+   the filenames do not begin with a (.) Filenames that begin with a (.)
+   are hidden. If the default location is used for odbc.ini and
+   odbcinst.ini, filenames must begin with a period (.). For
+   mapr.impalaodbc.ini, the filename must begin with a (.) and must reside
+   in the user’s home directory.
+
+   If the configuration files do not already exist in the home directory,
+   you can copy the sample configuration files to that directory and
+   rename them. If the configuration files already exist in the home
+   directory, use the sample configuration files as a guide for modifying
+   the existing configuration files.
+
+   Step 1: Configure the Environment
+
+   By default, the configuration files reside in the user’s home
+   directory. However, the ODBCINI, ODBCSYSINI, and SIMBAINI environment
+   variables can be used to specify different locations for the odbc.ini,
+   odbcinst.ini, and mapr.impalaodbc.ini configuration files. Set ODBCINI
+   to point to your odbc.ini file. Set ODBCSYSINI to point to the
+   directory containing the odbcinst.ini file. Set SIMBAINI to point to
+   your mapr.impalaodbc.ini file. For example, if your odbc.ini and
+   mapr.impalaodbc.ini files are located in /etc and your odbcinst.ini
+   file is located in /usr/local/odbc, then set the environment variables
+   as follows:
+     *
+export ODBCINI=/etc/odbc.ini
+     *
+export ODBCSYSINI=/usr/local/odbc
+     *
+export SIMBAINI=/etc/mapr.impalaodbc.ini
+
+   The following search order is used to locate the mapr.impalaodbc.ini
+   file:
+    1. If the SIMBAINI environment variable is defined, then the driver
+       searches for the file specified by the environment variable.
+       Important: SIMBAINI must contain the full path, including the
+       filename.
+    2. The current working directory of the application is searched for a
+       file named mapr.impalaodbc.ini not beginning with a period.
+    3. The directory ~/ (that is, $HOME) is searched for a hidden file
+       named .mapr.impalaodbc.ini.
+    4. The directory /etc is searched for a file named mapr.impalaodbc.ini
+       not beginning with a period.
+
+   Step 2: Configure the odbc.ini File
+
+   Define the ODBC data sources in the odbc.ini configuration file. This
+   file is divided into the following optional and required sections:
+     * (Optional) [ODBC]. Controls global ODBC configuration.
+     * (Required) [ODBC Data Sources]. Lists DSNs and associates them with
+       a driver.
+     * (Required) A section with the same name as the data source
+       specified in the [ODBC Data Sources] section. This is required to
+       configure the data source.
+
+   Example odbc.ini sample file for Linux
+[ODBC Data Sources]
+Sample MapR Impala DSN 32=MapR Impala ODBC Driver 32-bit
+
+[Sample MapR Impala DSN 32]
+Driver=/opt/mapr/impalaodbc/lib/32/libmaprimpalaodbc32.so
+HOST=MyImpalaServer
+PORT=21050
+
+   Example odbc.ini file for Mac OS X
+[ODBC Data Sources]
+Sample MapR Impala DSN=MapR Impala ODBC Driver
+
+[Sample MapR Impala DSN]
+Driver=/opt/mapr/impalaodbc/lib/universal/libmaprimpalaodbc.dylib
+HOST=MyImpalaServer
+PORT=21050
+
+   Create a Data Source
+
+   To create a data source, complete the following steps:
+    1. Open the .odbc.ini configuration file in a text editor.
+    2. Add a new entry to the [ODBC Data Sources] section. Type the data
+       source name (DSN) and the driver name.
+    3. To set configuration options, add a new section having a name
+       matching the data source name (DSN) you specified in step 2.
+       Specify configuration options as key-value pairs.
+    4. Save the .odbc.ini configuration file.
+
+   Refer to [1]Driver Configuration Options for Linux and Mac OS X for
+   available configuration options that control DSN behavior.
+   Step 3: Configure the odbcinst.ini File
+
+   The odbcinst.ini is an optional configuration file that defines the
+   ODBC Drivers. This configuration file is optional because you can
+   specify drivers directly in the odbc.ini configuration file. The
+   odbcinst.ini file is divided into the following sections:
+     * [ODBC Drivers] lists the names of all the installed ODBC drivers.
+     * A section having the same name as the driver name specified in the
+       [ODBC Drivers] section lists driver attributes and values.
+
+   Example odbcinst.ini sample file for Linux
+[ODBC Drivers]
+MapR Impala ODBC Driver 32-bit=Installed
+MapR Impala ODBC Driver 64-bit=Installed
+
+[MapR Impala ODBC Driver 32-bit]
+Description= MapR Impala ODBC Driver (32-bit)
+Driver=/opt/mapr/impalaodbc/lib/32/libmaprimpalaodbc32.so
+
+[MapR Impala ODBC Driver 64-bit]
+Description=MapR Impala ODBC Driver (64-bit)
+Driver=/opt/mapr/impalaodbc/lib/64/libmaprimpalaodbc64.so
+
+   Example odbcinst.ini file for Mac OS X
+[ODBC Drivers]
+MapR Impala ODBC Driver=Installed
+
+[MapR Impala ODBC Driver]
+Description=MapR Impala ODBC Driver
+Driver=/opt/mapr/impalaodbc/lib/universal/libmaprimpalaodbc.dylib
+
+   Define a Driver
+
+   To define a driver, complete the following steps:
+    1. Open the .odbcinst.ini configuration file in a text editor.
+    2. Add a new entry to the [ODBC Drivers] section. Type the driver
+       name, and then type =Installed. Assign the driver name as the value
+       of the Driver attribute in the data source definition instead of
+       the driver shared library name.
+    3. In .odbcinst.ini, add a new section having a name matching the
+       driver name you typed in step 2, and add configuration options to
+       the section based on the sample odbcinst.ini file provided with
+       MapR Impala ODBC Driver for Impala in the Setup directory. Specify
+       configuration options as key-value pairs.
+    4. Save the .odbcinst.ini configuration file.
+
+   Step 4: Configure the mapr.impalaodbc.ini File
+
+   Configure the MapR Impala ODBC Driverto work with your ODBC driver
+   manager.
+
+   To configure mapr.impalaodbc.ini, complete the following steps:
+    1. Open the .mapr.impalaodbc.ini configuration file in a text editor.
+    2. Edit the DriverManagerEncoding setting. The value is typically
+       UTF-16 or UTF-32, but depends on the driver manger used. iODBC uses
+       UTF-32 and unixODBC uses UTF-16. Review your ODBC Driver Manager
+       documentation for the correct setting.
+    3. Edit the ODBCInstLib setting. The value is the name of the ODBCInst
+       shared library for the ODBC driver manager you use. The
+       configuration file defaults to the shared library for iODBC. In
+       Linux, the shared library name for iODBC is libiodbcinst.so. In Mac
+       OS X, the shared library name for iODBC is libiodbcinst.dylib.
+       Note: Review your ODBC Driver Manager documentation for the correct
+       setting. Specify an absolute or relative filename for the library.
+       If you use the relative filename, include the path to the library
+       in the library path environment variable. In Linux, the library
+       path environment variable is LD_LIBRARY_PATH. In Mac OS X, the
+       library path environment variable is DYLD_LIBRARY_PATH.
+    4. Save the .mapr.impalaodbc.ini configuration file.
+
+   Step 5: Configure Authentication
+
+   The Impala server supports multiple authentication mechanisms. You must
+   determine the authentication type your server is using and configure
+   your DSN accordingly. The following table provides the authentication
+   methods available with configuration instructions:
+
+   Note: For details on the keys involved in configuring authentication,
+   see [2]Driver Configuration Options for Linux and Mac OS X.
+   Method Configuration
+   No Authentication For this authentication mechanism, you do not need to
+   configure any additional settings. To configure your DSN for
+   connections that do not require authentication, set the AuthMech
+   configuration key for the DSN to 0.
+   Kerberos
+
+   For information on operating Kerberos, refer to the documentation for
+   your operating system.
+
+   To configure your DSN to use Kerberos authentication, complete the
+   following steps:
+    1. Set the AuthMech configuration key for the DSN to 1
+    2. If your Kerberos setup does not define a default realm or if the
+       realm of your Impala server is not the default, then set the
+       appropriate realm using the KrbRealm key.
+    3. Set the KrbFQDN key to the fully qualified domain name of the
+       Impala host.
+    4. Set the KrbServiceName key to the service name of the Impala
+       server.
+       For example, if the principle for the Impala server is
+       impala/fully.qualified.domain.name@your-realm.com, then the value
+       in the service name field is impala. If you are unsure of the
+       correct service name to use for your particular Hadoop deployment,
+       contact your Hadoop administrator.
+
+   User Name
+
+   This authentication mechanism requires a user name but does not require
+   a password. The user name labels the session, facilitating database
+   tracking.
+
+   To configure your DSN to use User Name authentication, complete the
+   following steps:
+    1. Set the AuthMech configuration key for the DSN to 2.
+    2. Set the UID key to a user name that is recognized by the Impala
+       server.
+
+   User Name and Password
+
+   This authentication mechanism requires a user name and a password.
+
+   Note: This authentication mechanism should not be used with an Impala
+   configuration that does not have LDAP enabled.
+
+   To configure your DSN to use User Name and Password authentication,
+   complete the following steps:
+    1. Set the AuthMech configuration key for the DSN to 3.
+    2. Set the UID key to a user name that is recognized by the Impala
+       server.
+    3. Set the PWD key to the password corresponding to the user name you
+       provided in step 2.
+
+   User Name and Password (SSL)
+
+   This authentication mechanism uses SSL and requires a user name and a
+   password. The driver accepts self-signed SSL certificates.
+
+   Note: This authentication mechanism should not be used with an Impala
+   configuration that does not have LDAP enabled.
+
+   To configure your DSN to use User Name and Password (SSL)
+   authentication, complete the following steps:
+    1. Set the AuthMech configuration key for the DSN to 4.
+    2. Set the UID key to a user name that is recognized by the Impala
+       server.
+    3. Set the PWD key to the password corresponding to the user name you
+       provided in step 2.
+    4. Optionally, configure the driver to allow a mismatch between the
+       common name of a CA-issued certificate and the host name of the
+       Impala server by setting the CAIssuedCertNamesMismatch key to 1.
+
+   Note: For self-signed certificates, the driver always allows the common
+   name of the certificate to mismatch the host name. For more details,
+   see [3]Driver Configuration Options for Linux and Mac OS X.
+
+   Optionally, configure the driver to load SSL certificates from a
+   specific file by setting the TrustedCerts configuration key to the path
+   of the file.
+
+   Note: By default, the driver uses the trusted CA certificates PEM file
+   that is installed with the driver. For more details, see [4]Driver
+   Configuration Options for Linux and Mac OS X.
+   No Authentication (SSL)
+
+   This authentication mechanism uses SSL but does not require a user name
+   or a password. The driver accepts self-signed SSL certificates.
+
+   To configure your DSN to use No Authentication (SSL) authentication,
+   complete the following steps:
+    1. Set the AuthMech configuration key for the DSN to 5.
+    2. Optionally, configure the driver to allow a mismatch between the
+       common name of a CA-issued certificate and the host name of the
+       Impala server by setting the CAIssuedCertNamesMismatch key to 1.
+
+   Note: For self-signed certificates, the driver always allows the common
+   name of the certificate to mismatch the host name. For more details,
+   see [5]Driver Configuration Options for Linux and Mac OS X.
+
+   Optionally, configure the driver to load SSL certificates from a
+   specific file by setting the TrustedCerts configuration key to the path
+   of the file.
+
+   Note: By default, the driver uses the trusted CA certificate PEM file
+   that is installed with the driver. For more details, see [6]Driver
+   Configuration Options for Linux and Mac OS X.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/driver_configuration_options_for_linux_and_mac_os_x.html#driver_configuration_options_for_linux_and_mac_os_x
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/driver_configuration_options_for_linux_and_mac_os_x.html#driver_configuration_options_for_linux_and_mac_os_x
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/driver_configuration_options_for_linux_and_mac_os_x.html#driver_configuration_options_for_linux_and_mac_os_x
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/driver_configuration_options_for_linux_and_mac_os_x.html#driver_configuration_options_for_linux_and_mac_os_x
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/driver_configuration_options_for_linux_and_mac_os_x.html#driver_configuration_options_for_linux_and_mac_os_x
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/driver_configuration_options_for_linux_and_mac_os_x.html#driver_configuration_options_for_linux_and_mac_os_x

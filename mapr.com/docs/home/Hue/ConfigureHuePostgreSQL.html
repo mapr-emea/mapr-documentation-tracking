@@ -1,0 +1,57 @@
+Configure Hue to Store Data in PostgreSQL
+
+    1. Install the following packages:
+
+       CentOS yum install gcc python-devel postgresql-devel
+       SuSE   zypper install gcc python-devel postgresql-devel
+       Ubuntu apt-get install gcc python-dev postgresql-server-dev-all
+    2. Ensure that the pg_config command is in your PATH. For example, on
+       CentOS with PostgreSQL 9.4 development package from the
+       [1]postgresql.org official repository, you need to add the
+       directory with pg_config manually:
+export PATH="/usr/pgsql-9.4/bin:$PATH"
+    3. Install the Python psycopg2 package in Hue:
+cd /opt/mapr/hue/hue-<version>
+source ./build/env/bin/activate
+pip install psycopg2
+deactivate
+
+    4. Configure database connection parameters in the
+       [desktop][[database]] section of hue.ini. Set the following
+       properties for your database connection parameters:
+[desktop]
+  ...
+  [[database]]
+    engine=postgresql_psycopg2
+    host=<host>
+    port=5432
+    user=<user>
+    password=<password>
+    name=<database>
+    schema=<schema>
+
+       Example of Configuration
+[desktop]
+  ...
+  [[database]]
+    engine=postgresql_psycopg2
+    host=node1
+    port=5432
+    user=hue
+    password=hue_password
+    name=hue
+    schema=public
+
+    5. Perform the initial data migration:
+cd /opt/mapr/hue/hue-<version>
+source ./build/env/bin/activate
+hue syncdb --noinput
+hue migrate
+deactivate
+
+    6. Restart Hue:
+maprcli node services -name hue -action restart -nodes <node_with_hue>
+
+References
+
+   1. https://www.postgresql.org/

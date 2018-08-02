@@ -1,0 +1,51 @@
+Security Architecture
+
+   Describes how the design of the MapR security architecture takes into
+   account the main threats to a secure cluster. By default, MapR provides
+   basic authorization functionality and some authentication.
+     * [1]Filesystem permissions: MapR-FS is a POSIX-like file system. You
+       can set user permissions as you would on any other Linux system.
+     * [2]Cluster, [3]volume, and [4]job queue Access Control Lists
+       (ACLs): You can specify the actions that a given user can perform
+       on each of these cluster elements.
+     * [5]Access Control Expressions for filesystem and natively stored
+       MapR-DB tables. ACEs control which files, directories, volumes,
+       streams, and tables users or groups can access.
+     * Username/password login authentication to the MapR Control System
+       (MCS) through Pluggable Access Modules (PAM). You can use any
+       registry that has a PAM module.
+
+   Wire-level security (WLS) is disabled by default. When WLS is enabled,
+   MapR upgrades its security to use network-safe authentication and
+   encryption:
+     * Communication between the nodes in the cluster is authenticated and
+       may be encrypted:
+          + Traffic between the server and cluster, traffic within the
+            MapR filesystem, and CLDB traffic is authenticated using
+            network-safe tokens and may be encrypted with secure MapR
+            RPCs.
+          + Traffic between JobClients, NodeManagers, and ResourceManagers
+            is secured with MAPRSASL, an implementation of the [6]Simple
+            Authentication and Security Layer framework.
+
+     * Support for [7]Kerberos user authentication.
+     * Support for Kerberos encryption for secure communication to open
+       source components that require it.
+     * Support for the Simple and Protected GSSAPI Negotiation Mechanism
+       ([8]SPNEGO) used with the web UI frontends of some cluster
+       components.
+
+   Clusters with different security profiles, and client machines outside
+   of the cluster's security realm, can communicate with the secure
+   cluster.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUserPermissions-MapRfsPermissions.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/CreatingCluster-LevelACLs.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Creating-Volume-Level-ACLs.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Creating-Job-Queue-ACLs.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ACEs.html
+   6. http://en.wikipedia.org/wiki/Simple_Authentication_and_Security_Layer
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Configuring-Kerberos-User-Authentication.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ConfiguringSPNEGOonMapR.html

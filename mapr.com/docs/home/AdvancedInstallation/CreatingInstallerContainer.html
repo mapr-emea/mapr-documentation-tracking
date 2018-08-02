@@ -1,0 +1,119 @@
+Creating a MapR Installer Container Using mapr-setup.sh
+
+   This section describes how to create a MapR Installer Container image
+   by using the mapr-setup.sh script.
+
+Creating the Image
+
+   To create a MapR Installer image using mapr-setup.sh:
+    1. Download the mapr-setup.sh script to a Linux or Mac OS X platform
+       where Docker 1.12.5 or later is installed and the Docker daemon is
+       up and running. Choose one of the following download options:
+       Note: Running mapr-setup.sh on Windows is not supported.
+          + Download the setup script directly from [1]package.mapr.com to
+            the node that will run the MapR Installer:
+$ wget http://package.mapr.com/releases/installer/mapr-setup.sh -P /tmp
+          + Download to your local workstation, and copy to the node that
+            will run the MapR Installer:
+              a. On the [2]MapR Download Page, click Download, and save
+                 the setup script to a location on your workstation.
+              b. Use a tool such as SCP to copy the file to the node that
+                 will run the MapR Installer:
+$ scp mapr-setup.sh user@server /tmp
+    2. Run the mapr-setup.sh script with the docker installer command to
+       create the Docker image:
+./mapr-setup.sh docker installer
+    3. Respond to the command-line prompts to provide the information to
+       configure the image. The following table describes each prompt. If
+       you press Enter without specifying a value, mapr-setup.sh uses the
+       default value shown in the square brackets ([]):
+
+   Prompt Notes
+   Build MapR UI Installer image? (y/n) [y] Type y to continue or n to
+   exit the script.
+   Image OS class (centos6, centos7, ubuntu14, ubuntu16) [<local OS>]:
+   Specify the base operating system on which to build the image.
+
+   Note: Ubuntu 16 and SUSE are not currently supported.
+   Docker FROM base image name:tag [centos:centos7]: Specify the starting
+   image used to create the new image. If necessary, you can enter your
+   own tag and image name to choose a base image already created for your
+   installation. If you do not enter a name, the script provides one for
+   you.
+   Container memory: specify host XX[kmg] or 0 for no limit [0]: Specify
+   the maximum amount of memory (in kilobytes, megabytes, or gigabytes)
+   that Docker allows the container to access. For example:
+          + 2g
+          + 4096m
+          + 0
+
+   Accepting the default (0), means there is no restriction on memory, and
+   the container can use as much memory as the platform makes available.
+    4. After the last prompt, press Enter. The script:
+          + Prepares the installer
+          + Installs or verifies installer package dependencies
+          + Installs installer packages
+          + Cleans up unneeded files
+          + Creates the mapr-docker-installer.sh sample-run file and
+            displays the location of the file:
+Edit '/root/docker_images/installer/mapr-docker-installer.sh' to configure setti
+ngs and then execute it to start the container
+            mapr-docker-installer.sh contains environment variables for
+            the image and makes it easy for you to start the container.
+    5. (Optional) Edit the mapr-docker-installer.sh script file if you
+       want to change any environmental variables. For more information
+       about the environmental variables, see [3]Environmental Variables
+       for the MapR Installer Container.
+    6. Run the mapr-docker-installer.sh file to start mapr-installer
+       services:
+$ ./docker_images/installer/mapr-docker-installer.sh
+       After the installer service is started, you can issue [4]Stanza
+       commands or open the web-based MapR Installer in a browser:
+installer (380) started with log /opt/mapr/installer/logs/installer.log
+Started service mapr-installer
+
+...Success
+
+    To continue installing MapR software, open the following URL in a web browse
+r
+
+              If the address '172.17.0.2' is internal and not accessible
+           from your browser, use the external address mapped to it instead
+
+                              https://172.17.0.2:9443
+
+   Note: The MapR Installer maintains the state of the cluster. When the
+   installer is run from a container, the installer database is only as
+   persistent as the container itself. If you need the installer data to
+   be persistent, here are some options:
+     * If you shut down a MapR Installer container, use the docker start
+       command (not the docker run command) to restart the same instance
+       of the container. If you create a new instance of the container,
+       the database will have no information.
+     * Mount the /opt/mapr/ data directory outside the container to
+       persistent storage to maintain the cluster state.
+     * Use the Stanza export command to export the state of the cluster
+       before you shut down the container. See [5]Exporting a Cluster
+       Configuration.
+
+Running the MapR Installer Container Using Stanza Commands
+
+   You can also use the sample-run file to execute a MapR Installer Stanza
+   command. In this scenario, the command creates the installer container,
+   runs a Stanza command, and then shuts down the container. For example,
+   the following command runs the Stanza probe command on node
+   10.10.88.53:
+./docker_images/installer/mapr-docker-installer.sh probe -o config.ssh_id=root c
+onfig.ssh_password=mapr config.hosts='["10.10.88.53"]' -nv
+
+   For a list of the Stanza commands, see [6]MapR Installer Stanza
+   commands.
+
+References
+
+   1. https://package.mapr.com/releases/installer/
+   2. https://mapr.com/download/
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Env_Variables_Installer_Container.html#reference_w2p_hvh_s1b
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/SilentInstallerCommands.html#reference_c11_wmk_cy
+   5. http://maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/ExportClusterConfig.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/SilentInstallerCommands.html#reference_c11_wmk_cy

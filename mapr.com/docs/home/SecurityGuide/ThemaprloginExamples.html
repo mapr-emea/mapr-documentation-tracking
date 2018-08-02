@@ -1,0 +1,160 @@
+maprlogin Command Examples
+
+   Describes common scenarios associated with maprlogin usage.
+
+Generating and Displaying User Ticket
+
+   Generate a user ticket:
+$ maprlogin password
+[Password for user 'juser' at cluster 'my.cluster.com': ]
+MapR credentials of user 'juser' for cluster 'my.cluster.com'
+are written to '/tmp/maprticket_1000'
+
+   Display the ticket for the current user. Sample output is shown below.
+$ maprlogin print
+Opening keyfile /tmp/maprticket_1000
+my.cluster.com: user = juser,
+created = 'Sun Nov 24 18:59:43 PST 2017', expires = 'Sun Dec 08 18:59:43 PST 201
+7',
+RenewalTill = 'Tue Dec 24 18:59:43 PST 2017',
+uid = 1000, gids = 1000, 4, 24, 27, 30, 46, 109, 124
+
+Generating and Displaying Service Ticket
+
+   Generate a service ticket, longlived_ticket, in /tmp for maprUser1:
+$ maprlogin generateticket -type service -out /tmp/ticketwithduration
+-duration 30:0:0 -renewal 90:0:0 -user maprUser1
+MapR credentials of user 'maprUser1' for cluster 'JSKCluster129_secure'
+are written to '/tmp/longlived_ticket'
+
+   Display the service ticket in a specified location:
+$ maprlogin print -ticketfile /tmp/ticketwithduration
+Opening keyfile /tmp/ticketwithduration
+JSKCluster129_secure: user = maprUser1,
+created = 'Tue Jun 14 11:12:01 PDT 2017', expires = 'Thu Jul 14 11:12:01 PDT 201
+7',
+RenewalTill = 'Mon Sep 12 11:12:01 PDT 2017',
+uid = 0, gids = 0, CanImpersonate = false
+
+Generating and Printing Service with Impersonation Ticket
+
+   Generate a service with impersonation ticket (in /var/tmp) for
+   maprUser1:
+$ maprlogin generateticket -type servicewithimpersonation -user maprUser1
+-out /var/tmp/impersonationTicketMapRuser1
+
+   After generating the ticket, ensure that maprUser1 has read permissions
+   on the ticket. If you move the ticketfile to a different location, set
+   the $MAPR_TICKETFILE_LOCATION environment variable.
+
+   Display the service with impersonation ticket in the specified
+   location:
+$ maprlogin print -ticketfile /var/tmp/impersonationTcketMaprUser1
+Opening keyfile /var/tmp/impersonationTcketMaprUser1
+JSKCluster129_secure: user = maprUser1,
+created = 'Mon Apr 18 13:46:38 PDT 2017', expires = 'Mon May 02 13:46:38 PDT 201
+7',
+RenewalTill = 'Wed May 18 13:46:38 PDT 2017',
+uid = 501, gids = 502, CanImpersonate = true
+
+Generating and Printing a Tenant Ticket
+
+   Generate a tenant ticket (in /var/tmp) for tenantUser1:
+$ maprlogin generateticket -type tenant -ips ipaddress1,ipaddress2,ipaddress3
+-cluster myCluster -user tenantUser1 -out /var/tmp/
+
+   Display the tenant ticket in the specified location:
+$ maprlogin print -ticketfile /var/tmp/tenant_user_ticket
+Opening keyfile /user/cAdmin/tenant_user_ticket.txt
+tenantHost: user = tenantUser1,
+created = 'Mon Jul 11 07:14:53 UTC 2017', expires = 'Mon Jul 11 07:14:53 UTC 120
+17',
+RenewalTill = 'Mon Jul 11 07:14:53 UTC 12017',
+uid = 500, gids = 500, 42, CanImpersonate = true, tenant = true
+
+Generating and Displaying Cross-Cluster Ticket
+
+   Generate a cross-cluster ticket (in /tmp) for maprUser1:
+$ maprlogin generateticket -type crosscluster -out /tmp/CrossClusterTicket -user
+ maprUser1
+MapR credentials of user 'maprUser1' for cluster 'JSKCluster128_secure'
+are written to '/tmp/CrossClusterTicket'
+
+   Display the contents of a cross-cluster ticket in the specified
+   location:
+$ maprlogin print -ticketfile /tmp/crossclusterTicket
+Opening keyfile /tmp/crossclusterTicket
+ClusterSecure: user = root,
+created = 'Fri May 27 14:29:40 PDT 2017', expires = 'Fri May 27 14:29:40 PDT 120
+17',
+RenewalTill = 'Fri May 27 14:29:40 PDT 12017',
+uid = 0, gids = 0, CanImpersonate = false
+
+Running an Authentication Test
+
+   authtest: This troubleshooting option simulates the behavior of the
+   runtime during authentication, going through the [1]authentication
+   flow.
+
+   Options: [ -cluster ] Specifies the name of the cluster.
+
+Ending a Session Before the Ticket Expires
+
+   end or logout: Destroys tickets and logs out.
+
+   Options: [ -cluster ] Specifies the name of the cluster. By default,
+   deletes all tickets for all clusters.
+
+Renewing a Ticket Before It Expires
+
+   renew: Renews an existing ticket for a specified time period.
+   Options:
+     * [ -cluster ] - Specifies the name of the cluster.
+     * [ -duration ] - Specifies the ticket duration.
+
+   The duration you specify must be valid for the ticket in question,
+   given the original -renewal value for the ticket and the life of the
+   ticket when the renew command is run:
+     * You cannot renew a ticket that has already expired.
+     * You can renew the same ticket multiple times.
+     * The renewal period (or periods) cannot exceed the available time
+       left for the ticket.
+
+   For example, assume that a ticket is created with a duration of 10 days
+   and a renewal of 30 days:
+maprlogin password -duration 10:0:0 -renewal 30:0:0
+     * On the 11th day, the ticket expires and cannot be renewed at all.
+     * On the 9th day, you can renew the ticket for any number of days up
+       to a maximum of 21.
+     * On the 23rd day, you can renew the ticket for any number of days up
+       to a maximum of 7.
+
+   Example: Renew a ticket and display the renewed ticket in the specified
+   location:
+$ maprlogin renew -out /tmp/RenewedsecureClusterTicket
+-ticketfile /tmp/secureClusterTicket -duration 1:0:0
+
+$ maprlogin print -ticketfile /tmp/RenewedsecureClusterTicket
+Opening keyfile /tmp/RenewedsecureClusterTicket
+JSKCluster129_secure: user = root,
+created = 'Tue Jun 07 11:53:29 PDT 2017',
+expires = 'Wed Jun 08 11:56:56 PDT 2017',
+RenewalTill = 'Thu Jul 07 11:53:29 PDT 2017',
+uid = 0, gids = 0, CanImpersonate = false
+
+Error Messages when Accessing Secure Clusters without a MapR User Ticket.
+
+   Any user who wants to access a secure cluster must have a MapR user
+   ticket. If a user tries to log in without a ticket, an error message
+   appears similar to these:
+$ hadoop fs -ls
+Bad connection to FS. command aborted. exception: failure to login: Unable to ob
+tain MapR credentials
+
+$ maprcli node list
+ERROR (22) -  You do not have a ticket to communicate with 192.168.57.87:7222.
+Retry after obtaining a new ticket using maprlogin
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Authentication.html#concept_qw1_wdm_xt

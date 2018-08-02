@@ -1,0 +1,159 @@
+table region list
+
+   Lists the regions that make up a specified table or index.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce on the volume
+     * [2]lookupdir on directories in the path
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table region list
+  -path <path>
+  [ -start <offset from starting region> ]
+  [ -limit <number of regions to return> ]
+  [ -index <index name> ]
+  [ -output terse | verbose ]
+
+   REST
+
+curl -k -X GET \
+  'http[s]://<host>:<port>/rest/table/region/list?path=<path>&<parameters>'
+  -u <username>:<password>
+
+Parameters
+
+   Parameter
+
+   Description
+
+   path
+
+   Path to the table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, if you want to list regions for a table named
+       test under volume1 which has a mount point at /volume1, specify the
+       following path: /volume1/test
+
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, if you want to list regions for a
+       table named test under volume1 in the sanfrancisco cluster, specify
+       the following path:/mapr/sanfrancisco/volume1/customer
+
+   start
+
+   The offset from the starting region. The default value is 0.
+
+   limit
+
+   The number of regions to return, counting from the starting region. The
+   default value is 2147483647.
+   index The name of the index for which to list region information.
+   output Specifies whether the output should be terse or verbose.
+
+   Default: verbose
+
+Output Fields
+
+   Verbose Field Name Terse Field Name Field Value
+   primarymfs pn Host name and port of the primary node for this region
+   secondarymfs sn Host names and ports of the secondary nodes where this
+   region is replicated
+   startkey sk Value of the start key for this region
+
+   For the first region in a table, this value is exclusive. For all other
+   regions, it is inclusive. See the example output.
+   endkey ek Value of the end key for this region
+
+   This value is always exclusive. See the example output.
+   lastheartbeat lhb Time since last heartbeat from the region's primary
+   node
+   fid fid The region's FID.
+   logicalsize ls The logical size of the region without data compression
+   (excluding replication).
+   physicalsize ps The physical size of the region with data compression
+   (excluding replication).
+   copypendingsize cps Amount of data remaining to be replicated
+   numberofrows nr Number of rows in the region
+   numberofrowswithdelete nrd Number of rows in the region, counting
+   deleted rows
+   numberofspills nsp Number of spills for the region
+   numberofsegments nsg Number of segments in the region
+
+Examples
+
+   Lists the Region Information for a Table
+
+   This example lists the region information for the table newtable.
+
+   CLI
+
+maprcli table region list -path /my.cluster.com/volume1/newtable
+
+   REST
+
+curl -k -X GET \
+  'https://r1n1.sj.us:8443/rest/table/region/list?path=%2Fmy.cluster.com%2Fvolum
+e1%2Fnewtable' \
+  -u mapr:mapr
+
+   Example Output Using the -json Option
+
+   This example shows two table regions. The value of endkey for the first
+   region is the value of startkey for the second region. The value of
+   endkey is always exclusive. So, for the first region, endkey shows that
+   the first region was split with the addition of the record with the key
+   5190414F2E44DB732547630A9A81452539749000; for the second region,
+   startkey shows that the region begins with that record.
+{
+    "timestamp":1452554659812,
+    "timeofday":"2016-01-11 03:24:19.812 GMT-0800",
+    "status":"OK",
+    "total":2,
+    "data":[
+        {
+            "primarymfs":"test150.qa.lab:5660",
+            "secondarymfs":"test156.qa.lab:5661, test151.qa.lab:5660",
+            "startkey":"-INFINITY",
+            "endkey":"5190414F2E44DB732547630A9A81452539749000",
+            "lastheartbeat":0,
+            "fid":"2068.100.131676",
+            "logicalsize":794624,
+            "physicalsize":794624,
+            "copypendingsize":0,
+            "numberofrows":0,
+            "numberofrowswithdelete":0,
+            "numberofspills":0,
+            "numberofsegments":0
+        },
+        {
+
+            "primarymfs":"test161.qa.lab:5660",
+            "secondarymfs":"test157.qa.lab:5661, test162.qa.lab:5660",
+            "startkey":"5190414F2E44DB732547630A9A81452539749000",
+            "endkey":"INFINITY",
+            "lastheartbeat":0,
+            "fid":"2069.181.131578",
+            "logicalsize":745472,
+            "physicalsize":745472,
+            "copypendingsize":0,
+            "numberofrows":0,
+            "numberofrowswithdelete":0,
+            "numberofspills":0,
+            "numberofsegments":0
+        }
+    ]
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

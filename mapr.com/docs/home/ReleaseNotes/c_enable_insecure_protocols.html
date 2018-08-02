@@ -1,0 +1,37 @@
+Requirement to Enable Insecure Protocols
+
+   MapR disables insecure protocols by default. For example, TLSv1 and
+   SSLv3 are disabled by default due to their associated security risks.
+   In the event that your client environment or crypto libraries cannot be
+   upgraded, you can decide to enable insecure protocols.
+   Note: Enabling insecure protocols is not recommended as the security of
+   communications between the browser and web server is put at risk.
+   To enable insecure protocols:
+    1. Based on your requirements, add one of the following configurations
+       to the core-site.xml file on each node with a service that runs a
+       web server:
+          + To enable SSLv3:
+<property>
+ <name>hadoop.ssl.exclude.insecure.protocols</name>
+ <value>SSLV3</value>
+</property>
+          + To enable TLSv1:
+<property>
+ <name>hadoop.ssl.exclude.insecure.protocols</name>
+ <value>TLSV1</value>
+</property>
+          + To enable all insecure protocols that MapR disables by
+            default:
+<property>
+ <name>hadoop.ssl.exclude.insecure.protocols</name>
+ <value></value>
+</property
+       The core-site.xml is in the following location:
+       /opt/mapr/hadoop/hadoop-2.x.x/etc/hadoop/
+    2. Restart services associated with web servers.
+       Examples:
+          + To restart the MCS webserver:
+   maprcli node services -webserver restart -nodes <webserver nodes>
+          + To restart the ResourceManager service(s):
+maprcli node services -name resourcemanager -action restart -nodes <space delimi
+ted list of resourcemanager nodes>

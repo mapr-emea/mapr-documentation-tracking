@@ -1,0 +1,231 @@
+JSON Document Field Paths
+
+   To access fields in a JSON document, you use a field path. The syntax
+   for a field path can vary, depending on the data type you are
+   accessing: nested documents, arrays, nested documents within arrays,
+   and multidimensional arrays.
+
+   The examples in this topic reference the following sample JSON
+   document:
+{
+    "_id" : "2DT3201",
+    "product_ID" : "2DT3201",
+    "name" : " Allegro SPD-SL 6800",
+    "brand" : "Careen",
+    "category" : "Pedals",
+    "type" : "Components",
+    "price" : 112.99,
+    "features" : [
+        "Low-profile design",
+        "Floating SH11 cleats included"
+    ],
+    "specifications" : {
+        "weight_per_pair" : "260g",
+        "color" : "black"
+    },
+    "comments" : [
+        {
+            "username" : "hlmencken",
+            "comment" : "Best money I ever spent!"
+        },
+        {
+            "username" : "vwoolf",
+            "comment" : "What hlmencken said!"
+        }
+    ]
+}
+
+   In the simplest case, the field path is the name of the field and
+   refers to the entire field.
+
+Nested Documents
+
+   If a field is a nested document, specifying the nested document
+   identifies the entire nested document.
+
+   To identify individual fields in a nested document, you use a dot
+   notation to specify their paths. A field path is a sequence of field
+   names that leads to the particular field that you are interested in.
+   The names are separated by dots.
+
+   The following shows a document with multiple levels of nested
+   documents:
+{
+   "a" : {
+       "b" : {
+            "c" : {
+                "d" : "value_for_d"
+            }
+        }
+    }
+}
+
+   The field path for field d using dot notation is a.b.c.d.
+
+   The following table shows examples of field paths using dot notation
+   for the sample JSON document:
+                    Field Path                  Value Returned
+   specifications
+
+{
+  "specifications":
+    {"color":"black","weight_per_pair":"260g"}
+}
+
+   The entire nested document field specifications
+   specifications.weight_per_pair
+
+{"specifications":{"weight_per_pair":"260g"}}
+
+   The weight_per_pair subfield in specifications
+   specifications.color
+
+{"specifications":{"color":"black"}}
+
+   The color subfield in specifications
+
+Arrays
+
+   If the field is an array, specifying the array's field name identifies
+   the entire array.
+
+   To access an element in an array, specify the position of the element
+   in the array, starting at offset zero.
+
+   The following table shows examples of field paths that reference arrays
+   for the sample JSON document:
+               Field Path             Value Returned
+   features
+
+{
+  "features":[
+    "Low-profile design",
+    "Floating SH11 cleats included"
+  ]
+}
+
+   The entire features array
+   features[0]
+
+{"features":["Low-profile design"]}
+
+   The first element of the features array
+   features[1]
+
+{
+  "features":
+    [null,"Floating SH11 cleats included"]
+}
+
+   The second element of the features array
+   Note: null is shown in the first element of the array to signify that
+   the element returned is the second entry from the array.
+   comments[0]
+
+{
+  "comments":
+    [{"comment":"Best money I ever spent!","username":"hlmencken"}]
+}
+
+   The first element of the comments array, which is a nested document
+
+Nested Documents Within Arrays
+
+   Array elements can be nested documents. But, it is not possible to
+   reference individual subfields across all of these nested documents.
+   For example, suppose you have the following JSON documents in a MapR-DB
+   table where addresses has an array of nested documents:
+{
+  "_id":"1",
+  "addresses":[
+    {"state":"CA","city":"SJ"},
+    {"state":"CA","city":"SC"},
+    {"state":"WA","street":"NE 39th"}
+  ]
+}
+
+   You cannot reference only the nested document's state subfield across
+   all elements in the addresses array. To access all the state subfields,
+   you must reference the entire addresses field.
+
+   To access a nested document within an array, specify the array element
+   using its index, and then use the dot notation to specify the path to
+   the desired field.
+
+   The following table describes the field paths supported and what each
+   field path returns:
+                   Field Path                Value Returned
+   addresses
+
+{
+  "addresses":[
+    {"city":"SJ","state":"CA"},
+    {"city":"SC","state":"CA"},
+    {"state":"WA","street":"NE 39th"}
+]}
+
+   The addresses array
+   addresses.city
+
+{}
+
+   Empty because addresses is not a nested document
+   addresses[0]
+
+{
+  "addresses":
+    [{"city":"SJ","state":"CA"}]
+}
+
+   The first nested document in the addresses array
+   addresses[2].state
+
+{
+  "addresses":
+    [null,null,{"state":"WA"}]
+}
+
+   The state subfield in the third nested document in the addresses array
+   Note: null is shown in the first two elements of the array to signify
+   that the element returned is the third entry from the array
+addresses[0].state,
+addresses[0].city
+
+{"addresses":[{"city":"SJ","state":"CA"}]}
+
+   The city and state subfields in the first nested document in the
+   addresses array
+
+Multidimensional Arrays
+
+   Arrays can have more than one dimension.
+
+   For example, suppose you want to store the high and low temperatures by
+   week. The following document contains the high and low temperatures in
+   Fahrenheit for the seven days beginning on April 29th, 2018. The
+   document uses a two-dimensional array to store the high and low
+   temperatures for each day. The first element of each nested array
+   element is the high temperature for a day, and the second element is
+   the low:
+{
+   "_id" : "001",
+   "temps" : [[61,49],[74,51],[75,51],[74,52],[78,54],[75,53],[75,54]],
+   "weekOf" : "4/29/2018"
+}
+
+   To access individual high or low temperatures by day, you specify a
+   two-dimensional array element with the desired array indexes. To access
+   a pair of high and low temperatures, you specify a single array index.
+                     Field Path                  Value Returned
+   temps[0]
+
+   {"temps":[[61,49]]}
+
+   temps[5][1]
+
+{"temps":[null,null,null,null,null,[null,53]]}
+
+   Note: null is shown for all array elements preceding the desired
+   element
+
+   There is no limit on the number of dimensions in an array.

@@ -1,0 +1,70 @@
+Creating Column Families
+
+   You can create column families with the MapR-DB JSON Java API library
+   by using the Admin.createTable(TableDescriptor tableDescriptor) method.
+
+   Add a column family to the TableDescriptor object before passing that
+   object to the createTable() method.
+
+Restriction
+
+   If any existing column family in a JSON table, including the default
+   column family, uses a time-to-live that is greater than 0, you cannot
+   create any additional column families in that table. See [1]Setting TTL
+   for Data.
+
+Permissions Required
+
+     * [2]readAce and [3]writeAce on the volume
+     * [4]lookupdir on directories in the path
+     * createrenamefamilyperm on the table
+
+Example
+
+   Here is an example of using the API to create two column families --
+   the default column family and a custom column family -- during the
+   creation of a table:
+/* Create a TableDescriptor for the table to create,
+   passing in the path of the table. */
+TableDescriptor tableDescriptor = MapRDB.newTableDescriptor(tablePath);
+
+/* Create a FamilyDescriptor for the default column family.
+   When you create a table with the API, you must also create
+   the default column family.
+   After creating the FamilyDescriptor, add it to
+   the TableDescriptor. */
+FamilyDescriptor defaultfamilyDesc = MapRDB.newDefaultFamilyDescriptor();
+tableDescriptor.addFamily(defaultfamilyDesc);
+
+/* Create a FamilyDescriptor for the custom column family
+   to create. The setJsonFieldPath() method specifies the field
+   at which to create the column family.
+   After creating the FamilyDescriptor, add it to
+   the TableDescriptor. */
+FamilyDescriptor familyDescriptor = MapRDB.newFamilyDescriptor()
+  .setName("CF1")
+  .setJsonFieldPath("a.b");
+tableDescriptor.addFamily(familyDescriptor);
+
+// Pass the TableDescriptor to the Admin.createTable() method.
+public void createJSONTable(String tablePath, TableDescriptor tableDescriptor) t
+hrows DBException {
+  try (Admin admin = MapRDB.newAdmin()) {
+    if (!admin.tableExists(tablePath)) {
+      admin.createTable(tableDescriptor);
+    }
+  }
+}
+
+Alternative Method
+
+   You can also create column families in JSON tables by running the
+   command [5]table cf create.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/setting_the_time_to_live.html#setting_the_time_to_live
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-cf-create.html#tablecfcreate

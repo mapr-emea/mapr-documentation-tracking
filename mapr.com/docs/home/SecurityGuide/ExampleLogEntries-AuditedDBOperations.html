@@ -1,0 +1,58 @@
+Example Log Entries for Audited Operations on MapR-DB Binary and JSON Tables
+
+   When auditing of table operations is enabled at the cluster level,
+   volume level, and filesystem level, each operation on a table is logged
+   on the node where the operation was executed, which could differ from
+   the node where the operation was initiated.
+
+   Typical log entries provide a timestamp of the operation, the type of
+   operation, the UID of the user who ran the command, the IP address from
+   which the user ran the command, identifiers of the affected resources,
+   and the status of the operation. Fields such as “ColumnFamily” and
+   “Column” for some operations are also included when applicable. Row
+   keys are not included. Status codes come from the Linux errno.h file.
+   For a list of these codes, see [1]Status Codes That Can Appear in Audit
+   Logs.
+   Note: Due to the way that the creation of tables is processed
+   internally, sometimes the creation of tables is logged in
+   FSAudit.log.json, rather than in DBAudit.log.json.
+   Note: Audit logs do not display the indices of array elements when
+   there are put or update operations on arrays that are in documents
+   within JSON tables.
+
+   Below are some typical log entries:
+{"timestamp":{"$date":"2015-06-06T11:31:02.621Z"},"operation":"DB_GET","uid":0,"
+ipAddress":
+"10.10.105.51","volumeId":48210891,"tableFid":"2751.77.131402","status":0}
+{"timestamp":{"$date":"2015-06-06T11:31:02.623Z"},"operation":"DB_SCAN","uid":0,
+"ipAddress":
+"10.10.104.51","volumeId":48210891,"tableFid":"2751.77.131402","status":0}
+{"timestamp":{"$date":"2015-06-06T11:31:02.624Z"},"operation":"DB_PUT","uid":0,"
+ipAddress":
+"10.10.104.51","volumeId":48210891,"columnFamily":"cf0","columnQualifier":"c0","
+tableFid":
+"2751.77.131402","status":0}
+
+   To convert the user IDs to usernames, file identifiers to pathnames,
+   and volume IDs to volume names, run the [2]expandaudit utility. For
+   example, here are the same audit records after they were processed by
+   this utility:
+{"timestamp":{"$date":"2015-06-06T11:31:02.621Z"},"operation":"DB_GET","uid":0,"
+ipAddress":
+"10.10.105.51","VolumeName":"mapr.cluster.root","volumeId":48210891,"tablePath":
+"/ycsb1433588330006/ycsbTable0","status":0}
+{"timestamp":"{$date=2015-06-06T11:03:16.721Z}","operation":"DB_SCAN","user":"ro
+ot","uid":
+"0","ipAddress":"10.10.105.51","VolumeName":"mapr.cluster.root","volumeId":"4821
+0891","tablePath":
+"/ycsb1433588330006/ycsbTable0","status":"0"}
+{"timestamp":{"$date":"2015-06-06T11:31:02.624Z"},"operation":"DB_PUT","uid":0,"
+ipAddress":
+"10.10.104.51","VolumeName":"mapr.cluster.root","volumeId":48210891,"columnFamil
+y":"cf0",
+"columnQualifier":"c0","tablePath":"/ycsb1433588330006/ycsbTable0","status":0}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AuditLogs-StatusCodes.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/r_expand_audit_logs.html#reference_xzd_cpj_vt

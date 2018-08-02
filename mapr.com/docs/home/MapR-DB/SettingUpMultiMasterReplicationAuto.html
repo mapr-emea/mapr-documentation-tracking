@@ -1,0 +1,80 @@
+Setting Up Table Replication Using the CLI
+
+   You can run the maprcli table replica autosetup command to set up
+   master-slave or multi-master replication from an existing source table.
+   Note: This procedure describes how to use the maprcli to automatically
+   setup table replication. As an alternative, you can use the [1]MapR
+   Control Service (MCS) to automatically setup table replication or use
+   the maprcli to [2]manually setup master-slave replication or
+   [3]manually setup multi-master replication.
+
+   Complete the following steps before you begin:
+     * Verify that you have complete the steps to configure the clusters
+       for table replication. For more information, see [4]Preparing
+       Clusters for Table Replication.
+     * Run the maprcli table info command on the source table to verify
+       that you have the following permissions:
+          + readperm, which is required for reading from the table.
+          + replperm, which is required for replicating from the table.
+     * Run the maprcli table info command on the destination table (if it
+       already exists) to verify that you have the following permissions:
+          + bulkload, which is required for the initial copy of source
+            data into the destination table.
+          + replperm, which is required for receiving replicated updates
+            from the source table.
+
+   Note: All updates from a source table arrive at a replica after having
+   been authenticated at a gateway. Therefore, access control expressions
+   on the replica that control permissions for updates to column families
+   and columns are irrelevant; gateways have the implicit authority to
+   update replicas.
+   Note: If you are setting up a master-slave replication loop for n
+   clusters, repeat these steps for n-1 master-slave relationships to set
+   up basic master-slave topologies.
+    1. Log into both the source and destination clusters.
+    2. Run the maprcli table replica autosetup command.
+          + For master-slave replication:
+maprcli table replica autosetup -path <path to source table> -replica <path to r
+eplica>
+          + For multi-master replication:
+maprcli table replica autosetup -path <path to source table> -replica <path to r
+eplica> -multimaster true
+            Note:
+            The parameter -multimaster is an optional parameter that you
+            use to set up multi-master replication.
+       For example, to set up multi-master replication between the
+       customers table in the sanfrancisco cluster and a new customers
+       table in the newyork cluster, you could use this command:
+maprcli table replica autosetup -path /mapr/sanfrancisco/customers -replica /map
+r/newyork/customers -multimaster true
+       To set up master-slave replication between the customersA table in
+       the sanfrancisco cluster and a new customersB table in the same
+       cluster, you could use this command:
+maprcli table replica autosetup -path /mapr/sanfrancisco/customersA -replica /ma
+pr/sanfrancisco/customersB
+       Note: For information about additional parameters that you can
+       configure, see [5]table replica autosetup.
+    3. To check the replication status, run [6]table replica list.
+
+   Additional Information:
+     * With multi-master replication, if one of the tables goes offline,
+       direct client applications to the other table. For more
+       information, see [7]Multi-Master replication.
+     * Be aware that changes to the structure of a source table are not
+       replicated automatically to replicas. For more information, see
+       [8]Adding a Column Family to a Replica
+     * You can check for alarms related to replication and whether
+       synchronous replication is switched temporarily to asynchronous
+       replication by looking in MCS. See [9]Table-Replication Alarms.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/SetUpReplication.html#task_m3w_hkc_mz
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/SettingUpBasicMSReplicationManual.html#task_m14_xj2_gw
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/SettingUpMultiMasterReplicationManual.html#task_b1l_j3p_vt
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ConfiguringMapRClustersForTR.html#task_evy_rnz_5t
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-autosetup.html#tablereplicaautosetup
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-list.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ReplicatingMapR-DBTables-multimaster.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/AddColumnFamilyToReplica.html#task_xtq_2ph_21b
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Table-Replication-Alarms.html

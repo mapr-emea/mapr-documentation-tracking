@@ -1,0 +1,94 @@
+table cf colperm delete
+
+   Deletes the Access Control Expressions (ACEs) for a specified column.
+   Deletion cannot be undone.
+   Note: When a user, group, or role requests to read data from, write
+   data to, or append data to a column, MapR-DB checks whether that user,
+   group, or role has read or write permission for the column family AND
+   read or write permission for the column. For example, suppose user
+   i_montoya tries to write data to columns col1 and col2 in column family
+   cf1. MapR-DB checks whether i_montoya has write permission on cf1 AND
+   col1 AND col2. If i_montoya does not have all three permissions,
+   MapR-DB returns an error that says access for the write is denied.
+
+   If this user were to try to read from the same two columns, MapR-DB
+   would simply not return the data. If the user tried to read from those
+   two columns and additional columns on which he had read permissions,
+   the results would contain the data for those additional columns but
+   exclude the data for col1 and col2.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * adminaccessperm on the table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table cf colperm delete
+  -path <path>
+  -cfname <column-family name>
+  -name <column name>
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/cf/colperm/delete?path=<path>&cfname=<name
+>&name=<name>'
+  -u <username>:<password>
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Parameters
+
+   Parameter
+
+   Description
+
+   path
+
+   The path to the table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under volume1 which has
+       a mount point at /volume1, specify the following path:
+       /volume1/test
+
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named test under volume1
+       in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customer
+
+   cfname
+
+   The name of the column family in which the column is located.
+   name     The name of the column that you want to delete the ACEs for.
+
+Example
+
+   Deletes ACEs for column col1 in table mytable and column family cf1:
+
+   CLI
+
+maprcli table cf colperm delete -path /mytable -cfname cf1 -name col1
+
+   REST
+
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/cf/colperm/delete?path=%2Fmytable&cfname=c
+f1&name=col1' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

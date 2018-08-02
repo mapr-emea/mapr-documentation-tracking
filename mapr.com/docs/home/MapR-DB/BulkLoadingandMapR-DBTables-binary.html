@@ -1,0 +1,88 @@
+Loading Data into Binary Tables
+
+   Bulkload operations can be performed as a full bulkload or as an
+   incremental bulkload.
+
+   The most common way of loading data into a MapR-DB Binary Tables is
+   with a put operation. However, at large scales, bulk loads offer a
+   performance advantage over put operations.
+
+   Bulk loading is supported by the following tools, which can be used for
+   both full and incremental bulkload operations:
+     * MapR's hbase [1]MapR-DB Binary CopyTable utility which copies
+       MapR-DB binary table data, table metadata, access control
+       expressions, and more to another MapR-DB binary table.
+hbase com.mapr.fs.hbase.tools.mapreduce.CopyTable
+     * MapR's hbase ImportFiles utility which imports HFile or Result
+       files into MapR-DB binary tables. For example:
+hbase com.mapr.fs.hbase.tools.mapreduce.ImportFiles
+   -Dmapred.reduce.tasks=2
+   -inputDir < input directory, for example: /test/tabler.kv >
+   -table < table name, for example: /table2 >
+   [ -format < Result|HFile > ]
+   [ -sample < true|false > ]
+   [ -mapOnly < true|false > ]
+
+Full Bulk Loads
+
+   Full bulkload operations offer the best performance advantage because
+   it skips the write-ahead log (WAL) typical of MapR-DB binary table
+   operations. Full bulkload operations can only be performed on empty
+   tables that have the bulkload attribute set to true. This value is set
+   only when creating a table.
+
+   When you set the bulkload attribute, you cannot enable replication on
+   the table. Since this effectively disables logging on the table,
+   MapR-DB also does not capture log data that Elasticsearch can use to
+   index the table.
+   Important: Tables are unavailable for normal client operations,
+   including put, get, and scan operations, while a full bulkload
+   operation is in progress.
+
+   To create a MapR-DB binary table for bulkloading, use one of the
+   following:
+     * MapR [2]maprcli table create command with tthe -bulkload parameter
+       set to true.
+     * Apache HBase shell create command with the BULKLOAD parameter set
+       to true. For example:
+hbase> create '/a0','f1', BULKLOAD => 'true'
+       If you want to pre-split a table, separate the BULKLOAD parameter
+       from the SPLITS parameter. For example:
+hbase> create '/t1', 'f1', {SPLITS => ['10', '20', '30']}, {BULKLOAD => 'true'}
+
+     * MapR Control System (MCS) with Will table be bulkload? option set
+       to Yes under table PROPERTIES.
+
+   Note: Attempting a full bulkload on a table that does not have the
+   bulkload attribute set to true results in an incremental bulkload being
+   performed instead.
+   After you perform a full bulkload on a table, you cannot perform a full
+   bulkload on it again. For example:
+     * You cannot use the MapR maprcli table edit command to set the
+       bulkload parameter to TRUE again.
+     * You cannot use the Apache HBase shell alter command to set the
+       BULKLOAD parameter to TRUE again.
+     * In MCS, the Will table be bulkload? option cannot be modified after
+       table creation.
+
+Incremental Bulk Loads
+
+   Incremental bulk loads can add data to existing tables concurrently
+   with other table operations, with better performance than put
+   operations. This type of bulk load makes use of write-ahead log files.
+   Note: Tables are available for client operations, such as put, get, and
+   scan operations, during incremental bulk loads.
+
+   You can use incremental bulk loads to ingest large amounts of data to
+   an existing table. Tables remain available for standard client
+   operations such as put, get, and scan while the bulk load is in
+   process. A table can perform multiple incremental bulk load operations
+   simultaneously.
+   Note: Whether you create a table with the maprcli table create command,
+   with the hbase shell’s create command, or in MCS, incremental loads are
+   supported by default.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/CopyTable.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-create.html

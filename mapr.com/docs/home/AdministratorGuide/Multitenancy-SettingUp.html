@@ -1,0 +1,44 @@
+Setting Up a Tenant
+
+   To set up a tenant:
+    1. On the server:
+         a. Log in to the cluster as the administrator and create a user
+            (for the tenant admin) on the cluster.
+            The user (for the tenant) must exist on all the cluster nodes
+            with the same UID and GID or all the cluster nodes must
+            connect to the same LDAP server. See [1]Managing Users and
+            Groups for more information.
+            Note: The superuser for a tenant, referred to as tenant admin,
+            must have a UID of 0 on the tenant host(s) to access the
+            tenant volume (only) and all data in the tenant volume.
+            Although the tenant admin has the same UID as the MapR
+            superuser, the tenant admin does not have the same level of
+            access and administration privileges as the MapR superuser
+            because the tenant admin’s access is based on the tenant
+            ticket and is restricted to the tenant volume.
+         b. Generate a tenant ticket for the user.
+            For more information, see [2]Generating a Ticket for a Tenant.
+         c. Copy the ticket to the tenant host and grant the tenant
+            administrator read access to the ticket.
+         d. Create a volume (or share) on the cluster for the tenant.
+            For more information, see [3]Creating a Volume for a Tenant.
+    2. On the tenant instance:
+         a. Log in as tenant administrator (root).
+         b. Mount the file system using loopbacknfs or the FUSE-based
+            POSIX client.
+            For more information, see [4]Mounting a Tenant Volume.
+            Note: While starting the POSIX client, use the tenant ticket
+            configured in step 1.
+         c. As tenant admin, grant access to users by setting permissions
+            to data using either [5]file ACEs or mode bits.
+            For more information, see [6]Enabling and Restricting Access
+            to Tenant Volume and Data.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c-managing-users-and-groups.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Multitenancy-GenTicket.html#task_pgv_1n3_rx
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Multitenancy-CreateShare.html#task_f5j_s43_rx
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Multitenancy-MountShare.html#task_qhw_zt3_rx
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/FileDirACE.html#concept_rzq_sb1_f5
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Multitenancy-AccessTenantVol.html

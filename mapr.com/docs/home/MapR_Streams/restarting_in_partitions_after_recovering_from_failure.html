@@ -1,0 +1,18 @@
+Consumer Failure and Recovery
+
+   If a consumer that is not associated with a consumer-group ID fails,
+   when it comes back online it can either start reading its partitions
+   from the earliest offsets or from the latest offset. The choice is
+   determined by the auto.offset.reset configuration parameter.
+
+   If the consumer reads from the earliest offset in a partition, which is
+   the offset of the message that has been in the partition longest
+   without being deleted because of the expiration of the time-to-live
+   interval for the stream, it might re-read a large number of messages
+   before reading messages that were published after it failed.
+
+   If the consumer reads from the latest offset in a partition, which is
+   the offset of the most current message at the time the consumer
+   requests new messages from MapR-ES, the consumer starts off up-to-date,
+   but skips over the messages between its time of failure and the current
+   time.

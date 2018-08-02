@@ -1,0 +1,70 @@
+volume mirror start
+
+   Starts mirroring on the specified volume from its source volume.
+     * License required: Enterprise Edition
+     * Permissions required: fc or restore on the volume
+
+   When a mirror is started, the mirror volume is synchronized from a
+   hidden internal snapshot so that the mirroring process is not affected
+   by any concurrent changes to the source volume. The volume mirror start
+   command does not wait for mirror completion, but returns immediately.
+   The changes to the mirror volume occur atomically at the end of the
+   mirroring process; deltas transmitted from the source volume do not
+   appear until mirroring is complete.
+
+   To provide rollback capability for the mirror volume, the mirroring
+   process creates a snapshot of the mirror volume before starting the
+   mirror, with the following naming format:
+   <volume>.mirrorsnap.<date>.<time>.
+
+   Normally, the mirroring operation transfers only deltas from the last
+   successful mirror. Under certain conditions (mirroring a volume
+   repaired by fsck, for example), the source and mirror volumes can
+   become out of sync. In such cases, it is impossible to transfer deltas,
+   because the state is not the same for both volumes. Use the -full
+   option to force the mirroring operation to transfer all data to bring
+   the volumes back in sync.
+
+Syntax
+
+   CLI
+
+maprcli volume mirror start
+    [ -cluster <cluster> ]
+    [ -full true|false ]
+    -name <volume name>
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host>:<port>/rest/volume/mirror/start?<parameters>
+
+Parameters
+
+   Parameter Description
+   cluster The cluster on which to run the command.
+   full Specifies whether to perform a full copy of all data. If false,
+   only the deltas are copied.
+   name The volume for which to start the mirror.
+
+Output
+
+   Sample Output
+messages
+Started mirror operation for volumes 'testMirror'
+
+Examples
+
+   Start mirroring the mirror volume "testMirror":
+     * [1]CLI
+     * [2]REST
+
+maprcli volume mirror start -name testMirror
+
+https://abc.sj.us:8443/rest/volume/mirror/start?name=testMirror
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-mirror-start.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-mirror-start.html#div1entry2

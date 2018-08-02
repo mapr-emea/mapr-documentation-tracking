@@ -1,0 +1,25 @@
+Disable an Application in the Hue Interface (optional)
+
+   If you want to disable an application (such as Impala), follow these
+   steps:
+    1. In the [desktop] section of the hue.ini file, uncomment the #
+       app_blacklist= statement and insert the name of the app you want to
+       disable (impala in this example).
+       Note: Do not remove search from the app_blacklist. The Hue UI will
+       not work if the search application is enabled.
+# Comma-separated list of apps not to load at server startup.
+# Note that rdbms is the name used for dbquery.
+app_blacklist=spark,zookeeper,search,impala,sqoop,rdbms
+       Note: After removing an application from app_blacklist, you must
+       update the Hue internal database to create the tables required for
+       the application that was enabled:
+cd /opt/mapr/hue/hue-<version>source ./build/env/bin/activate
+hue syncdb --noinput
+hue migrate
+deactivate
+
+    2. Once all changes are made, restart Hue so the changes will take
+       effect.
+       Note: You can re-enable a blacklisted application at any time, and
+       then restart Hue.
+maprcli node services -name hue -action restart -nodes <ip_address>

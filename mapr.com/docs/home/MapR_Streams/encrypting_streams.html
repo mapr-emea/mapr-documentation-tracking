@@ -1,0 +1,42 @@
+Encrypting a Stream
+
+   Apply an additional layer of security to streams by encrypting them.
+
+   To set encryption on a stream:
+    1. Before encrypting a stream, ensure that wire-level security is
+       enabled for your MapR cluster. See [1]Enabling Wire-level Security.
+    2. Determine whether a directory or stream is encrypted by running the
+       following command:
+hadoop mfs -ls <path>
+       Note: Streams inherit the value of the -setnetworkencryption
+       setting from the directory in which they are created.
+    3. If the directory is not encrypted, set the encryption on the
+       streams with the following command:
+hadoop mfs -setnetworkencryption on <path of stream>
+
+Example
+
+   Suppose that the streams that you want to encrypt are all in the /test
+   directory. You run this command to discover whether the directory is
+   encrypted:
+# hadoop mfs -lsd /test
+Found 1 items
+drwxr-xr-x Z U U   - root root          0 2015-09-07 02:37  268435456 /test
+           p 2049.43.131260  localhost:5660
+
+   The second flag U after the permissions indicates that the directory
+   test is unencrypted. Because you want to encrypt your stream to enhance
+   data security, you run this command, which encrypts the entire
+   directory:
+hadoop mfs -setnetworkencryption on /test
+
+   If you run the -lsd command again, you will see that the U is replaced
+   by an E, indicating that the directory is now encrypted:
+# hadoop mfs -lsd /test
+Found 1 items
+drwxr-xr-x Z E U   - root root          0 2015-09-07 02:40  268435456 /test
+           p 2049.43.131260  localhost:5660
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html

@@ -1,0 +1,144 @@
+Specifying Ports
+
+   On installations where the MFS instances and/or CLDB cannot be reached
+   on the standard ports, you can specify the ports to advertise in the
+   MAPR_EXTERNAL and CLDB_EXTERNAL_RPC_PORT environment variables
+   respectively. This setting does not change the ports used by the
+   servers, but changes the ports advertised to clients (to support port
+   forwarding).
+
+   If the cluster nodes are no longer reachable on the standard ports, you
+   can specify ports for MFS using the MAPR_EXTERNAL environment variable.
+   MAPR_EXTERNAL allows the specification of the advertised ports for the
+   MFS instances only; this environment variable cannot be used to specify
+   ports for CLDB. Instead, use CLDB_EXTERNAL_RPC_PORT environment
+   variable to specify port for CLDB. If ZooKeeper is not available on the
+   default port or if there are multiple ZooKeepers listening on same
+   external IP address, you can specify ports for each ZooKeeper using the
+   configure.sh utility.
+
+   See the following sections for more information on setting the ports.
+
+Specifying Ports for MFS
+
+   If the port forwarding table is set up, ports must be configured for
+   every MFS node on every MFS instance. For more information on the
+   number of ports used by MFS instance(s), see [1]Ports Used by MapR. To
+   specify the ports for MFS:
+    1. Open the $MAPR_HOME/conf/env_override.sh file. If the
+       env_override.sh file is not present, you might have to create it.
+       See [2]About env_override.sh.
+    2. Set the value for the MAPR_EXTERNAL environment variable.
+       The value for the MAPR_EXTERNAL environment variable is a
+       comma-separated list of IP addresses and colon-separated list of
+       ports (to use for port forwarding).
+       For example:
+export MAPR_EXTERNAL=10.11.0.0;9000,9001,9002,9003
+       The following example shows 3 MFS instances with 4 ports:
+export MAPR_EXTERNAL=10.11.0.0;9000,9001,9002,9003:10000,10001,10002,10003:11000
+,11001,11002,11003
+       To specify:
+          + Multiple IP addresses, use comma to separate the IP addresses.
+          + Ports for multiple instances, use:
+               o comma (,) to separate the ports for an instance
+               o colon (:) to separate the set of ports for each instance
+       If ports are not specified, MFS is assumed to be reachable on the
+       default ports.
+    3. Save and close the $MAPR_HOME/conf/env_override.sh file.
+
+Specifying Ports for CLDB
+
+   If you want CLDB to use another port (other than the default 7222):
+    1. Open the $MAPR_HOME/conf/env_override.sh file on the CLDB host(s).
+       If the env_override.sh file is not present, you might have to
+       create it. See [3]About env_override.sh.
+    2. Set the value for the CLDB_EXTERNAL_RPC_PORT environment variable
+       in the file.
+       The value for this environment variable is the port to use for
+       CLDB.
+       For example:
+export CLDB_EXTERNAL_RPC_PORT=5000
+       This is especially useful if MapR is installed in a Docker
+       container or other guest hosts. If this is not set, CLDB must be
+       reachable on the default port 7222.
+    3. Save and close the $MAPR_HOME/conf/env_override.sh file.
+    4. Ensure that the mapr-clusters.conf file on the client host(s)
+       contains the correct port number for CLDB.
+
+   Note: After setting this environment variable, make sure that
+   cldb.feature.external.ip is enabled if you upgraded from a prior
+   version of MapR to v6.0. For more information on enabling this feature,
+   see [4]Step 4: Enable New Features.
+
+Specifying Ports for ZooKeeper
+
+   If ZooKeeper is not available on the default port or if all the
+   ZooKeepers are listening on the same external IP address (such as in a
+   Docker container), you can specify the port on which to reach each
+   ZooKeeper. To specify the port on which to reach each ZooKeeper, during
+   cluster configuration:
+   Run the configure.sh utility with the -EZ option.
+   The value for the -EZ option is a comma-separated list of external IP
+   addresses of the ZooKeeper nodes and the port (for each IP address),
+   separated by a colon, on which ZooKeeper can be reached. For example:
+/opt/mapr/server/configure.sh -C <IP|Hostname>[,<IP|Hostname>,...] -Z <IP|Hostna
+me>[,<IP|Hostname>,...] -EZ <IP|Hostname>:<Port>[,<IP|Hostname>:<Port>,...]
+
+   For example, you can specify:
+     * Different ports when the same external IP address is used for all
+       ZooKeeper nodes as shown below:
+# /opt/mapr/server/configure.sh -C 172.17.0.2,172,17.0.3,172.17.0.4 -Z 172.17.0.
+2,172,17.0.3,172.17.0.4 -EZ 10.10.104.34:5181,10.10.104.34:5182,10.10.104.34:518
+3 -N my.cluster.com
+     * Same ports when different IP addresses are specified for ZooKeeper
+       nodes:
+# /opt/mapr/server/configure.sh -C 172.17.0.2,172,17.0.3,172.17.0.4 -Z 172.17.0.
+2,172,17.0.3,172.17.0.4 -EZ 10.10.104.34:5181,10.20.105.34:5181,10.30.106.34:518
+1 -N my.cluster.com
+
+Configuring MR AppMaster Port Mapping
+
+    1. Set the yarn.app.mapreduce.am.job.client.port-range parameter in
+       the yarn-site.xml file to specific range of free ports in all the
+       NodeManager nodes.
+       Specify the range of ports that the MapReduce AppMaster can use
+       when binding. Do not specify a value for this parameter if you want
+       all possible ports. For example:
+50000-50050,50100-50200
+       Note: Each Docker instance where NodeManager is running should have
+       different range and the range should be different across all
+       NodeManager nodes.
+       For example:
+The yarn-site.xml file in docker container 1:
+<property>
+        <name>yarn.app.mapreduce.am.job.client.port-range</name>
+        <value>50000-50050</value>
+</property>
+The yarn-site.xml file in docker container 2:
+<property>
+        <name>yarn.app.mapreduce.am.job.client.port-range</name>
+        <value>50100-50150</value>
+</property>
+The yarn-site.xml file in docker container 3:
+<property>
+        <name>yarn.app.mapreduce.am.job.client.port-range</name>
+        <value>50151-50200,50250-50300</value>
+</property>
+    2. Set the port forwarding rules in host machine for these specific
+       ranges.
+       For example, if NM1 contains ranges from 50000 to 50050, then set
+       the IP table rules such that when requests come on these ports, it
+       is forwarded to NM1.
+    3. Specify the AWS or Docker host name for the IP address in the
+       /etc/hosts file on the client system so that external clients can
+       resolve Docker or AWS hostname properly when running the jobs.
+       For example, your entry in the /etc/hosts file should look similar
+       to the following:
+54.208.145.112 ip-10-10-0-103.ec2.internal
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/MapRPorts.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Configuring-the-New-Version.html

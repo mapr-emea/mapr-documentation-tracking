@@ -1,0 +1,265 @@
+Creating a New Table
+
+   There are several methods that you can use to create MapR-DB tables
+   including the maprcli, and hbase shell, mapr dbshell commands and
+   through the MCS. There are two methods that you can use to create both
+   binary tables and JSON tables:
+     * MCS
+     * CLI
+
+Creating a New Table Using MCS
+
+   To create a new table from the MCS, under Data > Tables:
+    1. Click Create Table.
+       The Create New Table page displays.
+    2. Choose the table type:
+          + JSON — see [1]MapR-DB as a Document Database
+          + Binary — see [2]MapR-DB as a Wide-Column Database
+    3. Specify the following properties under PROPERTIES.
+         a. Enter path to the table in the Table Path field.
+            Tables are stored in the MapR file system. When providing the
+            path to a table, use these conventions.
+               o For a path on the local cluster, start the path at the
+                 volume mount point. For example, for a table named test
+                 under a volume with a mount point at /volume1, specify
+                 the following path: /volume1/test
+               o For a path on a remote cluster, you must also specify the
+                 cluster name in the path. For example, for a table named
+                 customer in volume1 in the sanfrancisco cluster, specify
+                 the following path: /mapr/sanfrancisco/volume1/customer
+         b. Enable (Yes) or disable (No) auto-splitting of table.
+            If enabled, the table will be split automatically into regions
+            as the table grows. If disabled, the table can be split
+            manually into regions. By default, this is enabled.
+         c. Enable (Yes) or disable (No) full bulk load of the table.
+            For more information, see [3]Loading Documents into JSON
+            Tables. By default, this is disabled.
+         d. Enable (Yes) or disable (No) auditing of table operations.
+            If auditing is enabled at the cluster and volume levels,
+            enabling auditing will cause auditing to start for the table
+            operations. For more information, see [4]Auditing of
+            Operations on MapR-DB Binary Tables and JSON Tables.
+    4. Specify users, groups, and/or roles that have and/or do not have
+       the following types of access to the table under USER ACCESS
+       CONTROLS.
+          + [5]JSON Table
+          + [6]Binary Table
+
+   Administration Can view and edit the permissions for the table.
+   Force Pack Can pack table regions.
+   Split Merge Can take the following actions:
+          + Split the table into regions or merge regions of the table
+            together.
+          + Change the size of the region.
+
+   Index Can create index for this table.
+   Bulkload Can load this table with bulk loads if the table was created
+   with bulk load support.
+   Replication Access Can set up replication either to or from a table.
+   Create/Rename Column Family Can create column families for this table
+   or rename existing column families.
+   Delete Column Family Can delete column families associated with the
+   table.
+
+   Administration Can view and edit the permissions for the table.
+   Force Pack Can pack table regions.
+   Split Merge Can take the following actions:
+          + Split the table into regions or merge regions of the table
+            together.
+          + Change the size of the region.
+
+   Bulkload Can load this table with bulk loads if the table was created
+   with bulk load support.
+   Replication Access Can set up replication either to or from a table.
+   Create/Rename Column Family Can create column families for this table
+   or rename existing column families.
+   Delete Column Family Can delete column families associated with the
+   table.
+       By default, all permissions are given to the user creating the
+       table.
+       To grant or block access to users, groups, and/or roles, from the:
+          + Basic settings, select the type — public, (OR) user, group, or
+            role — from the drop-down menu, specify the name of the user,
+            group, or role, and select one or more checkbox to grant
+            permissions.
+            Tip: Click [cloneACE.png] to create a copy of the associated
+            access control setting. Click [deleteRow.png] to remove the
+            associated access control expression.
+            To add access control expressions for another user, group, or
+            role, click Add Another and repeat this step.
+          + Advanced settings, or specify public (p) or user (u), group
+            (g), and/or role (r) who have and/or do not have the type of
+            access using the following boolean expressions and
+            subexpressions:
+               o ! — Negation operator.
+               o & — AND operation.
+               o | — OR operation.
+            Use (), parentheses, for subexpressions.
+            Note: You cannot specify user, group, or role individually if
+            access is granted to all users (public).
+            Alternatively, click [editPencil.png] associated with the type
+            of access to use the Access Control Expression window to
+            define access for public or users, group, and/or role. See
+            [7]Defining ACEs for more information.
+       Note: If you switch from Basic to Advanced, the basic settings, if
+       any, will be carried over to the advanced settings. If you switch
+       from Advanced to Basic, all the settings will be lost because the
+       subexpressions and AND (&) and negation (!) operations that are
+       supported by advanced settings are not supported in the basic
+       settings.
+       You can proceed to:
+          + Step 5 to set default column family permissions.
+          + Step 6 to create the table.
+    5. Click Default Column Family Authorization.
+       You can set up default permissions for column families on this
+       page.
+          + [8]JSON Table
+          + [9]Binary Table
+       Specify public, (OR) users, groups, and/or roles that have and/or
+       do not have the following types of access to the column families
+       under USER ACCESS CONTROLS.
+
+   Read Data Can do column reads. Reads require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Write Data Can do column writes. Writes require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Traverse Data Can pass over fields in JSON documents. For example,
+   suppose that a JSON table contains documents of this general structure:
+{
+  "_id" : "ID",
+  "a" :
+     {
+       "b" : "value",
+       "c" : "value"
+     }
+}
+
+   Suppose further that the user sjohnson has read permission on a.b, but
+   not on a. For sjohnson to read a.b, the user needs the traverse
+   permission on a. The user can then pass over field a to a.b. This
+   permission is inherited by fields within the column family.
+   Set Compression Can set or change the compression setting for the
+   column family.
+       Specify public, (OR) users, groups, and/or roles that have and/or
+       do not have the following types of access to the column families
+       under USER ACCESS CONTROLS.
+
+   Read Data Can do column reads. Reads require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Write Data Can do column writes. Writes require permission both at the
+   column-family level and at the field level. This permission is
+   inherited by fields within the column family.
+   Append Data Can do column appends. Column appends require permission
+   both at the column-family level and at the column level.
+   Set Version Can set or change the maximum and minimum number of
+   versions of column values to keep.
+   Set Compression Can set or change the compression setting for the
+   column family.
+       By default, all permissions are given to the user creating the
+       table.
+       To grant or block access to users, groups, and/or roles, from the:
+          + Basic settings, select the type — public, (OR) user, group, or
+            role — from the drop-down menu, specify the name of the user,
+            group, or role, and select one or more checkbox to grant
+            permissions.
+            Tip: Click [cloneACE.png] to create a copy of the associated
+            access control setting. Click [deleteRow.png] to remove the
+            associated access control expression.
+            To add access control expressions for another user, group, or
+            role, click Add Another and repeat this step.
+          + Advanced settings, or specify public (p) or user (u), group
+            (g), and/or role (r) who have and/or do not have the type of
+            access using the following boolean expressions and
+            subexpressions:
+               o ! — Negation operator.
+               o & — AND operation.
+               o | — OR operation.
+            Use (), parentheses, for subexpressions.
+            Note: You cannot specify user, group, or role individually if
+            access is granted to all users (public).
+            Alternatively, click [editPencil.png] associated with the type
+            of access to use the Access Control Expression window to
+            define access for public or users, group, and/or role. See
+            [10]Defining ACEs for more information.
+       Note: If you switch from Basic to Advanced, the basic settings, if
+       any, will be carried over to the advanced settings. If you switch
+       from Advanced to Basic, all the settings will be lost because the
+       subexpressions and AND (&) and negation (!) operations that are
+       supported by advanced settings are not supported in the basic
+       settings.
+    6. Click Create Table to create the table.
+       You can proceed to:
+          + [11]Add column families to the table.
+          + [12]View the table information for the newly created table.
+
+Creating a Table Using the CLI or the REST API
+
+   The basic command to create a binary table is:
+maprcli table create -path <path>
+
+   To create a JSON table, include the -tabletype parameter and set it to
+   json:
+maprcli table create -path <path> -tabletype json
+
+   The -tabletype parameter is set to binary by default.
+
+   The format of the value of the -path parameter depends on whether you
+   are creating a table on a local cluster or a remote cluster:
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named test under a volume with a
+       mount point at /volume1, specify the following path: /volume1/test
+     * For a path on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named customer under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customer
+
+   When you create a table with this command, you can set a number of
+   properties. See [13]table create.
+     * Enabling or disabling auditing
+     * Enabling or disabling autosplitting
+     * Granting permission on tables
+     * Setting the bulkload flag on tables
+     * Setting maximum region size for tables
+
+Creating Tables Using shell Command
+
+     * [14]JSON Tables
+     * [15]Binary Tables
+
+   The MapR DB shell command is used on JSON tables only. To run this
+   command, execute the following:
+mapr dbshell
+
+   After starting the shell, run the create command. See [16]MapR-DB Shell
+   (JSON Tables).
+
+   The HBase shell command is used on binary tables only. To run this
+   command, execute the following:
+hbase shell
+
+   After starting the HBase shell, run the create command. Type help to
+   see a list of commands and their syntax. See [17]MapR-DB HBase Shell
+   (Binary Tables).
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/MaprDB-overview-json.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/maprDB-overview-binary.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/loading_documents_into_json_tables.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html#AuditingofFilesystemOperationsandTableOperations__tables
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/CreateTable.html#div1entry1
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/CreateTable.html#div1entry2
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/ACE-Builder.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/CreateTable.html#div2entry1
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/CreateTable.html#div2entry2
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/ACE-Builder.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ColumnFamilies-Create.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ViewTableDetails.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-create.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/CreateTable.html#div3entry1
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/CreateTable.html#div3entry2
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_dbshell.html
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/HBaseShellforMapR-DB.html

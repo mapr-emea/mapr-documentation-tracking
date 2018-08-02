@@ -1,0 +1,97 @@
+Enabling and Configuring Replication Role Balancer
+
+   You can enable or disable replication role balancer and configure role
+   balancer using MCS and the CLI.
+
+Enabling and Configuring Replication Role Balancer Using the MapR Control
+System
+
+    1. Log in to MCS and click Admin > Cluster Settings > Balancer.
+    2. Use the Enabled slider to enable (Yes) or disable (No) role
+       balancer and:
+          + Proceed to step 3 if you enabled the role balancer.
+          + Skip to step 4 if you disabled the role balancer.
+    3. Select one of the presets or specify a custom value for Concurrent
+       Role Rebalancer and Delay for Active Data in Seconds settings. You
+       can choose:
+          + Presets:
+
+              Default
+
+                    # Concurrent Role Rebalancer — 20%
+                    # Delay for Active Data in Seconds — 600 sec
+
+              Rapid
+
+                    # Concurrent Role Rebalancer — 5%
+                    # Delay for Active Data in Seconds — 300 sec
+
+              Moderate
+
+                    # Concurrent Role Rebalancer — 10%
+                    # Delay for Active Data in Seconds — 600 sec
+
+              Relaxed
+
+                    # Concurrent Role Rebalancer — 25%
+                    # Delay for Active Data in Seconds — 1800 sec
+
+          + Custom, use the slider to set the concurrent role rebalancer
+            percentage and delay for active data in seconds.
+       Here:
+
+   Concurrent Role Rebalancer Specifies the maximum percentage of data
+   affected by concurrent role rebalancer operations. The cluster will
+   wait until the number of rebalancing operations affects less than this
+   percentage of total data eligible for rebalancing.
+   Delay for Active Data in Seconds At the time of calculation, role
+   rebalancer will skip any data recently active within this time
+   interval. This prevents unnecessary tampering with data used in recent
+   or ongoing computations.
+    4. Click Save Changes for the changes to take effect.
+
+Enabling and Configuring Replication Role Balancer Using the CLI
+
+   You can use the [1]config save command to modify the replication role
+   balancer parameter values.
+
+   Example: # maprcli config save –values
+   {"cldb.role.balancer.strategy":"BySize"}
+   The following table lists the replication role balancer configuration
+   parameters with their default values and descriptions:
+
+   Parameter
+
+   Value
+
+   Description
+
+   cldb.balancer.role.paused
+
+   1
+
+   Specifies whether the role balancer runs:
+     * 0 - Not paused (normal operation)
+     * 1 - Paused (does not perform any container replication role
+       switches)
+
+   cldb.role.balancer.strategy
+   "BySize"
+
+   Specifies how the replication role balancer balances containers, either
+   by size or count.
+
+   Use "BySize" or "ByCount" to indicate how role balancer balances
+   containers.
+
+   cldb.balancer.role.max.switches.in.nodes.percentage
+
+   10
+
+   This can be used to throttle the role balancer. If it is set to 10, the
+   balancer will throttle the number of concurrent role switches to 10% of
+   the total nodes in the cluster (minimum 2).
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-save.html#configsave

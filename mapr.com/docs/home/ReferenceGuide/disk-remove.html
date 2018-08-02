@@ -1,0 +1,102 @@
+disk remove
+
+   Removes a disk from MapR-FS. Permissions required: fc or a.
+
+   The disk remove command does not remove a disk containing unreplicated
+   data unless forced. To force disk removal, specify -force with the
+   value 1.
+   Note:
+     * Only use the -force 1 option if you are sure that you do not need
+       the data on the disk. This option removes the disk without regard
+       to replication factor or other data protection mechanisms, and may
+       result in permanent data loss.
+     * Removing a disk in the storage pool that contains Container ID 1
+       will stop your cluster. Container ID 1 contains CLDB data for the
+       master CLDB. Run disk remove without the -force 1 option first and
+       examine the warning messages to make sure you aren't removing the
+       disk with Container ID 1. If you try to remove a disk associated
+       with the storage pool that contains Container ID 1, you will see an
+       error message similar to the following:
+ERROR (151) -  Failed operation for disk /dev/sdb, Operation may bring
+down cluster due to loss of cluster meta-data.
+       Tip: If necessary, run the following command for information on the
+       disk associated with the storage pool that contains Container ID 1:
+/opt/mapr/server/mrconfig info dumpcontainers  | grep cid:1
+       The command output may look similar to the following:
+cid:1 volid:1 sp:SP1:/dev/sdb spid:82380c287085486f0058112ecf016b76
+prev:0 next:0 issnap:0 isclone:0 deleteinprog:0 fixedbyfsck:0 stale:0
+querycldb:0 resyncinprog:0 shared:0 owned:206 logical:206 snapusage:0
+snapusageupdated:1 ismirror:0 isrwmirrorcapable:0 role:1 maxUniq:2100150
+isResyncSnapshot:0 snapId:0 port:5660
+       To safely remove such a disk, perform a [1]CLDB Failover to make
+       one of the other CLDB nodes the primary CLDB, then remove the disk
+       as normal.
+
+Syntax
+
+   CLI
+
+maprcli disk remove
+    [ -cluster <cluster> ]
+    -disks <disk names>
+    [ -force 0|1 ]
+    -host <host>
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host>:<port>/rest/disk/remove?<parameters>
+
+Parameters
+
+   Parameter Description
+   cluster The cluster on which to run the command.
+   disks A list of disks in the form:
+["disk"]or["disk","disk","disk"...]or[]
+
+   force Whether to force
+     * 0 (default) - do not remove the disk or disks if there is
+       unreplicated data on the disk
+     * 1 - remove the disk or disks regardless of data loss or other
+       consequences
+
+   host The hostname or ip address of the node from which to remove the
+   disk.
+
+Output
+
+   Output Fields
+
+   Field
+
+   Description
+
+   disk
+
+   The name of a disk or partition. Example: sca or sca/sca1
+
+   all
+
+   The string all, meaning all unmounted disks attached to the node.
+
+   disks
+
+   A comma-separated list of disks which have non-replicated volumes.<eg>
+   "sca" or "sca/sca1,scb"</eg>
+
+Examples
+
+   Remove a disk:
+     * [2]CLI
+     * [3]REST
+
+maprcli disk remove -disks ["sda1"]
+
+https://abc.sj.us:8443/rest/disk/remove?disks=["sda1"]
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/CLDB-Failover.html#CLDB-Failover-TheCLDBserviceautoma-d3e78
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disk-remove.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disk-remove.html#div1entry2

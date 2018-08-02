@@ -1,0 +1,116 @@
+MapR-DB JSON ExportTable and ImportTable
+
+   Use these utilities together to export data from JSON tables into
+   binary sequence files, and then import the data from the binary
+   sequence files into other JSON tables. You can also use the mapr
+   importtable utility to import changes that are specified in sequence
+   files output by the mapr difftables utility.
+     * [1]Syntax of mapr exporttable
+     * [2]Parameters of mapr exporttable
+     * [3]Syntax of mapr importtable
+     * [4]Parameters of mapr importtable
+     * [5]Example of using mapr exporttable and mapr importtable together
+
+Required Permissions
+
+     * The readAce permission on the volume where the source table for
+       mapr exporttable is located.
+     * The writeAce permission on the volume in which to save the output
+       from mapr exporttable.
+     * The readAce permission on the volume where the files output by mapr
+       exporttable is located.
+     * The writeAce permission on the volume in which the destination
+       table is located.
+
+   For information about how to set permissions on volumes, see [6]Setting
+   Whole Volume ACEs.
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run these utilities unless that user is given
+   the relevant permission or permissions with access-control expressions.
+
+Syntax of mapr exporttable
+
+mapr exporttable
+(option)
+-src Name of table
+-dst Directory path
+[-columns Fields to include]
+
+Parameters of mapr exporttable
+
+   Parameter Description
+   src The path of the JSON table to export from.
+   dst The directory within the MapR filesystem to export the files to.
+   columns A comma-delimited list of fields to include in the exported
+   files.
+   Example
+a,b,c
+
+   Do not use quotation marks and do not include spaces after commas.
+
+Syntax of mapr importtable
+
+mapr importtable
+(option)
+-src Input binary file or directory path
+-dst Destination table
+[-bulkload <true|false>, default is false ]
+[-mapreduce : <true|false>, default is true]
+
+Parameters of mapr importtable
+
+   Parameter Description
+   src The path of the binary file or files to import.
+   Examples
+-src /temp/part0
+-src /temp/*
+
+   dst The JSON table to import the data into.
+   bulkload A Boolean value that specifies whether or not to perform a
+   full bulk load of the table. The default is not to use bulk loading
+   (true). After a bulk load, you must set the -bulkload parameter of the
+   table to false by running the command maprcli table edit -path <path to
+   table> -bulkload false.
+   mapreduce
+
+   A Boolean value that specifies whether or not to use a MapReduce
+   program to perform the operation. The default, preferred method is to
+   use a MapReduce program (true).
+
+   When this parameter is set to false, a client process uses multiple
+   threads.
+
+Example of using mapr exporttable and mapr importtable together
+
+[user@hostname ~]$ mapr exporttable -columns contributors,creditLine -src /colle
+ction/artworks -dst /tempExport
+Header: hostName: hostname, Time Zone: Pacific Standard Time, processName: null,
+ processId: null
+2015-10-01 23:02:38,044 INFO org.apache.hadoop.io.compress.zlib.ZlibFactory <cli
+nit> pool-2-thread-1: Successfully loaded & initialized native-zlib library
+2015-10-01 23:02:38,059 INFO org.apache.hadoop.io.compress.CodecPool getCompress
+or pool-2-thread-1: Got brand-new compressor [.deflate]
+[user@hostname ~]$ hadoop mfs -ls /tempExport
+Found 1 items
+-rw-r--r-- Z U U   1 mapr mapr     108221 2015-10-01 23:02  268435456 /tempExpor
+t/part0
+               p 2049.184.918810  hostname:5660
+               0 2180.39.131304  hostname:5660
+[user@hostname ~]$ mapr importtable -src /tempExport/* -dst /new_collection/artw
+orks
+Header: hostName: hostname, Time Zone: Pacific Standard Time, processName: null,
+ processId: null
+2015-10-01 23:04:50,022 INFO org.apache.hadoop.io.compress.zlib.ZlibFactory <cli
+nit> pool-1-thread-1: Successfully loaded & initialized native-zlib library
+2015-10-01 23:04:50,029 INFO org.apache.hadoop.io.compress.CodecPool getDecompre
+ssor pool-1-thread-1: Got brand-new decompressor [.deflate]
+[user@hostname ~]$
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_export_and_mapr_import.html#mapr_export_and_mapr_import__me_s
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_export_and_mapr_import.html#mapr_export_and_mapr_import__me_p
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_export_and_mapr_import.html#mapr_export_and_mapr_import__mi_s
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_export_and_mapr_import.html#mapr_export_and_mapr_import__mi_p
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_export_and_mapr_import.html#mapr_export_and_mapr_import__example
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html

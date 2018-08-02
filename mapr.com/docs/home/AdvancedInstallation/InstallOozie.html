@@ -1,0 +1,68 @@
+Installing Oozie
+
+   This topic includes instructions for using package managers to download
+   and install Oozie from the MEP repository.
+   For instructions on setting up the MEP repository, see [1]Step 10:
+   Install Ecosystem Components Manually.
+   Oozie's client/server architecture requires you to install two
+   packages, mapr-oozie and mapr-oozie-internal, on the client node and
+   the server node. mapr-oozie is dependent on mapr-oozie-internal.
+   mapr-oozie-internal is automatically installed by the package manager
+   when you install mapr-oozie.
+
+   Execute the following commands as root or using sudo on a MapR cluster:
+    1. Install mapr-oozie and mapr-oozie-internal:
+       RedHat/CentOS
+yum install mapr-oozie mapr-oozie-internal
+       SUSE
+zypper install mapr-oozie mapr-oozie-internal
+       Ubuntu
+apt-get install mapr-oozie mapr-oozie-internal
+    2. For non-secure clusters, add the following two properties to
+       core-site.xml located in
+       /opt/mapr/hadoop/hadoop-2.x.x/etc/hadoop/core-site.xml:
+<property>
+  <name>hadoop.proxyuser.mapr.hosts</name>
+  <value>*</value>
+</property>
+<property>
+  <name>hadoop.proxyuser.mapr.groups</name>
+  <value>*</value>
+</property>
+    3. Restart the YARN services. For YARN mode, restart NodeManager and
+       ResourceManager:
+maprcli node services -name nodemanager -action restart -nodes <space delimited
+list of nodes>
+maprcli node services -name resourcemanager -action restart -nodes <space delimi
+ted list of nodes>
+    4. Run configure.sh -R:
+/opt/mapr/server/configure.sh -R
+    5. Export the Oozie URL to your environment:
+export OOZIE_URL='http://<Oozie_node>:<oozie_port_number>/oozie'
+       The <oozie_port_number> depends on whether your cluster is secure.
+       For secure clusters, use:
+<oozie_port_number>=11443
+       For non-secure clusters, use:
+<oozie_port_number>=11000
+    6. Check Oozie’s status with the following command:
+# /opt/mapr/oozie/oozie-<version>/bin/oozie admin -status
+    7. If high availability for the Resource Manager is configured, edit
+       the job.properties file for each workflow and insert the following
+       statement
+JobTracker=maprfs:///
+    8. If high availability for the Resource Manager is not configured,
+       provide the address of the node running the active ResourceManager
+       and the port used for ResourceManager client RPCs (port 8032). For
+       each workflow, edit the job.properties file and insert the
+       following statement:
+JobTracker=<ResourceManager_address>:8032
+    9. Restart Oozie:
+maprcli node services -name oozie -action restart -nodes <space delimited list o
+f nodes>
+       Note: If high availability for the Resource Manager is not
+       configured and the ResourceManager fails, you must update the
+       job.properties with the active ResourceManager.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingEcoWithoutInstaller.html#concept_gtv_mp4_2w

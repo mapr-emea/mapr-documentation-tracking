@@ -1,0 +1,69 @@
+Binary Tables
+
+   Binary tables store data in a flat table structure where the table
+   consists of columns and column values. Every field in a binary table is
+   stored as a sequence of bytes. Binary tables do not store data type
+   information. You manage the encoding for binary tables when storing
+   data and then convert the sequence of bytes into a specific data type
+   using the CAST or [1]CONVERT functions when you run queries against the
+   tables.
+
+   For example, if a string is stored in binary format, such as a UTF-8
+   encoded string, you must use the CAST function for the query to return
+   a string type. If an integer is stored in binary format, such as 4-byte
+   little endian encoding, you must use the CONVERT function for the query
+   to return the integer value instead of the 4-byte sequence.
+
+Querying a Binary Table
+
+   The following examples, from the [2]Querying HBase Tutorial, display
+   query results when the binary table “/user/root/binary/students” with
+   two column families, “account” and “address,” is queried without using
+   a conversion function to convert the binary table data into specific
+   data types.
+
+   Example 1
+   SELECT * FROM `/user/root/binary/students` students;
++--------------+------------------------------------------------+---------------
+-------------------------------------------------------------+
+|   row_key    |                    account                     |
+                   address                                   |
++--------------+------------------------------------------------+---------------
+-------------------------------------------------------------+
+| [B@78dfa1ed  | {"date":"MjAxNi0wMS0xNQ==","name":"QWxpY2U="}  | {"state":"Q0E=
+","street":"MTIzIEJhbGxtZXIgQXY=","zipcode":"MTIzNDU="}      |
+| [B@22000c9a  | {"date":"MjAxNi0wMy0wOA==","name":"Qm9i"}      | {"state":"Q0E=
+","street":"MSBJbmZpbml0ZSBMb29w","zipcode":"MTIzNDU="}      |
+| [B@313b63e6  | {"date":"MjAxNS0xMi0yMg==","name":"RnJhbms="}  | {"state":"Q0E=
+","street":"NDM1IFdhbGtlciBDdA==","zipcode":"MTIzNDU="}      |
+| [B@321baa4a  | {"date":"MjAxNS0wOS0xNQ==","name":"TWFyeQ=="}  | {"state":"Q0E=
+","street":"NTYgU291dGhlcm4gUGt3eQ==","zipcode":"MTIzNDU="}  |
++--------------+------------------------------------------------+---------------
+-------------------------------------------------------------+
+4 rows selected (0.612 seconds)
+
+   In example 2, using the CONVERT_FROM and CAST functions in a query on
+   the same table converts the binary table data to typed data.
+
+   Example 2
+   SELECT CONVERT_FROM(row_key, 'UTF8') AS studentid,
+   CONVERT_FROM(students.account.name, 'UTF8') AS name,
+   CONVERT_FROM(students.address.state, 'UTF8') AS state,
+   CONVERT_FROM(students.address.street, 'UTF8') AS street,
+   CONVERT_FROM(students.address.zipcode, 'UTF8') AS zipcode,
+   CAST(students.account.`date` as date) AS `date` FROM
+   dfs.`/user/root/binary/students` students;
++------------+--------+--------+-------------------+----------+-------------+
+| studentid  |  name  | state  |      street       | zipcode  |    date     |
++------------+--------+--------+-------------------+----------+-------------+
+| student1   | Alice  | CA     | 123 Ballmer Av    | 12345    | 2016-01-15  |
+| student2   | Bob    | CA     | 1 Infinite Loop   | 12345    | 2016-03-08  |
+| student3   | Frank  | CA     | 435 Walker Ct     | 12345    | 2015-12-22  |
+| student4   | Mary   | CA     | 56 Southern Pkwy  | 12345    | 2015-09-15  |
++------------+--------+--------+-------------------+----------+-------------+
+4 rows selected (0.702 seconds)
+
+References
+
+   1. https://drill.apache.org/docs/data-type-conversion/#convert_to-and-convert_from-usage-notes
+   2. https://drill.apache.org/docs/querying-hbase/#query-hbase-tables

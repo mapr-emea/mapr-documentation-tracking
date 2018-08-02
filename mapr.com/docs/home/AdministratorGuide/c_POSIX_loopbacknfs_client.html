@@ -1,0 +1,81 @@
+MapR loopbacknfs POSIX Client
+
+   The MapR POSIX Client feature allows app servers, web servers, and
+   other client nodes and apps to read and write directly to a MapR
+   cluster. Starting with the 4.0.2 release, MapR provides single-user
+   loopbacknfs licenses that give access to one or more clusters.
+   The table below summarizes the differences between the basic Linux OS
+   NFS client and the MapR POSIX client:
+     Linux OS Client MapR POSIX Client
+   Client OS
+     * Supported Linux distributions and desktop systems (Mac OS X and
+       Windows)
+
+     * Supported Linux distributions only
+     * No version for Mac OS X
+
+   Installs On Node Type
+     * Client node - not part of MapR cluster
+     * No mapr-fileserver or other Hadoop services
+
+     * Client node
+     * Cluster node
+
+   Access to Cluster
+     * Must have direct network access to all MapR cluster nodes
+
+     * Same
+
+   Supported Interfaces
+     * Apache HDFS and MapR-FS
+
+     * POSIX-NFS
+
+   Connection to File System
+     * Point to point
+     * Via an NFS gateway
+     * Single point of failure
+
+     * Proxied on host to regular MapR client traffic
+     * Direct, no NFS gateway
+     * No single point of failure
+
+   Security
+     * Link to NFS gateway is insecure
+
+     * Fully secured
+
+   The Linux OS NFS client must go through an NFS gateway, the link to the
+   gateway is not secured, and transmitted data is not compressed.
+
+   The following diagram illustrates how the MapR POSIX client
+   (mapr-loopbacknfs) works, in comparison with the Linux OS NFS client
+   (left).
+
+   [28442881.png]
+
+   The instructions on this page are for the MapR POSIX client. For
+   instructions on setting up NFS on a MapR cluster, see [1]Managing MapR
+   NFS.
+   The table below summarizes the differences in the MapR POSIX client
+   deployment behavior when installed with a MapR cluster where security
+   is disabled or enabled:
+     Cluster Security Disabled Cluster Security Enabled
+   Client Node
+     * MapR cluster looks exactly like network attached storage (NAS)
+     * POSIX permissions are enforced
+
+     * Single-user authentication
+     * Write access is supported only for applications with uid matching
+       authenticated user
+
+   Cluster Node
+     * MapR cluster looks exactly like NAS
+     * POSIX permissions are enforced
+
+     * Secure cluster access is key
+     * Best Practice: Use ticket from mapr user
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_set_up_mapr_nfs.html#Setting-Up-MapR-NFS-TheMapRNFSservicelet-d3e72

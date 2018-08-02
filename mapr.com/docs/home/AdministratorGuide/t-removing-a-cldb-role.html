@@ -1,0 +1,20 @@
+Removing a CLDB Role
+
+   The following steps describe how to remove the CLDB role from a node:
+    1. If you have only one CLDB node in the cluster, add the CLDB role to
+       another node.
+       When failover occurs after removal of the CLDB node, the new CLDB
+       node becomes the master CLDB.
+    2. Issue the following command to stop the CLDB service on the node:
+maprcli node services -name cldb -action stop -nodes mapr-<node>
+    3. Purge the CLDB package mapr-cldb with the apt-get, yum, or zypper
+       commands, depending on your operating system.
+    4. Run configure.sh -C on the node where you removed the role.
+       Use the -C option to provide the list of CLDB nodes that excludes
+       the node where you removed the role.
+    5. Run configure.sh -C on all other nodes in the cluster.
+       Use the -C option to provide the list of CLDB nodes that excludes
+       the node where you removed the role.
+    6. Start or restart Warden on the node where you removed the CLDB
+       role.
+    7. Perform a rolling restart of Warden on all other nodes.

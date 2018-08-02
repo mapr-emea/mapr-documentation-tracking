@@ -1,0 +1,89 @@
+OJAI Distributed Query Service
+
+   OJAI queries either directly access MapR-DB JSON or leverage the OJAI
+   Distributed Query Service. The OJAI Distributed Query Service provides
+   distributed query support for MapR-DB JSON, powered by Apache Drill.
+   The MapR client automatically determines whether OJAI queries benefit
+   from using the OJAI Distributed Query Service, when the service is
+   available. This section describes the architecture, including the code
+   paths and components involved. It also discusses queries that originate
+   from Drill SQL, which leverage the full functionality of MapR Drill.
+
+   The following diagram summarizes the different code paths and the
+   components involved for processing MapR-DB JSON queries.
+   [JSON_DBComponentFlow.png]
+
+   MapR automatically chooses which code path to use.
+
+   The following table summarizes the functionality each code path
+   supports:
+   Simple OJAI Queries OJAI Queries Requiring OJAI Distributed Query
+   Service Analytical Drill Queries
+     * Can use single secondary index
+     * Configurable limit on sorts
+     * Serial query execution
+
+     * Can use multiple secondary indexes
+     * No imposed limit on sort size
+     * Parallel query execution
+     * Query optimization for operational queries
+
+     * Can use multiple secondary indexes
+     * No imposed limit on sort size
+     * Parallel query execution
+     * Query optimization for analytical queries
+
+   Simple OJAI Queries
+          The right path in the image above represents simple queries
+          issued through an OJAI application. These queries can leverage a
+          single index and operate on smaller data sets that do not
+          benefit from parallel query execution.
+
+          Queries in this code path do not use the OJAI Distributed Query
+          Service. If the OJAI Distributed Query Service is not installed,
+          all OJAI queries use this code path. When queries run through
+          this code path, sorts on large data sets may fail if the result
+          size exceeds the size of a configurable parameter. See
+          [1]Querying in OJAI Applications for more details.
+
+   OJAI Queries Requiring OJAI Distributed Query Service
+          The middle path represents more complex queries issued through
+          an OJAI application. These queries use the enhanced
+          functionality available in the OJAI Distributed Query Service.
+          This includes sorting large data sets and distributed, parallel
+          query execution. When the Distributed Query Service is
+          installed, the MapR client decides whether a query benefits from
+          the service and automatically redirects the query to the
+          service.
+
+          The OJAI Distributed Query Service is a lightweight subset of
+          the full Drill query engine that is well suited for the typical
+          queries issued by OJAI. It excludes the more advanced
+          functionality needed by analytical queries.
+
+          The OJAI Distributed Query Service also provides more
+          sophisticated index selection, including leveraging multiple
+          indexes in a single query. It uses a cost based optimizer to
+          select the indexes that provide the best performance.
+
+   Analytical Drill Queries
+          The left path represents SQL queries issued by BI and SQL tools
+          to Drill. This path leverages Drill’s analytical capabilities.
+          It can optimize and process complex queries on large data sets
+          in parallel and provide interactive query response times.
+
+          The optimizer used by Drill is a superset of the optimizer used
+          by the OJAI Distributed Query Service. It is also a cost based
+          optimizer, but includes more comprehensive optimization
+          techniques needed by complex analytical queries.
+
+   For more information about how secondary index selection and execution
+   works in MapR-DB JSON, see [2]Selection and Execution of Secondary
+   Indexes.
+   Note: Prior to MapR version 6.0.1, the OJAI Distributed Query Service
+   was named the OJAI Query Service.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#querying_documents_with_maprdb_ojai_java_api_
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/OverviewIndexSelectionExecution.html#concept_pc2_4ws_p1b

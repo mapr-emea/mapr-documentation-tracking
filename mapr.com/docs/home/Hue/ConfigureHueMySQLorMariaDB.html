@@ -1,0 +1,35 @@
+Configure Hue to Store Data in MySQL or MariaDB
+
+    1. Configure the database connection parameters in the
+       [desktop][[database]] section of hue.ini. Set the following
+       properties with your database connection parameters:
+[desktop]
+  ...
+  [[database]]
+    engine=mysql
+    host=<host>
+    port=3306
+    user=<user>
+    password=<password>
+    name=<database>
+
+       Example of configuration:
+[desktop]
+  ...
+  [[database]]
+    engine=mysql
+    host=node1
+    port=3306
+    user=hue
+    password=hue_password
+    name=hue
+
+    2. Perform the initial data migration:
+cd /opt/mapr/hue/hue-<version>
+source ./build/env/bin/activate
+hue syncdb --noinput
+hue migrate
+deactivate
+
+    3. Restart Hue:
+maprcli node services -name hue -action restart -nodes <node_with_hue>

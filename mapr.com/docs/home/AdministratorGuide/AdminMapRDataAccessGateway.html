@@ -1,0 +1,86 @@
+Administering the MapR Data Access Gateway
+
+   The MapR Data Access Gateway is a service that acts as a proxy and
+   gateway for translating requests between lightweight client
+   applications and the MapR cluster. This section describes
+   considerations when upgrading the service, how to modify configuration
+   settings, and how to administer and manage the service.
+
+Installing the Service
+
+   The MapR Data Access Gateway is installed when you install MapR-DB in
+   the MapR installer. To manually install the service, see [1]Installing
+   MapR Data Access Gateway. For installation guidance, see
+   [2]Understanding the MapR Data Access Gateway.
+
+Upgrading the Service
+
+   When the Data Access Gateway receives a shutdown request, it stops
+   accepting new requests and returns an error to the client. Any
+   in-progress requests are allowed to complete before shutting down the
+   service. This allows you to perform rolling upgrades.
+
+Modifying Configuration Settings for the Service
+
+   Logging Properties
+
+   The MapR Data Access Gateway uses standard Log4J configuration to
+   control its logging. The log4j properties are in the file
+   /opt/mapr/data-access-gateway/conf/log4j2.xml on nodes where you have
+   installed the service. After modifying any properties on a node,
+   restart the service. See [3]Administering the Service for details.
+
+   The file /opt/mapr/data-access-gateway/logs/data-access-gateway.log
+   contains the log data.
+   Application Properties
+
+   You can configure MapR Data Access Gateway properties by modifying the
+   file /opt/mapr/data-access-gateway/conf/properties.cfg on nodes where
+   you have installed the service.
+
+   The following table lists the properties you can set:
+   Property Name Default Description
+   auth.token.expiration 1800 Expiration time (in seconds) for the
+   authentication token
+   rest.https.port 8243 Port number used to connect to the Data Access
+   Gateway using HTTPS
+   rest.result.limit 5000 Limit on the number of documents returned in
+   retrieval requests using the MapR-DB JSON REST API
+
+   After modifying any parameters on a node, restart the service, as
+   described in the [4]Administering the Service section.
+   Warden Configuration
+
+   The warden configuration for the MapR Data Access Gateway is in the
+   file /opt/mapr/data-access-gateway/conf/warden.data-access-gateway.conf
+   on nodes where you have installed the Data Access Gateway. Modify the
+   following settings to control the amount of memory allocated to the
+   service:
+   Parameter Default Description
+   service.heapsize.max 3000 Defines the maximum heap size (in MB) for the
+   service
+   service.heapsize.min 3000 Defines the minimum heap size (in MB) for the
+   service
+
+   After modifying the configuration on a node, restart the service, as
+   described in the next section.
+
+Administering the Service
+
+   The MapR Data Access Gateway is a service that you administer in the
+   same way as other MapR services. The name of the service is
+   data-access-gateway.
+   To restart the service through the CLI, run the following command:
+maprcli node services -nodes <node name> -name data-access-gateway -action resta
+rt
+
+   See [5]Managing Services for details about other operations you can
+   perform on the service.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingDataAccessGateway.html#InstallHue-ToinstallHue
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/MapRDataAccessGateway.html#MapRDataAccessGateway
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__section_p1r_ppw_zcb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__section_p1r_ppw_zcb
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ManageServices.html#concept_ytv_nft_5v

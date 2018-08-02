@@ -1,0 +1,77 @@
+Managing Extended Attributes
+
+   Extended attributes (referred to as xattrs) allow user applications to
+   associate additional metadata with a regular file or directory. Unlike
+   system-level inode metadata, such as file permissions or modification
+   time, extended attributes are not interpreted by the system and are
+   instead used by applications to store additional information about an
+   inode. Multiple extended attributes can be associated with a single
+   inode. The maximum size allowed for an extended attribute is 64 KB.
+
+   An extended attribute is a name-value pair, with a string name and
+   binary value. The extended attribute names are prefixed with a
+   namespace. For example, an xattr named myXattr in the user namespace
+   would be specified as user.myXattr.
+
+Limitations
+
+     * For the five valid namespaces supported by HDFS, MapR supports the
+       following:
+
+   Namespace MapR Functionality
+   user Commonly used by client applications. Access to these extended
+   attributes in the user namespace is controlled by corresponding
+   file/directory permissions. For more information, see [1]Permissions
+   for Extended Attributes.
+   trusted Available to superusers only. Access is denied for all other
+   users. The extended attribute is not available through userspace
+   methods.
+       Note: The namespaces, system, security, and raw, are not supported
+       by MapR.
+     * Extended attributes cannot be associated with symbolic links. If
+       extended attributes are used on symbolic links, they are instead
+       applied to the symbolic link target file.
+     * The preserve options of commands like cp -px and distcp -px will
+       work on extended attributes only in the following cases:
+          + With Hadoop commands such as hadoop fs.
+          + On FUSE mounted file paths.
+       Note: Extended attributes are not supported on NFS file paths.
+
+Permissions for Extended Attributes
+
+   The following table lists the permissions (POSIX mode bits or ACEs) you
+   will need to set, retrieve, or modify extended attributes.
+   To... For directories, you need... For files, you need...
+   Set extended attributes
+
+   Mode bits: write
+   (OR)
+
+   ACE: addchild
+
+   Mode bits: write
+   (OR)
+
+   ACE: writefile
+   Remove extended attributes
+
+   Mode bits: write
+   (OR)
+
+   ACE: deletechild
+
+   Mode bits: write
+   (OR)
+
+   ACE: writefile
+   Retrieve extended attributes Mode bits: read
+
+   (OR)
+   ACE: readdir Mode bits: read
+
+   (OR)
+   ACE: readfile
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ExtendedAttributes.html#concept_alt_fbs_zv__xattrs-permissions

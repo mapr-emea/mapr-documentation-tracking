@@ -1,0 +1,131 @@
+dbshell find or findbyid
+
+   To query JSON documents in MapR-DB shell, use either the find or
+   findbyid command. The find command enables you to scan complete tables
+   and retrieve rows that satisfy projection and/or condition clauses. The
+   findbyid command enables you to retrieve a single document with a given
+   ID.
+
+   When you review the find examples, note that they are sometimes shown
+   split across multiple lines for readability. You must enter the
+   commands on a single line when you run them in dbshell.
+   Note: If your find query requires the [1]OJAI Distributed Query
+   Service, you must install the mapr-drill-internal package on the nodes
+   where you run dbshell. The package is available in the MapR repository
+   from which you download MapR Expansion Packs. See [2]MapR Repositories
+   and Packages for details.
+
+Syntax
+
+find <table path> <options>
+findbyid <table path> --id <key-row ID>
+
+Parameters
+
+   find Options findbyid Options Description
+
+   *, --t, --table
+
+   (Required)
+
+   *, --t, --table
+
+   (Required)
+   Table path
+   --id
+
+   --id
+
+   (Required)
+
+   Document ID
+
+   For conditions on a single document ID, you can provide the ID either
+   by using the --id switch or by specifying the ID in a condition
+   payload.
+
+   For example, --id id1 is equivalent to --c {"$eq":{"_id":"id1"}}.
+   Note: You cannot specify multiple IDs using either syntax.
+   --fromid n/a Document ID to start from (inclusive)
+   --toid n/a Document ID to stop at (exclusive)
+   --limit n/a Maximum number of documents to return
+   --withtags, --withTags --withtags, --withTags
+
+   Enables or disables printing with extended type tags
+
+   Value: True|False
+
+   Default: True
+   --pretty --pretty
+
+   Enables or disables pretty printing of documents
+
+   Value: True|False
+
+   Default: True
+   --offset n/a Omits the first n number of documents in the result
+   --orderby n/a
+
+   Sorts the result by the given fields
+
+   Specify sort order as either ascending or descending using the
+   keywords, ASC or DESC, respectively.
+
+   Default: ASC
+   Note: The keywords ASC and DESC are case insensitive.
+   Syntax:
+find <table path> --orderby <field path>:<sortorder>
+
+   See [3]Query with --orderby for examples.
+   --c, --where --c, --where
+
+   Condition, in JSON format
+
+   See [4]OJAI Query Condition Syntax for a description of the syntax.
+
+   See [5]Return Documents Using Projection and Conditions for a dbshell
+   example that uses a condition specified in JSON format.
+   --f, --fields --f, --fields
+
+   Projections in JSON documents
+
+   See [6]JSON Document Field Paths for details about how to specify field
+   paths.
+   See [7]Return Documents Using Projection and Conditions for an example.
+   --q, --query n/a
+
+   Query JSON documents
+
+   This option accepts a query string in JSON format with predefined
+   keywords that define the behavior of the query.
+   The following examples shows a query that uses three keywords:
+find table/test --q {
+                     "$select":"a",
+                     "$limit":2,
+                     "$offset":1
+                    }
+
+   Note: The find command does not allow --query to work with other
+   options, such as --fields, --where, and --orderby. For example, the
+   following command ignores the --f option:
+find table/test --f "a" --q {"$limit":2}
+
+   In addition, you should not enter the same keyword twice:
+// Incorrect
+{"$select":"a","$select":"b"}
+
+// Correct
+{"$select":["a","b"]}
+
+   See [8]Query with --query for more examples.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/MapR-Repositories-and-Packages.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-orderby.html#dbshell-find-orderby
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-examples.html#reference_b4x_4fs_mbb__section_z4f_t12_mcb
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/IdentifyingJSONFields.html#IdentifyingJSONFields
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-examples.html#reference_b4x_4fs_mbb__section_z4f_t12_mcb
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-query.html#dbshell-find-query

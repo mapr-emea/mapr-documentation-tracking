@@ -1,0 +1,48 @@
+hdfsPwrite()
+
+   Supported by libMapRClient for hadoop-2.x
+
+   Writes starting at a specified position in an open file.
+
+   Whereas hdfsWrite() increments the current offset by the amount of
+   bytes returned by the API (except in case of error), hdfsPwrite() does
+   not change the value of current offset. If the current offset before
+   the call to hdfsPwrite() is 0 and you specify the offset 10 for the
+   write operation, after the write the current offset remains 0.
+
+   If a call to hdfsPwrite() specifies an offset that is past the end of
+   the file, the result is a hole in the file between the previous end of
+   the file and the offset at which the write begins.
+
+   You can obtain the size of a file in bytes by calling
+   hdfsGetPathInfo().
+
+   Flushes to the server happen automatically at intervals during a write
+   operation. After a write operation is finished, either call hdfsFlush()
+   explicitly or call hdfsFlush() implicitly by calling hdfsCloseFile() to
+   be sure that any data remaining in the write buffer is flushed.
+
+   On error, pending write buffers are flushed to the server.
+
+Signature
+
+tSize hdfsPwrite(hdfsFS fs, hdfsFile file, tOffset position, const void* buffer,
+ tSize length)
+
+Parameters
+
+   Parameter Description
+   fs The handle of the filesystem where the file is located. Obtain this
+   handle with one of the hdfsConnect() APIs.
+   file The handle of the file. Obtain this handle with one of the
+   hdfsOpenFile() APIs.
+   position The offset at which to start writing.
+   buffer The data to write.
+   length The number of bytes to write. The maximum length is the maximum
+   size of tSize.
+
+Return Value
+
+   Returns the number of bytes written, -1 on error.
+
+   Check errno for error codes and meanings.

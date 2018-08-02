@@ -1,0 +1,104 @@
+Cluster Hardware
+
+   This section describes important hardware architecture considerations
+   for your cluster.
+
+   When planning the hardware architecture for the cluster, make sure all
+   hardware meets the node requirements listed in [1]Preparing Each Node.
+
+   The architecture of the cluster hardware is an important consideration
+   when planning a deployment. Among the considerations are anticipated
+   data storage and network bandwidth needs, including intermediate data
+   generated when jobs and applications are executed. The type of workload
+   is important: consider whether the planned cluster usage will be
+   CPU-intensive, I/O-intensive, or memory-intensive. Think about how data
+   will be loaded into and out of the cluster, and how much data is likely
+   to be transmitted over the network.
+   Planning a cluster often involves tuning key ratios, such as:
+     * Disk I/O speed to CPU processing power
+     * Storage capacity to network speed
+     * Number of nodes to network speed
+
+   Typically, the CPU is less of a bottleneck than network bandwidth and
+   disk I/O. To the extent possible, network and disk transfer rates
+   should be balanced to meet the anticipated data rates using multiple
+   NICs per node. It is not necessary to bond or trunk the NICs together;
+   MapR is able to take advantage of multiple NICs transparently. Each
+   node should provide raw disks and partitions to MapR, with no RAID or
+   logical volume manager, as MapR takes care of formatting and data
+   protection.
+
+   The following example architecture provides specifications for a
+   standard MapR Hadoop compute/storage node for general purposes. This
+   configuration is highly scalable in a typical data center environment.
+   MapR can make effective use of more drives per node than standard
+   Hadoop, so each node should present enough faceplate area to allow a
+   large number of drives.
+
+Standard Compute/Storage Node
+
+     * 2U Rack Server/Chassis
+     * Dual CPU socket system board
+     * 2x8 core CPU, 32 cores with HT enabled
+     * 8x8GB DIMMs, 64GB RAM (DIMM count must be multiple of CPU memory
+       channels)
+     * 12x2TB SATA drives
+     * 10GbE network interface
+     * OS using entire single drive, not shared as data drive
+
+Best Practices
+
+   Hardware recommendations and cluster configuration vary by use case.
+   For example, is the application a MapR-DB application? Is the
+   application latency-sensitive?
+   The following recommendations apply in most cases:
+
+   Disk Drives
+
+          + Drives should be JBOD, using single-drive RAID0 volumes to
+            take advantage of the controller cache.
+          + SSDs are recommended when using MapR-DB JSON with secondary
+            indexes. HDDs can be used with secondary indexes only if the
+            performance requirements are thoroughly understood.
+            Performance can be substantially impaired on HDDs because of
+            high levels of disordered I/O requests. SSDs are not needed
+            for using MapR-ES.
+          + SAS drives can provide better I/O latency and SSDs even lower
+            latency.
+          + Match aggregate drive throughput to network throughput. 10GbE
+            ~= 10-12 drives.
+
+   Cluster Size
+
+          + In general, it is better to have more nodes. Larger clusters
+            recover faster from disk failures because more nodes are
+            available to contribute.
+          + For smaller clusters, all nodes are likely to fit on a single
+            non-blocking switch. Larger clusters require a well-designed
+            Spine/Leaf fabric that can scale.
+
+   Operating System and Server Configuration
+
+          + CentOS or RHEL 7.2, 7.3, or 7.4 are supported, as well as SUSE
+            12 SP2 and Ubuntu 14.04 and 16.04. See [2]Operating System
+            Support Matrix (MapR 6.x).
+          + Install the minimal server configuration. Use a product like
+            [3]Cobbler to PXE boot and install a consistent OS image.
+          + Install the full JDK (1.8).
+          + For best performance, avoid deploying a MapR cluster on
+            virtual machines. However, VMs are supported for use as
+            clients or edge nodes.
+
+   Memory, CPUs, Number of Cores
+
+          + Make sure the DIMM count is an exact multiple of the number of
+            memory channels the selected CPU provides.
+          + Use CPUs with as many cores as you can. Having more cores is
+            more important than having a slightly higher clock speed.
+          + MapR-DB benefits from lots of RAM: 256GB per node or more.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/PreparingEachNode.html#PreparingEachNode
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_os_matrix_6.x.html#reference_ypn_lrf_5w
+   3. http://cobbler.github.io/about.html

@@ -1,0 +1,149 @@
+table index list
+
+   This topic describes how to list information about the secondary
+   indexes created on MapR-DB JSON tables.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * readAce on the volume
+     * lookupdir on directories in the table path
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table index list
+  -path <path>
+  [ -indexname <index name> ]
+  [ -refreshnow < true | false > ]
+
+   REST
+
+curl -k -X GET
+  'http[s]://<host>:<port>/rest/table/index/list?path=<path>&<parameters>'
+  -u <username>:<password>
+
+Parameters
+
+   Parameter
+
+   Description
+
+   path
+   (Required) Path to where the parent JSON table resides
+   indexname (Optional) Name of the index for which to display
+   information. If omitted, the output includes all indexes created on the
+   table.
+
+   refreshnow
+   (Optional) Whether to fetch the current status of the index
+
+   Default: False
+
+Example
+
+   CLI
+
+maprcli table index list -path /my.cluster.com/volume1/table1
+
+maprcli table index list -path /demo/business -json
+
+   REST
+
+curl -k -X GET \
+  'https://r1n1.sj.us:8443/rest/table/index/list?path=%my.cluster.com%2Fvolume1%
+2Ftable1' \
+  -u mapr:mapr
+
+curl -k -X GET \
+  'https://r1n1.sj.us:8443/rest/table/index/list?path=%2Fdemo%2Fbusiness' \
+  -u mapr:mapr
+
+Output Fields
+
+   Output Field Description
+   cluster The cluster on which the index resides
+   type For indexes, this is always maprdb.si
+   indexFid A unique id used to identify the index in MapR-FS
+   indexName Name of the index
+   hashed A boolean value that specifies whether the index is hashed
+   indexState The replication state of the index. For information about
+   the replication states, see [1]Table Replication States.
+   idx The index id. Unique per table.
+   indexedFields The list of indexed fields with the sort order of each
+   key
+   includedFields The list of included fields in the index. Missing from
+   output if there are no included fields.
+   isUptodate A boolean value that specifies if the index is up-to-date
+   minPendingTS The epoch time in milliseconds of the oldest operation
+   that has yet to be replicated to the index
+   maxPendingTS The epoch time in milliseconds of the newest operation
+   that has yet to be replicated to the index
+   bytesPending The number of bytes that have yet to be replicated to the
+   index
+   putsPending The number of puts that have yet to be replicated to the
+   index
+   bucketsPending The number of buckets that have yet to be replicated to
+   the index
+   copyTableCompletionPercentage
+   The percentage of data from the source that has been copied to the
+   index during the setup phase of replication. After replication setup
+   completes, the value remains at 100.
+   Note: When replicating data to the index, the
+   copyTableCompletionPercentage value may decrease. This happens when
+   splits or merges occur in the JSON table's regions, or the table
+   receives new data.
+   numTablets The number of tablets the index occupies
+   numRows The number of rows in the index
+   totalSize The total size of the index
+
+Example Output
+
+maprcli table index list -path /demo/business -json -indexname i1
+{
+        "timestamp":1506617667735,
+        "timeofday":"2017-09-28 04:54:27.735 GMT+0000 PM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "cluster":"my.cluster.com",
+                        "type":"maprdb.si",
+                        "indexFid":"2049.93.10257820",
+                        "indexName":"i1",
+                        "hashed":false,
+                        "indexState":"REPLICA_STATE_REPLICATING",
+                        "idx":1,
+                        "indexedFields":"a.b:ASC",
+                        "isUptodate":true,
+                        "minPendingTS":0,
+                        "maxPendingTS":0,
+                        "bytesPending":0,
+                        "putsPending":0,
+                        "bucketsPending":0,
+                        "copyTableCompletionPercentage":100,
+                        "numTablets":1,
+                        "numRows":4,
+                        "totalSize":24576
+                }
+        ]
+}
+
+Troubleshooting Use Cases
+
+   Situations where you can use this command include the following:
+     * Examine the properties of an index.
+     * Determine if there is a lag in updates in an index.
+
+   See [2]Troubleshooting Secondary Indexes for more information on these
+   use cases.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/replication-states.html#reference_dmn_rn2_d1b
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-troubleshooting.html#indexes-troubleshooting

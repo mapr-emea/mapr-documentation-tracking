@@ -1,0 +1,57 @@
+Application Migration
+
+   Before you migrate your applications to the MapR Hadoop distribution,
+   consider testing your applications using a small subset of data.
+
+   In this phase, you will migrate your applications to the MapR cluster
+   test environment. The goal of this phase is to get your applications
+   running smoothly on the MapR cluster using a subset of data. Once you
+   have confirmed that all applications and components are running as
+   expected you can begin migrating your data.
+
+   Migrating your applications from HDFS to MapR is relatively easy. MapR
+   Hadoop is 100% plug-and-play compatible with Apache Hadoop, so you do
+   not need to make changes to your applications to run them on a MapR
+   cluster.
+   Application Migration Guidelines Keep the following considerations in
+   mind when you migrate your applications:
+     * MapR Libraries: Ensure that your applications can find the
+       libraries/configs it is expecting. Make sure the java classpath
+       includes the path to maprfs.jar and the java.library.path includes
+       libMapRClient.so
+     * MapR Storage: Every application must point to MapR-FS (maprfs:///)
+       rather than the HDFS (hdfs://). If your application uses
+       fs.default.name then it will work automatically. If you have
+       hardcoded HDFS links into your applications, you must redirect
+       those links so they point to MapR-FS. Setting a default path of
+       maprfs:/// tells your applications to use the cluster specified in
+       the first line of mapr-clusters.conf. You can also specify a
+       specific cluster with maprfs:///mapr/<cluster name>/.
+     * Permissions: The distcp command does not copy permissions;
+       permissions defined in HDFS do not transfer automatically to
+       MapR-FS. MapR uses a combination of access control lists (ACLs) to
+       specify cluster or volume-level permissions and file permissions to
+       manage directory and file access. You must define these permissions
+       in MapR when you migrate your customized components, applications,
+       and data. For more information, see Managing Permissions.
+     * Memory: Remove explicit memory settings defined in your
+       applications. If memory is set explicitly in the application, the
+       jobs may fail after migration to MapR.
+
+   Generally, the best approach to migrating your applications to MapR is
+   to import a small subset of data and test and tune your application
+   using that data in a test environment before you import your production
+   data.
+
+   The following procedure offers a simple roadmap for migrating and
+   running your applications in a MapR cluster test environment.
+    1. Copy over a small amount of data to the MapR cluster. Use the
+       hadoop distcp hftp command to copy over a small number of files:
+$ hadoop distcp hftp://namenode1:50070/foo maprfs:///bar
+       You must specify the namenode IP address, port number, and source
+       directory on the HDFS cluster. For more information, see Copying
+       Data from Apache Hadoop
+    2. Run the application.
+    3. Add more data and test again.
+    4. When the application is running to your satisfaction, use the same
+       process to test and tune another application.

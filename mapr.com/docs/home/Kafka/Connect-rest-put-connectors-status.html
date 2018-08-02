@@ -1,0 +1,45 @@
+GET /connectors/(string:name)/status
+
+   Gets current status of the connector, including whether it is running,
+   failed or paused, which worker it is assigned to, error information if
+   it has failed, and the state of all its tasks.
+
+Syntax
+
+http://<host>:8083/connectors/<string_name>/status
+
+Request Example
+
+GET /connectors/hdfs-sink-connector/status HTTP/1.1
+Host: connect.example.com
+
+Response Example
+
+   The response JSON object includes the following:
+     * name (string) – Name of the connector
+     * connector (map) – Map containing connector status
+     * tasks[i] (map) – Map containing the task status
+
+HTTP/1.1 200 OK
+
+{
+    "name": "hdfs-sink-connector",
+    "connector": {
+        "state": "RUNNING",
+        "worker_id": "localhost:8083"
+    },
+    "tasks":
+    [
+        {
+            "id": 0,
+            "state": "RUNNING",
+            "worker_id": "localhost:8083"
+        },
+        {
+            "id": 1,
+            "state": "FAILED",
+            "worker_id": "localhost:8083",
+            "trace": "org.apache.kafka.common.errors.RecordTooLargeException\n"
+        }
+    ]
+}

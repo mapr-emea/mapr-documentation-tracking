@@ -1,0 +1,78 @@
+Configuring MapR for HTTPS Upload to S3
+
+   By default, MapR only trusts its own self-signed certificates. To
+   configure MapR to trust the certificates used by AWS S3 for HTTPS
+   upload, you must configure additional trusted certificates. Add one of
+   the following to the /opt/mapr/conf/ssl_truststore file on every node
+   in the cluster:
+     * The actual certificate used by the S3 endpoints you are using
+     * A signer of the actual certificate used by the S3 endpoints you are
+       using
+     * A certificate higher in the trust chain that ultimately does sign
+       the certificate for the S3 endpoint
+       Note: Currently, the root certificate used by AWS S3 is the
+       Baltimore CyberTrust root certificate provided by [1]Digicert.
+
+   The following instructions are based on the assumption that you are
+   adding the root certificate (known as the Baltimore CyberTrust root)
+   provided by Digicert with a fingerprint of
+   D4DE20D05E66FC53FE1A50882C78DB2852CAE474 and an expiration date of May
+   12, 2025. You can also add other certificates to the truststore.
+   Warning: Most Baltimore CyberTrust root certificates will expire in
+   2025 and expired certificates cannot be used for connecting to S3. When
+   Amazon replaces its certificates with those issued by new certificate
+   authorities, you must update the truststore to hold both the old and
+   new root certificates for a smooth transition.
+    1. Download the Baltimore CyberTrust root certificate from the URL
+       specified by Digicert, as in the following example:
+# cd /tmp
+# wget https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt
+    2. Add the certificate to the MapR truststore.
+         a. Go to the directory where the ssl_truststore file is located.
+            For example:
+# cd /opt/mapr/conf
+         b. Run the command to add the certificate.
+            For example:
+# keytool -importcert -file /tmp/BaltimoreCybrTrustRoot.crt -keystore ssl_trusts
+tore
+         c. Enter the keystore password when prompted.
+            The default is <ssl-keystore-password>.
+         d. Specify whether to trust this certificate by entering y when
+            prompted.
+            Note: The default value is [no].
+            For example:
+# cd /opt/mapr/conf
+# keytool  -importcert -file /tmp/BaltimoreCyberTrustRoot.crt -keystore ssl_trus
+tstore
+Enter keystore password:
+Owner: CN=Baltimore CyberTrust Root, OU=CyberTrust, O=Baltimore, C=IE
+Issuer: CN=Baltimore CyberTrust Root, OU=CyberTrust, O=Baltimore, C=IE
+Serial number: 20000b9
+Valid from: Fri May 12 14:46:00 EDT 2000 until: Mon May 12 19:59:00 EDT 2025
+Certificate fingerprints:
+     MD5:  AC:B6:94:A5:9C:17:E0:D7:91:52:9B:B1:97:06:A6:E4
+     SHA1: D4:DE:20:D0:5E:66:FC:53:FE:1A:50:88:2C:78:DB:28:52:CA:E4:74
+     SHA256: 16:AF:57:A9:F6:76:B0:AB:12:60:95:AA:5E:BA:DE:F2:2A:B3:11:19:D6:44:A
+C:95:CD:4B:93:DB:F3:F2:6A:EB
+     Signature algorithm name: SHA1withRSA
+     Version: 3
+...
+
+Trust this certificate? [no]:  y
+Certificate was added to keystore
+            Wait for the message "Certificate was added to keystore"
+            before proceeding.
+         e. Copy the ssl_truststore file to all other MapR nodes in the
+            same location (for example, /opt/mapr/conf/).
+            Ensure that the correct truststore is available on all nodes
+            because the service can be run on any node.
+         f. Restart File Migration Service using MapR MCS or the maprcli
+            command.
+            See [2]Restarting the Service Using the Service UI for more
+            information. The restart enables File Migration Service to use
+            the newly added certificate.
+
+References
+
+   1. https://www.digicert.com/digicert-root-certificates.htm
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ManageService.html#restart-service

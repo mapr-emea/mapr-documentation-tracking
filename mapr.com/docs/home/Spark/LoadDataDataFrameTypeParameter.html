@@ -1,0 +1,88 @@
+Loading Data into a DataFrame Using a Type Parameter
+
+   If the structure of your data maps to a class in your application, you
+   can specify a type parameter when loading into a DataFrame.
+
+   Specify the application class as the type parameter in the load call.
+   The load infers the schema from the class.
+
+   The following example creates a DataFrame with a Person schema by
+   passing the Person class as the type parameter in the load call:
+     * [1]Scala
+     * [2]Java
+
+import org.apache.spark.sql.SparkSession
+import com.mapr.db.spark.sql._
+
+case class Address(Pin: Integer, street: String, city: String)
+
+          case class Person(_id: String,
+          First_name: String,
+          last_name: String,
+          Address: Address,
+          Interests: Seq[String])
+
+val df = sparkSession.loadFromMapRDB[Person]("/tmp/user_profiles")
+
+import com.mapr.db.spark.sql.api.java.MapRDBJavaSession;
+import org.apache.spark.sql.SparkSession;
+
+public static class Address implements Serializable {
+     private Integer pin;
+     private String street;
+     private String city;
+
+     public Integer getPin() { return pin; }
+     public void setPin(Integer pin) { this.pin = pin; }
+     public String getStreet() { return street; }
+     public void setStreet(String street) { this.street = street; }
+     public String getCity() { return city; }
+     public void setCity(String city) { this.city = city; }
+}
+public static class Person implements Serializable {
+     private String _id;
+     private String firstName;
+     private String lastName;
+     private Date dob;
+     private Seq<String> interests;
+
+     public String get_id() { return _id; }
+     public void set_id(String _id) { this._id = _id; }
+     public String getFirstName() { return firstName; }
+     public void setFirstName(String firstName) { this.firstName = firstName; }
+     public String getLastName() { return lastName; }
+     public void setLastName(String lastName) { this.lastName = lastName; }
+     public Date getDob() { return dob; }
+     public void setDob(Date dob) { this.dob = dob; }
+     public Seq<String> getInterests() { return interests; }
+     public void setInterests(Seq<String> interests) { this.interests = interest
+s; }
+}
+MapRDBJavaSession maprSession = new MapRDBJavaSession(sparkSession);
+Dataset<Row> df = maprSession.loadFromMapRDB(tableName, Person.class);
+
+   You must invoke the loadFromMapRDB method on a SparkSession or
+   MapRDBJavaSession object.
+
+   All fields in an application bean class are nullable by default. The
+   only circumstance in which the load returns an InvalidSchema exception
+   is if the MapR-DB table contains fields not included in the bean class.
+
+   The resulting schema of the object is as follows:
+df.printSchema()
+ ----------------------------------
+ root
+ |-- _id: String (nullable = true)
+ |-- first_name: String (nullable = true)
+ |-- last_name: String (nullable = true)
+ |-- address: Struct (nullable = true)
+ |    |-- Pin: integer (nullable = true)
+ |    |-- street: string (nullable = true)
+ |    |-- city: string (nullable = true)
+ |-- interests: array (nullable = true)
+ |    |-- element: string (containsNull = true)
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/LoadDataDataFrameTypeParameter.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/LoadDataDataFrameTypeParameter.html#div1entry2

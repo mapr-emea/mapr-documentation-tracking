@@ -1,0 +1,153 @@
+Application Master Web UI
+
+   Drill, running as a YARN application, provides the Drill-on-YARN
+   Application Master (AM) process to manage the Drill cluster. The Drill
+   AM provides a web UI where you can monitor cluster status and perform
+   simple operations, such as increasing or decreasing cluster size, or
+   stopping the cluster.
+
+   When you launch Drill using the Drill-on-YARN command line tool, the
+   tool signals YARN to launch the AM, which in turn launches the
+   drillbits in the cluster. When Drill starts, you can access the web UI
+   using the URL provided at startup.
+
+   The following sections describe the information that the Application
+   Master web UI provides:
+
+Main
+
+   The main page provides the following information about the Drill
+   cluster:
+
+   Drill Cluster Status
+          The Drill cluster status show the state of the Drill cluster,
+          which is one of the following:
+
+          + LIVE: This is the normal state and shows that the Drill
+            cluster is running.
+          + ENDING: The cluster is in the process of shutting down
+
+          There is no “ENDED.” state. When the cluster shuts down, the web
+          UI is no longer available.
+
+   Target Drillbit Count
+          The target drillbit count is the number of drillbits to run in
+          the cluster. The actual number may be less if drillbits have not
+          yet started, or if YARN cannot allocate enough containers.
+
+   Live Drillbit Count
+          The live drillbit count is the number of drillbits that are
+          ready for use. These have successfully started, have registered
+          with ZooKeeper, and are ready for use. You can see the detail of
+          all drillbits (including those in the process of starting or
+          stopping) using the Drillbits page. Each drillbit must run on a
+          separate node, so this is also the number of nodes in the
+          cluster running Drill.
+
+   Total Drillbit Memory and Virtual Cores
+          The total number of YARN resources currently allocated to
+          running drillbits.
+
+   YARN Node Count, Memory, and Virtual Cores
+          Reports general information about YARN itself including the
+          number of nodes, the total cluster memory, and total number of
+          virtual cores.
+
+   Groups
+          Lists the cluster groups defined in the configuration file (only
+          one is currently supported), along with the target and actual
+          number of drillbits in that group.
+
+Configuration
+
+   The configuration page shows the complete set of configuration values
+   used for the current run. The values come from the configurations you
+   set and the Drill-provided defaults. Use this page to diagnose
+   configuration-related issues. Names are shown in fully-expanded form.
+   That is the name “drill.yarn.http.port” refers to the parameter
+   defined, as follows, in your configuration file:
+drill.yarn:
+ http: {
+   port: 8048
+ }
+}
+
+Drillbits
+
+   The Drillbits page provides the following information about each of the
+   Drillbits:
+
+   ID
+          A sequential number assigned to each new Drillbit. Numbers may
+          not start with 1 if you have previously shut down some
+          drillbits.
+
+   Group
+          The cluster group that started the Drillbit. Cluster groups
+          configured in drill-on-yarn.conf.
+
+   Host
+          The host name or IP address on which the Drillbit runs. If the
+          Drillbit is in a normal operating state, this field is also a
+          hyperlink to the Web UI for the drillbit.
+
+   State
+          The operating state of the Drillbit. The normal state is
+          “Running.” The drillbit passes through a number of states as
+          YARN allocates a container and launches a process, as the AM
+          waits for the Drillbit to become registered in ZooKeeper, and so
+          on. Similarly, the Drillbit passes through a different set of
+          states during shutdown. Use this value to diagnose problems. If
+          the drillbit is in a live state, this field shows an “[X]” link
+          that you can use to kill this particular drillbit. Use this if
+          the drillbit has startup problems or seems unresponsive. During
+          the shut-down process, the kill link disappears and is replaced
+          with a “Cancelled” note.
+
+   ZK State
+          The ZooKeeper handshake state. Normal state is “START_ACK”,
+          meaning that the drillbit has registered with ZooKeeper. This
+          state is useful when diagnosing problems.
+
+   Container ID
+          The YARN-assigned container ID for the drillbit task. The ID is
+          a link that takes you to the YARN Node Manager UI for the
+          drillbit task.
+
+   Memory and Virtual Cores (vcores)
+          The amount of resources actually allocated to the drillbit by
+          YARN.
+
+   Start Time
+          The date and time (in your local time-zone, displayed in ISO
+          format) when the drillbit launch started. This page also
+          displays unmanaged drillbits, if present. An unmanage drillbit
+          is one that is running, has registered with ZooKeeper, but was
+          not started by the Application Master. Likely, the drillbit was
+          launched using the drillbit.sh script directly. Use the host
+          name to locate the machine running the Drillbit if you want to
+          convert the drillbit to run under YARN.
+
+Manage
+
+   The Manage page provides options to resize or stop the Drill cluster.
+   You can resize the cluster by adding or removing drillbits or setting
+   the cluster to a specific size.
+
+   Drill is a long-running application. Typlically, Drill runs
+   indefinitely, and you would only shut down the Drill cluster to perform
+   an upgrade of the Drill software or to change configuration options.
+   When you terminate the Drill cluster, any in-progress queries fail.
+   Therefore, best practice is to perform the shutdown with users so that
+   Drill is not processing any queries at the time of the shut-down.
+
+   When removing or shutting-down the cluster, you receive a confirmation
+   page asking if you really do want to stop drillbit processes. Click
+   Confirm to continue.
+
+History
+
+   The History page lists all failed, killed, and restarted drillbits. You
+   can detect failures and diagnose problems using the information on this
+   page. Use the YARN container ID listed on this page to locate the log
+   files for the drillbit.

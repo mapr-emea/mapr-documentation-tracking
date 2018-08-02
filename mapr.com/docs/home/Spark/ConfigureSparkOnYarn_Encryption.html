@@ -1,0 +1,49 @@
+Configure SSL Encryption for Spark on YARN
+
+   Complete the following step to manually configure encryption for the
+   Spark HTTP file and broadcast servers:
+   In the spark-defaults.conf file on each spark node, configure the
+   following properties:
+     * For Spark 2.0.1 and later:
+spark.ssl.fs.enabled true
+spark.ssl.keyPassword <ssl-keystore-password>
+spark.ssl.keyStore /opt/mapr/conf/ssl_keystore
+spark.ssl.keyStorePassword <ssl-keystore-password>
+spark.ssl.trustStore /opt/mapr/conf/ssl_truststore
+spark.ssl.trustStorePassword <ssl-keystore-password>
+spark.ssl.protocol TLSv1.2
+spark.ssl.enabledAlgorithms TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_256_CB
+C_SHA
+       Note: Starting in MEP 4.0, for secure clusters, you can skip this
+       step. For new installs done through the 6.0 MapR Installer, the
+       installer enables this configuration. For manual installs and
+       upgrades, [1]running configure.sh -R, as the final step in the
+       configuration process, enables these settings.
+     * For Spark 1.6.1:
+spark.ssl.akka.enabled true
+spark.ssl.fs.enabled true
+spark.ssl.keyPassword <ssl-keystore-password>
+spark.ssl.keyStore /opt/mapr/conf/ssl_keystore
+spark.ssl.keyStorePassword <ssl-keystore-password>
+spark.ssl.trustStore /opt/mapr/conf/ssl_truststore
+spark.ssl.trustStorePassword <ssl-keystore-password>
+spark.ssl.protocol TLSv1.2
+spark.ssl.enabledAlgorithms TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_256_CB
+C_SHA
+
+   Spark UI SSL is not needed when running Spark on YARN because
+   encryption is provided by the YARN protocol. For versions prior to MEP
+   4.1.0, to enable users logged in with a normal user account (not mapr
+   or root) to run spark jobs on the cluster, disable Spark SSL for
+   Spark-on-YARN jobs. To disable Spark SSL, add spark.ssl.ui.enabled
+   false to the spark-defaults.conf file on each spark node. The
+   spark-defaults.conf file is in the following location:
+   /opt/mapr/spark/spark-<version>/conf/. Make sure SSL is enabled for the
+   Spark history server.
+   Note: When you manually configure encryption for Spark, set the same
+   protocol and algorithms for each node. Otherwise, the connection
+   between those components might fail.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SparkConfigureShR.html#concept_x2q_5dl_3bb

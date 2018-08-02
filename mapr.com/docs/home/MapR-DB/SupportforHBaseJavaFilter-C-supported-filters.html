@@ -1,0 +1,115 @@
+Supported Filters
+
+   Filter Format Description
+   ColumnCountGetFilter ColumnCountGetFilter(x) Returns the first x
+   columns in a row. Used for GET operations.
+   ColumnPaginationFilter ColumnPaginationFilter(x,y) Returns the first x
+   columns after the number y of columns that is specified for the offset.
+   ColumnPrefixFilter ColumnPrefixFilter('prefix') Returns only those
+   key-values in columns that have names that start with the specified
+   prefix. The column prefix must be of the form “qualifier”.
+   ColumnRangeFilter
+   ColumnRangFilter('minColumn','maxColumn',boolean,boolean)
+
+   Returns only those key-values that are in columns that have names
+   between minColumn and maxColumn.
+
+   For example, if minColumn is 'an', and maxColumn is 'be', the filter
+   returns key-values from columns named 'ana', 'bad', but not from
+   columns named 'bed' or'eye' If minColumn is null, there is no lower
+   bound. If maxColumn is null, there is no upper bound.
+
+   This filter also takes two boolean variables to indicate whether to
+   include the minColumn and maxColumn.
+   DependentColumnFilter DependentColumnFilter('family','qualifier') Tries
+   to locate the specified column in each row and returns all key-values
+   that have the same timestamp in that column. If a row does not contain
+   the specified column, none of the key-values in that row are returned.
+   FamilyFilter FamilyFilter(compareOperator,'comparator:value') Filters
+   by column family. If the comparison returns true, the filter returns
+   all of the key-values in the matching column family.
+   FirstKeyOnlyFilter FirstKeyOnlyFilter() Returns the first key-value
+   from each row.
+   FirstKeyValueMatchingQualifiersFilter
+   FirstKeyValueMatchingQualifier('qualifier_1',
+   'qualifier_2',...'qualifier_n') Serially compares each qualifier in a
+   row with the given qualifiers. If the current qualifier matches any of
+   the given qualifiers, the filter stops and includes the current row (up
+   to the current qualifier) in the result set.
+   FuzzyRowFilter FuzzyRowFilter('rowkey','fuzzy_info')
+
+   Filters data based on fuzzy row key. Performs fast-forwards during
+   scanning. It takes pairs (row key, fuzzy info) to match row keys. Where
+   fuzzy info is a byte array with 0 or 1 as its values:
+
+   0 - means that this byte in provided row key is fixed, i.e. row key's
+   byte at same position must match
+
+   1 - means that this byte in provided row key is NOT fixed, i.e. row
+   key's byte at this position can be different from the one in provided
+   row key
+
+   Example: Let's assume row key format is userId_actionId_year_month.
+   Length of userId is fixed and is 4, length of actionId is 2 and year
+   and month are 4 and 2 bytes long respectively. Let's assume that we
+   need to fetch all users that performed certain action (encoded as "99")
+   in Jan of any year. Then the pair (row key, fuzzy info) would be the
+   following: row key = "????_99_????_01" (one can use any value instead
+   of "?") fuzzy info =
+   "\x01\x01\x01\x01\x00\x00\x00\x00\x01\x01\x01\x01\x00\x00\x00" I.e.
+   fuzzy info tells the matching mask is "????_99_????_01", where at ? can
+   be any value.
+   InclusiveStopFilter InclusiveStopFilter('rowKey') Returns all
+   key-values that are in the rows up to and including the specified row
+   that has the specified row key.
+   KeyOnlyFilter KeyOnlyFilter() Returns the key component of each
+   key-value.
+   MultipleColumnPrefixFilter
+
+   MultipleColumnPrefixFilter('prefix_1','prefix_2', ...,'prefix_n')
+   Returns the key-values from columns that have names that begin with any
+   of the specified prefixes.
+   PageFilter PageFilter(pageSize) Returns the number of rows that is
+   equivalent to the specified page size..
+   PrefixFilter PrefixFilter('rowKey_prefix') Returns the key-values from
+   a row that has a key which starts with the specified row-key prefix.
+   QualifierFilter QualifierFilter(compareOperator,'comparator:value')
+   Filters by column. If the comparison returns true, the filter returns
+   all of the key-values in the matching column.
+   RandomRowFilter RandomRowFilter(probability) Filters by probability.
+   For example, RandomRowFilter(0.25) means that there is a 1 in 4 chance
+   that the filter will pick the first row, a 1 in 4 chance that the
+   filter will pick the next row, and so on until all rows in the table
+   have been processed in this way.
+   RowFilter RowFilter(compareOperator,'comparator:value') Filters by row
+   key. If the comparison returns true, the filter returns all of the
+   key-values in the matching row.
+   SingleColumnValueExcludeFilter
+   SingleColumnValueExcludeFilter('columnFamily','qualifier',
+   compareOperator,'comparator:value') This filter takes the same
+   arguments and behaves the same as SingleColumnValueFilter: however, if
+   the column is found and the condition passes, all of the columns of the
+   row will be returned except for the tested column value.
+   SingleColumnValueFilter
+   SingleColumnValueFilter('columnFamily','qualifier',
+   compareOperator,'comparator:value') This filter takes a column family,
+   a qualifier, a compare operator and a comparator. If the specified
+   column is not found: all of the columns of that row will be emitted. If
+   the column is found and the comparison with the comparator returns
+   true, all of the columns of the row will be emitted. If the condition
+   fails, the row will not be returned.
+   SkipFilter SKIP filter [1]See the description of the SKIP unary
+   operator above .
+   TimeStampsFilter TimeStampsFilter('timestamp_1','timestamp_2',...,
+   'timestamp_n') Returns the key-values that have timestamps that match
+   any of the specified timestamps.
+   ValueFilter ValueFilter(compareOperator,'comparator:value') Filters by
+   key-value. If the comparison returns true, the filter returns the
+   matching key-value.
+   WhileMatchFilter WHILE filter [2]See the description of the WHILE unary
+   operator above .
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/SupportforHBaseJavaFilter-C.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/SupportforHBaseJavaFilter-C.html

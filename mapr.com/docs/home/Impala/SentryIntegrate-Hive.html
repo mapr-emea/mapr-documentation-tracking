@@ -1,0 +1,235 @@
+Configure Hive to use Sentry Authorization
+
+   Configure Hive to use Sentry when you want to use Sentry authorization
+   with Impala.
+
+   Complete the following steps to configure Hive to use Sentry
+   authorization, and create an admin role for the mapr user:
+    1. For Sentry 1.6.0 and Hive 1.2, add the following properties to
+       hive-site.xml:
+<property>
+                        <name>hive.server2.session.hook</name>
+                        <value>org.apache.sentry.binding.hive.HiveAuthzBindingSe
+ssionHook</value>
+                        </property>
+
+                        <property>
+                        <name>hive.sentry.conf.url</name>
+                        <value>file:///opt/mapr/sentry/sentry-<version>/conf/sen
+try-site.xml</value>
+                        <description>sentry-site.xml file location</description>
+                        </property>
+
+                        <property>
+                        <name>hive.metastore.rawstore.impl</name>
+                        <value>org.apache.sentry.binding.metastore.AuthorizingOb
+jectStore</value>
+                        </property>
+
+                        <property>
+                        <name>hive.metastore.filter.hook</name>
+                        <value>org.apache.sentry.binding.metastore.SentryMetaSto
+reFilterHook</value>
+                        </property>
+
+                        <property>
+                        <name>hive.server2.enable.doAs</name>
+                        <value>false</value>
+                        <description>Set this property to enable impersonation i
+n Hive Server 2</description>
+                        </property>
+
+                        <property>
+                        <name>hive.metastore.execute.setugi</name>
+                        <value>true</value>
+                        </property>
+
+                        <property>
+                        <name>hive.sentry.subject.name</name>
+                        <value>mapr</value>
+                        </property>
+
+                        <property>
+                        <name>hive.stats.collect.scancols</name>
+                        <value>true</value>
+                        <description>Property for use column level privileges in
+ Hive and Sentry Integration</description>
+                        </property>
+
+       Note: The hive.metastore.rawstore.impl property is optional, but is
+       recommended for [1]metadata read protection.
+    2. If Sentry uses the database storage model for rules, add the
+       following properties to hive-site.xml:
+<property>
+                        <name>hive.support.concurrency</name>
+                        <description>Enable Hive's Table Lock Manager Service</d
+escription>
+                        <value>true</value>
+                        </property>
+
+                        <property>
+                        <name>hive.zookeeper.quorum</name>
+                        <description>ZooKeeper quorum used by Hive's Table Lock
+Manager</description>
+                        <value>hostname</value>
+                        </property>
+
+                        <property>
+                        <name>hive.zookeeper.client.port</name>
+                        <description>The port where the clients connect</descrip
+tion>
+                        <value>5181</value>
+                        </property>
+
+                        <property>
+                        <name>hive.security.authorization.task.factory</name>
+                        <value>org.apache.sentry.binding.hive.SentryHiveAuthoriz
+ationTaskFactoryImpl</value>
+                        </property>
+
+                        <property>
+                        <name>hive.metastore.rawstore.impl</name>
+                        <value>org.apache.sentry.binding.metastore.AuthorizingOb
+jectStore</value>
+                        </property>
+
+                        <property>
+                        <name>hive.metastore.pre.event.listeners</name>
+                        <value>org.apache.sentry.binding.metastore.MetastoreAuth
+zBinding</value>
+                        <description>list of comma separated listeners for metas
+tore events.</description>
+                        </property>
+
+    3. To configure Sentry with Hive 2.1 or later, add the following
+       properties to HIVE_HOME/conf/hive-site.xml:
+<property>
+                        <name>hive.server2.session.hook</name>
+                        <value>org.apache.sentry.binding.hive.v2.HiveAuthzBindin
+gSessionHookV2</value>
+                        </property>
+                        <property>
+                        <name>hive.sentry.subject.name</name>
+                        <value>mapr</value>
+                        <description>sentry-site.xml file location</description>
+                        </property>
+                        <property>
+                        <name>hive.sentry.conf.url</name>
+                        <value>file:///opt/mapr/sentry/sentry-1.7.0/conf/sentry-
+site.xml</value>
+                        <description>sentry-site.xml file location</description>
+                        </property>
+                        <property>
+                        <name>hive.security.authorization.task.factory</name>
+                        <value>org.apache.sentry.binding.hive.v2.SentryHiveAutho
+rizationTaskFactoryImplV2</value>
+                        </property>
+                        <property>
+                        <name>hive.metastore.rawstore.impl</name>
+                        <value>org.apache.sentry.binding.hive.v2.metastore.Autho
+rizingObjectStoreV2</value>
+                        </property>
+                        <property>
+                        <name>hive.metastore.filter.hook</name>
+                        <value>org.apache.sentry.binding.metastore.SentryMetaSto
+reFilterHook</value>
+                        </property>
+                        <property>
+                        <name>hive.server2.enable.doAs</name>
+                        <value>false</value>
+                        <description>Set this property to enable impersonation i
+n Hive Server 2</description>
+                        </property>
+                        <property>
+                        <name>hive.metastore.execute.setugi</name>
+                        <value>true</value>
+                        </property>
+
+                        <property>
+                        <name>hive.internal.ss.authz.settings.applied.marker</na
+me>
+                        <value>true</value>
+                        </property>
+
+                        <property>
+                        <name>hive.security.authorization.manager</name>
+                        <value>org.apache.sentry.binding.hive.v2.SentryAuthorize
+rFactory</value>
+                        </property>
+
+                        <property>
+                        <name>hive.security.authenticator.manager</name>
+                        <value>org.apache.hadoop.hive.ql.security.SessionStateUs
+erAuthenticator</value>
+                        </property>
+
+                        <property>
+                        <name>hive.security.authorization.enabled</name>
+                        <value>true</value>
+                        </property>
+                        <property>
+                        <name>hive.metastore.pre.event.listeners</name>
+                        <value>org.apache.sentry.binding.hive.v2.metastore.Metas
+toreAuthzBindingV2</value>
+                        <description>list of comma separated listeners for metas
+tore events.</description>
+                        </property>
+                        <property>
+                        <name>hive.metastore.event.listeners</name>
+                        <value>org.apache.sentry.binding.hive.v2.metastore.Sentr
+yMetastorePostEventListenerV2</value>
+                        <description>list of comma separated listeners for metas
+tore, post events.</description>
+                        </property>
+                        <property>
+                        <name>hive.zookeeper.client.port</name>
+                        <value>5181</value>
+                        <description>The Zookeeper client port. The MapR default
+ clientPort is 5181.</description>
+                        </property>
+
+                        <property>
+                        <name>hive.zookeeper.quorum</name>
+                        <description>Zookeeper quorum used by Hive's Table Lock
+Manager</description>
+                        <value><!--host with Zookeper--></value>
+                        </property>
+
+    4. Restart HiveServer2 and the Hive Metastore:
+sudo -u mapr maprcli node services -name hs2 -action restart -nodes <nodename>
+                        sudo -u mapr maprcli node services -name hivemeta -actio
+n restart -nodes <nodename>
+    5. If Sentry was configured to use the database storage model, issue
+       the following command to restart Sentry:
+sudo -u mapr maprcli node services -name sentry -action restart -nodes <nodename
+>
+    6. Create the admin role.
+          + For the database storage model, run the following commands
+            from the Hive beeline to create the admin role for the mapr
+            user:
+>create role admin_role;
+                            >grant all on server HS2 to role admin_role;
+                            >grant role admin_role to group mapr;
+
+          + For the file-based model, update the [2]The global-policy.ini
+            File in /opt/mapr/sentry/sentry-<version>/conf. For example:
+[groups]
+                            mapr = admin_role
+                            testuser = test_role
+                            [roles]
+                            admin_role = server=HS2
+                            test_role = server=HS2->db=test_db1->table=test_tabl
+e->action=all
+            Note: If you include a non-existent mapping or path to a JAR
+            file that represents a UDF (user-defined function) in any
+            section of the global-policy.ini file, Sentry silently fails
+            and cannot control access to Hive. For example, if you include
+            a mapping to a role that does not exist in the [groups]
+            section, Sentry fails. For more information, see [3]Getting
+            Started with Sentry in Hive.
+
+References
+
+   1. https://cwiki.apache.org/confluence/display/SENTRY/Sentry+Metadata+Read+Protection+for+Hive+Configuration
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/global-policy_ini-file.html
+   3. https://blogs.apache.org/sentry/entry/getting_started

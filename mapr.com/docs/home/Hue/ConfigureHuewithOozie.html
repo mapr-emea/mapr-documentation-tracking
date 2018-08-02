@@ -1,0 +1,47 @@
+Integrate Hue with Oozie
+
+   Complete the following steps to integrate Hue with Oozie:
+    1. Edit the hue.ini file to configure the location where the Oozie
+       service is running. The path to the hue.ini file is:
+       /opt/mapr/hue/hue-<version>/desktop/conf/hue.ini.
+[liboozie]
+# The URL (host IP address) where the Oozie service is running. This is required
+ in order for # users to submit jobs.
+oozie_url=http://<ip_address>:<oozie_port_number>/oozie
+       The [1]<oozie_port_number> depends on whether your cluster is
+       secure.
+    2. Enable user impersonation for Oozie through Hue:
+         a. Add the following lines to the oozie-site.xml file (the path
+            to the file is:
+            /opt/mapr/oozie/oozie-4.2.0/conf/oozie-site.xml):
+<property>
+  <name>oozie.service.ProxyUserService.proxyuser.<default_user>.hosts</name>
+  <value>*</value>
+</property>
+<property>
+  <name>oozie.service.ProxyUserService.proxyuser.<default_user>.groups</name>
+  <value>*</value>
+</property>
+            In most cases, mapr is the <default_user>. This should be the
+            same default user that is specified in the hue.ini and the
+            core-site.xml.
+         b. Restart Oozie. To restart Oozie, first stop Oozie then start
+            it:
+maprcli node services -name oozie -action restart -nodes <ip_address>
+
+            To verify that the Oozie server started, enter:
+lsof -i:<oozie_port_number>
+            The output from this command should look similar to this:
+COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME java 16644 mapr 35u IPv6 6992
+6776 0t0 TCP *:irisa (LISTEN)
+            You can also check Oozie logs to verify that Oozie started.
+            The log is found here:
+            /opt/mapr/oozie/oozie-<version>/logs/oozie.log
+    3. Perform any additional Hue configurations and then restart Hue so
+       that the changes will take effect. See [2]Starting the Hue
+       Webserver.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallOozie.html#InstallOozie__step_djg_dp4_qbb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/StartingHueWebserver.html#task_k3f_zh3_1v

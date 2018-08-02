@@ -1,0 +1,34 @@
+Altering JSON Table Attributes
+
+   This topic describes how to change the values of table attributes by
+   using the MapR-DB JSON Client API.
+
+   In this example, the code turns off the bulkload flag on the table.
+   Applications will typically need to turn off this flag after a bulk
+   load of the table with the import, importJSON, or copytable utility.
+
+   Create a TableDescriptor object for an existing table by passing the
+   path of the table to the Admin interface's getTableDescriptor() method.
+
+Permissions Required
+
+   The readAce and writeAce permissions on the volumes where the JSON
+   tables are located. For information about how to set permissions on
+   volumes, see [1]Setting Whole Volume ACEs.
+
+Example
+
+   Tables are altered a by using the TableDescriptor object and then
+   passing that object to the Admin interface's altertable() method.
+public void alterTable(String tablePath) throws DBException {
+    try (Admin admin = MapRDB.newAdmin()) {
+        TableDescriptor tableDesc = admin.getTableDescriptor(tablePath);
+        // set bulk load to false
+        tableDesc.setBulkLoad(false);
+        admin.alterTable(tableDesc);
+    }
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html

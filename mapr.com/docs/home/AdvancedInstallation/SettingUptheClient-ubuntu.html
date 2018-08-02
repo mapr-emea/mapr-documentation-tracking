@@ -1,0 +1,47 @@
+Installing the MapR Client on Ubuntu
+
+   This section describes how to install the MapR Client on Ubuntu.
+    1. Remove any previous MapR software.
+       You can use dpkg --list | grep mapr to get a list of installed MapR
+       packages, then type the packages separated by spaces after the dpkg
+       -r command. Example: dpkg -l | grep mapr.
+dpkg -r mapr-core mapr-fileserver
+    2. Update your Ubuntu repositories.
+       Example:
+apt-get update
+    3. Run the following command to install the MapR client:
+apt-get install mapr-client
+    4. Run [1]configure.sh to configure the client.
+
+        Non-secure cluster example
+                In the following examples, the -N parameter specifies the
+                cluster name, the -c (lowercase) parameter specifies a
+                client configuration, the -C (uppercase) parameter
+                specifies the CLDB node, and -HS specifies the
+                HistoryServer node:
+
+/opt/mapr/server/configure.sh -N my.cluster.com -c -C mynode01:7222 -HS mynode02
+
+        Secure cluster example
+                In the following example, the -N parameter specifies the
+                cluster name, the -c (lowercase) parameter specifies a
+                client configuration, the -secure parameter indicates that
+                the cluster is secure, the -C (uppercase) parameter
+                specifies the CLDB node, and the -HS parameter specifies
+                the HistoryServer node:
+
+/opt/mapr/server/configure.sh -N my.cluster.com -c -secure -C mynode01:7222 -HS
+mynode02
+
+    5. To use this client with a secure cluster or clusters, copy the
+       ssl_truststore file from the /opt/mapr/conf directory on the
+       cluster to the /opt/mapr/conf directory on the client.
+       If this client will connect to multiple clusters, merge the
+       ssl_truststore files with the /opt/mapr/server/manageSSLKeys.sh
+       tool. See [2]Managing Secure Clusters for details on how to connect
+       to a secure cluster.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Secure-cluster-administration.html

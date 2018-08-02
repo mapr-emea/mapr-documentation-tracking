@@ -1,0 +1,54 @@
+Monitoring Consumers
+
+   There are two commands that you can run at intervals to get a sense of
+   how far behind a consumer is in a partition. The consumer must belong
+   to a consumer group, even if the consumer is the only member of that
+   group.
+
+   To find the lag in milliseconds between the timestamp of the most
+   recently published message in a stream, topic, or partition and the
+   timestamp of a consumer's most recently committed cursor, run the
+   command [1]stream cursor list. The lag is the value of the
+   consumerlagmillis parameter.
+   To find the timestamp of the most recently committed cursor for the
+   consumer that is furthest back in a partition compared to all other
+   consumers reading from the same partition, run the command [2]stream
+   topic info. This timestamp is the value of the
+   mintimestampacrossconsumers parameter. Use this timestamp together with
+   the values of the following parameters to get a sense of where this
+   cursor is in the partition:
+
+   mintimestamp
+          This parameter shows the timestamp of the oldest message in the
+          partition.
+
+   maxtimestamp
+          This parameter shows the timestamp of the most recently
+          published message in the partition.
+
+   If a consumer's configuration for cursor commits is the default (the
+   configuration parameter enable.auto.commit is set to true and
+   auto.commit.interval.ms is set to 1000 milliseconds), the consumer will
+   be only about one second ahead of the offset and timestamp reported for
+   the consumer's most recently committed cursor.
+
+   If it seems that consumers are falling behind and that this problem is
+   not caused by server-side I/O bottlenecks, you can start more consumer
+   threads.
+
+   If the current number of consumers in a consumer group is equal to the
+   number of partitions in the topic with the fewest partitions to which
+   the consumer group is subscribed, add a partition to this topic before
+   adding a consumer. The consumer client library dynamically reassigns
+   the existing partitions in the topic to the consumers in the consumer
+   group, as well as assigning the new partition to a consumer.
+
+   If the current number of consumers in a consumer group is less than the
+   number of partitions in the topic with the fewest partitions to which
+   the consumer group is subscribed, you don't need to add any partitions
+   before adding a consumer.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_cursor_list.html#untitled6
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_info.html#stream_topic_info

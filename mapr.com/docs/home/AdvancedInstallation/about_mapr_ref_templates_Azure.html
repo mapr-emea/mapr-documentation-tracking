@@ -1,0 +1,58 @@
+About the MapR Reference Templates for Azure
+
+   The MapR reference templates for Azure contain the scripts and JSON
+   templates for deploying a MapR cluster. You can use the reference
+   templates without modification, or you can customize them to suit your
+   environment.
+
+   The reference templates can be found on [1]GitHub in folders organized
+   by the MapR Installer version. To determine your MapR Installer
+   version, see [2]Checking the MapR Installer Version.
+   This table describes the Azure reference templates:
+   Note: For a given JSON file name, the deployment name in Azure is
+   similar, but does not necessarily match the file names below.
+   Template Type Template File Name Function
+   Primary Template mainTemplate.json References the child templates that
+   do segregated work to create Azure resources and deploy MapR software.
+   This is where most of the defaults can be changed to customize
+   deployments.
+   Child Template createUiDefinition.json MapR marketplace GUI
+   implementation. This is a standalone file and isn't used to deploy MapR
+   software. This file generates JSON from user input and then sends the
+   JSON to the mainTemplate.json.
+   Child Template network.json Child template to mainTemplate.json.
+   Creates a Virtual Network and Subnet when the option to create a new is
+   supplied.
+   Child Template openvpn.json Child template to mainTemplate.json.
+   Creates all VM resources for the OpenVPN server then executes the
+   mapr-vpn.sh script.
+   Child Template vm.json Child template to mainTemplate.json. Creates all
+   VM resources in the cluster, including the installer node. For
+   password-enabled and public-key-enabled OS users only.
+   Script install_openvpn_access_server.sh Installs OpenVPN core to an
+   Ubuntu 17 image.
+   Script mapr-cloud-configure.sh Installs MapR to the newly created VMs.
+   The vm_xxx.json files will send parameters to this file to initiate a
+   Stanza MapR installation. This file is run only on the installer node.
+   Script mapr-init.sh Initialization script that is run on all nodes in
+   the cluster (not just the install node). For example, this script sets
+   passwords and sudo access.
+   Script mapr-vpn-configure.sh Alters the configuration of the core
+   OpenVPN to match inputs from the user.
+   Script mapr-vpn.sh Decides if OpenVPN has been installed and configured
+   already. Since the templates might be run several times by expanding
+   the cluster, this file will not attempt to install or configure OpenVPN
+   if it has been done already.
+   Sample Stanza Input File mapr-core.yml Basic Stanza file. This file has
+   several placeholders that mapr-cloud-configure.sh changes. For example,
+   changes to services that are global across all types of deployments can
+   be changed here.
+
+   Provided as a convenience for users who need a script-based tool to
+   install MapR software. See [3]MapR Installer Stanzas.
+
+References
+
+   1. https://github.com/mapr/mapr-cloud-templates/tree/master/
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Checking_MapR_installer_version.html#task_clb_ntb_2db
+   3. https://maprdocs.mapr.com/home/AdvancedInstallation/Stanzas/SilentInstaller.html

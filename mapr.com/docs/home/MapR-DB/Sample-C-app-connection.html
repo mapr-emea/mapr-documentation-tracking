@@ -1,0 +1,77 @@
+Create a connection
+
+API used: hb_connection_create()
+
+   Use this function to connect to the MapR cluster.
+
+   This API takes three parameters:
+const char *zk_ensemble,     /* [in] NULL terminated, comma separated
+                                       *   string of CLDB servers. e.g.
+                                       *   "<server1[:port]>,...".
+const char *zk_root,              /* [in] Ignored for MapR-DB. */
+hb_connection_t *connection_ptr); /* [out] pointer to hb_connection_t */
+
+   There are two methods by which you can use the zk_ensemble parameter to
+   determine how the MapR client connection locates the MapR cluster to
+   connect to:
+
+   Set zk_ensemble to NULL to connect to the default cluster that is
+          defined in the mapr-clusters.conf file.
+          MapR recommends this method, which uses the configuration
+          information that is listed for the cluster in the
+          mapr-clusters.conf file.
+
+   Set zk_ensemble to a string that includes hostnames or IP addresses.
+          With this method, the client application can connect to a
+          non-default cluster explicitly. The client application searches
+          through the mapr-clusters.conf file to find a cluster entry with
+          a matching hostname/IP address. The first entry that is found to
+          contain a matching hostname[:port]/IP address[:port} is used for
+          the connection, as is the configuration information for that
+          entry.
+
+          If none of the hostnames or IP addresses specified for
+          zk_ensemble are located in entries in mapr-clusters.conf, or if
+          mapr-clusters.conf does not exist, the client application tries
+          to connect to the first specified hostname[:port]/IP
+          address[:port]. If the client application cannot make a
+          connection, it moves to the next specified hostname[:port]/IP
+          address[:port].
+
+          Warning: Because no mapr-clusters.conf file is involved, no
+          additional configuration information is used for connections.
+          For example, connections made in this way cannot be secure
+          because no security parameters are provided.
+
+Examples
+
+//connect to default cluster specified in mapr-clusters.conf (preferred)
+if ((err = hb_connection_create(NULL,
+                                NULL,
+                                &connection)) != 0) {
+  HBASE_LOG_ERROR("Could not create MapR-DB connection : errorCode = %d.",
+err);
+  goto cleanup;
+}
+
+//Connect directly to cluster with these specified IP addresses.
+//Typically this means there is no mapr-clusters.conf and security not used.
+if ((err = hb_connection_create("192.168.1.1:7222,192.168.1.2:7222",
+                                NULL /* ignored */,
+                                &connection)) != 0) {
+  HBASE_LOG_ERROR("Could not create MapR-DB connection : errorCode = %d.",
+err);
+  goto cleanup;
+}
+
+Code in the sample application
+
+if ((retCode = hb_connection_create(zk_ensemble,
+                                    zk_root_znode,
+                                    &connection)) != 0) {
+  HBASE_LOG_ERROR("Could not create HBase connection : errorCode = %d.", retCode
+);
+  goto cleanup;
+}
+
+   This API is defined in the header file connection.h:

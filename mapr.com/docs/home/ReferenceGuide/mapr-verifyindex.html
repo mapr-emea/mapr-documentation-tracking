@@ -1,0 +1,84 @@
+MapR-DB JSON verifyindex
+
+   Describes how to use the MapR-DB JSON verifyindex command to verify
+   that the data in a secondary index is consistent with its JSON table.
+
+Syntax
+
+mapr verifyindex
+        -path < table path >
+        -index < index name >
+        -first_exit < true | false >
+        -numthreads < thread number >
+
+Parameters
+
+   Parameter Description
+   path (Required) Path to where the table exists.
+   index (Required) Name of the secondary index on the table.
+   first_exit (Optional) Exit when the first difference is found. Options:
+   true or false. Default: false.
+   numthreads (Optional) Number of parallel threads to use for the
+   verification. Default: 16
+
+Example
+
+   The following example creates a table, creates a secondary index on the
+   table, inserts some documents, and then runs the verifyindex command to
+   verify that there is data consistency between the JSON table and the
+   secondary index. See [1]Troubleshooting Secondary Indexes for an
+   example where verifyindex detects data inconsistency.
+// Create a table using dbshell add
+# mapr dbshell
+
+maprdb root:> create /t1
+Table /t1 created.
+
+
+// Create an index using maprcli table index add
+# maprcli table index add -path /t1 -index i1 -indexedfields a -json
+{
+"timestamp":1499788406380,
+"timeofday":"2017-07-11 08:53:26.380 GMT-0700",
+"status":"OK",
+"total":0,
+"data":[ ]
+}
+
+
+// Insert documents into the table using dbshell insert
+# mapr dbshell
+
+maprdb root:> insert /t1 --v {"a":1,"b":2} --id 1
+Document with id: "1" inserted.
+
+maprdb root:> insert /t1 --v {"a":"mapr","b":3} --id 2
+Document with id: "2" inserted.
+
+maprdb root:> insert /t1 --v {"a":{"$numberLong":3},"b":4} --id 4
+Document with id: "4" inserted.
+
+
+// Run verifyindex to verify indexed data
+# mapr verifyindex -path /t1 -index i1
+
+Number of rows in table but not in index: 0
+Number of rows in index but not in table: 0
+Mismatch row count: 0
+
+Troubleshooting Use Cases
+
+   Situations where you can use this command are as follows:
+     * Examine details on updates that have not yet propagated from a JSON
+       table to one of its indexes.
+     * Detect if there are documents that are missing from an index.
+     * Detect other data consistency issues between an index and its
+       parent JSON table.
+
+   See [2]Troubleshooting Secondary Indexes for more information on these
+   use cases.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-troubleshooting.html#indexes-troubleshooting
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-troubleshooting.html#indexes-troubleshooting

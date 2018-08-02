@@ -1,0 +1,55 @@
+Create and Maintain Volume Dump File
+
+   Describes how to create full dump files and add incremental volume dump
+   files.
+
+   You can use volume dump create to create two types of files:
+     * full dump files containing all data in a volume
+     * incremental dump files that contain changes to a volume between two
+       points in time
+
+   A full dump file is useful for restoring a volume from scratch. An
+   incremental dump file contains the changes necessary to take an
+   existing (or restored) volume from one point in time to another. Along
+   with the dump file, a full or incremental dump operation can produce a
+   state file (specified by the ?-e parameter) that contains a table of
+   the version number of every container in the volume at the time the
+   dump file was created. This represents the end point of the dump file,
+   which is used as the start point of the next incremental dump. The main
+   difference between creating a full dump and creating an incremental
+   dump is whether the -s parameter is specified; if -s is not specified,
+   the volume create command includes all volume data and creates a full
+   dump file. If you create a full dump followed by a series of
+   incremental dumps, the result is a sequence of dump files and their
+   accompanying state files:
+
+   dumpfile1 statefile1
+
+   dumpfile2 statefile2
+
+   dumpfile3 statefile3
+   Note: You can restore the volume from scratch, using the [1]volume dump
+   restore command with the full dump file, followed by each dump file in
+   sequence.
+   Note: In a secure cluster, you must use the MapR user ID. Using root or
+   any other user ID results in the system hanging.
+
+   To create and maintain an up-to-date dump of a volume:
+    1. Create a full dump file.
+       Example:
+maprcli volume dump create -name cli-created
+                    -dumpfile fulldump1 -e statefile1
+    2. Periodically, add an incremental dump file.
+       Examples:
+maprcli volume dump create -s
+                    statefile1 -e statefile2 -name cli-created -dumpfile incrdum
+p1 maprcli volume dump create
+                    -s statefile2 -e statefile3 -name cli-created -dumpfile incr
+dump2 maprcli volume dump
+                    create -s statefile3 -e statefile4 -name cli-created -dumpfi
+le incrdump3
+       ...and so on.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-dump-restore.html

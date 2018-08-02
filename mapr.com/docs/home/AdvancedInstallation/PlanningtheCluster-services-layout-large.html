@@ -1,0 +1,44 @@
+Service Layout Guidelines for Large Clusters
+
+   This section contains information about installing and segregating
+   services on large clusters.
+
+General Guidelines
+
+   The following are guidelines for installing services on large clusters:
+     * ResourceManager: Run the ResourceManager services on dedicated
+       nodes for clusters with over 250 nodes.
+     * Elasticsearch: Elasticsearch consumes significant CPU, disk, and
+       memory resources. Review the following guidelines:
+          + Whenever possible, Elasticsearch should have a dedicated disk
+            for its index directory.
+          + Depending on the number of indexed logs, you may want to run
+            the Elasticsearch service on five or more dedicated nodes.
+          + On production clusters, consider increasing Elasticsearch's
+            memory allocation. After you install MapR Monitoring, see
+            [1]Configure the Elasticsearch Service Heap Size.
+          + On clusters with high-density racks, run one or more
+            Elasticsearch services on each rack. Also, configure Fluentd
+            to write logs to Elasticsearch services that reside on the
+            same rack as the Fluentd services. After you install MapR
+            Monitoring, see [2]Configure Fluentd Services to Write to
+            Elasticsearch Nodes on the Same Rack.
+     * OpenTSDB: Run the OpenTSDB service on five or more nodes for
+       clusters over 100 nodes.
+
+Services to Separate on Large Clusters
+
+   The following are guidelines about which services to separate on large
+   clusters:
+     * ResourceManager on ZooKeeper nodes: Avoid running the
+       ResourceManager service on nodes that are running the ZooKeeper
+       service. On large clusters, the ResourceManager service can consume
+       significant resources.
+     * Monitoring Services on CLDB Nodes: Avoid running the OpenTSDB,
+       Elasticsearch, Kibana, or Grafana services on nodes that are
+       running the CLDB service.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ES_ConfigMemory.html#concept_rkr_wsl_pw
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LogAggregationAndStorage_ConfigureRack.html#task_y53_nyl_pw

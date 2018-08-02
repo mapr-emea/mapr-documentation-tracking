@@ -1,0 +1,262 @@
+Configure Hue with DB Query
+
+   Hue's DB Query application provides a way to view data in these four
+   database formats:
+     * SQLite
+     * MySQL
+     * PostgreSQL
+     * Oracle
+
+   To configure Hue to work with DB Query, edit the [librdbms] section of
+   the hue.ini file and change the parameters related to the particular
+   database you are using.
+   Warning: To disable the DB Query application, add rdbms to the
+   blacklist as shown in [1]Disabling an Application.
+
+Default librdbms Settings in hue.ini
+
+   Database settings are contained in the [librdbms] section of the
+   hue.ini file. Two databases (SQLite and MySQL) are already configured
+   in their own sections under the [[databases]] heading. Note that
+   PostgreSQL and Oracle work similarly to MySQL, so the [[[mysql]]]
+   section can be treated as a template that can be edited for these two
+   databases.
+
+   The DB Query application supports four types of databases, which are
+   configured in the [[databases]] section.
+
+   The default version of the librdbms section of the hue.ini file looks
+   like this:
+#################################################################
+# Settings for the RDBMS application
+#################################################################
+[librdbms]
+ # The RDBMS app can have any number of databases configured in the databases
+ # section. A database is known by its section name
+ # (i.e. sqlite, mysql, psql, and oracle in the list below).
+ [[databases]]
+   # sqlite configuration.
+   ## [[[sqlite]]]
+     # Name to show in the UI.
+     ## nice_name=SQLite
+     # For SQLite, name defines the path to the database.
+     ## name=/opt/mapr/hue/hue-<version>/desktop/desktop.db
+     # Database backend to use.
+     ## engine=sqlite
+   # mysql, oracle, or postgresql configuration.
+   ## [[[mysql]]]
+     # Name to show in the UI.
+     ## nice_name="My SQL DB"
+     # For MySQL and PostgreSQL, name is the name of the database.
+     # For Oracle, Name is instance of the Oracle server. For express edition
+     # this is 'xe' by default.
+     ## name=mysqldb
+     # Database backend to use. This can be:
+     # 1. mysql
+     # 2. postgresql
+     # 3. oracle
+     ## engine=mysql
+
+     # IP or hostname of the database to connect to.
+     ## host=localhost
+
+     # Port the database server is listening to. Defaults are:
+     # 1. MySQL: 3306
+     # 2. PostgreSQL: 5432
+     # 3. Oracle Express Edition: 1521
+     ## port=3306
+
+     # Username to authenticate with when connecting to the database.
+     ## user=example
+
+     # Password matching the username to authenticate with when
+     # connecting to the database.
+     ## password=example
+
+Using DB Query with SQLite
+
+   To configure Hue to work with SQLite, edit the sqlite section of the
+   hue.ini file and replace default values as necessary.
+
+Default sqlite Section
+
+   The default version of the sqlite section is shown here.
+# sqlite configuration
+## [[[sqlite]]]
+  # Name to show in the UI.
+  ## nice_name=SQLite
+
+  # For SQLite, name defines the path to the database.
+  ## name=/tmp/sqlite.db
+
+  # Database backend to use.
+  ## engine=sqlite
+
+Modifying the sqlite Section
+
+   To configure Hue’s DB Query application to work with SQLite, edit the
+   sqlite section of the hue.ini file as follows:
+    1. Remove the comment characters (##) in front of the [[[sqlite]]]
+       statement.
+    2. Replace the default values for the following parameters as
+       necessary.
+
+       Parameter  Default Value                 New Value
+       nice_name SQLite         The name that you want to appear in the UI
+       name      /tmp/sqlite.db The path to the SQLite database
+    3. Remove the comment characters (##) for the parameter values you
+       changed. Otherwise, the default values are used.
+
+Using DB Query with MySQL, PostgreSQL, or Oracle
+
+   Instructions for MySQL, PostgreSQL, and Oracle are similar. These
+   instructions show how to configure Hue to work with MySQL. You can
+   adapt the instructions to configure Hue to work with PostgreSQL or
+   Oracle.
+
+   The next section shows the default mysql section of the hue.ini file
+   for illustration. For instructions on configuring Hue so the DB Query
+   application can display data from a MySQL database, see [2]Modifying
+   the mysql Section.
+
+Default mysql Section
+
+   The default version of the mysql section is shown here.
+# mysql, oracle, or postgresql configuration.
+## [[[mysql]]]
+  # Name to show in the UI.
+  ## nice_name="My SQL DB"
+  # For MySQL and PostgreSQL, name is the name of the database.
+  # For Oracle, Name is the instance of the Oracle server. For    express editio
+n
+  # this is 'xe' by default.
+  ## name=mysqldb
+  # Database backend to use. This can be:
+  # 1. mysql
+  # 2. postgresql
+  # 3. oracle
+  ## engine=mysql
+
+  # IP or hostname of the database to connect to.
+  ## host=localhost
+
+  # Port the database server is listening to. Defaults are:
+  # 1. MySQL: 3306
+  # 2. PostgreSQL: 5432
+  # 3. Oracle Express Edition: 1521
+  ## port=3306
+
+  # Username to authenticate with when connecting to the database.
+  ## user=example
+
+  # Password matching the username to authenticate with when
+  # connecting to the database.
+  ## password=example
+
+Modifying the mysql Section
+
+   To configure Hue so the DB Query application can work with MySQL, edit
+   the mysql section of the hue.ini file as follows:
+    1. Replace the default values for the following parameters.
+
+   Parameter Default Value New Value
+   nice_name "My SQL DB" The name that you want to appear in the UI
+   name
+   mysqldb
+   The name of the database
+   host
+   localhost
+   IP address or hostname of the database to connect to
+   user
+   example
+   The username to use for authentication when connecting to the database
+   password example The password to use with the username (above) for
+   authentication when connecting to the database
+    2. Remove the comment characters (##) for the parameter values you
+       changed. Otherwise, the default values are used.
+
+Activating DB Query with mySQL
+
+   To activate DBQuery with MySQL, follow these steps:
+    1. Move the mysql python library to a back-up location and regenerate
+       it to match the version on the deployment machine. mv
+       /opt/mapr/hue/hue-<VERSION>/python2.6/site-packages/MySQL_python-1.
+       2.3c1-py2.6-linux-x86_64.egg
+       MySQL_python-1.2.3c1-py2.6-linux-x86_64.egg.bk
+    2. Regenerate the mysql python library by running the following
+       command: /opt/mapr/hue/hue-<VERSION>/build/env/bin/pip install
+       mysql-python
+
+Modifying the mysql Section for PostgreSQL
+
+   If you are working with a PostgreSQL database, edit the mysql section
+   of the hue.ini file and rename it postgresql. Next, replace the MySQL
+   default values as shown:
+    1. Replace the following MySQL default values with PostgreSQL values.
+
+                       Parameter                 Default Value New Value
+       nice_name
+       "My SQL DB"
+       The name that you want to appear in the UI
+       name
+       mysqldb
+       The name of the database
+       engine
+       mysql
+       postgresql (the database backend)
+       port                                      3306          5432
+    2. Replace the following default values with your host machine,
+       username, and password.
+
+   Parameter Default Value New Value
+   host
+   localhost
+   IP address or hostname of the database to connect to
+   user
+   example
+   The username to use for authentication when connecting to the database
+   password example The password to use with the username (above) for
+   authentication when connecting to the database
+    3. Remove the comment characters (##) at the beginning of each line
+       where you changed parameter values. Otherwise, the MySQL default
+       values are used.
+
+Modifying the mysql Section for Oracle
+
+   If you are working with an Oracle database, edit the mysql section of
+   the hue.ini file and rename it oracle. Next, replace the MySQL default
+   values as shown:
+    1. Replace the following MySQL default values with Oracle values.
+
+   Parameter Default Value New Value
+   nice_name
+   "My SQL DB"
+   The name that you want to appear in the UI
+   name
+   mysqldb
+   The instance of the Oracle server (for express edition, this is xe by
+   default)
+   engine
+   mysql
+   oracle (the database backend)
+   port 3306 1521 (for Oracle Express Edition)
+    2. Replace the following default values with your host machine,
+       username, and password.
+
+   Parameter Default Value New Value
+   host
+   localhost
+   IP address or hostname of the database to connect to
+   user
+   example
+   The username to use for authentication when connecting to the database
+   password example The password to use with the username (above) for
+   authentication when connecting to the database
+    3. Remove the comment characters (##) at the beginning of each line
+       where you changed parameter values. Otherwise, the mysql default
+       values are used.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/ConfigureHue-DisablingApp.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/Configure-Hue-DB-Query.html

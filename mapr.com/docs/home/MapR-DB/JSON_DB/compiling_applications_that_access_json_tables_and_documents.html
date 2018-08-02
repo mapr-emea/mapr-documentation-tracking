@@ -1,0 +1,56 @@
+Compiling and Running Java OJAI Applications
+
+   For applications that use the Java OJAI API, use Maven to compile and
+   determine the application's dependencies. Then, when you run the
+   application, specify those dependencies in the application's classpath.
+
+Compile and Determine Dependencies
+
+   Use Maven to compile and determine the application dependencies.
+    1. Add MapR's Maven repository to your pom.xml file, if it is not
+       already added:
+<repositories>
+    <repository>
+        <id>mapr-releases</id>
+        <url>http://repository.mapr.com/nexus/content/repositories/releases</url
+>
+        <snapshots><enabled>true</enabled></snapshots>
+        <releases><enabled>true</enabled></releases>
+    </repository>
+</repositories>
+    2. Add a dependency to the MapR OJAI driver project:
+<dependencies>
+    <dependency>
+        <groupId>com.mapr.ojai</groupId>
+        <artifactId>mapr-ojai-driver</artifactId>
+        <version>6.0.0-mapr</version>
+    </dependency>
+</dependencies>
+       Note: Replace the <version> property with the MapR-DB version that
+       you are using.
+    3. Use Maven to compile the application and resolve dependencies.
+
+Run the Application
+
+   When you develop a Java application, you can use a dependency
+   management tool such as Maven to compile your application. However, it
+   is recommended that do the following instead:
+    1. Compile the Java application without including dependencies
+    2. Specify the required classpath when you submit the application to
+       the cluster
+
+   If you choose to bundle the JAR file, and there is a mismatch between
+   the bundled JAR file and the version that your MapR cluster expects,
+   this can result in failures. The failures differ depending on the
+   version of MapR you are using. For more information, see [1]Using the
+   MapR-FS JAR to Connect to the Cluster.
+
+   When the cluster is secure, the node must also have a MapR ticket
+   configured for the user that runs the application.
+   You can use the following command to launch MapR-DB JSON applications:
+java -cp <classpath>:. -Djava.library.path=/opt/mapr/lib <main class JAR> <comma
+nd line arguments>
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/IncludeMFSjar.html#IncludeMFSjar

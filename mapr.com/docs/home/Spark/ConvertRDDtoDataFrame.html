@@ -1,0 +1,49 @@
+Converting an Apache Spark RDD to an Apache Spark DataFrame
+
+   When APIs are only available on an Apache Spark RDD but not an Apache
+   Spark DataFrame, you can operate on the RDD and then convert it to a
+   DataFrame.
+
+   You can convert an RDD to a DataFrame in one of two ways:
+     * Use the helper function, toDF.
+     * Convert the RDD to a DataFrame using the createDataFrame call on a
+       SparkSession object.
+
+Using the toDF Helper Function
+
+   The toDF method is available through MapRDBTableScanRDD. The following
+   example loads an RDD that filters on first_name equal to "Peter" and
+   projects the _id and first_name fields, and then converts the RDD to a
+   DataFrame:
+     * [1]Scala
+
+import com.mapr.db.spark.sql._
+
+val df = sc.loadFromMapRDB(<table-name>)
+           .where(field("first_name") === "Peter")
+           .select("_id", "first_name").toDF()
+
+Using SparkSession.createDataFrame
+
+   With this approach, you can convert an RDD[Row] to a DataFrame by
+   calling createDataFrame on a SparkSession object. The API for the call
+   is as follows:
+     * [2]Scala
+
+def createDataFrame(RDD, schema: StructType)
+
+   You might need to first convert an RDD[OJAIDocument] to an RDD[Row].
+   The following example shows how to do this:
+     * [3]Scala
+
+val df = sparkSession.createDataFrame(
+         rdd.map(doc =>MapRDBSpark.docToRow(doc, schema)), schema)
+
+   rdd is of type RDD[OJAIDocument]. The docToRow call converts rdd to an
+   RDD[Row] that is then passed to createDataFrame.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/ConvertRDDtoDataFrame.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/ConvertRDDtoDataFrame.html#div2entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/ConvertRDDtoDataFrame.html#div3entry1

@@ -1,0 +1,49 @@
+Kafka REST 2.0.1: POST /consumers/{group: string}/instances/{instance:
+string}/offsets
+
+   Commit offsets for the consumer. Returns a list of the partitions with
+   the committed offsets.
+
+Description
+
+   The body of this request is empty. The offsets are determined by the
+   current state of the consumer instance on the proxy. The returned state
+   includes both consumed and committed offsets. After a successful
+   commit, these should be identical; however, both are included so the
+   output format is consistent with other API calls that return the
+   offsets.
+   Note: This request must be made to the specific REST proxy instance
+   holding the consumer instance.
+
+   CAPTION: Table 1. Parameters
+
+        Parameters                Description
+   group_name (string)  The name of the consumer group.
+   instance_id (string) The ID of the consumer instance.
+
+Syntax
+
+http://<host>:8082/consumers/<group_name>/instances/<instance_id>/offsets
+
+Request Example
+
+curl -X POST http://localhost:8082/consumers/grouptest/instances/user/offsets
+
+Response Example
+
+   The response JSON object is in the following form:
+     * topic (string) – Name of the topic for which an offset was
+       committed.
+     * partition (int) – Partition ID for which an offset was committed.
+     * consumed (long) – The offset of the most recently consumed message.
+     * committed (long) – The committed offset value. If the commit was
+       successful, this should be identical to consumed
+
+HTTP/1.1 200 OK
+[
+   {     "topic": "test",     "partition": 1,     "consumed": 100,     "committe
+d": 100   },
+   {     "topic": "test",     "partition": 2,     "consumed": 200,     "committe
+d": 200   },
+   {     "topic": "test2",     "partition": 1,     "consumed": 50,     "committe
+d": 50   } ]

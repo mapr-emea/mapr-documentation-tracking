@@ -1,0 +1,64 @@
+Step 5: Configure Multiple Drill Clusters
+
+   Update the /opt/mapr/drill/drill-<version>/conf/drill-override.conf
+   file on each Drill node that is part of a cluster with the cluster ID
+   and a ZooKeeper entry to define the Drill cluster. Each Drill cluster
+   should have a unique cluster ID and ZooKeeper entry to separate the
+   clusters.
+   Note: Each Drill node in a cluster must have the same configuration.
+
+   The Drillbit process reads the configuration file and communicates with
+   ZooKeeper to see if the cluster it belongs to exists. If yes, ZooKeeper
+   says to join the cluster, if no, the Drillbit initiates a new drill
+   cluster based on the cluster ID.
+   The following table provides an example of unique cluster IDs and
+   ZooKeeper entries based on the topologies in the image above:
+   Cluster                  Nodes            Cluster ID ZooKeeper Entry
+   QS1
+
+   10.10.100.1
+
+   10.10.100.2
+
+   cluster-id: "drillbits"
+   zk.root: "drill"
+   D1
+
+   10.10.100.3
+
+   10.10.100.4
+
+   10.10.100.5
+
+   10.10.100.6
+
+   10.10.100.7
+
+   10.10.100.8
+
+   10.10.100.9
+
+   10.10.100.10
+   cluster-id: "drillbits2" zk.root: "drill2"
+   For QS1, drill-override.conf must include the following configuration:
+drill.exec: {
+  zk.root: "drill",
+  cluster-id: "drillbits",
+  zk.connect: "<zk-node-ip-address>:5181",
+}
+
+   For D1, drill-override.conf must include the following configuration:
+drill.exec: {
+  zk.root: "drill2",
+  cluster-id: "drillbits2",
+  zk.connect: "<zk-node-ip-address>:5181",
+}
+
+   Note: If you installed Drill to run under YARN, follow the steps in
+   [1]Defining Multiple Drill Clusters Under YARN for each Drill node.
+   Drill running under YARN requires some additional steps, such changing
+   ZooKeeper ports.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/defining_multiple_drill_clusters_under_yarn.html#defining_multiple_drill_clusters_under_yarn

@@ -1,0 +1,287 @@
+Query MapR-DB Binary Tables with Impala
+
+   You can use Impala to query data in MapR-DB binary tables. Create an
+   external table in the Hive shell and then map the Hive table to the
+   corresponding MapR-DB binary table. You can map a MapR-DB binary table
+   to a Hive table with or without string row keys. When you create an
+   external table in Hive, use the HBaseStorageHandler clause in the Hive
+   CREATE TABLE statement to allow Hive to access data stored in the
+   MapR-DB binary table. The HBaseStorageHandler has two important
+   properties:
+
+   hbase.columns.mapping
+          Specifies the Hive column to column family mapping.
+
+   hbase.table.name
+          Absolute path of the table or just the table name, depending on
+          whether the table path is mapped.
+
+   Example:
+CREATE EXTERNAL TABLE students
+(id string,
+name string,
+street string,
+zipcode int,
+state string)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' WITH SERDEPROPERTIE
+S
+('hbase.columns.mapping'=':key,account:name,address:street,address:zipcode,addre
+ss:state')
+TBLPROPERTIES ('hbase.table.name'='/user/userA/students');
+
+   Once you have mapped the MapR-DB binary table to Hive, you can query or
+   insert into the table from Impala because Hive and Impala share the
+   metastore database. Impala nodes cache table metadata if a table
+   contains a large amount of data or has many partitions. Caching the
+   metadata reduces runtime for future queries on the table.
+
+   If you insert new data into a Hive or MapR-DB binary table, use the
+   Impala shell to issue the REFRESH statement to refresh the data
+   location cache. The REFRESH command only applies to the node that the
+   Impala shell is connected to. If you route all SQL statements to the
+   same node, you do not have to issue regular REFRESH statements when
+   table data is updated on other nodes.
+
+   If you create, drop, or alter any external tables or databases, use the
+   Impala shell to issue the INVALIDATE METADATA statement to refresh
+   table structure metadata.
+   To ensure Impala is quering MapR-DB binary tables and not HBase, add
+   the next property to $HBASE_HOME/conf/hbase-site.xml:
+<property>
+  <name>mapr.hbase.default.db</name>
+  <value>maprdb</value>
+</property>
+
+Example: Running an Impala Query on MapR-DB Binary Tables
+
+   In this example scenario, a professor wants to know how many times a
+   student clicks on Google from his webpage. He wants to use Impala to
+   query the data in MapR-DB. One of his students offered to load the data
+   into MapR-DB so he can access it. In order to complete the professor’s
+   request, the student must use the HBase shell to create two MapR-DB
+   binary tables that contain the following schema and then put data in
+   the tables:
+     * student
+          + account – id, name
+          + address – street, zipcode, state
+     * clicks
+          + clickinfo – clickid, studentid, url, time
+          + iteminfo – itemid, quantity
+
+   Each bullet corresponds to a column family with a list of columns. In
+   order to access the tables using Impala, the student must create
+   external tables in Hive with mapped columns that match the MapR-DB
+   columns.
+
+   If you would like to be the student, you can perform the following
+   steps to help the professor:
+    1. Use the HBase shell to create two tables in MapR-DB: “student” and
+       “clicks”. To create the tables, issue the following commands:
+echo "create '/user/userA/students','account','address'" | hbase shell
+echo "create '/user/userA/clicks','clickinfo','iteminfo'" | hbase shell
+    2. Issue the hadoop fs –ls command on the table location to verify
+       that the tables exist.
+hadoop fs -ls /user/userA
+echo "describe '/user/usera/student'" | hbase shell
+echo "describe '/user/usera/clicks'" | hbase shell
+    3. Create external tables in Hive with the appropriate column mapping
+       for the “student” and “clicks” tables using a string row key.
+       Remember the two important properties for HBaseStorageHandler:
+          + hbase.columns.mapping, which specifies Hive column to column
+            family mapping.
+          + hbase.table.name, which can be the absolute path of the table
+            or just the table name, depending on whether the table path is
+            mapped.
+       To create the external tables in Hive, run the following commands:
+CREATE EXTERNAL TABLE students
+(id string,
+name string,
+street string,
+zipcode int,
+state string)
+STORED BY
+'org.apache.hadoop.hive.hbase.HBaseStorageHandler' WITH SERDEPROPERTIES
+('hbase.columns.mapping'=':key,account:name,address:street,address:zipcode,addre
+ss:state')
+TBLPROPERTIES
+('hbase.table.name'='/user/userA/students');
+
+CREATE EXTERNAL TABLE clicks
+(clickid string,
+studentid string,
+url string,
+time timestamp,
+itemtype string,
+quantity int)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES ('hbase.columns.mapping'=':key, clickinfo:studentid,
+clickinfo:url, clickinfo:time, iteminfo:itemtype, iteminfo:quantity')
+TBLPROPERTIES
+('hbase.table.name'='/user/userA/clicks');
+    4. Create a testdata.txt file with the following content to add data
+       into the “students” and “clicks” MapR-DB binary tables.
+cat > testdata.txt
+put '/user/userA/students','student1','account:name','Alice'
+put '/user/userA/students','student1','address:street','123 Ballmer Av'
+put '/user/userA/students','student1','address:zipcode','12345'
+put '/user/userA/students','student1','address:state','CA'
+put '/user/userA/students','student2','account:name','Bob'
+put '/user/userA/students','student2','address:street','1 Infinite Loop'
+put '/user/userA/students','student2','address:zipcode','12345'
+put '/user/userA/students','student2','address:state','CA'
+put '/user/userA/students','student3','account:name','Frank'
+put '/user/userA/students','student3','address:street','435 Walker Ct'
+put '/user/userA/students','student3','address:zipcode','12345'
+put '/user/userA/students','student3','address:state','CA'
+put '/user/userA/students','student4','account:name','Mary'
+put '/user/userA/students','student4','address:street','56 Southern Pkwy'
+put '/user/userA/students','student4','address:zipcode','12345'
+put '/user/userA/students','student4','address:state','CA'
+put '/user/userA/clicks','click1','clickinfo:studentid','student1'
+put '/user/userA/clicks','click1','clickinfo:url','http://www.google.com'
+put '/user/userA/clicks','click1','clickinfo:time','2014-01-01 12:01:01.0001'
+put '/user/userA/clicks','click1','iteminfo:itemtype','image'
+put '/user/userA/clicks','click1','iteminfo:quantity','1'
+put '/user/userA/clicks','click2','clickinfo:studentid','student1'
+put '/user/userA/clicks','click2','clickinfo:url','http://www.amazon.com'
+put '/user/userA/clicks','click2','clickinfo:time','2014-01-01 01:01:01.0001'
+put '/user/userA/clicks','click2','iteminfo:itemtype','image'
+put '/user/userA/clicks','click2','iteminfo:quantity','1'
+put '/user/userA/clicks','click3','clickinfo:studentid','student2'
+put '/user/userA/clicks','click3','clickinfo:url','http://www.google.com'
+put '/user/userA/clicks','click3','clickinfo:time','2014-01-01 01:02:01.0001'
+put '/user/userA/clicks','click3','iteminfo:itemtype','text'
+put '/user/userA/clicks','click3','iteminfo:quantity','2'
+put '/user/userA/clicks','click4','clickinfo:studentid','student2'
+put '/user/userA/clicks','click4','clickinfo:url','http://www.ask.com'
+put '/user/userA/clicks','click4','clickinfo:time','2013-02-01 12:01:01.0001'
+put '/user/userA/clicks','click4','iteminfo:itemtype','text'
+put '/user/userA/clicks','click4','iteminfo:quantity','5'
+put '/user/userA/clicks','click5','clickinfo:studentid','student2'
+put '/user/userA/clicks','click5','clickinfo:url','http://www.reuters.com'
+put '/user/userA/clicks','click5','clickinfo:time','2013-02-01 12:01:01.0001'
+put '/user/userA/clicks','click5','iteminfo:itemtype','text'
+put '/user/userA/clicks','click5','iteminfo:quantity','100'
+put '/user/userA/clicks','click6','clickinfo:studentid','student3'
+put '/user/userA/clicks','click6','clickinfo:url','http://www.google.com'
+put '/user/userA/clicks','click6','clickinfo:time','2013-02-01 12:01:01.0001'
+put '/user/userA/clicks','click6','iteminfo:itemtype','image'
+put '/user/userA/clicks','click6','iteminfo:quantity','1'
+put '/user/userA/clicks','click7','clickinfo:studentid','student3'
+put '/user/userA/clicks','click7','clickinfo:url','http://www.ask.com'
+put '/user/userA/clicks','click7','clickinfo:time','2013-02-01 12:45:01.0001'
+put '/user/userA/clicks','click7','iteminfo:itemtype','image'
+put '/user/userA/clicks','click7','iteminfo:quantity','10'
+put '/user/userA/clicks','click8','clickinfo:studentid','student4'
+put '/user/userA/clicks','click8','clickinfo:url','http://www.amazon.com'
+put '/user/userA/clicks','click8','clickinfo:time','2013-02-01 22:01:01.0001'
+put '/user/userA/clicks','click8','iteminfo:itemtype','image'
+put '/user/userA/clicks','click8','iteminfo:quantity','1'
+put '/user/userA/clicks','click9','clickinfo:studentid','student4'
+put '/user/userA/clicks','click9','clickinfo:url','http://www.amazon.com'
+put '/user/userA/clicks','click9','clickinfo:time','2013-02-01 22:01:01.0001'
+put '/user/userA/clicks','click9','iteminfo:itemtype','image'
+put '/user/userA/clicks','click9','iteminfo:quantity','10'
+    5. Press Control + Z to finish editing the file and pipe these
+       commands to the HBase shell to insert the test data:
+cat testdata.txt | hbase shell
+    6. Scan the tables to verify that the data was inserted correctly. Run
+       the following commands to perform the scan:
+echo "scan '/user/userA/students'" | hbase shell
+echo "scan '/user/userA/clicks'" | hbase shell
+    7. Use Hive to verify that the data was inserted into the tables.
+       Issue the SELECT statement against students and clicks to verify
+       the count in each table.
+hive
+hive> select * from students;
+OK
+student1        Alice   123 Ballmer Av  12345   CA
+student2        Bob     1 Infinite Loop 12345   CA
+student3        Frank   435 Walker Ct   12345   CA
+student4        Mary    56 Southern Pkwy        12345   CA
+hive> select * from clicks;
+OK
+click1  student1        http://www.google.com   2014-01-01 12:01:01.0001
+image   1
+click2  student1        http://www.amazon.com   2014-01-01 01:01:01.0001
+image   1
+click3  student2        http://www.google.com   2014-01-01 01:02:01.0001
+text    2
+click4  student2        http://www.ask.com      2013-02-01 12:01:01.0001
+text    5
+click5  student2        http://www.reuters.com  2013-02-01 12:01:01.0001
+text    100
+click6  student3        http://www.google.com   2013-02-01 12:01:01.0001
+image   1
+click7  student3        http://www.ask.com      2013-02-01 12:45:01.0001
+image   10
+click8  student4        http://www.amazon.com   2013-02-01 22:01:01.0001
+image   1
+click9  student4        http://www.amazon.com   2013-02-01 22:01:01.0001
+image   10
+       Since the Impala shell was running when you inserted the data,
+       verify that the metadata is refreshed to make sure that Impala is
+       aware of the new tables created.
+    8. From the Impala shell , issue the INVALIDATE METADATA statement to
+       refresh the metadata.
+> invalidate metadata;
+> select * from students ;
+Query: select * from students
+Query finished, fetching results ...
++----------+-------+-------+------------------+---------+
+| id       | name  | state | street           | zipcode |
++----------+-------+-------+------------------+---------+
+| student1 | Alice | CA    | 123 Ballmer Av   | 12345   |
+| student2 | Bob   | CA    | 1 Infinite Loop  | 12345   |
+| student3 | Frank | CA    | 435 Walker Ct    | 12345   |
+| student4 | Mary  | CA    | 56 Southern Pkwy | 12345   |
++----------+-------+-------+------------------+---------+
+select count(*) from clicks;
+> select * from clicks;
+Query: select * from clicks
+Query finished, fetching results ...
++---------+-----------+-------------------------------+------------------------+
+----------+----------+
+| clickid | studentid | time                          | url                    |
+ itemtype | quantity |
++---------+-----------+-------------------------------+------------------------+
+----------+----------+
+| click1  | student1  | 2014-01-01 12:01:01.000100000 | http://www.google.com  |
+ image    | 1        |
+| click2  | student1  | 2014-01-01 01:01:01.000100000 | http://www.amazon.com  |
+ image    | 1        |
+| click3  | student2  | 2014-01-01 01:02:01.000100000 | http://www.google.com  |
+ text     | 2        |
+| click4  | student2  | 2013-02-01 12:01:01.000100000 | http://www.ask.com     |
+ text     | 5        |
+| click5  | student2  | 2013-02-01 12:01:01.000100000 | http://www.reuters.com |
+ text     | 100      |
+| click6  | student3  | 2013-02-01 12:01:01.000100000 | http://www.google.com  |
+ image    | 1        |
+| click7  | student3  | 2013-02-01 12:45:01.000100000 | http://www.ask.com     |
+ image    | 10       |
+| click8  | student4  | 2013-02-01 22:01:01.000100000 | http://www.amazon.com  |
+ image    | 1        |
+| click9  | student4  | 2013-02-01 22:01:01.000100000 | http://www.amazon.com  |
+ image    | 10       |
++---------+-----------+-------------------------------+------------------------+
+----------+----------+
+    9. To query the tables and to find out which students clicked on
+       google.com, run the following command from the Impala shell:
+> select * from clicks where url like '%google%';
+Query: select * from clicks where url like '%google%'
+Query finished, fetching results ...
++---------+-----------+-------------------------------+-----------------------+-
+---------+----------+
+| clickid | studentid | time                          | url                   |
+itemtype | quantity |
++---------+-----------+-------------------------------+-----------------------+-
+---------+----------+
+| click1  | student1  | 2014-01-01 12:01:01.000100000 | http://www.google.com |
+image    | 1        |
+| click3  | student2  | 2014-01-01 01:02:01.000100000 | http://www.google.com |
+text     | 2        |
+| click6  | student3  | 2013-02-01 12:01:01.000100000 | http://www.google.com |
+image    | 1        |
++---------+-----------+-------------------------------+-----------------------+-
+---------+----------+

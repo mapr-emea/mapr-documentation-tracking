@@ -1,0 +1,30 @@
+Incorporating Mirror Volumes into a Disaster Recovery Plan
+
+   Mirroring critical data to a remote datacenter (with the ability to
+   make mirror volumes into read-write volumes) addresses these two
+   objectives:
+     * Recovery Point Objective (RPO) - the age of the files you need to
+       recover (and how much data you can afford to lose)
+     * Recovery Time Objective (RTO) - how soon you need to have a working
+       datacenter in order to maintain business continuity
+
+   In a typical scenario that employs remote mirrors, the contents of a
+   source volume are mirrored to a mirror volume in a remote cluster at a
+   frequency specified by the mirror schedule. At the start of each mirror
+   operation, a snapshot is taken of the source volume's contents. The
+   mirror operation takes some time to complete, and while the data is
+   being copied from the snapshot to the mirror volume, more data is
+   written to the source volume. This data will be captured during the
+   next mirror operation. When each mirror operation completes, the
+   contents of the mirror volume are identical to the contents of the
+   source volume at the time of the snapshot. For subsequent mirror
+   operations, only the incremental changes (additions and deletions) are
+   copied to the mirror volume, which synchronizes its contents with the
+   contents of the source volume at the time of the snapshot.
+   [28442908.png]
+
+   If the source cluster goes down, any data written to the source volume
+   since the last successful mirror operation cannot be copied to the
+   mirror. The amount of data lost depends on the number of write
+   operations in the interval from the last successful mirror to the time
+   the cluster goes down.

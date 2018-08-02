@@ -1,0 +1,52 @@
+User Impersonation for Oozie
+
+   Oozie supports impersonation, which enables Oozie to run jobs as a user
+   other than the user that started the Oozie server. You can set up proxy
+   user functionality if you want Oozie to impersonate a user from a set
+   of hosts, or to impersonate a user that belongs to a set of groups.
+   When you configure proxy user functionality, the proxy user can perform
+   “doAs” operations. Add configuration properties to the oozie-site.xml
+   and core-site.xml files to configure proxy user functionality.
+
+   Add the following configuration properties to the oozie-site.xml file:
+     * oozie.service.ProxyUserService.proxyuser.#USER#.hosts
+     * oozie.service.ProxyUserService.proxyuser.#USER#.groups
+
+   Replace #USER# with the username of the proxy that can perform “doAs”
+   operations. For the host property, you can add a list of host names as
+   the value. For the group property, you can add a list of groups as the
+   value. Alternatively, you can add a wildcard character (*) as the value
+   for host and group properties. To add multiple users, copy the property
+   and replace #USER# with the proxy user name.
+   Host Example
+<property>
+        <name>oozie.service.ProxyUserService.proxyuser.mapr.hosts</name>
+        <value>*</value>
+</property>
+
+   Group Example
+<property>
+        <name>oozie.service.ProxyUserService.proxyuser.mapr.groups</name>
+        <value>*</value>
+</property>
+
+   Add the following configuration properties to the core-site.xml:
+     * hadoop.proxyuser.#USER#.hosts
+     * hadoop.proxyuser.#USER#.groups
+
+   Replace #USER# with the username of the proxy.
+
+   When you add the host property, the proxy user can only connect from a
+   host to impersonate a user. When you add the group property, the proxy
+   user can impersonate any member of any group.
+   Host Example
+<property>
+    <name>hadoop.proxyuser.mapr.hosts</name>
+    <value>*</value>
+</property>
+
+   Group Example
+<property>
+    <name>hadoop.proxyuser.mapr.groups</name>
+    <value>*</value>
+</property>

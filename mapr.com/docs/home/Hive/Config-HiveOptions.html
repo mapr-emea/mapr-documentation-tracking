@@ -1,0 +1,86 @@
+Hive Security Configuration Options
+
+   This section describes changes made in Hive default configuration. It
+   shows how to configure Hive after manual installation.
+
+   Unlike the previous releases, starting in MEP 4.0, Hive should be
+   configured by running the $MAPR_HOME/server/configure.sh script with
+   the -R option immediately after installing Hive. Hive demons will not
+   start automatically if Hive is not configured correctly. The security
+   configuration are described in the following sections:
+    1. Manual
+    2. Automatic
+    3. Custom
+
+   Note: Do not use ecosystem $HIVE_HOME/bin/configure.sh script for Hive
+   configuration. Every configuration of Hive should be done via the
+   $MAPR_HOME/server/configure.sh uitlity by running it with the -R
+   option. The core $MAPR_HOME/server/configure.sh uitlity invokes the
+   ecosystem configure.sh script automatically with appropriate security
+   option.
+
+Automatic
+
+   If you installed Hive using the MapR Installer, the MapR Installer
+   configures Hive daemons during installation. Additional configuration
+   is not required.
+
+Manual
+
+   After a new manual installation, to generate a valid default ecosystem
+   configuration, run:
+$MAPR_HOME/server/configure.sh -R
+
+   CAPTION: Table 1. Example: Hive is installed with the following
+   configuration on a secure cluster
+
+   Node, Package Hive HiveServer2 Hive Metastore WebHCat
+   Node 1        X    X
+   Node 2        X                X
+   Node 3        X                               X
+     * After a manual installation, run the following command on Node 1,
+       Node 2, and Node 3:
+
+   $MAPR_HOME/server/configure.sh -R
+
+   As a result:
+     * All Hive daemons are configured to support MapR-SASL. If the
+       hive.metastore.sasl.enabled property is enabled in the
+       hive-site.xml file, its value is set to true. If the property is
+       not present, it is added in the configuration section as follows:
+<property>
+   <name>hive.metastore.sasl.enabled</name>
+   <value>true</value>
+</property>
+     * HiveServer2 is configured to support encryption between Hiveserer2
+       and Hive clients. If the hive.server2.thrift.sasl.qop property is
+       available in the hive-site.xml file, its value is set to auth-conf.
+       If the property is not present, it is added in the configuration
+       section as follows:
+<property>
+   <name>hive.server2.thrift.sasl.qop</name>
+   <value>auth-conf</value>
+</property>
+     * The configure.sh script creates a backup folder for the current
+       Hive configuration before it changes the configuration. All
+       configuration properties including *.conf, *.properties, and *.xml
+       are saved in the backup folder.
+$HIVE_HOME/conf.YYYYMMDD_HHMMS
+     * The Hive default ports listed below are verified as available. If a
+       port is not available, the configure.sh script generates an error
+       message during configuration.
+
+   Hive default ports are as follows:
+        Role      Default Port
+   Hive Metastore 9083
+   HiveServer2    10000
+   HiveWebHCat    50111
+
+Custom
+
+   For PAM, LDAP, and Kerberos custom configurations, run configure.sh
+   with the -R option:
+$MAPR_HOME/server/configure.sh -R
+
+   The hive-site.xml file is not changed. However, Warden files are copied
+   and a HIVE_HOME/conf backup folder is created.

@@ -1,0 +1,48 @@
+Configure SSL for Sqoop2
+
+   As of Sqoop 1.99.7, you can configure SSL to enable encrypted
+   communications between the Sqoop2 server and its clients. Starting with
+   the MEP 4.0 release, for secure clusters, SSL is automatically
+   configured for Sqoop2 and you can skip the steps outlined in this
+   section.
+    1. Stop the Sqoop2 server:
+maprcli node services -name sqoop2 -action stop -nodes <space delimited list of
+nodes>
+    2. In the sqoop.properties file
+       (/opt/mapr/sqoop/sqoop-<version>/conf/sqoop.properties), uncomment
+       the SSL related properties. For example:
+#Enable Sqoop SSL
+org.apache.sqoop.security.tls.enabled=true
+#Change SSL protocol
+org.apache.sqoop.security.tls.protocol=TLSv1.2
+#Path to MapR ssk keystore
+org.apache.sqoop.security.tls.keystore=/opt/mapr/conf/ssl_keystore
+#Keystore password
+org.apache.sqoop.security.tls.keystore_password=<passwd>
+
+       Note: You can use the default ssl_keystore and password. The
+       password for the default ssl_keystore is <ssl-keystore-password>.
+    3. Remove the Sqoop2 repository.
+rm -rf /opt/mapr/sqoop/repository
+    4. Start the Sqoop2 server.
+maprcli node services -name sqoop2 -action start -nodes <space delimited list of
+ nodes>
+    5. Start the Sqoop2 client:
+sudo -u mapr /opt/mapr/sqoop/sqoop-<version>/bin/sqoop.sh client
+       Note: If you are using MapR-SASL, run the following command
+       instead: sudo -u mapr /opt/mapr/sqoop/sqoop-<version>/bin/sqoop.sh
+       client --custom.
+    6. Configure the Sqoop2 client to communicate the Sqoop2 server using
+       SSL.
+set server --host <sqoop_server_hosname> --port <sqoop_port> --webapp <sqoop_web
+app> --tls
+
+       For example:
+sqoop:000> set server --host localhost --port 12000 --webapp sqoop --tls
+
+    7. Configure the Sqoop2 client truststore and truststore password.
+set truststore --truststore /opt/mapr/conf/ssl_truststore --truststore-password
+<passwd>
+
+   Each time you start the Sqoop2 client, you must reset the server and
+   truststore configuration.

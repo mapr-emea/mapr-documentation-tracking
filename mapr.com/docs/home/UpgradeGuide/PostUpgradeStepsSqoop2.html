@@ -1,0 +1,34 @@
+Post-Upgrade Steps for Sqoop2
+
+   Complete the following steps after you upgrade Sqoop2 with or without
+   the MapR Installer.
+    1. Perform one of the following steps:
+         a. Manually update the sqoop.properties file with new options. On
+            each Sqoop2 server node, set the following property in
+            sqoop.properties file:
+org.apache.sqoop.repository.schema.immutable=false
+org.apache.sqoop.connector.autoupgrade=true
+org.apache.sqoop.driver.autoupgrade=true
+         b. Run configure.sh -R:
+/opt/mapr/server/configure.sh -R
+         c. Stop Sqoop2:
+maprcli node services -name sqoop2 -action stop -nodes <space delimited list of
+Sqoop2 server nodes>
+         d. Use the upgrade utility to update the sqoop.properties file.
+            On each Sqoop2 server node, run the upgrade utility.
+/opt/mapr/sqoop/sqoop-<version>/bin/sqoop2-tool upgrade
+            When the upgrade utility completes successfully, the following
+            message displays: Tool class
+            org.apache.sqoop.tools.tool.UpgradeTool has finished
+            correctly.
+       Note: In Sqoop 1.99.6, the sqoop.properties file is in the
+       following directory: /opt/mapr/sqoop/sqoop-<version>/server/conf/.
+       In Sqoop 1.99.7, the sqoop.properties file is in the following
+       directory: /opt/mapr/sqoop/sqoop-<version>/conf/.
+    2. Optionally, add customized properties from the sqoop.properties
+       file that you saved before the upgrade to the new sqoop.properties
+       file.
+    3. If Sqoop is not running, start the Sqoop Server.
+maprcli node services -name sqoop2 -action start -nodes <space delimited list of
+ Sqoop2 server
+      nodes>

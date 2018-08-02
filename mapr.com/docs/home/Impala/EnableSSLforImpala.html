@@ -1,0 +1,68 @@
+Enable SSL for Impala
+
+   Impala 2.5.0 supports SSL encryption for internal Impala connections.
+
+   Complete the following steps to configure SSL for Impala:
+    1. Configure encryption in Hive. See [1]Hive Encryption.
+    2. Configure client-server encryption only or configure client-server
+       and Impala internal encryption.
+          + To configure client-server encryption only, add the following
+            start-up options for the Impala Server to
+            /opt/mapr/impala/impala-<version>/conf/env.sh:
+
+              -ssl_server_certificate
+                      Full path to the server certificate on the local
+                      file system.
+
+              -ssl_private_key
+                      Full path to the server private key on the local
+                      file system.
+
+          + To configure client-server and Impala internal encryption, add
+            the following start-up options for the Impala server, catalog,
+            and statestore to
+            /opt/mapr/impala/impala-<version>/conf/env.sh:
+
+              -ssl_server_certificate
+                      Full path to the server certificate on the local
+                      file system.
+
+              -ssl_private_key
+                      Full path to the server private key on the local
+                      file system.
+
+              -ssl_client_ca_certificate
+                      Full path to the certificate on the local file
+                      system required for client/server encryption.
+
+   Note: When you add the SSL flags to Impala start-up options, Impala
+   listens for HiveServer2 on the SSL-secured ports. A client program
+   usually has equivalent options to verify a connection to the correct
+   server.
+
+   After you enable SSL, you can issue the following options when you
+   start the impala-shell:
+   Option Description
+--ssl
+
+   Enables SSL for the impala-shell.
+--ca_cert
+
+   Local path name that points to the third-party CA certificate, or to a
+   copy of the server certificate for self-signed server certificates. If
+   --ca_cert is not set, impala-shell enables SSL, but does not validate
+   the server certificate. This is useful for connecting to an Impala node
+   that you know is only running over SSL when a copy of the certificate
+   is not available.
+
+   For more information about the impala-shell, refer to [2]Impala-Shell
+   Commands.
+
+   For more information about configuring Impala start-up options, see
+   [3]Additional Impala Configuration Options.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/HiveEncryption.html#HiveEncryption
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/Impala-ShellCommandsandCo.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/AdditionalImpalaConfigurOptions.html

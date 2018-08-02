@@ -1,0 +1,93 @@
+Configure Hive Directories
+
+   You can configure the following Hive directories:
+     * Hive Scratch Directory
+     * Hive Warehouse Directory
+     * Hive Error Logs Directory
+
+Hive Scratch Directory
+
+   In Hive 1.0, MapR configures the Hive scratch directory to be
+   /user/<user.name>/tmp/hive/<user.name>. In Hive 0.13, the default
+   scratch directory is /user/<user.name>/tmp/hive. The hive user must
+   have write access to the /user folder.
+
+   To modify this parameter, perform one of the following operations:
+     * Set this parameter in the hive-site.xml.Copy the
+       hive.exec.scratchdir property elements from the
+       $HIVE_HOME/conf/hive-default.xml.template file and paste them into
+       an XML configuration element in the $HIVE_HOME/conf/hive-site.xml
+       file. Then, modify the value elements for these directories in the
+       hive-site.xml file.
+     * Set this parameter from the Hive shell. Example:
+hive> set hive.exec.scratchdir=/myvolume/tmp
+
+   Note: You will see better performance when queries import data from a
+   table that is in the same MapR volume as Hive scratch directory.
+
+How Hive Handles Scratch Directories on MapR
+
+   When a query requires Hive to query existing tables and create data for
+   new tables, Hive uses the following workflow:
+    1. Create the query scratch directory hive_<timestamp>_<randomnumber>
+       under the Hive scratch directory.
+    2. Create the following directories as subdirectories of the scratch
+       directory:
+         a. Final query output directory. This directory's name takes the
+            form -ext-<number>.
+         b. An output directory for each MapReduce application. These
+            directories' names take the form -mr-<number>.
+    3. Hive executes the tasks, including MapReduce applications and
+       loading data to the query output directory.
+    4. Hive loads the data from output directory into a table. By default,
+       the table's directory is in the /user/hive/warehouse directory. You
+       can configure this location with the hive.metastore.warehouse.dir
+       parameter in hive-site.xml, unless the table DDL specifies a custom
+       location. Hive renames the output directory to the table directory
+       in order to load the output data to the table.
+    5. The scratch directories are automatically deleted after the query
+       completes successfully.
+
+   MapR uses [1]Administering Volumes, which are logical units that enable
+   you to apply policies to a set of files, directories, and sub-volumes.
+   When the output directory and the table directory are in different
+   volumes, this workflow involves moving data across volumes. Moving data
+   across volumes is slower than moving data within a volume. Therefore,
+   MapR sets hive.optimize.insert.dest.volume to true to automatically
+   create a scratch directory in the same volume as the target table.
+
+Hive Warehouse Directory
+
+   Hive tables are stored in the Hive warehouse directory. By default,
+   MapR configures the Hive warehouse directory to be /user/hive/warehouse
+   under the root volume. This default is defined in the
+   $HIVE_HOME/conf/hive-default.xml.template file.
+
+   To modify this parameter, perform one of the following operations:
+     * Set this parameter in the hive-site.xml.Copy the
+       hive.metastore.warehouse.dir property elements from the
+       $HIVE_HOME/conf/hive-default.xml.template file and paste them into
+       an XML configuration element in the $HIVE_HOME/conf/hive-site.xml
+       file. Then, modify the value elements for these directories in the
+       hive-site.xml file.
+     * Set this parameter from the Hive shell. Example:
+hive> set hive.metastore.warehouse.dir=/myvolume/mydirectory
+
+   Note: You will see better performance when queries move data between
+   tables in the same volume.
+
+Hive Error Logs Directory
+
+   The log files are stored in /opt/mapr/hive/hive-<version>/logs/<user>
+   by default.
+
+   To modify the log location:
+    1. Configure hive.log.dir in $HIVE_HOME/conf/hive-log4j.properties
+       file. Example:
+hive.log.dir=<other_location>
+    2. Set the sticky bit on the new directory. Example:
+chmod 1777 <other_location>
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_managing_data_with_volumes.html

@@ -1,0 +1,54 @@
+Configuring in Standalone Mode
+
+   The section describes how to configure and execute workers in Kafka
+   connect standalone mode.
+
+   Standalone mode is the simplest mode, where a single process is
+   responsible for executing all connectors and tasks. Since it is a
+   single process, it requires minimal configuration.
+
+   Configuring and running in standalone mode, involves configuring the
+   standalone properties and connector parameters before executing the
+   standalone shell command along with the properties files on the command
+   line.
+
+   The following parameters must be provided in the
+   connect-standalone.properties file.
+     * offset.storage.file.filename - Storage for connector offsets which
+       are stored on the local file system in standalone mode. Using the
+       same file leads to offset data being deleted or overwritten with
+       different values.
+     * rest.port - Port the REST interface listens on for HTTP requests.
+       If you run multiple standalone instances on the same host, this
+       parameter must have different values for each instance.
+
+   Note: If you are running multiple standalone instances on the same
+   host, these parameters must be different for each instances. Therefore,
+   an additional properties file is created for the instance with
+   different parameter values.
+
+   To run a worker in standalone mode:
+    1. Edit the ./config/connect-standalone.properties file and add the
+       name of the local file that will store the connector offsets.
+    2. Edit the quickstart-sqlite.properties file (JDBC connector
+       configuration file).
+    3. Run the ./bin/connect-standalone.sh command along with the
+       properties files on the command line.
+
+   For example:
+cd /opt/mapr/kafka/kafka-1.0
+./bin/connect-standalone.sh
+./config/connect-standalone.properties
+/opt/mapr/kafka-connect-jdbc/kafka-connect-jdbc-4.0.0/etc/kafka-connect-jdbc/qui
+ckstart-sqlite.properties
+
+   The first parameter is always a configuration file for the worker. This
+   configuration gives you control over settings such as which cluster to
+   use and the serialization format. See [1]JDBC Connector for more
+   information. All additional parameters should be connector
+   configuration files. Each file contains a single connector
+   configuration.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/Connect-jdbc-connector.html

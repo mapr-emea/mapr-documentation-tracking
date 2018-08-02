@@ -1,0 +1,65 @@
+mapr copystream
+
+   This utility copies data from one MapR stream to another MapR stream.
+   You can use it, for example, if you want to set up replication manually
+   from one stream to another.
+
+   If the destination stream does not exist, mapr copystream creates the
+   destination stream with the same metadata as the source stream, and
+   then copies data.
+
+   If the destination stream exists, mapr copystream copies data only.
+
+Requried Permissions
+
+   To use this utility, you must have the following permissions:
+     * The permission readAce on the volume where the source stream is
+       located, and the permission writeAce on the volume where the
+       destination stream is located.
+     * On the source stream: either consumeperm or copyperm.
+     * On the destination stream: either copyperm or all three of the
+       following permissions: produceperm, consumeperm, topicperm
+
+   For information about how to set permissions on volumes, see [1]Setting
+   Whole Volume ACEs.
+
+   For information about how to set permissions on streams, see
+   [2]Enabling Table and Stream Authorizations with ACEs.
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+mapr copystream
+-src <srcStream>
+-dst <dstStream>
+[-mapreduce true/false default:false]
+[-numthreads <nthreads> default:16]
+
+Parameters
+
+   Parameter Description
+   src The path and name of the stream to copy messages from.
+   dst The path and name of the stream to copy messages to.
+   mapreduce
+
+   A Boolean value that specifies whether or not to use a MapReduce
+   program to perform the copying operation. The default, preferred method
+   is to use a MapReduce program (true).
+
+   When this parameter is set to false, a client process uses multiple
+   threads to read from the source stream and write to the destination
+   stream.
+
+   The MapReduce program runs as a MapReduce version 2 application based
+   on the MapReduce mode that is configured on this node.
+   numthreads When -mapreduce is false, this parameter specifies the
+   number of threads allocated to perform the copying of data. The default
+   is 16. If additional CPU resources are available, you might want to
+   increase the number of threads to achieve better performance.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html

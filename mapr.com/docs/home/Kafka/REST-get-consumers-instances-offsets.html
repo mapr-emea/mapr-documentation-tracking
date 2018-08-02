@@ -1,0 +1,48 @@
+GET /consumers/{string: group_name)/instances/{string: instance_id}/offsets
+
+   Gets the last committed offsets for the given partitions (whether the
+   commit happened by this process or another).
+
+Parameters
+
+   CAPTION: Table 1. Parameters
+
+   Parameter Description
+   group_name (string) Name of the consumer group.
+   instance (string) ID of the consumer instance.
+   partitions A list of partitions to find the last committed offsets.
+   partitions[i].topic (string) Name of the topic.
+   partitions[i].partition (int) Partition ID
+
+Syntax
+
+http://localhost:8082/consumers/<group_name>/instances/<consumer_name>/offsets
+
+Request Example
+
+curl -X GET -H "Content-Type: application/vnd.kafka.binary.v2+json" --data
+'{"partitions":[{"topic":"/stream:topic","partition":0}]}'
+https://node2:8082/consumers/grouptest/instances/user/offsets
+
+Response Example
+
+   The response JSON object is in the following form:
+     * offsets - A list of committed offsets.
+     * offsets[i].topic (string) – Name of the topic for which an offset
+       was committed
+     * offsets[i].partition (int) – Partition ID for which an offset was
+       committed
+     * offsets[i].offset (int) – Committed offset
+     * offsets[i].metadata (string) – Metadata for the committed offset
+
+{"offsets":
+  [
+    {
+
+        "topic": "/stream:topic",
+        "partition": 0,
+        "offset": 21,
+        "metadata":""
+    }
+  ]
+}

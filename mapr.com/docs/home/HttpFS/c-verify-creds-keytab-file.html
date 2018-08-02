@@ -1,0 +1,45 @@
+Step 2: Verify Credentials in the keytab File
+
+   To test that the credentials in the mapr.keytab file work, run the
+   klist command with the three options:
+     * -k for keytab keys
+     * -e for encryption type
+     * -t for timestamp
+
+   Example
+$ klist -ket /opt/mapr/conf/mapr.keytab
+
+   Verify that the output lists only one key version number (KVNO) for
+   each principal name. If you see the same principal listed more than
+   once with a different KVNO, this could indicate a problem. The latest
+   version number is used, which means you might not be able to log in to
+   the node and authenticate with your user credentials.
+   Here is sample output for a node that has the HttpFS and CLDB services
+   installed.
+Keytab name: FILE:/opt/mapr/conf/mapr.keytab
+KVNO Timestamp Principal
+---- -----------------
+  --------------------------------------------------------
+ 2 07/18/14 18:50:07 mapr/perfnode153.perf.lab@dev-maprtech
+  (aes256-cts-hmac-sha1-96)
+ 2 07/18/14 18:50:07 mapr/perfnode153.perf.lab@dev-maprtech (arcfour-hmac)
+ 2 07/18/14 18:50:08 mapr/perfnode153.perf.lab@dev-maprtech (des3-cbc-sha1)
+ 2 07/18/14 18:50:08 mapr/perfnode153.perf.lab@dev-maprtech (des-cbc-crc)
+ 2 07/18/14 18:50:26 HTTP/perfnode153.perf.lab@dev-maprtech
+  (aes256-cts-hmac-sha1-96)
+ 2 07/18/14 18:50:26 HTTP/perfnode153.perf.lab@dev-maprtech (arcfour-hmac)
+ 2 07/18/14 18:50:26 HTTP/perfnode153.perf.lab@dev-maprtech (des3-cbc-sha1)
+ 2 07/18/14 18:50:26 HTTP/perfnode153.perf.lab@dev-maprtech (des-cbc-crc)
+ 6 07/18/14 18:50:56 mapr/my.cluster.com@dev-maprtech
+  (aes256-cts-hmac-sha1-96)
+ 6 07/18/14 18:50:56 mapr/my.cluster.com@dev-maprtech (arcfour-hmac)
+ 6 07/18/14 18:50:56 mapr/my.cluster.com@dev-maprtech (des3-cbc-sha1)
+ 6 07/18/14 18:50:57 mapr/my.cluster.com@dev-maprtech (des-cbc-crc)
+
+   In the example, the following principals are listed for the
+   perfnode153.perf.lab node:
+     * mapr/perfnode153.perf.lab@dev-maprtech for authenticating to the
+       HttpFS service
+     * HTTP/perfnode153.perf.lab@dev-maprtech for communicating securely
+       over HTTP
+     * mapr/my.cluster.com for authenticating to the CLDB service

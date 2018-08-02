@@ -1,0 +1,24 @@
+Converting a MapR Cluster from Root to Non-Root User from the Command-Line
+
+    1. Create a user with the same UID/GID across the cluster. Assign that
+       user to the MAPR_USER environment variable.
+    2. On each node:
+         a. Stop the warden and the ZooKeeper (if present).
+# service mapr-warden stop
+# service mapr-zookeeper stop
+         b. Run the config-mapr-user.sh script to configure the cluster to
+            start as the non-root user.
+# /opt/mapr/server/config-mapr-user.sh -u <MapR user> [-g <MapR group>]
+         c. Start the ZooKeeper (if present) and the warden.
+# service mapr-zookeeper start
+# service mapr-warden start
+    3. After the previous step is complete on all nodes in the cluster,
+       run the upgrade2mapruser.sh script on all nodes.
+# /opt/mapr/server/upgrade2mapruser.sh
+       This command may take several minutes to return. The script waits
+       ten minutes for the process to complete across the entire cluster.
+       If the cluster-wide operation takes longer than ten minutes, the
+       script fails. Re-run the script on all nodes where the script
+       failed.
+       Warning: The MAPR_UID_MISMATCH alarm may raise during this process.
+       The alarm will clear when this process is complete on all nodes.

@@ -1,0 +1,94 @@
+entity list
+
+   Lists and displays information about entities.
+
+Syntax
+
+   CLI
+
+maprcli entity list
+    [ -alarmedentities true|false ]
+    [ -cluster <cluster> ]
+    [ -columns <columns> ]
+    [ -filter <filter> ]
+    [ -limit <rows> ]
+    [ -output terse|verbose ]
+    [ -sortby ]
+    [ -start <start> ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host>:<port>/rest/entity/list[?<parameters>]
+
+Parameters
+
+   Parameter
+
+   Description
+   alarmedentities Specifies whether to list only entities that have
+   exceeded a quota or advisory quota.
+   cluster The cluster on which to run the command.
+   columns A comma-separated list of fields to return in the query. See
+   the Fields table below.
+   filter A filter specifying entities to display. See [1]Filters for more
+   information.
+   limit The number of rows to return, beginning at start. Default: 0
+   output Specifies whether output should be terse or verbose.
+   sortby Specifies one of the following attributes to sort the list of
+   entities by: entityname, entitytype, entityid, entityemail,
+   entityquota, entityadvisoryquota, entitydiskusage, entityvolumecount.
+   By default, the list of entities sorted by entityname.
+   start The offset from the starting row according to sort. Default: 0
+
+Output
+
+   Information about the users and groups. Only users and groups with
+   associated volumes are returned in the output.
+
+   CAPTION: Table 1. Fields
+
+        Field        Short Name                   Description
+ EntityType          t Entity type
+     * 0 = User
+     * 1 = Group
+
+ EntityName          n          User or Group name
+ EntityId            id         User or Group id
+ EntityQuota         qta        Quota, in MB. 0 = no quota.
+ EntityAdvisoryquota aqt        Advisory quota, in MB. 0 = no advisory quota.
+ VolumeCount         vct        The number of volumes this entity owns.
+ DiskUsage           dsu        Disk space used for all entity's volumes, in MB.
+
+   Sample Output
+DiskUsage  EntityQuota  EntityType  EntityName  VolumeCount  EntityAdvisoryquota
+  EntityId
+5859220    0            0           root        209          0
+  0
+
+Examples
+
+   List all entities:
+     * [2]CLI
+     * [3]REST
+
+maprcli entity list
+
+https://abc.sj.us:8443/rest/entity/list
+
+   Filter entities by entity name:
+     * [4]CLI
+     * [5]REST
+
+maprcli entity list -filter "[EntityName==mapr]"
+
+https://abc.sj.us:8443/rest/entity/list?filter=[EntityName%3D%3Dmapr]
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html#concept_znz_qxz_5t
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/entity-list.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/entity-list.html#div1entry2
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/entity-list.html#div2entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/entity-list.html#div2entry2

@@ -1,0 +1,114 @@
+Spill to Disk
+
+   Impala 2.2.0 for MapR introduces the "spill to disk" feature which
+   prevents queries that use memory-intensive operations, such as large
+   sort, join, aggregation, or analytic function operations, from failing
+   with out-of-memory errors. Impala automatically writes data to disk
+   when queries with memory-intensive operations exceed the set memory
+   limit on an Impala node. You can enable or disable the spill to disk
+   feature in /opt/mapr/impala/impala-<version>/conf/env.sh. You can also
+   change the DISABLE_UNSAFE_SPILLS setting at the session level to allow
+   or prevent data spills.
+
+   Impala reserves a certain amount of memory for memory-intensive
+   operations that reach the set memory threshold. This memory reserve
+   serves as a buffer that slows an operation's use of memory and in some
+   instances prevents operations from exceeding the memory limit on a
+   node. If the amount of memory used exceeds the set memory limit, Impala
+   starts writing data to disk (spilling to disk).
+
+   Impala writes data to a temporary work area on disk. The default
+   location of this work area is /tmp/impala-scratch. You can start the
+   impalad daemon with the --scratch_dirs="path_to_directory"
+   configuration option to change the directory location, however the
+   scratch directory must reside on the local file system. You can specify
+   a single directory, or a comma-separated list of directories. If there
+   is less than 1 GB of available space on the filesystem where the
+   scratch directory resides, Impala writes a warning message to its log
+   when it runs. When an operation completes, the data is removed from the
+   disk.
+
+Prevent Data from Spilling to Disk
+
+   Spilling to disk can have significant performance implications due to
+   the additional I/O required. Ideally, you want to optimize queries,
+   system parameters, and the hardware configurations to prevent data from
+   spilling to disk. The following points describe some techniques that
+   can prevent data from spilling to disk:
+     * View the query profile after you run queries to determine how often
+       they spill to disk and how much temporary data is written to disk.
+       You can run the PROFILE command from the impala-shell or you can
+       view the Impala debug web user interface to see the profile for the
+       query.
+     * Increase the number of Impala nodes in the cluster to increase the
+       aggregate memory available.
+     * Increase the overall memory capacity of each node at the hardware
+       level.
+     * On a multi-tenant cluster, use resource management features to
+       allocate more memory for Impala.
+     * If you are running concurrent queries rather than a few
+       memory-intensive ones, use the admission control feature to lower
+       the limit on the number of concurrent queries. You can schedule the
+       most resource-intensive queries to avoid spikes in memory usage and
+       improve overall response times. See [1]Admission Control.
+     * Use the following techniques to tune the queries with the highest
+       memory requirements:
+          + Run the COMPUTE STATS statement for all tables involved in
+            large-scale joins and aggregation queries.
+          + Minimize the use of STRING columns in join columns. Use
+            numeric values instead.
+          + Evaluate the EXPLAIN plan to see the execution plan used for
+            the most resource-intensive queries.
+          + Add hints to the most resource-intensive queries to select the
+            right execution strategy.
+          + If your queries experience substantial performance overhead
+            due to spilling, enable the DISABLE_UNSAFE_SPILLS query option
+            to prevent queries from spilling to disk.
+
+DISABLE_UNSAFE_SPILLS
+
+   You can categorize queries that spill to disk as safe or unsafe. A
+   spill that results from optimized queries may represent a safe spill,
+   whereas a spill that results from running large ad-hoc queries with
+   unknown performance implications may represent an unsafe spill. For
+   example, if a query does not include a hint to set the most efficient
+   mechanism for a join or an INSERT ... SELECT into a partitioned table,
+   these tables will most likely result in suboptimal execution plans that
+   could cause unnecessary spilling.
+
+   When DISABLE_UNSAFE_SPILLS is enabled (set to "true"), you can run the
+   COMPUTE STATS statement on large tables involved in join queries and
+   resource-intensive operations. The COMPUTE STATS statement collects
+   table and column statistics to help estimate memory usage for each
+   query before you allow data to spill to disk.
+   If you have determined that your queries will spill safely to disk, run
+   the following command to turn the DISABLE_UNSAFE_SPILLS option off:
+set DISABLE_UNSAFE_SPILLS=false
+
+Disable the Spill to Disk Feature
+
+   You can disable the spill to disk feature if spilling to disk
+   negatively affects performance or you do not know the performance
+   implications or memory usage of queries in advance.
+
+   To disable the spill to disk feature, complete the following steps:
+    1. On each node running the Impala server, edit
+       /opt/mapr/impala/impala-<version>/conf/env.sh , and set the
+       following options to “false”:
+-enable_partitioned_aggregation=false
+-enable_partitioned_hash_join=false
+    2. Save the env.sh file and then run the following commands to restart
+       the Impala service and instances:
+         a. Run the following command to restart the Impala server:
+$ sudo maprcli node services -name impalaserver -action restart -nodes <IP addre
+ss where impala server is installed>
+         b. Run the following command to restart the Impala statestore:
+$ sudo maprcli node services -name impalastore -action restart -nodes <IP addres
+s where impala statestore is installed>
+         c. Run the following command to restart the Impala catalog:
+$ sudo maprcli node services -name impalacatalog -action restart -nodes <IP addr
+ess where impala catalog is installed>
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/admission_control.html

@@ -1,0 +1,120 @@
+node services
+
+   Starts, stops, or restarts services on one or more server nodes.
+   Permissions required: ss, fc or a.
+
+   To start or stop services, you must specify the service name, the
+   action (start, stop, or restart), and the nodes on which to perform the
+   action. You can specify the nodes in either of two ways:
+     * Use the nodes parameter to specify a space-delimited list of node
+       names.
+     * Use the filter parameter to specify all nodes that match a certain
+       pattern. See [1]Filters for more information.
+
+Syntax
+
+   CLI
+
+maprcli node services
+    [ -action start|stop|restart ]
+    [ -apiserver start|stop|restart ]
+    [ -cldb start|stop|restart ]
+    [ -cluster <cluster> ]
+    [ -fileserver start|stop|restart ]
+    [ -filter <filter> ]
+
+    [ -name <service> ]
+    [ -nfs start|stop|restart ]
+
+    [ -nodes <node names> ]
+
+    [ -zkconnect <ZooKeeper Connect String> ]
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host>:<port>/rest/node/services[?<parameters>]
+
+Parameters
+
+   To perform an action on a service, on a particular set of nodes, you
+   must specify the following three parameters:
+     * action- the action to perform; starting, stopping, suspending,
+       resuming, or restarting a service.
+     * node or filter - the nodes on which to perform the action; either a
+       list of nodes, or a filter that matches a set of nodes
+     * name - the service on which to perform the action
+
+   The following table lists the parameters available with the node
+   services command.
+
+   Parameter
+
+   Description
+   action An action to perform on a service specified in the name
+   parameter: Values: start, stop, suspend, resume, or restart
+   apiserver Starts, stops, or restarts the apiserver. Values: start,
+   stop, or restart
+   cldb Starts, stops, or restarts the cldb service. Values: start, stop,
+   suspend, resume, or restart
+   cluster The cluster on which to run the command.
+   fileserver Starts, stops, or restarts the fileserver service. Values:
+   start, stop, suspend, resume, or restart
+   filter A filter specifying nodes on which to start or stop services.
+   For fields to use with the filter, see the [2]Fields table in the
+   [3]node page. See [4]Filters for more information about filters.
+   Note: Either this or nodes is required.
+   name A service on which to perform an action specified by the action
+   parameter. Any service can be specified with this option, but the
+   following services can be specified only with the name option:
+   collectd, elasticsearch, fluentd, grafana, historyserver, hivemeta,
+   hoststats, hs2, httpfs, hue, kibana, nodemanager, opentsdb, oozie, and
+   resourcemanager.
+   nfs Starts, stops, or restarts the nfs service. Values: start, stop,
+   suspend, resume, or restart
+   nodes A list of node names, separated by spaces.
+   Note: Either this or filter is required.
+   zkconnect The [5]ZooKeeper Connect String.
+
+Examples
+
+   Start the NodeManager Service
+maprcli node services -name nodemanager -nodes abc.sj.us -action start
+
+   Stop the ResourceManager Service
+maprcli node services -name resourcemanager -nodes abc.sj.us -action stop
+
+   Stop the ResourceManager Service
+maprcli node services -name resourcemanager -nodes abc.sj.us -action restart
+
+   Restart nfs server
+maprcli node services -nodes abc.sj.us -nfs restart
+
+   Restart nfs server using a filter
+
+   Using a filter is common, especially in HBase environments, where full
+   restarts of region and master servers are needed.
+maprcli node services -filter ["csvc==nfs"] -nfs restart
+
+   Start the Hue Service
+maprcli node services -name hue -action start -nodes <node n>
+
+   Restart the hoststats service
+
+   Restart the hoststats service after making changes to the MapR Metrics
+   database. You do not need to restart warden.
+maprcli node services -name hoststats -action restart -nodes <nodes>
+
+OR
+
+maprcli node services -name hoststats -action restart -filter '[csvc==hoststats]
+'
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-CommonParameters.html

@@ -1,0 +1,28 @@
+Configure a Secure HBase Sink
+
+   Configure Flume agents to use Kerberos when you want to write sinks to
+   secure HBase.
+    1. Create a keytab file called flume.keytab which contains a principal
+       that matches the Kerberos identity of the user that will be running
+       flume-ng. For example:
+# kadmin
+: addprinc -randkey username/<FQDN@REALM>
+: ktadd -k /opt/mapr/conf/flume.keytab username/<FQDN@REALM>
+       The flume.keytab file must be owned and readable only by the mapr
+       user.
+    2. In the flume.conf file, configure the following properties:
+
+   Property Value Description
+   <agent>.sinks.<hbaseSink>.kerberosPrincipal username/FQDN@REALM.COM The
+   Kerberos identity of the user running flume-ng.
+   <agent>.sinks.<hbaseSink>.kerberosKeytab path_to_keytab The path to a
+   valid keytab file (flume.keytab) for the user running flume-ng
+
+   For additional properties that you may want to configure, see the[1]
+   Apache Flume documentation.
+   Note: Once Kerberos is enabled, the maprlogin ticket generation is
+   performed implicitly.
+
+References
+
+   1. https://flume.apache.org/documentation.html

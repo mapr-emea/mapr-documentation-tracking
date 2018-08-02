@@ -1,0 +1,45 @@
+Integrate Hue with Drill
+
+   Important: Hue integration with Drill is an experimental feature. In
+   addition, this method of configuration works only with Hue 3.12 or
+   later.
+    1. Configure Hue to use Drill:
+         a. In the hue.ini, go to the notebook section, and set the
+            dbproxy_extra_classpath parameter to contain the path to the
+            Drill JDBC driver. For example:
+[notebook]
+  ...
+  ## Classpath to be appended to the default DBProxy server classpath.
+  dbproxy_extra_classpath=/opt/mapr/drill/drill-1.10.0/jars/jdbc-driver/drill-jd
+bc-all-1.10.0.jar
+
+         b. Add Drill interpreter to the notebook.interpreters section in
+            hue.ini. For example:
+[notebook]
+  ...
+  # One entry for each type of snippet.
+  [[interpreters]]
+    ...
+    [[[drill]]]
+      name=Drill JDBC
+      interface=jdbc
+      ## Specific options for connecting to the server.
+      ## The JDBC connectors, e.g. mysql.jar, need to be in the CLASSPATH enviro
+nment variable.
+      ## If 'user' and 'password' are omitted, they will be prompted in the UI.
+      options='{"url": "<drill-jdbc-url>", "driver": "org.apache.drill.jdbc.Driv
+er", "user": "admin", "password": "admin"}'
+
+            You can specify any valid Drill JDBC connection string as a
+            <drill-jdbc-url> parameter. For more information, see [1]Drill
+            JDBC Driver.
+            Note: To configure Hue with MapR Drill JDBC Drivers, see
+            [2]Drill JDBC Driver.
+    2. Restart Hue to apply the updated configuration:
+maprcli node services -name hue -action restart -nodes <node>
+       Now you can use Drill JDBC snippets in Hue Notebooks.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill_jdbc_connector.html#drill_jdbc_connector
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill_jdbc_connector.html#drill_jdbc_connector

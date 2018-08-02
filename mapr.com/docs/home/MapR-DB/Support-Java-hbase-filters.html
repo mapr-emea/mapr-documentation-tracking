@@ -1,0 +1,223 @@
+Support for HBase Java Filters Support
+
+   MapR-DB supports the following Java filters, which work identically to
+   their Apache HBase versions. See the [1]Apache HBase API for more
+   information, specifically, the [2]Apache HBase Filter package.
+
+   Filter
+
+   Description
+   ColumnCountGetFilter
+
+   Simple filter that returns first N columns on row only. This filter was
+   written to test filters in Get and as soon as it gets its quota of
+   columns, filterAllRemaining() returns true. This makes this filter
+   unsuitable as a Scan filter.
+   ColumnPaginationFilter
+
+   A filter, based on the ColumnCountGetFilter, takes two arguments: limit
+   and offset. This filter can be used for row-based indexing, where
+   references to other tables are stored across many columns, in order to
+   efficient lookups and paginated results for end users. Only most recent
+   versions are considered for pagination.
+   ColumnPrefixFilter
+
+   This filter is used for selecting only those keys with columns that
+   matches a particular prefix. For example, if prefix is 'an', it will
+   pass keys with columns like 'and', 'anti' but not keys with columns
+   like 'ball', 'act'.
+   ColumnRangeFilter
+
+   This filter is used for selecting only those keys with columns that are
+   between minColumn to maxColumn. For example, if minColumn is 'an', and
+   maxColumn is 'be', it will pass keys with columns like 'ana', 'bad',
+   but not keys with columns like 'bed', 'eye' If minColumn is null, there
+   is no lower bound. If maxColumn is null, there is no upper bound.
+   minColumnInclusive and maxColumnInclusive specify if the ranges are
+   inclusive or not.
+   DependentColumnFilter A filter for adding inter-column timestamp
+   matching Only cells with a correspondingly timestamped entry in the
+   target column will be retained Not compatible with Scan.setBatch as
+   operations need full rows for correct filtering
+   FamilyFilter This filter is used to filter based on the column family.
+   It takes an operator (equal, greater, not equal, etc) and a byte []
+   comparator for the column family portion of a key.
+
+   This filter can be wrapped with WhileMatchFilter and SkipFilter to add
+   more control. Multiple filters can be combined using FilterList . If an
+   already known column family is looked for, use Get.addFamily(byte[])
+   directly rather than a filter.
+   FilterList Implementation of Filter that represents an ordered List of
+   Filters which will be evaluated with a specified boolean operator
+   FilterList.Operator.MUST_PASS_ALL (AND) or
+   FilterList.Operator.MUST_PASS_ONE (OR). Since you can use Filter Lists
+   as children of Filter Lists, you can create a hierarchy of filters to
+   be evaluated. FilterList.Operator.MUST_PASS_ALL evaluates lazily:
+   evaluation stops as soon as one filter does not include the KeyValue.
+   FilterList.Operator.MUST_PASS_ONE evaluates non-lazily: all filters are
+   always evaluated. Defaults to FilterList.Operator.MUST_PASS_ALL .
+   FirstKeyOnlyFilter
+
+   A filter that will only return the first KV from each row.
+
+   This filter can be used to more efficiently perform row count
+   operations.
+   FirstKeyValueMatchingQualifiersFilter The filter looks for the given
+   columns in KeyValue. Once there is a match for any one of the columns,
+   it returns ReturnCode.NEXT_ROW for remaining KeyValues in the row.
+
+   Note: It may emit KVs which do not have the given columns in them, if
+   these KVs happen to occur before a KV which does have a match. Given
+   this caveat, this filter is only useful for special cases like
+   RowCounter .
+   FuzzyRowFilter
+
+   Filters data based on fuzzy row key. Performs fast-forwards during
+   scanning. It takes pairs (row key, fuzzy info) to match row keys. Where
+   fuzzy info is a byte array with 0 or 1 as its values:
+     * 0 - means that this byte in provided row key is fixed, i.e. row
+       key's byte at same position must match
+     * 1 - means that this byte in provided row key is NOT fixed, i.e. row
+       key's byte at this position can be different from the one in
+       provided row key
+
+   Example: Let's assume row key format is userId_actionId_year_month.
+   Length of userId is fixed and is 4, length of actionId is 2 and year
+   and month are 4 and 2 bytes long respectively. Let's assume that we
+   need to fetch all users that performed certain action (encoded as "99")
+   in Jan of any year. Then the pair (row key, fuzzy info) would be the
+   following: row key = "????_99_????_01" (one can use any value instead
+   of "?") fuzzy info =
+   "\x01\x01\x01\x01\x00\x00\x00\x00\x01\x01\x01\x01\x00\x00\x00" I.e.
+   fuzzy info tells the matching mask is "????_99_????_01", where at ? can
+   be any value.
+   InclusiveStopFilter
+
+   A Filter that stops after the given row. There is no "RowStopFilter"
+   because the Scan spec allows you to specify a stop row. Use this filter
+   to include the stop row, eg: [A,Z].
+   KeyOnlyFilter
+
+   A filter that will only return the key component of each KV (the value
+   will be rewritten as empty).
+
+   This filter can be used to grab all of the keys without having to also
+   grab the values.
+   MultipleColumnPrefixFilter
+
+   This filter is used for selecting only those keys with columns that
+   matches a particular prefix. For example, if prefix is 'an', it will
+   pass keys will columns like 'and', 'anti' but not keys with columns
+   like 'ball', 'act'.
+   PageFilter
+
+   Implementation of Filter interface that limits results to a specific
+   page size. It terminates scanning once the number of filter-passed rows
+   is > the given page size.
+
+   Note that this filter cannot guarantee that the number of results
+   returned to a client are <= page size. This is because the filter is
+   applied separately on different region servers. It does however
+   optimize the scan of individual HRegions by making sure that the page
+   size is never exceeded locally.
+   PrefixFilter
+
+   Pass results that have same row prefix.
+   QualifierFilter This filter is used to filter based on the column
+   qualifier. It takes an operator (equal, greater, not equal, etc) and a
+   byte [] comparator for the column qualifier portion of a key.
+
+   This filter can be wrapped with WhileMatchFilter and SkipFilter to add
+   more control. Multiple filters can be combined using FilterList . If an
+   already known column qualifier is looked for, use Get.addColumn(byte[],
+   byte[]) directly rather than a filter.
+   RandomRowFilter
+
+   A filter that includes rows based on a chance.
+   RowFilter This filter is used to filter based on the key. It takes an
+   operator (equal, greater, not equal, etc) and a byte [] comparator for
+   the row, and column qualifier portions of a key.
+
+   This filter can be wrapped with WhileMatchFilter to add more control.
+   Multiple filters can be combined using FilterList. If an already known
+   row range needs to be scanned, use CellScanner start and stop rows
+   directly rather than a filter.
+   SingleColumnValueExcludeFilter A Filter that checks a single column
+   value, but does not emit the tested column. This will enable a
+   performance boost over SingleColumnValueFilter , if the tested column
+   value is not actually needed as input (besides for the filtering
+   itself).
+   SingleColumnValueFilter
+
+   This filter is used to filter cells based on value. It takes a
+   CompareFilter.CompareOp operator (equal, greater, not equal, etc), and
+   either a byte [] value or a ByteArrayComparable.
+
+   If we have a byte [] value then we just do a lexicographic compare. For
+   example, if passed value is 'b' and cell has 'a' and the compare
+   operator is LESS, then we will filter out this cell (return true). If
+   this is not sufficient (eg you want to deserialize a long and then
+   compare it to a fixed long value), then you can pass in your own
+   comparator instead.
+
+   You must also specify a family and qualifier. Only the value of this
+   column will be tested. When using this filter on a CellScanner with
+   specified inputs, the column to be tested should also be added as input
+   (otherwise the filter will regard the column as missing).
+
+   To prevent the entire row from being emitted if the column is not found
+   on a row, use setFilterIfMissing(boolean) . Otherwise, if the column is
+   found, the entire row will be emitted only if the value passes. If the
+   value fails, the row will be filtered out.
+
+   In order to test values of previous versions (timestamps), set
+   setLatestVersionOnly(boolean) to false. The default is true, meaning
+   that only the latest version's value is tested and all previous
+   versions are ignored.
+
+   To filter based on the value of all scanned columns, use ValueFilter.
+   SkipFilter
+
+   A wrapper filter that filters an entire row if any of the Cell checks
+   do not pass.
+
+   For example, if all columns in a row represent weights of different
+   things, with the values being the actual weights, and we want to filter
+   out the entire row if any of its weights are zero. In this case, we
+   want to prevent rows from being emitted if a single key is filtered.
+   Combine this filter with a ValueFilter:
+ scan.setFilter(new SkipFilter(new ValueFilter(CompareOp.NOT_EQUAL, new BinaryCo
+mparator(Bytes.toBytes(0))));
+
+   Any row which contained a column whose value was 0 will be filtered out
+   (since ValueFilter will not pass that Cell). Without this filter, the
+   other non-zero valued columns in the row would still be emitted.
+   TimestampsFilter
+
+   Filter that returns only cells whose timestamp (version) is in the
+   specified list of timestamps (versions).
+
+   Note: Use of this filter overrides any time range/time stamp options
+   specified using Get.setTimeRange(long, long), Scan.setTimeRange(long,
+   long), or Scan.setTimeStamp(long). See the [3]Apache HBase API, Client
+   package for detailed information.
+   ValueFilter This filter is used to filter based on column value. It
+   takes an operator (equal, greater, not equal, etc) and a byte []
+   comparator for the cell value.
+
+   This filter can be wrapped with WhileMatchFilter and SkipFilter to add
+   more control. Multiple filters can be combined using FilterList. To
+   test the value of a single qualifier when scanning multiple qualifiers,
+   use SingleColumnValueFilter.
+   WhileMatchFilter
+
+   A wrapper filter that returns true from filterAllRemaining() as soon as
+   the wrapped filters Filter.filterRowKey(byte[], int, int),
+   Filter.filterKeyValue(org.apache.hadoop.hbase.Cell), Filter.filterRow()
+   or Filter.filterAllRemaining() methods returns true.
+
+References
+
+   1. https://hbase.apache.org/apidocs/index.html
+   2. https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
+   3. https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/client/package-summary.html

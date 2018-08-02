@@ -1,0 +1,179 @@
+Managing Gateways
+
+   This topic describes various methods for listing gateways, checking
+   status of gateways, managing gateways if they fail, and troubleshooting
+   gateways.
+     * To see a list of the gateways for a particular destination cluster:
+       Run the [1]maprcli cluster gateway get command on the source
+       cluster. Specify the name of the destination cluster with the
+       -dstcluster parameter. If you run the command remotely from your
+       source cluster, specify the name of the source cluster with the
+       -cluster parameter.
+     * To see a list of the gateways for all of the destination clusters
+       that the source cluster is replicating to:
+       Run the [2]maprcli cluster gateway list command on the source
+       cluster. If you run the command remotely from your source cluster,
+       specify the name of the source cluster with the -cluster parameter.
+     * To remove the list of gateways that you specified for a destination
+       cluster by using the maprcli cluster gateway set command:
+       Run the [3]maprcli cluster gateway delete command on the source
+       cluster. Specify the name of the destination cluster with the
+       -dstcluster parameter. If you run the command remotely from your
+       source cluster, specify the name of the source cluster with the
+       -cluster parameter.
+     * To find out how MapR-DB or MapR-ES is finding gateways (for
+       example, from DNS records, lists created by the maprcli cluster
+       gateway set command or the mapr-clusters.conf file):
+       Run the command [4]maprcli cluster gateway resolve on the source
+       cluster. Specify the name of the destination cluster with the
+       -dstcluster parameter. If you run the command remotely from your
+       source cluster, specify the name of the source cluster with the
+       -cluster parameter.
+     * To stop and start one or more gateways:
+       Run the maprcli node services -name gateway -action stop|start on
+       the clusters where the gateways are running.
+maprcli node services -name gateway -action stop -nodes <hostnames or IP address
+es separated by spaces>
+maprcli node services -name gateway -action start -nodes <hostnames or IP addres
+ses separated by spaces>
+
+     * To check the status of a gateway service on a particular node:
+       Run the command [5]maprcli service list on the clusters where the
+       gateways are running.
+
+Running the maprcli cluster gateway set command
+
+   The syntax of the [6]maprcli cluster gateway set command is:
+maprcli cluster gateway set -dstcluster <cluster name> -gateways "<space-delimit
+ed list of gateways>"
+
+   To generate a list of the existing gateways in a MapR cluster, use the
+   [7]maprcli cluster gateway list command. You can then copy this list
+   and paste it into the maprcli cluster gateway set command.
+   Alternatively, to generate a list of the gateways on a local cluster,
+   run the [8]maprcli cluster gateway local -format text command. If you
+   want to run the command from a different cluster and point to the
+   cluster where the gateways are located, use -cluster parameter can be
+   used to provide the name of that cluster.
+
+   For example, suppose that you are configuring table replication from
+   the cluster sanfrancisco to the cluster newyork and want to use two
+   gateways. The nodes on which these gateways are located are named gw1
+   and gw2.
+
+   The command that you run will look like this:
+maprcli cluster gateway set -dstcluster newyork -gateways "gw1.bigcompany.com gw
+2.bigcompany.com"
+
+Adding a DNS record to your DNS server's zone file for your domain
+
+   In your DNS server’s zone file for your domain, add a record for the
+   cluster where gateways are located, listing the nodes to use as
+   gateways. You can use the MapR Control System (MCS) to create a record
+   that you can copy into a DNS configuration file, run a maprcli command
+   to generate the record, or create a record manually.
+
+   To create a record with the MCS, follow these steps:
+    1. Log into MCS on the cluster where the gateways are located.
+    2. In the Navigation pane, select MapR-DB Tables.
+    3. In the MapR-DB Tables section, click the button Generate Gateway
+       DNS. A window opens with the generated DNS entry.
+    4. Copy and paste the record into your zone file.
+
+   To generate a record by using the maprcli, follow these steps:
+    1. On the cluster where the gateways are located, run the command
+       maprcli cluster gateway local -format dns. If you want to run the
+       command from a different cluster and point to the cluster that
+       hosts the gateways, use the -cluster parameter to provide the name
+       of the latter cluster.
+    2. Copy and paste the output of this command into your zone file.
+
+   If you want to create a record manually, use the following format:
+gateway.<clustername> IN TXT "<space-delimited list of hostnames>"
+
+   You can also specify IP addresses, though using hostnames is
+   recommended so that it is easier to locate gateways if their IP
+   addresses change. Combinations of hostnames and IP addresses are also
+   supported. The default port is 7660. If a gateway is using a different
+   port, append a colon to the address and then specify the port number.
+   Here is an example entry:
+gateway.newyork.bigcompany.com gw1ny.bigcompany.com gw2ny.bigcompany.com
+
+   Multi-homing is also supported. Simply separate the entries for a
+   single node with semicolons, as in this example that uses IP addresses:
+gateway.newyork.bigcompany.com 10.10.34.20 10.10.34.22 10.10.34.24;173.194.79.12
+1
+
+If a Gateway Fails
+
+   If a gateway fails, the warden service tries three (3) times to restart
+   it automatically. After an interval, the warden tries again three times
+   to start the gateway. You can configure the interval by using the
+   parameter services.retryinterval.time.sec in the warden.conf file. The
+   default is 30 minutes.
+
+   During the time that the gateway is down, source clusters will resend
+   updates to other gateways. Source clusters will also ping the failed
+   gateway with an exponentially increasing backoff.
+
+   If all of the gateways fail in a destination cluster, source clusters
+   will ping the failed gateways in the same manner. Updates pending
+   replication are stored on disk in an internal data structure until at
+   least one gateway in the destination cluster comes back online.
+   Therefore, you will see additional storage costs during a gateway
+   outage. The Gateway Service Down alarm in MCS will notify you when none
+   of the gateways in a destination cluster can be reached.
+
+   If the additional storage becomes too costly, you can follow either of
+   these procedures:
+
+   If you are replicating to a MapR-DB binary table:
+    1. Run the [9]maprcli table replica remove command to stop replicating
+       to the replica. This action deletes the pending updates.
+    2. Resolve the gateway outage.
+    3. Recreate the replica and start replicating to it by running the
+       [10]maprcli table replica autosetup command.
+
+   If you are replicating to a MapR-ES stream:
+    1. Run the maprcli stream replica remove command to stop replicating
+       to the replica stream. This action cancels the pending updates to
+       the replica stream.
+    2. Resolve the gateway outage.
+    3. Run the command maprcli stream replica autosetup to recreate the
+       replica stream and start replicating to it.
+
+Troubleshooting
+
+   You can refer to two log files for each gateway when troubleshooting.
+   Both are in the /opt/mapr/logs directory on the node where the gateway
+   is running:
+     * gateway.log
+     * gatewayinit.log
+
+MapR-DB Lookup Order
+
+   MapR-DB uses the following order to locate the gateways that are
+   running in a destination cluster.
+     * Look up the destination cluster's name and gateway addresses in the
+       information specified by the [11]maprcli cluster gateway set
+       command. If a list of gateways, then a DNS lookup is performed.
+     * Perform a DNS lookup of the destination cluster and the addresses
+       of the gateways. If no DNS record for the destination cluster is
+       found, then the lookup goes to the mapr-clusters.conf file.
+     * Look up the destination cluster's name and the CLDB node addresses
+       in the mapr-clusters.conf file under the assumption that gateways
+       are running on all of the CLDB nodes and only on those nodes.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-get.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-list.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-delete.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-resolve.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/service-list.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-set.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-list.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-local.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-remove.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-autosetup.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-set.html

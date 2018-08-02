@@ -1,0 +1,36 @@
+Configure PAM Authentication Between Hue and Hive
+
+   In Hue 3.10, you can configure Hue to use PAM authentication when it
+   communicates with HiveServer2. Before you configure Hue to use PAM
+   authentication with HiveServer2, verify that HiveServer2 is configured
+   to use PAM authentication. See [1]Configure HiveServer2 to Use PAM
+   Authentication for more information.
+
+   Complete the following steps to configure PAM authentication between
+   Hue and Hive:
+    1. Configure the [beeswax] section of the hue.ini file. Set the
+       mechanism option to none. Set the auth_username and auth_password
+       options in the [desktop] or [beeswax] sections of hue.ini (where
+       auth_username and auth_password are the user credentials for the
+       user who authenticates the Hue service with HiveServer2).
+       The following example summarizes these changes:
+[desktop]
+     ...
+     # Default LDAP/PAM/.. username and password of the Hue user used for authen
+tication with other services.
+     # Inactive if password is empty.
+     # e.g. LDAP pass-through authentication for HiveServer2 or Impala.
+ Apps can override them individually.
+       auth_username=mapr
+       auth_password=<user_password>
+     ...
+ [beeswax]
+     ...
+     # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+       mechanism=none
+    2. Restart Hue:
+maprcli node services -name hue -action restart -nodes <Hue node>
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/HiveServer2-PAMAuth.html

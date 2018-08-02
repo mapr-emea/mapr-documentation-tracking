@@ -1,0 +1,60 @@
+Example: Impersonation and Chaining
+
+   Frank is a senior HR manager at a company. Frank has access to all of
+   the employee data because he is a member of the hr group. Frank created
+   a table named “employees” in his home directory to store the employee
+   data he uses. Only Frank has access to this table.
+drwx------ frank:hr /user/frank/employees
+
+   Each record in the employees table consists of the following
+   information: emp_id, emp_name, emp_ssn, emp_salary, emp_addr,
+   emp_phone, emp_mgr
+   Frank needs to share a subset of this information with Joe who is an HR
+   manager reporting to Frank. To share the employee data, Frank creates a
+   view called emp_mgr_view that accesses a subset of the data. The
+   emp_mgr_view filters out sensitive employee information, such as the
+   employee social security numbers, and only shows data for the employees
+   that report directly to Joe. Frank and Joe both belong to the mgr
+   group. Managers have read permission on Frank’s directory.
+rwxr----- frank:mgr /user/frank/emp_mgr_view.view.drill
+
+   The emp_mgr_view.view.drill file contains the following view
+   definition:
+(view definition: SELECT emp_id, emp_name, emp_salary, emp_addr, emp_phone FROM
+`/user/frank/employee` WHERE emp_mgr = 'Joe')
+
+   When Joe issues SELECT * FROM emp_mgr_view, Drill impersonates Frank
+   when accessing the employee data, and the query returns the data that
+   Joe has permission to see based on the view definition. The query
+   results do not include any sensitive data because the view protects
+   that information. If Joe tries to query the employees table directly,
+   Drill returns an error or null values.
+
+   Because Joe has read permissions on the emp_mgr_view, he can create new
+   views from it to give other users access to the employee data even
+   though he does not own the employees table and cannot access the
+   employees table directly.
+   Joe needs to share employee contact data with his direct reports, so he
+   creates a special view called emp_team_view to share the employee
+   contact information with his team. Joe creates the view and writes it
+   to his home directory. Joe and his reports belong to a group named
+   joeteam. The joeteam group has read permissions on Joe’s home directory
+   so they can query the view and create new views from it.
+rwxr----- joe:joeteam /user/joe/emp_team_view.view.drill
+
+   The emp_team_view.view.drill file contains the following view
+   definition:
+(view definition: SELECT emp_id, emp_name, emp_phone FROM `/user/frank/emp_mgr_v
+iew.drill`);
+
+   When anyone on Joe’s team issues SELECT * FROM emp_team_view, Drill
+   impersonates Joe to access the emp_team_view and then impersonates
+   Frank to access the emp_mgr_view and the employee data. Drill returns
+   the data that Joe’s team has can see based on the view definition. If
+   anyone on Joe’s team tries to query the emp_mgr_view or employees table
+   directly, Drill returns an error or null values.
+
+   Because Joe’s team has read permissions on the emp_team_view, they can
+   create new views from it and write the views to any directory for which
+   they have write access. Creating views can continue until Drill reaches
+   the maximum number of impersonation hops.

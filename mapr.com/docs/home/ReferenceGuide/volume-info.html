@@ -1,0 +1,195 @@
+volume info
+
+   Displays information about the specified volume. For best results, use
+   the -json option when running the command.
+
+Syntax
+
+   CLI
+
+maprcli volume info
+    [ -cluster <cluster name> ]
+    [ -output terse | verbose ]
+    [ -path <mount directory> ]
+    [ -name <volume name> ]
+    [ -columns <column name> ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host>:<port>/rest/volume/info?<parameters>
+
+Parameters
+
+   You must specify either name or path, but not both.
+
+   Parameter
+
+   Description
+
+   cluster
+
+   The cluster on which to run the command.
+   columns A comma-separated list of fields to return in the query. See
+   the Fields table on the volume command page. Default: all
+
+   name
+
+   The volume name for which to retrieve information. Note: When issuing
+   maprcli volume info -columns and marcli volume list -columns commands,
+   the column for the volume name is volumename.
+
+   output
+
+   Whether the output should be terse or verbose. Default: verbose
+
+   path
+
+   The mount path of the volume for which to retrieve information.
+
+Output
+
+   For definitions of the output fields, and short names for use with
+   filters, see the [1]Fields table on the volume command [2]page.
+
+Examples
+
+     * [3]CLI
+     * [4]REST
+
+# /opt/mapr/bin/maprcli volume info -name test_vol -json
+{
+        "timestamp":1520275171388,
+        "timeofday":"2018-03-05 06:39:31.388 GMT+0000",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "acl":{
+                                "Principal":"User root",
+                                "Allowed actions":[
+                                        "dump",
+                                        "restore",
+                                        "m",
+                                        "a",
+                                        "d",
+                                        "fc"
+                                ]
+                        },
+                        "creator":"root",
+                        "aename":"root",
+                        "aetype":0,
+                        "numreplicas":"3",
+                        "minreplicas":"2",
+                        "nsNumReplicas":"3",
+                        "nsMinReplicas":"2",
+                        "enforceMinReplicationForIO":"false",
+                        "containerAllocationFactor":"0",
+                        "allowGrant":"false",
+                        "reReplTimeOutSec":"0",
+                        "criticalReReplTimeOutSec":"0",
+                        "replicationtype":"high_throughput",
+                        "rackpath":"/data/default-rack/atsqa4-197.qa.lab",
+                        "mirrorthrottle":"1",
+                        "accesstime":"March 5, 2018",
+                        "readonly":"0",
+                        "mountdir":"/VOL3_TST_1517344011351",
+                        "volumename":"VOL3_TST_1517344011351",
+                        "mounted":1,
+                        "quota":"0",
+                        "advisoryquota":"0",
+                        "snapshotcount":"0",
+                        "logicalUsed":"0",
+                        "replicatedlogicalused":"0",
+                        "used":"0",
+                        "snapshotused":"0",
+                        "totalused":"0",
+                        "replicatedtotalused":"0",
+                        "scheduleid":0,
+                        "schedulename":"",
+                        "mirrorscheduleid":0,
+                        "volumetype":0,
+                        "mirrortype":3,
+                        "creatorcontainerid":2825,
+                        "creatorvolumeuuid":"-6688596250779888467:-1470941960816
+171692",
+                        "volumeid":28803390,
+                        "actualreplication":[
+                                0,
+                                100,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                        ],
+                        "nameContainerSizeMB":0,
+                        "nameContainerId":2825,
+                        "nameContainerDataThresholdMB":524288,
+                        "needsGfsck":false,
+                        "maxinodesalarmthreshold":"0",
+                        "maxnssizembalarmthreshold":"0",
+                        "dbrepllagsecalarmthresh":"0",
+                        "dbindexlagsecalarmthresh":"0",
+                        "limitspread":"true",
+                        "partlyOutOfTopology":0,
+                        "wireSecurity":0,
+                        "auditVolume":0,
+                        "audited":0,
+                        "coalesceInterval":60,
+                        "enableddataauditoperations":"getattr,setattr,chown,chpe
+rm,chgrp,getxattr,listxattr,setxattr,removexattr,read,write,create,delete,mkdir,
+readdir,rmdir,createsym,lookup,rename,createdev,truncate,tablecfcreate,tablecfde
+lete,tablecfmodify,tablecfScan,tableget,tableput,tablescan,tablecreate,tableinfo
+,tablemodify,getperm,getpathforfid,hardlink",
+                "disableddataauditoperations":"getattr",
+                        "volumeAces":{
+                                "readAce":"p",
+                                "writeAce":"p"
+                        },
+                        "fixCreatorId":"false",
+                        "ReplTypeConversionInProgress":"0",
+                        "creationTime":1524067828279,
+                        "metricsEnabled":0
+                }
+        ]
+}
+
+curl -k -X GET 'https://abc.sj.us:8443/rest/volume/info?name=test_vol' --user ma
+pr:mapr
+{"timestamp":1529545951212,"timeofday":"2018-06-20 06:52:31.212 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"acl":{"Principal":"User mapr","Allowed actions":"
+[dump, restore, m, a, d, fc]"},"creator":"mapr","aename":"mapr","aetype":"0","nu
+mreplicas":"3","minreplicas":"2","nsNumReplicas":"3","nsMinReplicas":"2","enforc
+eMinReplicationForIO":"true","containerAllocationFactor":"0","reReplTimeOutSec":
+"0","criticalReReplTimeOutSec":"0","replicationtype":"high_throughput","rackpath
+":"/data","mirrorthrottle":"1","accesstime":"June 20, 2018","readonly":"0","moun
+tdir":"/test_vol","volumename":"test_vol","mounted":1,"quota":"0","advisoryquota
+":"0","snapshotcount":0,"logicalUsed":"0","replicatedlogicalused":"0","used":"0"
+,"snapshotused":"0","totalused":"0","replicatedtotalused":"0","scheduleid":"0","
+schedulename":"","mirrorscheduleid":"0","volumetype":"0","mirrortype":3,"creator
+containerid":2117,"creatorvolumeuuid":"-8953141547368591763:-5762925753444373354
+","volumeid":84378231,"actualreplication":[0,100,0,0,0,0,0,0,0,0,0],"nameContain
+erSizeMB":0,"nameContainerId":2117,"nameContainerDataThresholdMB":524288,"needsG
+fsck":"false","maxinodesalarmthreshold":"0","maxnssizembalarmthreshold":"0","dbr
+epllagsecalarmthresh":"0","dbindexlagsecalarmthresh":"0","limitspread":"true","p
+artlyOutOfTopology":0,"wireSecurity":1,"auditVolume":0,"audited":0,"forceAudit":
+0,"coalesceInterval":60,"enableddataauditoperations":"setattr,chown,chperm,chgrp
+,getxattr,listxattr,setxattr,removexattr,read,write,create,delete,mkdir,readdir,
+rmdir,createsym,lookup,rename,createdev,truncate,tablecfcreate,tablecfdelete,tab
+lecfmodify,tablecfScan,tableget,tableput,tablescan,tablecreate,tableinfo,tablemo
+dify,getperm,getpathforfid,hardlink,"disableddataauditoperations":"getattr,"volu
+meAces":{"writeAce":"p","readAce":"p"},"fixCreatorId":"false","ReplTypeConversio
+nInProgress":0,"creationTime":1529545198145,"metricsEnabled":1}]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume.html#volume__fields
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume.html#volume
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-info.html#div1entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-info.html#div1entry2

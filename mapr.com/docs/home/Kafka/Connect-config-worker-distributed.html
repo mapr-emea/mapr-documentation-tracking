@@ -1,0 +1,148 @@
+Distributed Worker Configuration Options
+
+   This topic describes the worker parameters that are specific to
+   distributed configurations.
+
+   In addition to the common worker configuration options, the following
+   are available in distributed mode. These parameters are set in the
+   connect-distributed.properties file.
+
+   CAPTION: Table 1. Distributed Worker Configuration Parameters
+
+   Parameter Description Type Default
+
+   group.id
+
+   A unique string that identifies the Connect cluster group that the
+   worker belongs to.
+   string    “”
+
+   config.storage.topic
+
+   The name of the MapR-ES topic to store connector and task configuration
+   data in. This must be the same for all workers with the same group.id.
+
+   For example: /path/to/stream:topic-prefix-
+   string    “”
+
+   status.storage.topic
+
+   The name of the MapR-ES topic where connector and task configuration
+   updates are stored. This must be the same for all workers with the same
+   group.id.
+   string    “”
+
+   offset.storage.topic
+
+   The MapR-ES topic to store offset data for connectors in. This must be
+   the same for all workers with the same group.id.
+
+   For example: /path/to/stream:topic-prefix-
+   string    “”
+
+   heartbeat.interval.ms
+
+   The expected time between heartbeats to the group coordinator when
+   using Kafka’s group management facilities.
+
+   Heartbeats are used to ensure that the worker’s session stays active
+   and to facilitate rebalancing when new members join or leave the group.
+   The value must be set lower than session.timeout.ms, but typically
+   should be set no higher than 1/3 of that value. It can be adjusted even
+   lower to control the expected time for normal rebalances.
+   int       3000
+
+   session.timeout.ms
+
+   The timeout used to detect failures when using Kafka’s group management
+   facilities.
+   int       30000
+
+   connections.max.idle.ms
+
+   Close idle connections after the number of milliseconds specified by
+   this config.
+   long      540000
+
+   receive.buffer.bytes
+
+   The size of the TCP receive buffer (SO_RCVBUF) to use when reading
+   data.
+   int       32768
+
+   request.timeout.ms
+
+   The configuration controls the maximum amount of time the client will
+   wait for the response of a request.
+
+   If the response is not received before the timeout elapses the client
+   will resend the request if necessary or fail the request if retries are
+   exhausted.
+   int       40000
+
+   send.buffer.bytes
+
+   The size of the TCP send buffer (SO_SNDBUF) to use when sending data.
+   int       131072
+
+   worker.sync.timeout.ms
+
+   When the worker is out of sync with other workers and needs to
+   resynchronize configurations, wait up to this amount of time before
+   giving up, leaving the group, and waiting a backoff period before
+   rejoining.
+   int       3000
+
+   worker.unsync.backoff.ms
+
+   When the worker is out of sync with other workers and fails to catch up
+   within worker.sync.timeout.ms, leave the Connect cluster for this long
+   before rejoining.
+   int       300000
+
+   client.id
+
+   An id string to pass to the server when making requests. The purpose of
+   this is to be able to track the source of requests beyond just IP/port
+   by allowing a logical application name to be included in server-side
+   request logging.
+   string    “”
+
+   metadata.max.age.ms
+
+   The period of time in milliseconds after which we force a refresh of
+   metadata even if we haven’t seen any partition leadership changes to
+   proactively discover any new brokers or partitions.
+   long      300000
+
+   metric.reporters
+
+   A list of classes to use as metrics reporters. Implementing the
+   MetricReporterinterface allows plugging in classes that will be
+   notified of new metric creation. The JmxReporter is always included to
+   register JMX statistics.
+   list      []
+
+   metrics.num.samples
+
+   The number of samples maintained to compute metrics.
+   int       2
+
+   metrics.sample.window.ms
+
+   The number of samples maintained to compute metrics.
+   long      30000
+
+   reconnect.backoff.ms
+
+   The amount of time to wait before attempting to reconnect to a given
+   host. This avoids repeatedly connecting to a host in a tight loop. This
+   backoff applies to all requests sent by the consumer to the broker.
+   long      50
+
+   retry.backoff.ms
+
+   The amount of time to wait before attempting to retry a failed fetch
+   request to a given topic partition. This avoids repeated
+   fetching-and-failing in a tight loop.
+   long      100

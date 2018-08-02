@@ -1,0 +1,99 @@
+Preparing Clusters for Querying using Secondary Indexes on JSON Tables
+
+   Describes the tasks needed to prepare your environment so you can query
+   MapR-DB JSON tables using secondary indexes.
+
+Installing with the MapR Installer
+
+   To install MapR using the MapR installer, follow the steps outlined at
+   [1]Installing with the MapR Installer.
+
+   Starting in the MapR 6.0.1 release, you do not have to enable a
+   separate query service to use secondary indexes. The Operational
+   Applications with MapR-DB template installs and configures the
+   replication gateways needed to update secondary indexes in MapR-DB JSON
+   and includes the components needed to run OJAI queries.
+
+   You must enable the [2]OJAI Distributed Query Service to use certain
+   features. The following table summarizes the differences in the
+   functionality of OJAI queries when you do and do not have the service
+   enabled:
+                     Service Not Enabled                  Service Enabled
+     * Can run queries that use a single secondary index
+     * Can sort data in your queries up to a configurable limit
+
+     * Can run queries that use multiple secondary indexes
+     * Can sort data in your queries without any limit
+     * Can run queries in parallel
+
+   Selecting any of the following templates enables the OJAI Distributed
+   Query Service:
+     * Operational Applications with MapR-DB and Distributed Query Service
+     * MapR Converged Cluster: Batch, interactive and real-time analytics
+     * Analytics with MapR-DB
+
+   You can also explicitly enable the OJAI Distributed Query Service by
+   selecting the service in the Custom Services template.
+
+   For more information about installer templates, see
+   [3]Auto-Provisioning Templates.
+
+   For more information about how secondary index selection and execution
+   works in MapR-DB JSON, see [4]Selection and Execution of Secondary
+   Indexes.
+   Note: The OJAI Query Service has been renamed to the OJAI Distributed
+   Query Service in MapR 6.0.1. All information about the OJAI Distributed
+   Query Service applies to the OJAI Query Service, except where noted.
+
+Installing without the MapR Installer
+
+   Other sections of the documentation describe the detailed steps for
+   installing and configuring without the MapR installer. Generally, you
+   need to perform the following steps:
+    1. Install software.
+       To install MapR without using the MapR installer, follow the steps
+       outlined at [5]Installing without the MapR Installer. In addition
+       to installing MapR core packages, you also need to [6]install MapR
+       Drill if you want advanced secondary index selection, sorts on
+       large data sets, and parallel query execution. When installing
+       Drill, make sure to [7]Configure the OJAI Distributed Query
+       Service.
+    2. Install and configure replication gateways.
+       Updates are propagated from the JSON tables using the [8]Gateways
+       for Replicating MapR-DB Tables. You need to install the replication
+       gateways. Since the source JSON table and the secondary index are
+       on the same volume within a cluster, configure an [9]intra-cluster
+       gateway.
+
+Upgrades
+
+   Other sections of the documentation describe the detailed steps for
+   upgrades. Generally, you need to perform the following steps:
+    1. Upgrade your MapR software by following the instructions at
+       [10]Upgrading MapR or MEP Components.
+    2. [11]Install MapR Drill, if you have not already done so and want to
+       sort large data sets and run queries in parallel.
+    3. When installing Drill, make sure to [12]Configure the OJAI
+       Distributed Query Service.
+    4. If you are upgrading without the MapR installer, follow step 2 in
+       the previous section to install and configure replication gateways.
+    5. Enable the replication support needed to propagate index updates by
+       running the following command:
+maprcli cluster feature enable –name mfs.feature.db.streams.v6.support
+       See [13]Step 4: Enable New Features for further details.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/c_get_started_install.html#concept_mt1_xzx_ft
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/auto-provisioning-templates.html#concept_iwk_rbp_zcb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/OverviewIndexSelectionExecution.html#concept_pc2_4ws_p1b
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingMapRSoftware.html#InstallingMapRSoftware
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/drill_installation.html#installing_drill
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/configure_query_services.html#task_gmp_tmg_2bb
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/Gateways-replication-Tables.html#GatewaysforTableReplicati_29656856-d3e64
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/Gateways-replication-Tables.html#GatewaysforTableReplicati_29656856-d3e64__section_dzb_kg1_z1b
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Upgrade-Paths.html#upgrade-paths
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/drill_installation.html#installing_drill
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/configure_query_services.html#task_gmp_tmg_2bb
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Configuring-the-New-Version.html#ConfiguringtheNewVersion

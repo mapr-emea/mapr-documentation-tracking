@@ -1,0 +1,34 @@
+Setting the Topology for Local Volume Replicas
+
+   The master copies for containers of local volumes are placed on the
+   local node (specified with parameter -localhost in the volume create
+   command). The nodes for the replica copies for containers of local
+   volumes are chosen as follows:
+    1. If a topology is explicitly specified for replicas during volume
+       create or volume edit, that topology will be used.
+maprcli volume create -name egLocalVol -path /test/local/volumes/examples/sample
+1 -localvolumehost 10.20.30.40 -topology /rack1/test
+       In the above example, the masters for the volume are placed on node
+       10.20.30.40, and replicas will be placed on nodes in the topology
+       /rack1/test.
+       The -topology parameter is optional, and if it is not specified,
+       CLDB will fall back to 2 or 3 below.
+    2. If the configuration parameter that specifies a relative path for
+       replicas of local volumes is set, that will be used.
+maprcli config save -values {"cldb.local.volume.topology.trim.index":"-1"}
+       This will trim the topology of the node specified by the localhost
+       parameter and restrict the replicas to the resultant topology.
+       By default, this configuration parameter is not set. To set this
+       configuration parameter, see [1]Creating Replicas of Local Volumes
+       in Custom Topology Using the CLI. If the configuration parameter is
+       not set, CLDB will fall back to 3 below.
+    3. The default volume topology will be used.
+       The default volume topology is the value specified by the
+       configuration parameter cldb.default.volume.topology. The default
+       value for this parameter is /data. See [2]Setting Default Volume
+       Topology Using the CLI.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpTopology-LocalVolReplica.html#concept_qrv_2d2_sw
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpTopology-DefaultVolumeTopology.html

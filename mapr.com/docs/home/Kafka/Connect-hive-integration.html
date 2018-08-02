@@ -1,0 +1,76 @@
+Hive Integration
+
+   This topic describes how to integrate a Hive database with Kafka
+   Connect for MapR-ES.
+
+   Kafka Connect for MapR-ES supports Hive integration. If a Hive database
+   is enabled, an external Hive table is created and that can be queried
+   via Hive shell.
+   Note: As of Kafka Connect 4.0.0 for MapR-ES Hive 2.1 is supported.
+
+   The Hive table name is constructed using a topic name in the following
+   manner:
+     * In the MapR-ES topic, /stream_path:topic-name, the first forward
+       slash (/) is removed, all other slashes are translated to
+       underscores ( _ ), and the colon (:) is translated to an underscore
+       (_).
+     * All non-alphanumeric and non-underscore characters are removed from
+       the string representing the Hive table name.
+
+Renaming Topics for Hive usage
+
+   The following example shows a topic named /test-12:test1 is renamed for
+   Hive usage.
+$ hadoop fs -ls -R /topics
+        drwxr-xr-x   - mapr mapr          1 2016-10-05 19:46 /topics/+tmp
+        drwxr-xr-x   - mapr mapr          1 2016-10-05 19:46 /topics/+tmp/test12
+_test1
+        drwxr-xr-x   - mapr mapr          0 2016-10-05 19:50 /topics/+tmp/test12
+_test1/partition=1
+        drwxr-xr-x   - mapr mapr          1 2016-10-05 19:46 /topics/test12_test
+1
+        drwxr-xr-x   - mapr mapr          2 2016-10-05 19:50 /topics/test12_test
+1/partition=1
+        -rwxr-xr-x   3 mapr mapr        241 2016-10-05 19:47 /topics/test12_test
+1/partition=1/test12_test1+1+0000000078+0000000080.avro
+        -rwxr-xr-x   3 mapr mapr        241 2016-10-05 19:50 /topics/test12_test
+1/partition=1/test12_test1+1+0000000081+0000000083.avro
+
+   The following query and results shows the topic data in the Hive table.
+> select * from test12_test1;
+        OK
+        16/10/05 20:06:59 INFO mapred.FileInputFormat: Total input paths to proc
+ess : 2
+        18  data10  1
+        18  data10  1
+        18  data10  1
+        18  data10  1
+        18  data10  1
+        18  data10  1
+        Time taken: 0.128 seconds, Fetched: 6 row(s)
+>
+
+Streaming Data from MapR-ES to the Hive database
+
+   This example provides sample code for streaming data from MapR-ES to
+   the Hive database.
+POST /connectors HTTP/1.1
+        Host: connect.example.com
+        Content-Type: application/json
+        Accept: application/json
+
+        {
+        "name":"hdfs-connector-hive",
+          "config":{
+          "hive.integration":"true",
+          "hive.database":"db3",
+            "hive.conf.dir":"/opt/mapr/hive/hive-1.2/conf",
+          "hive.metastore.uris":"thrift://localhost:9083",
+          "schema.compatibility":"BACKWARD",
+          "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+          "tasks.max":"1",
+          "topics":"/kafka-connect:topic3",
+          "hdfs.url":"maprfs:///",
+          "flush.size":"1"
+          }
+        }

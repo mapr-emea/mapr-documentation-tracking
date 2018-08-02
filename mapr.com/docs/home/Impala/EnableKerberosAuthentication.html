@@ -1,0 +1,94 @@
+Enable Kerberos Authentication
+
+   You can enable Kerberos authentication for Impala on a secure and
+   non-secure MapR cluster.
+
+   Once you have configured Impala to use Kerberos for authentication,
+   restart Impala and then start the impala-shell with the -s mapr -k
+   flags to enable Kerberos.
+   To enable Kerberos authentication for Impala, complete the following
+   steps:
+    1. Enable encryption between RPC services on Kerberos in core-site.xml
+       (change "hadoop.rpc.protection" value to "privacy") and copy
+       core-site.xml to Impala-conf directory:
+<property>
+  <name>hadoop.rpc.protection</name>
+  <value>privacy</value>
+</property>
+       And restart MapR-Warden to apply changes from core-site.xml.
+    2. Copy the following files to the $IMPALA_HOME/conf/ directory:
+          +
+$HIVE_HOME/conf/hive-site.xml
+          +
+$HADOOP_HOME/etc/hadoop/core-site.xml
+       Note: Any time the hive-site.xml file is modified, copy the file to
+       the $IMPALA_HOME/conf/ directory.
+    3. Create service principals for each host that runs impalad,
+       catalogd, or statestored and for the HTTP service. Principal names
+       take the following form:
+mapr/<fully.qualified.domain.name>@<KERBEROS.REALM>
+         a. Create an Impala service principal and specify the following
+            information:
+               o Name “mapr”
+               o Fully qualified domain name of each node running impalad
+               o Realm name
+kadmin: addprinc -requires_preauth -randkey -allow_renewable mapr/impala_host.ex
+ample.com@TEST.EXAMPLE.COM
+         b. Create an HTTP service principal.
+kadmin: addprinc -randkey HTTP/impala_host.example.com@TEST.EXAMPLE.COM
+    4. Create, merge, and distribute keytab files for the principals.
+         a. Create keytab files with both principals.
+kadmin: xst -k /opt/mapr/conf/mapr.keytab mapr/impala_host.example.com
+         b. Use the keytab utility to read the content of the keytab files
+            and then write the content to a new file.
+ktutil
+ktutil: rkt /opt/mapr/conf/mapr.keytab
+ktutil: rkt /opt/mapr/conf/http.keytab
+ktutil: wkt /opt/mapr/conf/mapr-http.keytab
+ktutil: quit
+         c. Optionally, test the credentials in the merged keytab file to
+            verify their validity and to verify that “renew until” data is
+            set to a future time.
+klist -e -k -t /opt/mapr/conf/mapr-http.keytab
+         d. Change the file owner to the mapr user to make mapr the only
+            user authorized to read the file content.
+chmod 400 /opt/mapr/conf/mapr-http.keytab
+    5. Edit /opt/mapr/impala/impala-<version>/conf/env.sh to include the
+       fully qualified domain name for the IMPALA_STATE_STORE_HOST,
+       IMPALA_STATE_STORE_HOST variables, and Kerberos options.
+         a. Set the IMPALA_STATE_STORE_HOST and CATALOG_SERVICE_HOST
+            variables to point to the fully qualified domain name.
+IMPALA_STATE_STORE_HOST=impala_host.example.com
+IMPALA_STATE_STORE_PORT=24000
+CATALOG_SERVICE_HOST=impala_host.example.com
+         b. Add the following Kerberos options for impalad, catalogd, and
+            statestored daemons using the IMPALA_SERVER_ARGS,
+            IMPALA_CATALOG_ARGS, and IMPALA_STATE_STORE_ARGS variables:
+-kerberos_reinit_interval=60
+-principal=mapr/impala_host.example.com@TEST.EXAMPLE.COM
+-keytab_file=/opt/mapr/conf/mapr-http.keytab
+
+IMPALA_SERVER_ARGS=" \
+     -log_dir=${IMPALA_LOG_DIR} \
+     -state_store_port=${IMPALA_STATE_STORE_PORT} \
+     -use_statestore \
+     -authorized_proxy_user_config=mapr=* \
+     -state_store_host=${IMPALA_STATE_STORE_HOST} \
+     -catalog_service_host=${CATALOG_SERVICE_HOST} \
+     -be_port=${IMPALA_BACKEND_PORT} \
+     -disable_admission_control=true \
+     -kerberos_reinit_interval=60 \
+     -principal=mapr/impala_host.example.com@TEST.EXAMPLE.COM \
+     -keytab_file=/opt/mapr/conf/mapr-http.keytab "
+         c. Restart Impala and the catalog and statestore services. See
+            [1]Managing Impala.
+         d. To enable Kerberos from the impala-shell, start the
+            impala-shell with the -s mapr -k flags.
+impala-shell -s mapr -k
+            For more information on changing the Impala defaults specified
+            in env.sh, see [2]Impala-Shell Commands.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/ManagingImpala-StartandSt.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/Impala-ShellCommandsandCo.html

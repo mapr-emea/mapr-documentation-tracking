@@ -1,0 +1,113 @@
+Installing OpenTSDB with a Package
+
+   The following steps describe how to install OpenTSDB from a package.
+   Be sure to install the OpenTSDB version that is required for your
+   AsyncHBase version. AsyncHBase 1.6 requires OpenTSDB 2.0. AsyncHBase
+   1.7 requires OpenTSDB 2.2.
+    1. Install the OpenTSDB RPM:
+         a. mkdir /root/opentsdbrpm
+         b. cd /root/opentsdbrpm
+         c. Download the version of OpenTSDB that you required. For
+            OpenTSDB 2.0: wget
+            [1]https://github.com/OpenTSDB/opentsdb/releases/download/v2.0
+            .0/opentsdb-2.0.0.noarch.rpm -O opentsdb-2.0.0.noarch.rpm For
+            OpenTSDB 2.2:
+            wget[2]https://github.com/OpenTSDB/opentsdb/releases/download/
+            v2.2.0/opentsdb-2.2.0.noarch.rpm-o opentsdb-2.2.0.noarch.rpm
+         d. rpm -ivh opentsdb-<version>.noarch.rpm
+    2. Configure OpenTSDB to work with MapR:
+         a. Edit the following tsdb scripts to cover MapR-specific
+            dependencies: /usr/share/opentsdb/bin/tsdb and /usr/bin/tsdb
+# Base of MapR installation
+BASEMAPR=${MAPR_HOME:-/opt/mapr}
+
+# Add MapR hadoop jars to classpath
+if test -d "$BASEMAPR/hadoop/hadoop-0.20.2/lib"; then
+ # hadoop conf directory to beginning of classpath (for core-site.xml)
+ CLASSPATH="$BASEMAPR/hadoop/hadoop-0.20.2/conf:$CLASSPATH"
+
+ for jar in "$BASEMAPR"/hadoop/hadoop-0.20.2/lib/*.jar; do
+   if [ "`echo $jar | grep slf4j`" != "" ]; then
+     continue
+   fi
+   CLASSPATH="$CLASSPATH:$jar"
+ done
+fi
+         b. Replace the asynchbase jar file (provide the current jar file
+            name in the cp command):
+cp
+/opt/mapr/asynchbase/asynchbase-<version>/asynchbase-<version>-mapr-*.jar
+/usr/share/opentsdb/lib/
+rm -f /usr/share/opentsdb/lib/asynchbase-<previous_version>.jar
+         c. Configure the opentsdb.conf files: These files must have the
+            following settings:
+/usr/share/opentsdb/etc/opentsdb/opentsdb.conf
+/etc/opentsdb/opentsdb.conf
+tsd.network.port = 4242
+tsd.http.staticroot = /usr/share/opentsdb/static/
+tsd.core.auto_create_metrics = false (for testing purposes only)
+tsd.storage.hbase.data_table = /tsdb
+tsd.storage.hbase.uid_table = /tsdb-uid
+tsd.storage.hbase.zk_quorum = <zookeeperNode>:<zookeeperP>
+         d. Edit the <OPENTSDB_ROOT_INSTALL_DIR>/src/create_table.sh file
+            and add "/" before the table names so that MapR recognizes
+            them as MapR-DB tables. Then, create tables in MapR-DB: .
+export COMPRESSION=NONE; export HBASE_HOME=/opt/mapr/hbase/hbase-<version>; /usr
+/share/opentsdb/tools/create_table.sh
+            See [3]Example: create_table.sh
+         e. Confirm that the tables are created:
+hadoop fs -ls /
+tr--------   3 root root            2 2014-12-12 01:47 /tsdb
+tr--------   3 root root            2 2014-12-12 01:47 /tsdb-meta
+tr--------   3 root root            2 2014-12-12 01:47 /tsdb-tree
+tr--------   3 root root            2 2014-12-12 01:47 /tsdb-uid
+    3. Start the tsd daemon. You can give executable permissions to the
+       tsdb script in /usr/share/opentsdb/bin, or you can directly use
+       tsdb (because of the dependencies you added earlier).
+chmod +x /usr/share/opentsdb/bin/tsdb
+/usr/share/opentsdb/bin/tsdb tsd --port=4242
+--staticroot="/usr/share/opentsdb/static/"
+--cachedir="/tmp/opentsdb" --auto-metric
+    4. Create a metric: /usr/share/opentsdb/bin/tsdb mkmetric
+       mymetric.stock
+    5. Test the metric:
+         a. Run a [4]Test Program for OpenTSDB that reads from the
+            [5]tmp_input file and sends put requests to opentsdb, which
+            saves the data to a MapR-DB table (tsdb/tsdb-uid).
+         b. Run aggregation queries (such as SUM) from the command line:
+            /usr/share/opentsdb/bin/tsdb query 1y-ago sum mymetric.stock
+            or tsdb query 1y-ago sum mymetric.stock
+         c. When you run the SUM command, the results should look like the
+            following:
+====
+mymetric.stock 1407165399000 680.500015 {}
+mymetric.stock 1407165401000 904.625000 {}
+mymetric.stock 1407165402000 904.612495 {}
+mymetric.stock 1407165403000 904.599991 {}
+mymetric.stock 1407165404000 904.599991 {}
+mymetric.stock 1407165405000 904.599991 {}
+mymetric.stock 1407165406000 904.599991 {}
+mymetric.stock 1407165407000 904.599991 {}
+mymetric.stock 1407165408000 904.599991 {}
+mymetric.stock 1407165409000 904.599991 {}
+mymetric.stock 1407165410000 904.599991 {}
+mymetric.stock 1407165411000 904.599991 {}
+mymetric.stock 1407165412000 904.599991 {}
+mymetric.stock 1407165413000 904.599991 {}
+mymetric.stock 1407165414000 904.599991 {}
+mymetric.stock 1407165415000 904.599991 {}
+mymetric.stock 1407165416000 904.599991 {}
+mymetric.stock 1407165417000 904.599991 {}
+mymetric.stock 1407165418000 904.599991 {}
+mymetric.stock 1407165419000 904.599991 {}
+mymetric.stock 1407165422000 904.678749 {}
+mymetric.stock 1407165423000 484.255005 {}
+====
+
+References
+
+   1. https://github.com/OpenTSDB/opentsdb/releases/download/v2.0.0/opentsdb-2.0.0.noarch.rpm
+   2. https://github.com/OpenTSDB/opentsdb/releases/download/v2.2.0/opentsdb-2.2.0.noarch.rpm
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AsyncHBase/AsyncHbase_UsingOpenTSDB_Example_create_table.sh.html#UsingOpenTSDBwithAsyncHBa_28220871-d3e496
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AsyncHBase/UsingOpenTSDBwithAsyncHBase_TestProgram.html#UsingOpenTSDBwithAsyncHBa_28220871-d3e851
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AsyncHBase/UsingOpenTSDB_tmp_input.html#UsingOpenTSDBwithAsyncHBa_28220871-d3e851

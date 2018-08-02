@@ -1,0 +1,70 @@
+Setting up Users from an LDAP Database
+
+   This diagram shows how the LDAP client embedded in Hue searches the
+   LDAP server's database for user names, and then adds them to the User
+   Admin directory for Hue. [27199517.png]
+
+   The following table shows the parameters you need to set in the ldap
+   section of the hue.ini file so you can import users.
+   Warning: The hue.ini file is located at
+   /opt/mapr/hue/hue-<version>/desktop/conf/.
+   Parameter Description Comments
+   ldap_url The URL of your LDAP server.
+   base_dn Top of the search tree, which defines the search scope.
+   bind_dn Distinguished name (DN) of the user to bind as. Can be omitted
+   for anonymous searches.
+   bind_password Password of the bind user. Can be omitted for anonymous
+   searches.
+   user_filter Limits the scope of the search by applying a filter. This
+   parameter is optional.
+   user_name_attr The attribute used for username in the LDAP schema.
+   Examples: cn (for common name) or uid (for user ID).
+
+   To set up Hue users by importing information from an LDAP database:
+    1. Establish communication with the LDAP server by setting the
+       ldap_url parameter in the ldap section of the hue.ini file.
+       Uncomment the line and change the value from the default (
+       [1]ldap://localhost ) to the URL for your LDAP server.
+# URL of the LDAP server
+    ##ldap_url=ldap://localhost
+    2. Provide the base_dn information to define the search scope.
+       Uncomment the line where base_dn is defined and replace with your
+       base_dn.
+# The search base for finding users and groups
+    ## base_dn="DC=mycompany,DC=com"
+    3. If your LDAP server does not support anonymous searches, you need
+       to provide the bind_dn and bind_password. Uncomment the lines with
+       these parameters and change the values to your bind_dn and your
+       bind_password.
+# Distinguished name of the user to bind as -- not necessary if the LDAP server
+    # supports anonymous searches
+    ## bind_dn="CN=ServiceAccount,DC=mycompany,DC=com"
+
+    # Password of the bind user -- not necessary if the LDAP server supports
+    # anonymous searches
+    ## bind_password=
+    4. If you want to narrow the scope of the directory search, specify a
+       user_filter in the users section under the ldap section of the
+       hue.ini file. This is optional.
+[[[users]]]
+
+      # Base filter for searching for users
+      ## user_filter="objectclass=*"
+    5. Set the user_name_attr parameter in the users section under the
+       ldap section of the hue.ini file. If your LDAP directory schema
+       does not use the attribute sAMAccountName for the username,
+       uncomment the line and change the value of the user_name_attr to
+       the attribute you use. For example, if the directory schema uses
+       the uid attribute, change the value of the parameter as shown:
+[[[users]]]
+
+      # The username attribute in the LDAP schema
+      ## user_name_attr=sAMAccountName
+user_name_attr=uid
+    6. Restart httpfs so ldap settings will take effect.
+    7. Restart Hue once all configuration changes have been made so the
+       changes will take effect.
+
+References
+
+   1. ldap://localhost/

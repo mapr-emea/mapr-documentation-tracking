@@ -1,0 +1,22 @@
+Balancing Overused and Above Average Bins
+
+   Storage pools in the Overused and Above Average bins are highly
+   utilized. The default threshold of “overused” is 90%, which means that
+   the first overused bin’s lower bound is 90%. You should not reset this
+   threshold, but you can, if necessary, by setting the value for the
+   parameter cldb.balancer.disk.overused.threshold using the maprcli
+   config save command. For example:
+maprcli config save -values {"cldb.balancer.disk.overused.threshold":"95"}
+
+   In scenarios when the cluster average is low, storage pools in Above
+   Average bins too might not be highly utilized. In this case, to prevent
+   unnecessary balancing activity, disk balancer uses an additional
+   criterion to prevent wasted moves: only those storage pools whose
+   utilization equals to or is greater than a certain threshold are
+   considered for balancing. This threshold is controlled by the
+   configurable parameter cldb.balancer.disk.threshold.percentage, whose
+   default value is 70%.
+   Note: If the threshold of the Overused bin is set below the default
+   value of 90%, the balancing threshold specified in the
+   cldb.balancer.disk.threshold.percentage parameter is also applicable to
+   Overused bins also.

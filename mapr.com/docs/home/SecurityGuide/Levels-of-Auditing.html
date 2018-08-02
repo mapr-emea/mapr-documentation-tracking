@@ -1,0 +1,84 @@
+Levels of Auditing
+
+   In contrast to auditing cluster-level operations, auditing of
+   filesystem, table, and stream operations needs to be enabled at
+   multiple levels. For auditing file, table, and stream operations, you
+   must first enable auditing at the cluster level and then enable
+   auditing at the volume level. If you want:
+     * Granular or selective auditing of content in the volume, you must
+       also enable auditing on each individual directory, file, table,
+       and/or stream in the volume, recursively from the root directory,
+       using the hadoop command. If auditing is enabled at the root
+       directory, all new files inherit the property.
+     * To audit all content (files, tables, and/or streams) in the volume,
+       you can set the forceaudit parameter at the volume level,
+       irrespective of what is set (or whether or not auditing is enabled)
+       at the individual file, table, and/or stream level.
+
+   In the following diagram, the illustration on the left shows data
+   auditing enabled at three levels: the cluster level, through the
+   [1]maprcli audit data command; the volume level, through any of the
+   three volume commands shown in the diagram; and the level of the
+   individual directory, file, table, or stream, recursively from the root
+   directory, using the hadoop command. This allows you to include and/or
+   exclude specific directories, files, tables, and streams for auditing.
+   If auditing is not enabled at any one of these levels, operations on an
+   object are not logged.
+
+   Alternatively, after enabling auditing at the cluster level, you can
+   enforce auditing for all directories, files, tables, and streams at the
+   volume level itself, irrespective of audit setting at the individual
+   file, table, and/or stream level, using:
+     * auditenabled and forceauditenable parameters with the [2]volume
+       create or [3]volume modify command.
+     * enabled and forceenable parameters with the [4]volume audit
+       command.
+
+   The illustration on the right shows auditing enabled at two levels: the
+   cluster level, through the [5]audit data command and the volume level
+   through [6]volume audit command (enabled and forceenable parameters).
+   Note: You can enable auditing at the volume level using the [7]volume
+   create and [8]volume modify commands also.
+
+   Because all levels are enabled, operations that, for example, a client
+   application makes on a directory, file, table, or stream are recorded
+   in an audit log.
+   [data_auditing_three_levels.png]
+
+   To give another example, in the following diagram, auditing is enabled
+   at the cluster level using the [9]audit data command and at the volume
+   level through the the auditenabled and forceauditenable parameters set
+   using any one of the volume commands. Also note that although auditing
+   is explicitly disabled at the directory, file, table, and/or stream
+   level, operations on all directories, files, tables, and streams in the
+   volume are audited because forceauditenable is set to true at the
+   volume level.
+   [data_audit_forceaudit.png]
+
+   For granular or selective auditing, the next diagram shows auditing
+   enabled at the cluster level and the volume level (with just the
+   auditenabled parameter), but not on the directory, file, table, or
+   stream that an operation is performed on. Although the two higher
+   levels are enabled for auditing, the operation is not logged in an
+   audit log because the objects on which auditing has to be performed on
+   is not enabled for auditing.
+   [data_auditing_two_levels.png]
+
+   For granular or selective auditing, to give one final example, in the
+   next diagram auditing is enabled on the individual directory, file,
+   table, or stream and at the cluster level. However, auditing is not
+   enabled at the volume level. Therefore, the operation that the client
+   application performs on the object is not recorded in an audit log.
+   [data_auditing_third_example.png]
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/audit-data.html#auditdata
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-audit.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/audit-data.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-audit.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/audit-data.html

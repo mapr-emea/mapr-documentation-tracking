@@ -1,0 +1,82 @@
+Replica Autosetup for Streams
+
+   The option to automatically set up stream replication, also known as
+   replica autosetup, performs the steps to set up and start the
+   replication of streams. The replica autosetup option is available
+   through the MCS and CLI.
+   In general, replica autosetup performs the following steps to set up
+   replication:
+    1. Creates a stream in the destination cluster.
+    2. Declares the new stream to be a replica of the source stream and
+       ensures that replication does not begin immediately after the next
+       step.
+    3. Declares the source stream as the original of the replica stream.
+    4. Loads a copy of the source stream into the replica.
+    5. For multi-master replication, replica autosetup declares the source
+       stream to be a replica of the new stream and then declares the new
+       stream to be an upstream source for the source stream.
+    6. Clears the paused replication state to start replication.
+
+   By default, replica autosetup uses the directcopy option. However,
+   based on how you run replica autosetup, you also have the option not to
+   use directcopy.
+
+Replica Autosetup with Directcopy (default)
+
+   The directcopy option uses gateways to perform all setup operations
+   including the initial population of data into the replica stream.
+   Directcopy is the default option when you setup stream replication
+   using the MCS or with the maprcli stream replica autosetup command.
+
+   When a client submits a request to automatically setup stream
+   replication to the cluster, the source cluster acknowledges the request
+   and begins to track the replica autosetup request from start to finish.
+   [StreamAutosetupReplication.png]
+   If a failure occurs when replica autosetup operations are in progress,
+   the source cluster resumes operations from the point of failure.
+   Note: To check the replication status of a stream, run the [1]stream
+   replica list command. To stop the automatic setup of stream
+   replication, run [2]stream replica remove, or delete the source or
+   replica stream.
+   Replica autosetup with directcopy provides the following benefits:
+     * Replica autosetup operations do not block the client from
+       submitting additional requests. When setting up stream replication,
+       the process to copy source data to the replica can be time
+       consuming. The client does not need to wait for the replica
+       autosetup request to complete before submitting another request.
+     * Source cluster retries replica autosetup operations in case of
+       failure. The source cluster keeps track of the replica autosetup
+       progress. This allows the source cluster to resume autosetup
+       operations in the event of an intermittent failure. If you choose
+       to not use directcopy, user intervention is required if a failure
+       occurs.
+     * Throttling of copy table operations is done by default. Throttling
+       prevents the initial copy of data from the source to the replica
+       stream from consuming all cluster resources.
+
+Replica Autosetup without Directcopy (not default)
+
+   Without the directcopy option, replica autosetup submits a majority of
+   the replication setup requests through the client and then runs the
+   mapr copystream utility to populate the initial table data. To use
+   replica autosetup without the directcopy option, run maprcli stream
+   replica autosetup command with the -directcopy parameter set to false.
+
+   Without the directcopy option, once a client submits an replica
+   autosetup request to the cluster, it must wait until the source cluster
+   sends a notification that the autosetup request is complete before it
+   can submit another request to the cluster. In this case, replica
+   autosetup uses the client connection to submit autosetup operation
+   requests such as create replica, add replica, and add upstream source.
+   Then, to populate the initial table data, it runs mapr copystream.
+   [StreamAutosetupReplication_noDC.png]
+
+   If a failure occurs when replica autosetup operations are in progress,
+   the client hangs and any replica streams that were created during the
+   failed autosetup operations must be manually deleted before you can try
+   to setup replication again.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_replica_list.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_replica_remove.html

@@ -1,0 +1,123 @@
+acl set
+
+   Modifies the ACL for a cluster or volume.
+
+   The acl set command specifies the entire ACL for a cluster or volume.
+   Any previous permissions are overwritten by the new values, and any
+   permissions omitted are removed. To use the acl set command, you must
+   have administrative (a) permissions on the volume and cluster for which
+   you are running the command. The permissions are specified as a
+   comma-separated list of permission codes. See [1]acl. You must specify
+   either a user or a group. When the type is volume, a volume name must
+   be specified using the name parameter.
+   Note: The acl set command removes any previous ACL values. If you wish
+   to preserve some of the permissions, you should either use the [2]acl
+   edit command instead of acl set, or use [3]acl show to list the values
+   before overwriting them.
+
+Syntax
+
+   CLI
+
+maprcli acl set
+    [ -cluster <cluster name> ]
+    [ -group <group> ]
+    [ -name <name> ]
+    -type cluster|volume
+    [ -user <user> ]
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host>:<port>/rest/acl/set?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+
+   cluster
+
+   The cluster on which to run the command.
+
+   group
+
+   Groups and allowed actions for each group. See [4]acl. Format:
+   <group>:<action>[,<action>...][ <group>:<action>[,<action...]]
+
+   name
+
+   The object name.
+
+   type
+
+   The object type (cluster or volume).
+
+   user
+
+   Users and allowed actions for each user. See [5]acl. Format:
+   <user>:<action>[,<action>...][ <user>:<action>[,<action...]]
+
+Examples
+
+   Give the user root full control of the my.cluster.com cluster and
+   remove all permissions for all other users:
+
+   CLI
+
+maprcli acl set -type cluster -user user10:fc
+
+   REST
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/acl/set?type=cluster&user=user10%
+3Afc' --user mapr:mapr
+{"timestamp":1525462091620,"timeofday":"2018-05-04 12:28:11.620 GMT-0700 PM","st
+atus":"OK","total":0,"data":[]}
+
+   Usage Example
+# maprcli acl show -type cluster
+Principal      Allowed actions
+User root      [login, ss, cv, a, fc]
+User lfedotov  [login, ss, cv, a, fc]
+User mapr      [login, ss, cv, a, fc]
+
+# maprcli acl set -type cluster -cluster my.cluster.com -user root:fc
+# maprcli acl show -type cluster
+Principal  Allowed actions
+User root  [login, ss, cv, a, fc]
+
+   Warning: Notice that the specified permissions have overwritten the
+   existing ACL.
+   Give multiple users specific permissions for the egVol1 volume and
+   remove all permissions for all other users:
+
+   CLI
+
+# maprcli acl set -type volume -name egVol1 -user m7user5:dump,restore,m m7user4
+:fc -json
+{
+        "timestamp":1525462647371,
+        "timeofday":"2018-05-04 12:37:27.371 GMT-0700 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ]
+}
+
+   REST
+
+# curl -k -X POST 'https://10.10.82.24:8443/rest/acl/set?type=volume&name=egVol1
+&user=m7user5%3Adump,restore,m%20m7user4%3Afc' --user mapr:mapr
+{"timestamp":1525463080941,"timeofday":"2018-05-04 12:44:40.941 GMT-0700 PM","st
+atus":"OK","total":0,"data":[]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl-edit.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl-show.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl.html

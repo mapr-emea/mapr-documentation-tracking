@@ -1,0 +1,152 @@
+Configuring User Impersonation with Hive
+
+   Complete the following steps on a secure or insecure MapR cluster to
+   configure user impersonation with Hive:
+
+Step 1: Modify drill-env.sh
+
+   Modify <DRILL_HOME>/conf/drill-env.sh to include the required
+   environment variables on each Drill node.
+
+   Insecure Cluster
+          On an insecure cluster, include the following environment
+          variable:
+
+export MAPR_IMPERSONATION_ENABLED=true
+
+   Secure Cluster
+          On a secure cluster, include the following environment
+          variables:
+
+export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Djava.security.auth.login.config=/opt/
+mapr/conf/mapr.login.conf -Dzookeeper.sasl.client=true"
+export DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Dmapr_sec_enabled=true -Dhadoop.login=
+maprsasl_keytab -Dzookeeper.saslprovider=com.mapr.security.maprsasl.MaprSaslProv
+ider -Dmapr.library.flatclass"
+export MAPR_TICKETFILE_LOCATION=/opt/mapr/conf/mapruserticket
+
+Step 2: Modify drill-override.conf
+
+   For secure and inecure clusters, modify
+   <DRILL_HOME>/conf/drill-override.conf on each Drill node to enable
+   impersonation in Drill, and set the [1]maximum number of chained user
+   hops that Drill allows.
+   Add the following configuration properties to the drill.exec block in
+   drill-override.conf:
+drill.exec: {
+ cluster-id: "<drill_cluster_name>",
+ zk.connect: "<hostname>:5181,<hostname>:5181,<hostname>:5181"
+ impersonation: {
+       enabled: true,
+       max_chained_user_hops: 3
+ }
+}
+
+Step 3: Modify the Hive Storage Plugin in Drill
+
+   Modify the Hive storage plugin configuration in the Drill Web UI based
+   on the authorization and security scenario for the cluster. You can
+   only access the Drill Web UI for a running Drillbit.
+   Complete the following steps to modify the Hive storage plugin
+   configuration:
+    1. Navigate to http://<drillbit_hostname>:8047, and select the Storage
+       tab.
+    2. Click Update next to the hive option.
+    3. In the configuration window, add the required properties based on
+       the authorization type and security scenario:
+
+        Storage Based Authorization or No Authorization Enabled
+                For a insecure cluster, add the following properties to
+                the configuration:
+
+{
+ type:"hive",
+ enabled: true,
+ configProps : {
+   "hive.metastore.uris" : "thrift://<metastore_hostname>:9083",
+   "fs.default.name" : "maprfs:///",
+   "hive.metastore.sasl.enabled" : "false",
+   "hive.server2.enable.doAs" : "true",
+   "hive.metastore.execute.setugi" : "true"
+ }
+}
+
+                For a secure cluster, add the following properties to the
+                configuration:
+
+{
+"type": "hive",
+"enabled": true,
+"configProps": {
+  "hive.metastore.uris": "thrift://<metastore_hostname>:9083",
+  "fs.default.name": "maprfs:///",
+  "hive.server2.enable.doAs": "true"
+   }
+}
+
+                Add the following additional properties if the Hive
+                metastore is configured with Kerberos in a secure cluster;
+                include a comma after each line except for the last:
+
+"hive.metastore.kerberos.principal": "hive/<metastore_thrift_server>"
+"hive.metastore.sasl.enabled": "true"
+
+        SQL Standard Based Authorization
+                For an insecure cluster, add the following properties to
+                the configuration:
+
+{
+ type:"hive",
+ enabled: true,
+ configProps : {
+   "hive.metastore.uris" : "thrift://<metastore_hostname>:9083",
+   "fs.default.name" : "maprfs:///",
+   "hive.security.authorization.enabled" : "true",
+   "hive.security.authenticator.manager" : "org.apache.hadoop.hive.ql.security.S
+essionStateUserAuthenticator",
+   "hive.security.authorization.manager" : "org.apache.hadoop.hive.ql.security.a
+uthorization.plugin.sqlstd.SQLStdHiveAuthorizerFactory",
+   "hive.metastore.sasl.enabled" : "false",
+   "hive.server2.enable.doAs" : "false",
+   "hive.metastore.execute.setugi" : "false"
+ }
+}
+
+                For a secure cluster, add the following properties to the
+                configuration:
+
+{
+"type": "hive",
+"enabled": true,
+"configProps": {
+  "hive.metastore.uris": " thrift://<metastore_hostname>:9083",
+  "fs.default.name": "maprfs:///",
+  "hive.security.authorization.enabled": "true",
+  "hive.security.authenticator.manager": "org.apache.hadoop.hive.ql.security.Ses
+sionStateUserAuthenticator",
+  "hive.security.authorization.manager": "org.apache.hadoop.hive.ql.security.aut
+horization.plugin.sqlstd.SQLStdHiveAuthorizerFactory",
+  "hive.server2.enable.doAs": "false",
+  "hive.metastore.execute.setugi": "true"
+ }
+}
+
+                Add the following additional properties if the Hive
+                metastore is configured with Kerberos in a secure cluster;
+                include a comma after each line except for the last:
+
+"hive.metastore.kerberos.principal": "hive/<metastore_thrift_server>"
+"hive.metastore.sasl.enabled": "true"
+
+Step 4: Restart Warden
+
+   Run the following command on all nodes to restart the Warden service:
+service mapr-warden restart
+
+   If you have clush installed, you can run the following command to
+   restart Warden on all nodes at once:
+clush –a "service mapr-warden restart"
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-config-impersonation-chaining.html#drill-config-impersonation-chaining

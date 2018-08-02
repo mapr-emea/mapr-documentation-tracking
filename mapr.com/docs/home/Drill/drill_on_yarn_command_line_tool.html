@@ -1,0 +1,198 @@
+Drill-on-YARN Command Line Tool
+
+   Run the Drill-on-YARN command line tool from the Drill-on-YARN client
+   and use it to start, stop, resize, and check the status of the Drill
+   cluster. When you launch Drill from the command line, the tool
+   automatically archives and uploads the “site” directory, which YARN
+   deploys (along with Drill) onto each node.
+   You can access the Drill-on-YARN command line tool in the following
+   directory:
+ $DRILL_HOME/bin/drill-on-yarn.sh --site $DRILL_SITE command
+
+   where command is the operation you want to perform, such as start.
+   To avoid having to type the site argument for each command, set an
+   environment variable:
+export DRILL_CONF_DIR=$DRILL_SITE
+
+   The following example shows the start command after setting the
+   environment variable:
+$DRILL_HOME/bin/drill-on-yarn.sh start
+
+Command Summary
+
+   The following table lists the commands and provides a brief summary for
+   each:
+   Command Description
+   start Starts the Drill cluster. Prints the startup status followed by a
+   summary of the application.
+   status Retrieves basic information about the Drill cluster.
+   stop Stops the Drill cluster.
+
+   resize <value>
+
+   resize + <increase_node_count_by>
+
+   resize - <decrease_ node_count_by>
+   Adds or removes nodes in the Drill cluster while the cluster runs. You
+   can specify the exact number of nodes you want to run, or you can use
+   +/- to increase or decrease the current node count by a certain amount.
+   clean Removes the cached Drill archive from the designated DFS
+   directory.
+
+Commands
+
+   The following sections provide detailed information and examples for
+   each of the commands listed in the command summary:
+
+   start
+          The start command launches Drill and provides a startup status
+          followed by a summary of the application.
+
+          The first line in the summary displays the cluster name from the
+          configuration file to confirm which cluster is starting.
+
+Launching Drill-on-YARN...
+
+          The next line shows the YARN application ID and tracks the job
+          status from Accepted to Running.
+
+Application ID: application_1462842354064_0001
+Application State: ACCEPTED
+Starting......
+Application State: RUNNING
+
+          Once the job starts, you see the YARN job tracking URL with the
+          Drill-on-YARN web UI URL.
+
+Application Master URL: http://<YARN_Job_Tracking_URL>:8048/
+
+          Once the application starts, the Drill-on-YARN writes an “appid”
+          file into the Drill installation directory:
+
+ls /opt/mapr/drill/drill-<version>
+…
+drillbits1.appid
+
+          The file name is the same as the Drill cluster ID. The file
+          contains the ID of the Drill-on-YARN application. The other
+          commands use this ID. You can run only one Drill application at
+          a time. If you attempt to start a second from the same client
+          machine on which you started the first, the client command
+          complains that the appid file already exists. If you attempt to
+          start the cluster from a different node, the second application
+          detects a conflict and shuts down again.
+
+          Example
+
+$DRILL_HOME/bin/drill-on-yarn.sh start
+
+Launching Drill-on-YARN...
+Application ID: application_1462842354064_0001
+Application State: ACCEPTED
+Starting......
+Application State: RUNNING
+Tracking URL: http://10.250.50.31:8088/proxy/application_1462842354064_0001/
+Application Master URL: http://10.250.50.31:8048/
+
+   status
+          The status command retrieves basic information about the Drill
+          cluster and provides a status summary.
+
+          The first several lines of the status summary provide
+          information about the state of YARN, which includes the
+          application ID, the application state, and YARN’s tracking URL
+          for the application.
+
+Application ID: application_1462842354064_0001
+Application State: RUNNING
+Host: yosemite/10.250.50.31
+Tracking URL:
+
+          Following the state of YARN information is the host on which the
+          Drill application is running, the queue on which the application
+          was placed, and the user who submitted the application. The
+          start time tells you when YARN started the application.
+
+http://10.250.50.31:8088/proxy/application_1462842354064_0001/
+Queue: default
+User: drilluser
+Start Time: 2016-05-09 16:56:40
+
+          The next few lines are specific to Drill, including the name of
+          the application (which you configured in the drill-on-yarn.conf
+          configuration file), the Drill Application Master URL, the
+          number of drillbits you requested to run, and the number
+          actually running.
+
+Application Name: Drill-on-YARN
+AM State: LIVE
+Target Drillbit Count: 1
+Live Drillbit Count: 1
+
+          Finally, the last line provides the URL for the Drill-on-YARN
+          web UI.
+
+For more information, visit: http://10.250.50.31:8048/
+
+          Example
+
+$DRILL_HOME/bin/drill-on-yarn.sh status
+
+Application ID: application_1462842354064_0001
+Application State: RUNNING
+Host: yosemite/10.250.50.31
+Tracking URL: http://10.250.50.31:8088/proxy/application_1462842354064_0001/
+Queue: default
+User: drilluser
+Start Time: 2016-05-09 16:56:40
+Application Name: Drill-on-YARN
+AM State: LIVE
+Target Drillbit Count: 1
+Live Drillbit Count: 1
+For more information, visit: http://10.250.50.31:8048/
+
+   stop
+          The stop command stops the Drill cluster. This command is
+          forceful and kills any in-flight queries. The output tracks the
+          shutdown and displays the final YARN application status.
+
+          Example
+
+$DRILL_HOME/bin/drill-on-yarn.sh stop
+
+Stopping Application ID: application_1462842354064_0001
+Stopping...
+Stopped.
+Final status: SUCCEEDED
+
+   resize
+          The resize command changes the number of nodes in the cluster.
+          You can use this command to add or remove nodes in the Drill
+          cluster as it runs. You can specify the change either by giving
+          the number of nodes you want to run, or by using the + or - to
+          specify the change in node count.
+
+          Drill adds nodes only if additional nodes are available from
+          YARN. If you request to stop more nodes than are running, Drill
+          stops all of the running nodes.
+
+          Example
+
+$DRILL_HOME/bin/drill-on-yarn.sh resize 10
+$DRILL_HOME/bin/drill-on-yarn.sh resize +2
+$DRILL_HOME/bin/drill-on-yarn.sh resize -3
+
+   clean
+          The clean command removes the cached Drill archive from the
+          designated DFS directory. If you run Drill-on-YARN for a
+          temporary cluster, Drill leaves the Drill software archive in
+          your designated DFS directory. Specifically, the first start
+          uploads the Drill archive to DFS. Stop leaves the archive in
+          DFS. Subsequent start commands reuse the cached archive if it is
+          the same size as the version on the local disk. Clean removes
+          the cached file, forcing Drill to upload a fresh copy if you
+          again restart the Drill cluster.
+
+          Example
+
+$DRILL_HOME/bin/drill-on-yarn.sh clean

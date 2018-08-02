@@ -1,0 +1,53 @@
+Upgrading the MapR Data Fabric for Kubernetes
+
+   This section describes how to upgrade the plug-in and dynamic
+   provisioner, or upgrade Pods with attached volumes.
+
+Upgrading the Plug-in and Provisioner
+
+   Before upgrading the plug-in, stop any Pods using the plug-in. You may
+   want to quiesce any traffic hitting the Pod before shutdown. Failure to
+   shut down the Pods before replacing the plug-in can lead to the Pod not
+   being able to access its data until it is restarted.
+
+   Removing the plug-in does not kill existing Pods. The Pods should only
+   lose their mounted storage when a new version of the plug-in is
+   installed and the libraries used to communicate with MapR software are
+   deleted.
+
+   Upgrading the provisioner does not require stopping Pods, but dynamic
+   provisioning (creating MapR volumes for new PersistentVolumeClaims)
+   will be unavailable during the provisioner upgrade.
+
+   Use these steps to upgrade the plug-in:
+    1. Stop any Pods using the the plug-in to be upgraded. Before shutting
+       down the Pod, you might want to quiesce any traffic hitting the
+       Pod.
+       Note: If any Pods that use the MapR Data Fabric for Kubernetes are
+       not shut down during the plug-in upgrade, those Pods will have
+       mount access removed and will need to be deleted and re-created as
+       new Pods. If existing Pods need to be removed or are stuck in the
+       Terminating state, you can delete them forcefully by using the
+       kubectl delete pod command:
+kubectl delete pod <pod-name> -n <pod-namespace> --force --grace-period=0
+    2. Download the new plug-in. See [1]Downloads.
+    3. Delete the old plug-in:
+kubectl delete -f kdf-<old_plugin>.yaml
+    4. Deploy the new plugin:
+kubectl create -f kdf-<new_plugin>.yaml
+
+Upgrading Pods with Attached Volumes
+
+   Pods with mounted volumes can be patched in place. See [2]Update API
+   Objects in Place Using kubectl patch. Volumes will disappear only when
+   the Pod is deleted. Patching a Pod does not affect the mount. When a
+   Pod is deleted, a volume disappears. However, if you delete a Pod using
+   a PersistentVolume and you leave the PVC alive, you can remount the
+   PersistentVolumeClaim and its PersistentVolume with a new Pod. In this
+   scenario, there is no disruption or need to recreate the
+   PersistentVolume.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_downloads.html#concept_lgd_1y1_scb
+   2. https://kubernetes.io/docs/tasks/run-application/update-api-object-kubectl-patch/

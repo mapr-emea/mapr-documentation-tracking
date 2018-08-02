@@ -1,0 +1,250 @@
+Customer Experience and Support Tools
+
+   MapR support tools now ships a CLI-based metering utility to better
+   understand your cluster and resource usage to give the MapR support
+   team insights that will help enhance your support experience.
+   Note: The Metering application is available for MapR version 5.2.2 or
+   higher.
+   This feature is described by the following major topics:
+     * [1]Installing the Metering Application
+     * [2]Uninstalling the Metering Application
+     * [3]Configuring the Metering Application
+     * [4]Using the Metering CLI
+     * [5]Uploading Metering Measurement Results to MapR
+     * [6]Example Metrics JSON
+
+Installing the Metering Application
+
+   Note: Before you begin, ensure you have Java 7+ installed.
+
+   The Metering application must be installed on your MapR cluster,
+   preferably on a non-critical node (for example, an edge node or a
+   non-CLDB node). In the case that your MapR cluster is offline, you may
+   also install Metering on an internet-connected computer in order to
+   upload the collected metrics.
+   To install the Metering application:
+     * [7]RedHat/CentOS
+     * [8]Ubuntu
+     * [9]SUSE
+     * [10]Linux/OSX (from tarball)
+     * [11]Windows
+
+    1. Create mapr-metering.repo file in /etc/yum.repos.d/ with the
+       contents:
+[mapr-metering]
+name=mapr-metering
+baseurl=http://package.mapr.com/releases/metering/redhat/
+gpgcheck=0
+    2. Run the following command:
+yum install mapr-metering
+    3. The Metering application is installed in the /opt/mapr/metering/
+       folder.
+
+    1. Add the following entry to /etc/apt/sources.list:
+deb http://package.mapr.com/releases/metering/ubuntu/ binary trusty
+    2. Run the following commands:
+apt-get update
+apt-get install mapr-metering
+    3. The Metering application is installed in the /opt/mapr/metering/
+       folder.
+
+    1. Run the following commands:
+zypper ar -f http://package.mapr.com/releases/metering/suse mapr-metering
+zypper install mapr-metering
+    2. The Metering application is installed in the /opt/mapr/metering/
+       folder.
+
+    1. Download package from
+       http://package.mapr.com/releases/metering/metering-latest.tar.
+    2. Create a metering folder at the desired installation location.
+    3. Extract the package contents into the metering folder.
+
+   For example, to install the Metering application at the current working
+   directory:
+wget http://package.mapr.com/releases/metering/metering-latest.tar
+mkdir metering
+tar -xvf metering-latest.tar -C metering
+cd metering
+
+    1. Download package from
+       http://package.mapr.com/releases/metering/metering-latest.tar.
+    2. Create a metering folder at the desired installation location.
+    3. Extract the package contents into the metering folder.
+
+   Note: The folder in which the Metering application is installed is
+   referred to as the "Metering Installation Directory".
+
+Uninstalling the Metering Application
+
+   To uninstall the Metering application:
+     * [12]RedHat/CentOS
+     * [13]Ubuntu
+     * [14]SUSE
+     * [15]From Tarball
+
+yum remove mapr-metering
+
+apt-get remove mapr-metering
+
+zypper rm mapr-metering
+
+     * If you are on a MapR cluster, run bin/metering --unschedule from
+       the "Metering Installation Directory".
+     * Delete the Metering Installation Directory.
+
+Using the Metering CLI
+
+   Note: The Metering application is available to be run as mapr or root
+   user ONLY.
+
+   The Metering CLI must be run on the MapR cluster from the "Metering
+   Installation Directory". The metrics are outputted in JSON format. See
+   [16]Metering Data Descriptions for a list of collected metrics (all
+   metrics are collected by default).
+
+   Syntax:
+bin/metering <option>
+
+   See [17]Metering CLI Options for a complete list of options.
+
+Configuring the Metering Application
+
+   Note: To schedule metric collection, ensure you have cron installed.
+
+   After installing the Metering application, it is recommended to run
+   bin/metering --configure to set the output location of the metrics and
+   schedule metric collection and/or upload.
+
+   You can also schedule or unschedule the metric collection with the
+   --cron or --unschedule options, respectively. See [18]Metering CLI
+   Options for more information.
+   Note: MapR recommends you schedule metric collection rather than
+   perform it manually.
+
+   The log level can be set from the resources/log4j.metering.properties
+   file. The log4j.rootLogger property can be set with ERROR, INFO, or
+   DEBUG (listed in increasing level of specificity).
+
+Uploading Metering Measurement Results to MapR
+
+   The process for uploading metrics (transmitting to MapR) depends on
+   whether the cluster has internet connectivity:
+
+   Connected to Internet
+     * To manually capture metrics and immediately upload it (transmit to
+       MapR), run: bin/metering --captureAndUpload.
+     * If metrics were captured to be uploaded at a later time, run:
+       bin/metering --upload.
+
+   Offline (air-gapped)
+    1. On the MapR cluster, run bin/metering --prepareForOfflineSend.
+    2. Transfer the resulting zip to an internet-connected computer.
+
+     * [19]Uploading Using Metering
+     * [20]SFTP
+     * [21]Email
+
+    1. Ensure that your internet-connected computer has the Metering
+       application installed.
+    2. On the internet-connected computer, run the localUpload command
+       from the "Metering Installation Directory".
+          + For Linux/OSX:
+bin/localUpload <path to meteringMetrics.zip>
+          + For Windows:
+bin\localUpload.bat <path to meteringMetrics.zip>
+
+   Upload the zip file to MapR's SFTP site at [22]https://sftp.mapr.com/
+   with your MapR SFTP login ID and password.
+   Email the zip file to support@mapr.com.
+
+Example Metrics JSON
+
+{
+  "clusterId":"4590606688340423841",
+  "clusterName":"cluster_name",
+  "mapRCoreBuildVersion":"6.0.0.20171109191718.GA",
+  "numberOfFileServerNodes":1,
+  "diskSpaceUsedInGB":128,
+  "diskSpaceAvailableInGB":4463,
+  "collectionDate":1519775607,
+  "isSecure":false,
+  "disk":{
+      "usedCapacityUnderMultiMFSInGB":128,
+      "availableCapacityUnderMultiMFSInGB":4463,
+      "usedCapacityUnderOneMFSInGB":0,
+      "availableCapacityUnderOneMFSInGB":0
+  },
+  "dbAndStreams":{
+      "isUsingDBTables":true,
+      "isUsingStreams":false,
+      "numberOfNodesWithDBAndOrStreamsOperations":1
+  },
+  "yarn":{
+      "numberOfNodesWithResourceManagerInstalled":1,
+      "numberOfNodesWithActiveResourceManager":1,
+      "numberOfNodesWithYarnHistoryServerInstalled":1,
+      "numberOfNodesWithActiveYarnHistoryServer":1,
+      "numberOfNodesWithNodeManagerInstalled":1,
+      "numberOfNodesWithActiveNodeManager":1
+  },
+  "drill":{
+      "numberOfNodesWithDrillBitInstalled":0,
+      "numberOfNodesWithActiveDrillBit":0
+  },
+  "spark":{
+      "numberOfNodesWithSparkMasterInstalled":0,
+      "numberOfNodesWithActiveSparkMaster":0,
+      "numberOfNodesWithSparkHistoryServerInstalled":1,
+      "numberOfNodesWithActiveSparkHistoryServer":1,
+      "sparkStandAlone":{
+         "numberOfActiveSparkWorkers":0,
+         "numberOfNodesWithOneOrMoreActiveSparkWorkers":0
+      },
+      "sparkYarn":{
+         "numberOfNodeManagersRunningSpark":0
+      }
+  },
+  "hive":{
+      "numberOfNodesWithHiveServer2Installed":1,
+      "numberOfNodesWithActiveHiveServer2":0,
+      "numberOfNodesWithHiveMetastoreInstalled":0,
+      "numberOfNodesWithActiveHiveMetastore":0,
+      "numberOfNodesWithHiveWebhcatInstalled":0,
+      "numberOfNodesWithActiveHiveWebhcat":0
+  },
+  "signature":"",
+  "meteringVersion":"1.18.1",
+  "id":"metering-1519775607-38d258ecc7e848dda3b1a8bf0793025c",
+  "meteringConfiguration":{
+      ...
+  }
+}
+
+   For a complete description of each metric, see [23]Metering Data
+   Descriptions.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#support-tools__install
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#support-tools__uninstall
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#support-tools__config
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#support-tools__collect
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#support-tools__upload-metrics
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#support-tools__types-metrics
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div1entry1
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div1entry2
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div1entry3
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div1entry4
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div1entry5
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div2entry1
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div2entry2
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div2entry3
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div2entry4
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/metering-data-descriptions.html
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/Metering_CLI_options.html
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/Metering_CLI_options.html
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div3entry1
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div3entry2
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/support-tools.html#div3entry3
+  22. https://sftp.mapr.com/
+  23. file://localhost/root/docsync/tmp/mapr.com/docs/home/home/metering-data-descriptions.html

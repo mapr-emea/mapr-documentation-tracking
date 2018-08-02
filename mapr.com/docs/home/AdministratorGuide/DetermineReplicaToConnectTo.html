@@ -1,0 +1,39 @@
+How Clients Connect to the Replica
+
+   When a client connects to the MapR cluster for I/Os, the client is
+   directed to the replica with the shortest distance. In order to
+   calculate the distance, every client is given a specific path based on
+   whether the client is connecting from within the cluster or from
+   outside the cluster.
+
+   For clients connecting from outside the cluster, because the topology
+   is unknown, MapR defines the path based on the topology configured in
+   the CLDB configuration property (cldb.default.node.topology), the
+   default rack (which is hardcoded as default-rack), and the client IP
+   address. For example, suppose the client IP address is 10.10.10.1 and
+   the value for the CLDB configuration property is default_topo. The
+   client topology (or path) is: /default_topo/default_rack/10.10.10.1.
+
+   For clients on the cluster, the client node has a known topology and
+   the path is built based on that topology, rack, and the client IP
+   address. For example, suppose the client IP address is 10.10.10.1 and
+   the client node topology is /topo1/rack1, the client path is:
+   /topo1/rack1/10.10.10.1.
+
+   Now, let’s suppose the following node topology:
+   [clientTopology.png]
+
+   For the client connecting from outside or within the cluster, the
+   replica that the client connects to is calculated based on the client’s
+   node topology (or path) and the distance between the nodes on the
+   cluster. When trying to find the nearest replica, the system does a
+   distance calculation based upon how far away the replica is from the
+   MapR client looking for the replica and chooses the replica with the
+   shortest topology or least number of hops from the client node. In the
+   above example, the client connecting from:
+     * Outside the cluster with the path
+       /default_topo/default_rack/10.10.10.1 will connect to replica2
+     * Within the cluster with the path:
+          + /topo1/rack1/10.10.10.1 will connect to replica1
+          + /topo1/rack2/10.10.10.2 will connect to replica2
+          + /topo1/rack3/10.10.10.3 will connect to replica2

@@ -1,0 +1,73 @@
+Data Generator Program
+
+   This simple test program generates data and sends repeated puts for the
+   metric over a socket connection.
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.Date;
+import java.util.Random;
+
+public class TestOpenTsdbAPI {
+   public static Random random = new Random();
+   public static long timeStamp = new Date().getTime()/1000; //in secs
+   public static void testTSDBConnection() throws Exception {
+       Socket sock = null;
+       PrintWriter pw = null;
+       String hostname = "10.10.10.230";
+       int port = 4242;
+       int count=1;
+       while(true) {
+           if(null==sock) {
+               sock = new Socket(hostname, port);
+               pw = new PrintWriter(sock.getOutputStream(), true);
+           }
+           pw.println(dataGen(0, 0, count));
+           pw.flush();
+           pw.println(dataGen(0, 1, count));
+           pw.flush();
+           pw.println(dataGen(1, 0, count));
+           pw.flush();
+           pw.println(dataGen(1, 1, count));
+           pw.flush();
+
+           if(++count==Integer.MAX_VALUE) break;
+           Thread.sleep(60000);
+       }
+   }
+   public static void main(String [] args) {
+       try {
+           testTSDBConnection();
+       } catch(Exception ex) {
+           ex.printStackTrace();
+       }
+   }
+
+   public static String dataGen(int web, int cpu, int count) {
+       int Low = 1;
+       int High = 99;
+       int val = random.nextInt(High-Low) + Low;
+       long timeStamp1 = new Date().getTime()/1000;
+       String dat = "put sys.cpu.user "+(timeStamp1)+" "+val+" host=webserver"+
+web +" cpu="+cpu;//(timeStamp+count)
+       System.out.println(dat);
+       return dat;
+   }
+}
+
+   For example, this program tries to put metrics for 2 hosts (webserver 0
+   and webserver 1). Each host has 2 CPUs (cpu 0 and cpu 1). Sample puts
+   look like this:
+put sys.cpu.user 1415300810 87 host=webserver0 cpu=0
+put sys.cpu.user 1415300810 66 host=webserver0 cpu=1
+put sys.cpu.user 1415300810 18 host=webserver1 cpu=0
+put sys.cpu.user 1415300810 26 host=webserver1 cpu=1
+
+put <metric> <timestamp> <value> <tag1>=<> <tag2>=<>
+
+   When you run the program, you should see entries that indicate that the
+   tags for the metric were created, and they should auto-complete on the
+   UI.
+UniqueId: Creating an ID for kind='tagv' name='webserver0'
+
+   You can also verify this from command line instead of the UI:
+<OpenTSDB-Root>/build/tsdb query 1y-ago sum sys.cpu.user

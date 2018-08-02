@@ -1,0 +1,53 @@
+Permissions on Arrays
+
+   When granting permissions on a field, if the field contains array data,
+   you must grant the permission on the array field. This grants access to
+   only array data in the field. It is also possible to set permissions on
+   subfields within nested documents that are stored in an array.
+
+Granting Permissions on Array Elements
+
+   Suppose you have the following documents where person is:
+     * An array of nested documents in document id001
+     * A single nested document in document id002
+     * A scalar value in document id003
+
+{
+    "_id" : "id001",
+    "person" : [
+        {"name" : {"last" : "Smith", "first" : "John"}},
+        {"name" : {"last" : "Subramanium", "first" : "Ananya"}}
+    ]
+}
+{
+    "_id" : "id002",
+    "person" : {"name" : {"last" : "Doe", "first" : "Jane"}}
+}
+{
+    "_id" : "id003",
+    "person" : "Unknown"
+}
+
+   If you grant a user read permission on the array person[], that user
+   can read every field in every nested document within the array in
+   document id001. The permission does not allow the user to read the
+   person field in documents id002 and id003. You must define a separate
+   permission on person.
+
+   You cannot grant permissions on individual elements in an array; for
+   example: person[1]. Granting permission on an array enables access to
+   the entire array.
+
+Granting Permissions on Nested Document Fields in an Array
+
+   If you want to restrict read access to only specific fields in the
+   array person[] , perform the following steps:
+    1. Deny the user read permission on the array person[].
+    2. Grant the user traverse permission on the array person[].
+    3. Grant the user read permission on the specific fields.
+
+   For example, to grant the user read permission on only the first names
+   in the nested documents, for the third step, grant read permission on
+   person[].name.first. The permission enables the user to read the fields
+   in only document id001. You must grant separate permissions on
+   person.name.first to enable reads on the field in document id002.

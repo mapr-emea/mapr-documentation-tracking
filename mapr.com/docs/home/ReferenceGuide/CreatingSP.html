@@ -1,0 +1,20 @@
+Creating a Storage Pool Using mrconfig
+
+   To create a storage pool using mrconfig:
+    1. Assume the disks /dev/sdb, /dev/sdc, and /dev/sdd are available;
+       initialize them with mrconfig disk init:
+/opt/mapr/server/mrconfig disk init /dev/sdb
+/opt/mapr/server/mrconfig disk init /dev/sdc
+/opt/mapr/server/mrconfig disk init /dev/sdd
+    2. Create a disk group with mrconfig dg create:
+/opt/mapr/server/mrconfig dg create raid0 -d 128 /dev/sdb /dev/sdc /dev/sdd
+    3. Create a concatenated disk group with mrconfig dg create concat by
+       specifying the primary drive.
+/opt/mapr/server/mrconfig dg create concat /dev/sdb
+    4. At this point, you can use mrconfig dg list to see the layout of
+       the disk group, and which disk is the primary disk. The primary
+       disk can be used in other commands to refer to the disk group as a
+       whole. Example:
+/opt/mapr/server/mrconfig dg list
+    5. From the disk group, create a storage pool with mrconfig sp make:
+/opt/mapr/server/mrconfig sp make /dev/sdb

@@ -1,0 +1,39 @@
+Copy Data Using the hdfs:// Protocol
+
+   Before you can copy data from an HDFS cluster to a MapR cluster using
+   the hdfs:// protocol, you must configure the MapR cluster to access the
+   HDFS cluster. To do this, complete the steps listed in [1]Configuring a
+   MapR Cluster to Access an HDFS Cluster for the security scenario that
+   best describes your HDFS and MapR clusters and then complete the steps
+   listed under [2]Verifying Access to an HDFS Cluster.
+   You also need the following information:
+     * <NameNode> - the IP address or hostname of the NameNode in the HDFS
+       cluster
+     * <NameNode Port> - the port for connecting to the NameNode in the
+       HDFS cluster
+     * <HDFS path> - the path to the HDFS directory from which you plan to
+       copy data
+     * <MapR-FS path> - the path in the MapR cluster to which you plan to
+       copy HDFS data
+     * <file> - a file in the HDFS path
+
+   To copy data from HDFS to MapR-FS using the hdfs:// protocol, complete
+   the following steps:
+    1. Run the following hadoop command to determine if the MapR cluster
+       can read the contents of a file in a specified directory on the
+       HDFS cluster:
+hadoop fs -cat <NameNode>:<NameNode port>/<HDFS path>/<file>
+       Example
+hadoop fs –cat hdfs://nn1:8020/user/sara/contents.xml
+    2. If the MapR cluster can read the contents of the file, run the
+       distcp command to copy the data from the HDFS cluster to the MapR
+       cluster:
+hadoop distcp hdfs://<NameNode>:<NameNode Port>/<HDFS path> maprfs://<MapR-FS pa
+th>
+       Example
+hadoop distcp hdfs://nn1:8020/user/sara maprfs:///user/sara
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Configuring-a-MapR-Cluster.html#Configuring-a-MapR-Cluste-Startinginrelease3.0-d3e62
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/VerifyingAccessToHDFSCluster.html#ConfiguringaMapRClusterto_26281156-d3e560

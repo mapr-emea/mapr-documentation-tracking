@@ -1,0 +1,142 @@
+mapr perfproducer
+
+   This utility runs a producer, generating messages and publishing them
+   to a MapR stream. Use this utility to run producers when you want to
+   estimate the performance of producers for your MapR-ES applications,
+   given your network configuration.
+
+   This utility starts a producer and generates data for the producer to
+   publish in messages to a MapR stream. When starting the utility, you
+   can specify how many topics the producer publishes to, how many
+   partitions to create for each topic, and how many messages to publish
+   to each partition. You can also specify the method for distributing
+   messages among the partitions in each topic.
+   For example, suppose you run the utility by issuing this command:
+mapr perfproducer -path /myVolume/myDirectory/stream_a -ntopics 40 -npart -5
+-nmsgs 100000 -rr true
+
+   The producer automatically creates 40 topics in the stream, creating
+   each topic as it writes the first message to that topic. Each topic is
+   created with 5 partitions. The producer writes 100,000 messages to each
+   partition for a total of 20,000,000 messages. After publishing all of
+   the messages, the utility terminates.
+
+   The mapr perfproducer utility uses the default values for all of the
+   configuration parameters that apply to producers. For a list of these
+   parameters, see [1]MapR-ES Configuration Parameters.
+
+   Each producer runs as a single thread. You can run multiple instances
+   of the utility at the same time. However, because producers can be
+   CPU-intensive, it is recommended to run at most 4 or 5 on a single
+   cluster node.
+
+   When multiple instances of the mapr perfproducer utility publish to a
+   single stream, the separate instances share topics. For example, if
+   -ntopics is set to 40 for each instance that publishes to a single
+   stream, together those instances create no more than 40 topics in the
+   stream and they share those topics.
+
+   It is recommended that all producers that publish to a single cluster
+   publish to the same number of topics and partitions within those
+   topics. Therefore, use the same values for -ntopics and -npart for each
+   instance of the mapr perfproducer utility that shares a stream with
+   other instances.
+
+   Monitor the performance of the running instances of the mapr
+   perfproducer utility by issuing the maprcli command [2]stream topic
+   info at intervals, as described in [3]Monitoring Producers. The command
+   stream topic info shows statistics for single topics. Because all of
+   the topics that mapr perfproducer creates have the same number of
+   partitions, and because mapr perfproducer writes the same number of
+   messages to each partition, you can assume that the statistics that the
+   command stream topic info displays for any one topic are close to the
+   statistics for any other topic. The naming convention that mapr
+   perfproducer uses when creating topics is simply topicn, which produces
+   the names topic0, topic1, and so on. You can run the command stream
+   topic info with any one of these names as the value of the -topic
+   parameter.
+
+   To simulate consumers to estimate the performance of MapR-ES in your
+   network configuration, run one or more instances of the mapr
+   perfconsumer utility against the stream.
+
+Prerequisites for running this utility
+
+     * Create a MapR stream in a MapR cluster for the mapr perfproducer
+       utility to publish messages to. See [4]stream create.
+       If you plan to replicate the stream for the purposes of the
+       performance estimate, create the replica stream. Then, start
+       replication from the first stream to the replica stream. For
+       instructions on setting up replication between streams, see
+       [5]Managing Stream Replication.
+     * Ensure that the user ID that runs the mapr perfproducer utility has
+       the readAce and writeAce permissions on the volume where the stream
+       is located.
+     * Ensure that the user ID that runs the mapr perfproducer utility has
+       the produceperm and topicperm permissions on the stream.
+
+   For information about how to set permissions on volumes, see [6]Setting
+   Whole Volume ACEs.
+
+   For information about how to set permissions on streams, see
+   [7]Enabling Table and Stream Authorizations with ACEs.
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this utility unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+mapr perfproducer
+-path <stream-full-name>
+[ -ntopics <num topics> (default: 2) ]
+[ -npart <numpartitions per topic> (default: 4) ]
+[ -nmsgs <num messages per topicfeed> (default: 100000) ]
+[ -msgsz <msg value size> (default: 200) ]
+[ -rr <round robin true/false> (default: false) ]
+[ -hashkey <true/false> (default: false) ]
+
+Parameters
+
+   Parameter Description
+   path The path to the stream.
+   ntopics The number of topics for the producer to publish to in the
+   stream.
+
+   The default is 2.
+   npart The number of partitions to create for each topic.
+
+   The default is 4.
+   nmsgs The number of messages to publish to each partition.
+
+   The default is 100,000.
+   msgz The size of each message in bytes.
+
+   The default is 200 bytes.
+   rr Specifies to publish messages to partitions within a topic in
+   round-robin fashion. See [8]How Partitions are Chosen for Messages for
+   detail about this method of distributing messages among topic
+   partitions.
+   Note: This parameter is incompatible with the -hashkey parameter. You
+   must set one or the other to true, but not both.
+
+   The default is false.
+   hashkey Specifies to distribute messages among topic partitions
+   according to the hash of each message key. See [9]How Partitions are
+   Chosen for Messages for detail about this method of distributing
+   messages among topic partitions.
+   Note: This parameter is incompatible with the -rr parameter. You must
+   set one or the other to true, but not both.
+
+   The default is true.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/configuration-parameters.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_info.html#stream_topic_info
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/monitoring_produc.html#monitoring_produc
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/ManagingStreamReplication.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/how_partitions_are_chosen_for_messages.html#how_partitions_are_chosen_for_messages
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/how_partitions_are_chosen_for_messages.html#how_partitions_are_chosen_for_messages

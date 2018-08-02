@@ -1,0 +1,39 @@
+Configuring Inbound Impersonation
+
+   Administrators can configure inbound impersonation. You can define
+   administrative users through the security.admin.user_groups and
+   security.admin.users options.
+   Complete the following steps to enable inbound impersonation:
+    1. If user impersonation is not enabled, you must enable it before
+       configuring inbound impersonation. To enable user impersonation,
+       edit /opt/mapr/drill/drill-<version>/drill-override.conf and set
+       the option to true, as shown:
+{
+      drill.exec.impersonation.enabled: true,
+      ...
+      }
+    2. Define inbound impersonation policies. For example, the following
+       ALTER SYSTEM statement authorizes:
+          + puser1 to impersonate any user (use * as a wildcard character)
+          + puser2 to impersonate euser1 and all users in egroup2
+          + all users in pgroup3 to impersonate all users in egroup3
+ALTER SYSTEM SET `exec.impersonation.inbound_policies`='[
+  { proxy_principals : { users: ["puser1"] },
+    target_principals: { users: ["*"] } },
+  { proxy_principals : { users: ["puser2"] },
+    target_principals: { users: ["euser1"], groups :  ["egroup2"] } },
+  { proxy_principals : { groups: ["pgroup3"] },
+    target_principals: { groups: ["egroup3"] } } ]';
+       Policy format:
+{ proxy_principals : { users : ["...", "..."], groups : ["...", "..."] },
+  target_principals: { users : ["...", "..."], groups : ["...", "..."] } }
+    3. Ensure that the proxy user (application) passes the username of the
+       impersonation target user to Drill when creating a connection
+       through the impersonation_target connection property. For example,
+       through sqlline:
+bin/sqlline –u "jdbc:drill:schema=dfs;zk=myclusterzk;impersonation_target=euser1
+" -n puser1 -p ppass1
+
+   Note: In this example, puser1 is the user submitting the queries. This
+   user is authenticated. Since this user is authorized to impersonate any
+   user, queries through the established connection are run as euser1.

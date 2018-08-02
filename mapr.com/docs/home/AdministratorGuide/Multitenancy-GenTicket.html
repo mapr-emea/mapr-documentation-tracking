@@ -1,0 +1,40 @@
+Generating a Ticket for a Tenant
+
+   Tenant tickets allow tenant users to access the tenant volume on the
+   cluster (when you have a [1]multi-tenant environment on MFS). Generate
+   the tenant ticket on the cluster and copy it to the tenant host(s) to
+   grant tenant users access to the provisioned storage.
+   To generate a tenant ticket, run one of the following commands on the
+   cluster:
+$ maprlogin generateticket -type tenant -cluster <cluster_name> -user <tenant_ad
+min_user> -duration <seconds> -out <ticket_file_path>.txt
+
+   Note: For more information, see the [2]maprlogin command.
+   By default:
+     * Tenant ticket is stored in /tmp and can only be read by that user.
+       To change the default location, specify the path to the desired
+       location with the out parameter.
+     * Tenant ticket has no expiration. To change the expiration time,
+       specify duration for the ticket with the command.
+
+   In the tenant tickets, the value for CanImpersonate and tenant will
+   always be true. For example, when you run the maprlogin print command,
+   your output should look similar to the following:
+Opening keyfile /user/clstrAdmin/tenant_user_ticket.txt
+tenantHost: user = tenant_user, created = 'Mon Jul 11 07:14:53 UTC 2016',
+expires = 'Mon Jul 11 07:14:53 UTC 12016', RenewalTill = 'Mon Jul 11 07:14:53 UT
+C 12016',
+uid = 500, gids = 500, 42, CanImpersonate = true, tenant = true
+
+   To grant access to tenant users, the tenant ticket must be copied over
+   to the tenant hosts.
+   After generating the ticket, do the following:
+    1. Reset the permissions on the ticket to grant the tenant admin read
+       permissions on the ticket.
+    2. Move the ticket out of the default /tmp directory to a secure
+       location on the tenant host(s).
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Multitenancy-Overview.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility

@@ -1,0 +1,82 @@
+table region pack
+
+   Manually triggers the packing of regions.
+
+   MapR-DB automatically packs regions; however, you can use this command
+   to reclaim space that is consumed by expired rows or to avoid read
+   amplification.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce and [2]writeAce on the volume
+     * [3]lookupdir on directories in the path
+     * packperm permission on the table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table region pack
+  -path <table path>
+  -fid <fid>|all
+  [ -nthreads <number of threads> ]
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/region/pack?path=<path>&fid=<fid>&<paramet
+ers>'
+  -u <username>:<password>
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Parameters
+
+   Parameter Description
+   path
+
+   Specifies the path to the table.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, if you want to pack a table named test under
+       volume1 which has a mount point at /volume1, specify the following
+       path: /volume1/test
+
+     * For a path on another cluster, you must also specify the cluster
+       name in the path. For example, if you want to pack a table named
+       customer under volume1 in the sanfrancisco cluster, specify the
+       following path: /mapr/sanfrancisco/volume1/customer
+
+   fid Specifies that you want to pack all table regions or a single table
+   region that you identify with a FID. The output of maprcli [4]table
+   region list lists the FIDs for the table.
+   nthreads Specifies the number of threads allocated to process the
+   packing of table regions. Default:16
+
+Example
+
+   Packs the specified region:
+
+   CLI
+
+maprcli table region pack -path /user/test5 -fid 2086.32.131296
+
+   REST
+
+curl -k -X POST \
+  'https://myhost:8443/rest/table/region/pack?path=%2Fuser%2Ftest5&fid=2086.32.1
+31296' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-region-list.html

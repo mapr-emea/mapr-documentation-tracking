@@ -1,0 +1,82 @@
+Gateways for Replicating MapR-DB Tables
+
+   In MapR-DB table replication, MapR-DB replicates updates to tables
+   (binary and JSON) on source MapR clusters to replicas of those tables
+   on destination MapR clusters. Gateways are services that receive these
+   updates and apply them to the replicas.
+   To set up gateways for replicating MapR-DB tables,
+     * On the nodes of destination clusters, configure the gateways. You
+       must configure gateways in destination clusters.
+       Note: If the destination cluster is remote from the source cluster,
+       then the gateways must be in the remote cluster. If the destination
+       cluster is the source cluster, meaning that a source table and its
+       replica are located in a single cluster, then the gateways must be
+       in the local cluster.
+     * On the source clusters, list the destination cluster and the
+       gateways that are running on them.
+
+   For information on configuring and managing gateways, see:
+     * [1]Configuring Gateways for Table and Stream Replication
+     * [2]Managing Gateways
+
+How Replication Works
+
+   During replication, MapR-DB sends source table updates to the gateways
+   on the destination clusters where the replicas of those source tables
+   are located. Gateways batch the updates and then apply them to
+   replicas.
+
+   All updates from a source table arrive at a replica after having been
+   authenticated at a gateway. Therefore, access control expressions on
+   the replica that control permissions for updates to column families and
+   columns are irrelevant; gateways have the implicit authority to update
+   replicas.
+
+   MapR-DB distributes updates to a destination cluster’s gateways in
+   round-robin fashion. If a gateway is down or unreachable, MapR-DB
+   chooses another gateway or retries the operation on the same gateway.
+   Note: If a table is replicated to another table, using the replication
+   gateway, and you run a truncate operation on the source table, this
+   operation is not replicated.
+
+Gateways on nodes in remote destination MapR clusters
+
+   In this type of topology, gateways receive updates that are made to
+   source tables, authenticate with the destination cluster on behalf of
+   the source cluster, and apply the updates to the corresponding
+   replicas.
+
+   This schematic diagram of basic intercluster master-slave replication
+   shows updates to the customers table in the cluster sanfrancisco being
+   sent to gateways. The gateways then apply the updates to the replica
+   that is in the cluster newyork.
+
+   [29917269.jpg]
+
+   The gateways on a destination cluster are not assigned to particular
+   replicas. They apply updates to all replicas on the destination
+   cluster. For example, in this diagram updates to two source tables in
+   the cluster sanfrancisco are being replicated to two replicas in the
+   cluster newyork. There are four gateways. Each gateway receives updates
+   to both source tables, and each gateway applies those updates to both
+   replicas.
+
+   [29917270.jpg]
+
+Gateways on nodes within a MapR cluster serving as source and destination
+
+   In this type of topology, gateways again receive updates that are made
+   to source tables and apply the updates to the replicas. However, all of
+   this activity takes place within a single MapR cluster.
+
+   This schematic diagram of basic intracluster master-slave replication
+   shows updates to the customersA table in the cluster sanfrancisco being
+   sent to gateways. The gateways then apply the updates to the table
+   customersB.
+
+   [29917271.jpg]
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/Gateways-managing.html

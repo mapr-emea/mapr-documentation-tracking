@@ -1,0 +1,63 @@
+Manual Rolling Upgrade Procedure
+
+   You must complete a series of upgrade steps for each node in each
+   upgrade group.
+
+   Complete the following upgrade steps for each node in each upgrade
+   group.
+    1. Download the archive file from
+       [1]http://package.mapr.com/releases/.
+    2. Extract the archive file. When you upgrade each package, be sure to
+       specify the full path to the files in this local directory.
+       tar -xzvf <archive file>
+    3. Run commands to determine if a patch is installed. If the commands
+       display no output, no patch is installed.
+          + RHEL/CentOS and SUSE: rpm -qa mapr-patch
+          + Ubuntu: dpkg -l | grep mapr-patch
+    4. Get the default MapReduce mode for the cluster.
+       maprcli cluster mapreduce get
+    5. Set the node to maintenance mode.
+       sudo maprcli node maintenance -nodes <hostname> -timeoutminutes 30
+    6. Notify the CLDB that the node is going to be upgraded.
+       sudo maprcli notifyupgrade start -node <hostname>
+    7. Stop Warden.
+       sudo service mapr-warden stop
+    8. If ZooKeeper is installed on the node, stop ZooKeeper.
+       service mapr-zookeeper stop
+    9. Remove any patches installed on the node.
+          + RHEL/CentOS or SUSE: sudo rpm -e mapr-patch
+          + Ubuntu: sudo apt-get -y remove mapr-patch
+   10. Upgrade each MapR package on the node based on the defined
+       [2]package upgrade order by running this command for each package:
+          + RHEL/CentOS or SUSE: sudo rpm --quiet --force --nosignature -U
+            </FullPathToPackage/PackageName.rpm>
+          + Ubuntu: sudo dpkg --force-all -i
+            </FullPathToPackage/PackageName.rpm>
+   11. Configure the node.
+       sudo /opt/mapr/server/configure.sh -R
+   12. If ZooKeeper is installed on the node, start ZooKeeper.
+service mapr-zookeeper start
+   13. Start Warden.
+       sudo service mapr-warden start
+   14. Check that the CLDB is running. If output is displayed, the CLDB is
+       running. If not, start CLDB.
+maprcli node list
+   15. Unset maintenance mode on the node, notify the CLDB about the
+       upgraded version, and about the finished status of the upgrade
+       process.
+sudo maprcli node maintenance -nodes <hostname> -timeoutminutes 0
+sudo maprcli config save -values {mapr.targetversion:"`cat /opt/mapr/MapRBuildVe
+rsion`"}
+sudo maprcli notifyupgrade finish –node <hostname>
+   16. Wait for the containers to synchronize, run the following command,
+       and check that there is no output.
+/opt/mapr/server/mrconfig info containers resync local
+       No output signifies that the containers are synchronized.
+
+   See [3]Post-Upgrade Steps for MapR Core
+
+References
+
+   1. http://package.mapr.com/releases/
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Manual-Rolling-Upgrade.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PostUpgradeCore.html

@@ -1,0 +1,111 @@
+Configuring SSL/TLS
+
+   Enable SSL in <DRILL_INSTALL_HOME>/conf/drill-override.conf. You can
+   use several configuration options to customize SSL/TLS.
+   You must restart the Drillbit process on each node after you modify the
+   configuration options, as shown:
+$ maprcli node services -name drill-bits -action restart -nodes <node host names
+ separated by a space>
+
+   The following sections provide information and instructions for
+   enabling and configuring SSL:
+
+Enabling SSL
+
+   When SSL is enabled, all Drill clients, such as JDBC and ODBC, must
+   connect to Drill servers using SSL. Enable SSL in the Drill startup
+   configuration file, drill-override.conf, located in
+   /opt/mapr/drill/drill-<version>/conf.
+
+   To enable SSL for Drill, set the
+   drill.exec.security.user.encryption.ssl.enabled option in
+   drill-override.conf to "true."
+
+Configuring SSL
+
+   You can customize SSL on a Drillbit through the SSL configuration
+   options. You can set the options from the command-line (using Java
+   system properties), in the drill-override.conf file, or in the property
+   file to which the Hadoop parameter hadoop.ssl.server.conf points
+   (recommended).
+   Note: Specifying values in drill-override.conf can expose the security
+   parameters to end users. Administrators should set these values in the
+   Hadoop security file and restrict permissions on that file.
+
+   If a parameter is specified in multiple places, the value in the Hadoop
+   configuration takes precedence over the Drill configuration, which
+   takes precedence over the system property.
+   The Hadoop configuration is specified in the file pointed to by the
+   hadoop.ssl.server.conf parameter in the Hadoop core-site.xml file.
+   Typically, this parameter points to $HADOOP_CONF/ssl-server.xml, which
+   contains the property names to configure SSL. Both the core-site.xml
+   file and the ssl-server.xml file must exist in Drill’s classpath.
+   Drill’s SSL configuration picks up the Hadoop SSL configuration.
+   Note: Since the Drillbit implementation is based on JSSE, several
+   standard parameters that apply to JSSE will also apply to the Drillbit,
+   however you typically do not need to configure JSSE parameters.
+   The following table lists the SSL configuration options with their
+   descriptions and default values:
+   Drill Property Name Hadoop Property Name System Property Name
+   Description Allowed Values Drill Default
+   drill.exec.security.user.encryption.ssl.enabled     Enable or disable
+   TLS for Drill client - Drill Server communication. You must set this
+   option in drill-override.conf. true,false false
+   drill.exec.ssl.protocol     The version of the TLS protocol to use
+
+   TLS, TLSV1, TLSv1.1, TLSv1.2
+   TLSv1.2 (recommended)
+   drill.exec.ssl.keyStoreType ssl.server.keystore.type
+   javax.net.ssl.keyStoreType Format of the keystore file
+
+   jks, jceks, pkcs12
+   JKS
+   drill.exec.ssl.keyStorePath ssl.server.keystore.location
+   javax.net.ssl.keyStore Location of the Java keystore file containing
+   the Drillbit’s own certificate and private key. On Windows, the
+   specified pathname must use forward slashes, /, in place of
+   backslashes.
+   drill.exec.ssl.keyStorePassword ssl.server.keystore.password
+   javax.net.ssl.keyStorePassword Password to access the private key from
+   the keystore file. This password is used twice: To unlock the keystore
+   file (store password), and to decrypt the private key stored in the
+   keystore (key password) unless a key password is specified separately.
+
+   drill.exec.ssl.keyPassword ssl.server.keystore.keypassword   Password
+   to access the private key from the keystore file. May be different from
+   the keystore password.
+   drill.exec.ssl.trustStoreType ssl.server.truststore.type
+   javax.net.ssl.trustStoreType Format of the truststore file
+
+   jks, jceks, pkcs12
+   JKS
+   drill.exec.ssl.trustStorePath ssl.server.truststore.location
+   javax.net.ssl.trustStore Location of the Java keystore file containing
+   the collection of CA certificates trusted by the Drill client. On
+   Windows, the specified pathname must use forward slashes, /, in place
+   of backslashes.
+   Note: If the trustStorePath is not provided, Drill ignores the
+   trustStorePassword parameter and gets the default Java truststore
+   instead, which causes issues if the Java truststore has a non-default
+   password. The Java APIs to load the default keystore assume the default
+   password. The only way to use the default keystore with a non-default
+   password is to specify both the path and the password to the keystore.
+   To work around this issue, pass the default Java truststore to the
+   trustStorePath parameter.
+
+   drill.exec.ssl.trustStorePassword ssl.server.truststore.password
+   javax.net.ssl.trustStorePassword Password to access the private key
+   from the keystore file specified as the truststore.
+   drill.exec.ssl.provider     Changes the underlying implementation to
+   the chosen value. OPENSSL/JDK default: JDK
+   drill.exec.ssl.useHadoopConfig
+
+   Use the setting in the hadoop configuration file.
+
+   The hadoop configuration is specified in the file pointed to by the
+   hadoop.ssl.server.conf parameter in the core-site.xml file. Typically,
+   this parameter points to $HADOOP_CONF/ssl-server.xml which contains the
+   property names to configure TLS.
+   true/false
+
+   default:true

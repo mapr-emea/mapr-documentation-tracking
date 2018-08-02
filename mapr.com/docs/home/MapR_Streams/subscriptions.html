@@ -1,0 +1,89 @@
+Consumer Subscriptions
+
+   Consumers subscribe to topics. When a consumer subscribes to a topic or
+   partition, it means that the consumer wants to receive messages from
+   that topic or partition. A subscription is the list of the topics,
+   specific partitions, or both that a consumer is subscribed to.
+
+   For example, an analytics application might subscribe to the topics
+   rfids_productA, rfids_productB, and more to track movement of products
+   from factories to distribution centers. A reporting tool might
+   subscribe to the topics meters_NW, meters_SW, and more to get a report
+   of electricity usage in different geographic regions that a power
+   company services.
+   Consumers can subscribe to:
+
+   Topics
+          When a consumer subscribes to a topic, it reads messages from
+          all of the partitions that are in the topic. The exception is
+          when a consumer is part of a consumer group. Consumer groups and
+          this exception are explained in [1]Consumer Groups.
+
+          Consumers can subscribe to topics in two ways:
+
+        By name
+                Consumers specify the names of the topics that they
+                subscribe to.
+
+        By regular expression
+                Consumers specify a regular expression and subscribe to
+                all topics with names that match the regular expression.
+
+                The ability to use regular expressions is helpful when the
+                -autocreate parameter for a stream is set to true and
+                producers are allowed to create topics automatically at
+                runtime.
+
+                To unsubscribe from topics that you subscribed to with
+                regular expressions, you must use the same regular
+                expressions.
+
+                For example, suppose that you use this regular expression
+                to subscribe to topic0 and topic1:
+
+topic[0-1]
+
+                Next, you add topic2, topic3, and topic4 to the
+                subscription, like this:
+
+topic[0-4]
+
+                Trying subsequently to unsubscribe from, say, topic0 has
+                no effect. The consumer remains subscribed to it because
+                topic0 was subscribed to as part of a regular expression.
+
+                Trying to unsubscribe from topic[0-1] also has no effect
+                because the regular expression topic[0-4] was used after
+                topic[0-1], and the latter is a superset of the former.
+
+                To unsubscribe from topic0, you would have to follow these
+                steps:
+
+              1. Unsubscribe from topic[0-4]. This step unsubscribes you
+                 from topic2, topic3, and topic4. You must follow this
+                 step because a) this regular expression was used last,
+                 and b) because it is a superset of topic[0-1]. The order
+                 in which regular expressions are used in subscriptions
+                 matters. If you were to unsubscribe from topic[0-1]
+                 first, you would still be subscribed to topic[0-4].
+              2. Unsubscribe from topic[0-1]. This step unsubscribes you
+                 from topic0 and topic1.
+
+   Partitions
+          Consumers can subscribe to individual partitions within topics.
+          This is helpful in cases where you want a consumer to read the
+          messages published to a specific partition. For example, a
+          producer might publish messages for high-priority data to a
+          specific partition for processing by a dedicated consumer.
+
+          When a consumer subscribes to individual partitions within a
+          topic, the consumer does not receive messages from any of the
+          other partitions in the topic.
+
+          Subscriptions to individual partitions can cause problems in
+          consumer groups, as explained in the section [2]Consumer Groups.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/consumer_groups.html#consumer_groups
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/consumer_groups.html#consumer_groups

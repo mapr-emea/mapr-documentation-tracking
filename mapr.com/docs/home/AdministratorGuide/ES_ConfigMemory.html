@@ -1,0 +1,62 @@
+Configure the Elasticsearch Service Heap Size
+
+   The Elasticsearch service is memory-intensive. By default, the
+   Elasticsearch service is configured to use a minimum and maximum heap
+   size of 2 GB. You can override these default values in the jvm.options
+   file. Restart Elasticsearch after you modify the settings.
+
+   The jvm.options file centralizes arguments to the Java Virtual Machine
+   to simplify the management of the JVM options. You can no longer set
+   the JVM options through the ES_MIN_MEM, ES_MAX_MEM, ES_HEAP_SIZE,
+   ES_HEAP_NEWSIZE, ES_DIRECT_SIZE, ES_USE_IPV4,ES_GC_OPTS,
+   ES_GC_LOG_FILE, and JAVA_OPTS environment variables.
+   If you installed the Elasticsearch service from the TAR or ZIP
+   distributions, you can locate the jvm.options file in
+   config/jvm.options. If you installed ElasticSearch from the Debian or
+   RPM packages, you can locate the jvm.options file in
+   $ES_HOME/etc/elasticsearch/jvm.options directory, for example:
+/opt/mapr/elasticsearch/elasticsearch-<version>/etc/elasticsearch
+
+   To specify an alternative location, set the ES_JVM_OPTIONS environment
+   variable to the file path.
+
+Configuring Memory in the jvm.options File
+
+   The -Xms and -Xmx values in the jvm.options file set the Elasticsearch
+   heap size, as shown:
+-Xms2g
+-Xmx2g
+
+   The -Xms parameter sets the minimum heap size in gigabytes. The -Xmx
+   parameter sets the maximum heap size in gigabytes. Elasticsearch
+   recommends that both parameters have the same value.
+   If you have enabled memory settings in the ElasticSearch Warden
+   configuration file, located in the
+   /opt/mapr/conf/conf.d/warden.elasticsearch.conf directory, the -Xms and
+   -Xmx values must match the service.heapsize.min and
+   service.heapsize.max values set in warden.elasticsearch.conf, as shown:
+service.heapsize.min=2000
+service.heapsize.max=2000
+
+   Note: The service.heapsize.min and service.heapsize.max values are set
+   in megabytes as an integer.
+
+Restarting the Elasticsearch Service
+
+   After you modify the settings in the jvm.options file, issue the
+   following command to restart the Elasticsearch service:
+maprcli node services -name elasticsearch -nodes <space separated list of Elasti
+csearch nodes> -action restart
+
+   Tip:
+     * On a production cluster, you can lock Elasticsearch memory to
+       improve performance. To lock Elasticsearchmemory, set the
+       “bootstrap.mlockall: true” option in
+       $ES_HOME/etc/elasticsearch/elasticsearch.yml.
+     * If Elasticsearch uses more than 75% of the configured heap size,
+       you may want to increase the maximum heapsize value.
+       For more information, see the [1]Elasticsearch documentation.
+
+References
+
+   1. https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html

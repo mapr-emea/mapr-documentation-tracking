@@ -1,0 +1,26 @@
+Get Started with Pig
+
+   In this tutorial, we'll use Pig to run a MapReduce application that
+   counts the words in the file /in/constitution.txt in the mapr user's
+   directory on the cluster, and store the results in the file
+   wordcount.txt.
+    1. Download the ZIP file that contains [1]constitution.txt and then
+       extract the constitution.txt file.
+    2. Load the file onto the cluster and place it in the directory
+       /user/mapr/in.
+    3. In the terminal, type the command pig to start the Pig shell.
+    4. At the grunt> prompt, type the following lines (press ENTER after
+       each): After you type the last line, Pig starts a MapReduce
+       application to count the words in the file constitution.txt.
+A = LOAD '/user/mapr/in' USING TextLoader() AS (words:chararray);
+B = FOREACH A GENERATE FLATTEN(TOKENIZE(*));
+C = GROUP B BY $0;
+D = FOREACH C GENERATE group, COUNT(B);
+STORE D INTO '/user/mapr/wordcount';
+    5. When the MapReduce application is complete, type quit to exit the
+       Pig shell and take a look at the contents of the directory
+       /myvolume/wordcount to see the results.
+
+References
+
+   1. http://maprdocs.mapr.com/attachments/constitution.zip

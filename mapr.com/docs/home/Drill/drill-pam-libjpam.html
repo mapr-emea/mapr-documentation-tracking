@@ -1,0 +1,40 @@
+Configuring Drill to Use libjpam
+
+   You can configure Drill to use libjpam for Plain authentication between
+   a client, such as ODBC, and the Drillbit.
+   To configure Drill to use libjpam, complete the following steps:
+    1. Copy the libjpam.so file from /opt/mapr/lib to a directory that
+       does not contain other Hadoop components, for example /opt/pam/.
+    2. Add the following line to
+       /opt/mapr/drill/drill-<version>/conf/drill-env.sh, including the
+       directory where the libjpam.so file is located, as shown:
+export DRILLBIT_JAVA_OPTS="$DRILLBIT_JAVA_OPTS -Djava.library.path=<directory>"
+Example: export DRILLBIT_JAVA_OPTS="$DRILLBIT_JAVA_OPTS -Djava.library.path=/opt
+/pam/"
+    3. Add the following configuration to the drill.exec block in
+       /opt/mapr/drill/drill-<version>/conf/drill-override.conf:
+drill.exec: {
+             cluster-id: "drillbits1",
+             zk.connect: "qa102-81.qa.lab:5181,qa102-82.qa.lab:5181,qa102-83.qa.
+lab:5181",
+             impersonation: {
+               enabled: true,
+               max_chained_user_hops: 3
+          },
+             security: {
+                auth.mechanisms : ["PLAIN"],
+                 },
+              security.user.auth: {
+                enabled: true,
+                packages += "org.apache.drill.exec.rpc.user.security",
+                impl: "pam",
+                pam_profiles: [ "sudo", "login", "mapr-admin" ]
+         }
+       }
+
+    4. (Optional) To add or remove different PAM profiles, add or delete
+       the profile names in the pam_profiles array portion of the
+       configuration:
+pam_profiles: [ "sudo", "login" ]
+    5. Restart the Drillbit process on each Drill node, as shown:
+/opt/mapr/drill/drill-<version>/bin/drillbit.sh restart

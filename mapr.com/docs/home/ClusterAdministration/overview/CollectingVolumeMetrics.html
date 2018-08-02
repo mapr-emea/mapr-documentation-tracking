@@ -1,0 +1,87 @@
+Collecting Volume Metrics
+
+   You can collect the following volume metrics on MFS after enabling
+   metrics collection as described in [1]Enabling Volume Metric
+   Collection:
+   Read I/Os        number of reads
+   Write I/Os       number of writes
+   Read throughput  amount of data read
+   Write throughput amount of data written
+   Read latency     amount of time taken by read operations
+   Write latency    amount of time taken by write operations
+
+   If metrics collection is enabled on a volume, for each MFS instance, on
+   every node where the volume containers reside, metrics for the volume
+   (for a day) are captured every 10 seconds and logged to files in a
+   local volume, which is two way replicated. The metrics log file,
+   Metrics.log-<date>-<n>.json, is available at
+   /var/mapr/local/<hostname>/audit/<mfs-port> directory. Here:
+     * mfs-port is the port on which the MFS instance listens.
+     * date is the record date in the format yyyy-mm-dd. A new file is
+       created at the beginning of each day.
+     * n is the iteration of the log file represented by 3 digits. A new
+       file is created every time Warden is restarted on the node. For the
+       first file, <n> is 001 and <n> is incremented every time warden
+       restarts. For example: Metrics.log-2017-08-18-001.json and
+       Metrics.log-2017-08-18-002.json
+
+   Each record in the file may look similar to the following:
+{
+ "ts":1503048590000,
+  "vid":35211529,
+  "RDT":0.0,
+  "RDL":0.0,
+  "RDO":0.0,
+  "WRT":308085.8,
+  "WRL":2434.0,
+  "WRO":2192.0
+}
+
+   Here:
+     * ts — timestamp in milliseconds
+     * vid — volume ID
+     * RDT — read throughput in KB (cumulative for 10 seconds)
+     * RDL — amount of time taken by read operations (average for 10
+       seconds)
+     * RDO — number of read operations (cumulative for 10 seconds)
+     * WRT — write throughput in KB (cumulative for 10 seconds)
+     * WRL — amount of time taken by write operations (average for 10
+       seconds)
+     * WRO — number of write operations (cumulative for 10 seconds)
+
+   When a new file is created, the old file is compressed by hoststats
+   after 2 days, if hoststats is running on that node and if there are no
+   further writes to the file, and the original file is deleted. If
+   hoststats in not running on a node, the original JSON file is not
+   compressed and is purged after 30 days retention period.
+
+   The collectd service reads from each file up to 16 MB of data every ten
+   seconds, aggregates and writes one minute worth of data to OpenTSDB.
+   When reading the file, the collectd service stores offsets (as to how
+   much has been read) as extended attributes (trusted.disptachedOffset)
+   on the file. In addition to the default tags assigned to each metric
+   when collectd writes metrics to OpenTSDB, the following tags are
+   assigned to volume metrics:
+     * mapr.volmetrics.[read_|write_][throughput|latency|ops] — Displays
+       the type of metric
+     * volume_name — Displays the name of the volume
+
+   For more information on the default tags, see [2]Metric Collection.
+
+   For each metrics file, MapR also creates a file,
+   Vollist_metrics.log-<date>-<n>, in the
+   /var/mapr/local/<hostname>/audit/<mfs-port>/ directory. This file
+   contains a comma separated list of volume name and volume ID (for
+   volumes for which metrics are captured) and is associated with the
+   Metrics.log-<date><n>.json file. For example, the record in the file
+   looks similar to the following:
+<volumeid>,<volume name>,<volumeid>,<volume name>,...
+
+   You can visualize the metrics in the dashboards on Grafana. See
+   [3]Metric Visualization for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/overview/EnableMetricCollection.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MetricsCollections.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/VisualizingMetrics.html

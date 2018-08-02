@@ -1,0 +1,104 @@
+Running Jobs on the WebHCat Server
+
+   REST Calls in WebHCat
+
+   The base URI for REST calls in WebHCat is
+   http://<host>:<port>/templeton/v1/. The following table lists elements
+   appended to the base URI and DDL commands.
+
+   URI
+
+   Description
+
+   Server Information
+
+   /status
+
+   Shows WebHCat server status.
+
+   /version
+
+   Shows WebHCat server version.
+
+   DDL Commands
+
+   /ddl/database
+
+   List existing databases.
+
+   /ddl/database/<mydatabase>
+
+   Shows properties for the database named mydatabase.
+
+   /ddl/database/<mydatabase>/table
+
+   Shows tables in the database named mydatabase.
+
+   /ddl/database/<mydatabase>/table/<mytable>
+
+   Shows the table definition for the table named mytable in the database
+   named mydatabase.
+
+   /ddl/database/<mydatabase>/table/<mytable>/property
+
+   Shows the table properties for the table named mytable in the database
+   named mydatabase.
+
+Launching a MapReduce Job with WebHCat
+
+   WebHCat launches two jobs for each MapReduce job. The first job,
+   TempletonControllerJob, has one map task. The map task launches the
+   actual job from the REST API call. Check the status of both jobs and
+   the output directory contents.
+    1. Copy the MapReduce example job to the MapRFS layer:
+hadoop fs -put /opt/mapr/hadoop/hadoop-<version>/hadoop-<version>-dev-examples.j
+ar /user/mapr/webhcat/examples.jar
+    2. Use the curl utility to launch the job:
+curl -s -d jar=examples.jar -d class="terasort" -d arg=teragen.test -d arg=whop3
+ 'http://localhost:50111/templeton/v1/mapreduce/jar?user.name=<username>'
+
+Launching a Streaming MapReduce Job with WebHCat
+
+    1. Use the curl utility to launch the job:
+curl -s -d arg=teragen.test -d output=mycounts -d mapper=/bin/cat -d reducer="/u
+sr/bin/wc -w" 'http://localhost:50111/templeton/v1/mapreduce/streaming?user.name
+=<username>'
+    2. Check the job status for both WebHCat jobs at the jobtracker page
+       in the MCS.
+
+Launching a Pig Job with WebHCat
+
+    1. Copy a data file into MapRFS:
+hadoop fs -put $HIVE_HOME/examples/files/kv1.txt /user/<user name>/
+    2. Create a test.pig file with the following contents:
+A = LOAD 'kv1.txt' using PigStorage('\u0001') AS(key:INT, value:chararray);
+STORE A INTO 'pig.output';
+    3. Copy the test.pig file into MapR-FS:
+hadoop fs -put test.pig /user/<user name>/
+    4. Run the Pig REST API command:
+curl -s -d file=test1.pig -d arg=-v 'http://localhost:50111/templeton/v1/pig?use
+r.name=<username>'
+    5. Monitor the contents of the pig.output directory.
+    6. Check the JobTracker page for two jobs: TempletonControllerJob and
+       PigLatin.
+
+Launching a Hive Job with WebHCat
+
+    1. Create a table:
+curl -s -d execute="create+external+table+ext3(t+TIMESTAMP)+location /user/<user
+ name>/ext3'" 'http://localhost:50111/templeton/v1/hive?user.name=<username>'
+    2. Load data into the table:
+curl -s -d execute="insert+overwrite+table+ext3+select+*+from+datetable" 'http:/
+/localhost:50111/templeton/v1/hive?user.name=<username>'
+    3. List the tables:
+curl -s -d execute="show+tables" -d statusdir='hive.output' 'http://localhost:50
+111/templeton/v1/hive?user.name=<username>'
+       The list of tables is in hive.output/stdout.
+
+The Job Queue
+
+   To show HCatalog jobs for a particular user, navigate to the following
+   address:
+http://<hostname>:<port>/templeton/v1/queue/?user.name=<username>
+
+   The default port for HCatalog is 50111.

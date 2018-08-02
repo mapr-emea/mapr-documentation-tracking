@@ -1,0 +1,112 @@
+Editing a Stream
+
+   You can edit streams using MCS and the CLI.
+
+Editing a Stream Using the MapR Control System
+
+    1. Log in to MCS and go to the [1]stream information page.
+    2. Click Edit Stream.
+       The Edit Stream page displays.
+    3. Make necessary changes to one or more of the following:
+
+   Property Description
+   Time To Live The amount of time to elapse between the publication of a
+   message in a topic in this stream and the expiration of that message.
+   Choose:
+          + Forever to retain messages indefinitely
+          + Seconds to specify the number of seconds. A value of 0 causes
+            messages to be retained indefinitely.
+
+   Messages that have expired are deleted during the next purge process.
+   See [2]Time-to-Live for Messages for details.
+   Compression The compression setting to use for the stream. Producer
+   client libraries can bundle messages that are to be published on the
+   same partition and compress them. The messages are sent to the server
+   compressed, are stored compressed, are replicated to other containers
+   compressed, and (if stream replication is configured) replicated to
+   replica streams compressed. Consumer client libraries receive
+   compressed data, decompresses it, and passes it to client applications.
+
+   Choose one of the following:
+          + Inherited (to inherit from the directory where the stream is
+            stored), which is the default setting
+          + OFF (to disable compression)
+          + LZF
+          + LZF4
+          + ZLIB
+
+   Auto Create Topics Whether (Yes) or not (No) to create a topic
+   automatically when a producer tries to write the first message to it.
+   Default Partitions The default number of partitions to allocate to new
+   topics in the stream.
+    4. Add, modify, or remove access to streams for users, groups, and
+       roles.
+       For each user, group, and/or role, you can grant (by selecting the
+       associated check box) or block (by deselecting the associated
+       checkbox) the following types of access:
+
+   Administer Can modify the access-control expressions for the stream,
+   set up replication from the stream, and modify attributes of the
+   stream.
+
+   This permission includes the topic permission.
+   Copy Stream Can copy data from one MapR stream to another MapR stream
+   (using the mapr copystream utility) and compare the message IDs,
+   metadata, and data in two MapR streams (using the mapr diffstreams
+   utility).
+   Topic Can create, edit, or remove topics in the stream.
+   Producer Can publish messages to topics in the stream.
+   Consumer Can listen to topics in the stream.
+       To grant or block access to users, groups, and/or roles, choose one
+       of the following:
+          + Basic Settings: Select the type — public, (OR) user, group, or
+            role — from the drop-down list and grant read and/or write
+            permissions.
+            Tip: Click [cloneACE.png] to create a copy of the associated
+            access control setting. Click [deleteRow.png] to remove the
+            associated access control expression.
+            Click Add Another to add permissions for another user, group,
+            or role.
+          + Advanced Settings: Within empty strings (""), specify user
+            (u), group (g), role (r), or public (p) who have and do not
+            have read and/or write access using the following boolean
+            expressions and subexpressions:
+               o ! — Negation operator.
+               o & — AND operation.
+               o | — OR operation.
+            Use (), parentheses, for subexpressions.
+            Alternatively, click [editPencil.png] associated with the type
+            of access to use the Access Control Expression window to
+            define access for public or users, group, and/or role. See
+            [3]Defining ACEs for more information.
+       Note: If you switch from Basic to Advanced, the basic settings, if
+       any, will be carried over to the Advanced settings. If you switch
+       from Advanced to Basic, all the settings will be lost because the
+       subexpressions and AND (&) and negation (!) operations that are
+       supported by Advanced settings are not supported in the Basic
+       settings.
+       To add access control expressions for another user, group, or role,
+       click Add Another and repeat this step.
+    5. Click Save Changes for the changes to take effect.
+
+Editing a Stream Using the CLI or REST API
+
+   The basic command to edit a stream is
+maprcli stream edit -path <Stream Path>
+
+   To run this command, your user ID must have the following permissions:
+     * [4]readAce and [5]writeAce on the volume
+     * [6]lookupdir on directories in the path
+     * adminperm permission on the stream
+
+   For complete reference information, see [7]stream edit.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/streams/ViewDetail.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/time_to_live_for_messages.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/ACE-Builder.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_edit.html

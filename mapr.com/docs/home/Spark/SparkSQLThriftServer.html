@@ -1,0 +1,90 @@
+Spark SQL Thrift Server
+
+   Spark SQL Thrift (Spark Thrift) was developed from Apache Hive
+   HiveServer2 and operates like HiveSever2 Thrift server. It is supported
+   on secure clusters. You can run the Spark Thrift server and connect to
+   Hive versions supported by Spark 2.1.0 with Business Intelligence (BI)
+   tools or the Beeline command-line tool.
+
+   Starting in the MEP 4.0 release, the Spark Thrift server is available
+   as a separate package. For instructions about installing this package,
+   see [1]Installing Spark Standalone or [2]Installing Spark on YARN,
+   depending on the type of cluster manager you are installing.
+
+   In MEP 3.0, MapR introduces additional security mechanisms for Spark
+   with the Spark Thrift server. MapR-SASL and Kerberos are supported:
+     * For JDBC connections into Spark Thrift server
+     * Between Spark and Hive metastore
+
+   [sparksqlthriftserver.png]
+
+   To enable these security mechanisms for the Spark Thrift server,
+   starting in the MEP 4.0 release, for secure clusters, running
+   [3]configure.sh -R configures MapR-SASL security. The script modifies
+   or creates a SPARK_HOME/conf/hive-site.xml file as follows:
+     * If Hive installed in your cluster, the script copies
+       HIVE_HOME/conf/hive-site.xml to SPARK_HOME/conf and modifies the
+       file.
+     * If Hive is not installed and you are using MapR-SASL security, the
+       script creates a new SPARK_HOME/conf/hive-site.xml file.
+     * Each time the script runs, if there is a pre-existing
+       SPARK_HOME/conf/hive-site.xml file, the script saves a copy of the
+       file in SPARK_HOME/conf/hive-site.xml.old before modifying it.
+
+   You can manually configure security by following the steps outlined in
+   sub-topics listed on this page.
+
+   To launch Spark Thrift server, perform the procedures required to
+   configure [4]Spark to use [5]Hive.
+   Important: Starting in the MEP 4.0 release, if you start and stop the
+   Spark Thrift server using Warden, the connection port number is 2304.
+   If you start and stop by running the
+   /opt/mapr/spark/<spark-version/sbin/{start,stop}-thriftserver.sh
+   scripts, the port number remains 10000.
+
+Known Limitations
+
+     * MapR-SASL support is only implemented for Spark 2.1.0.
+     * Username and password authentication through PAM is not supported
+       in MEP 3.0.
+     * Only SELECT statements support impersonation usage to access data
+       stored in MapR-FS and/or MapR-DB.
+     * Spark Thrift server supports only features and commands in Hive
+       1.2.
+     * Although Spark 2.1.0 can connect to Hive 2.1 Metastore, only Hive
+       1.2 features and commands are supported by Spark 2.1.0.
+
+Related Links
+
+   For information related to Spark Thrift server, see:
+   MapR                               Apache
+     * Hive Release Notes:
+          + [6]1.2.1
+          + [7]2.1
+     * [8]Hive 2.1 and Tez 0.8
+     * [9]Integrate Spark SQL with Hive
+     * [10]Hive
+     * [11]Authentication for HiveServer2
+     * [12]Spark Feature Support
+
+     * [13]Apache Spark 2.1.0 Security
+     * [14]Apache Thrift
+     * [15]Setting Up HiveServer2
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallSparkStandalone.html#InstallSparkStandalone
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallSparkonYARN.html#InstallSparkonYARN
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SparkConfigureShR.html#concept_x2q_5dl_3bb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/Spark.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Hive.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/HiveRN-1.2.1-1703.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/HiveRN-2.1.1-1703.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/HiveandTez.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/IntegrateSparkSQL_Hive.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Hive.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Authentication-for-HiveServer2.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SparkFeatureSupport.html
+  13. http://spark.apache.org/docs/2.1.0/security.html
+  14. http://thrift.apache.org/
+  15. https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2

@@ -1,0 +1,114 @@
+MapR Data Fabric for Kubernetes Overview
+
+   This page describes how the MapR Data Fabric for Kubernetes integrates
+   with Kubernetes to provide persistent data for containers.
+   To install or use the MapR Data Fabric for Kubernetes, see:
+     * [1]Installing the MapR Data Fabric for Kubernetes
+     * [2]Using the MapR Data Fabric for Kubernetes
+
+About the MapR Data Fabric for Kubernetes
+
+   Most Pods in a Kubernetes environment should be portable, short-lived,
+   and stateless. Traditionally, when a Pod is stopped or moved, the state
+   of its containers could be lost. The MapR Data Fabric for Kubernetes:
+     * Provides long-lived, persistent storage for Pods and their
+       containers.
+     * Allows containers running in Kubernetes to use the MapR filesystem
+       for all of their storage needs.
+     * Allows secure storage of all container states in MapR-XD.
+
+   [kdf_overview_illus.png]
+
+   The MapR Data Fabric for Kubernetes consists of a set of Docker
+   containers and their respective .yaml [3]configuration files for
+   installation into Kubernetes. Once installed, both a Kubernetes
+   [4]FlexVolume Driver for MaprFS and a Kubernetes [5]Dynamic Volume
+   Provisioner are available for both static and dynamic provisioning of
+   MapR storage.
+
+Containers
+
+   Containers are stand-alone, executable images of applications. They
+   freeze all code needed to run an application, including an OS. Unlike
+   VMs, containers run directly on an operating system without the need
+   for a HyperVisor. Both Linux- and Windows-based applications can be
+   packaged as containers. Containers represent an easy way to deploy
+   applications in development and test environments. Using containers,
+   developers can quickly create a development platform to test their
+   code.
+
+   Containers are ephemeral by nature and light-weight. They enable
+   setting up compute clusters quickly. They also allow a cluster to be
+   dismantled quickly. To accomplish this task, containers are designed to
+   be ephemeral. That is, they are designed to be somewhat stateless.
+   However, truly stateless containers would eliminate many classes of
+   applications. It is therefore important to provide containers with
+   persistent data independent of the container lifecycle. A natural
+   solution is to have persistent storage (data) presented to the
+   containers, just as persistent storage is presented today for VMs and
+   in bare-metal environments.
+
+Container Management
+
+   Simple container solutions are somewhat limited when orchestrating
+   multiple containers to solve complex business challenges. Managing
+   containers for production is challenging. With many workloads
+   transitioning to fully production-grade containers, cluster admins need
+   something beyond a container engine like Docker. Several
+   container-orchestration engines are now available to manage containers
+   in production. Kubernetes is the most prominent example of these
+   container-orchestration solutions.
+
+Kubernetes Volume Drivers
+
+   Kubernetes introduced the concept of FlexVolume drivers. FlexVolume
+   drivers are intended to allow storage vendors to provide storage to
+   containers managed by Kubernetes. The MapR Data Fabric for Kubernetes
+   leverages Kubernetes FlexVolume drivers. There are additional
+   Kubernetes components and concepts you should also be aware of:
+     * [6]Kubernetes Volumes: A Kubernetes volume is a Kubernetes-managed
+       resource concept. Kubernetes Volumes are associated with
+       [7]Kubernetes Pods. Kubernetes Volumes are different from MapR
+       volumes. The lifecycle of a Kubernetes volume is tied to the
+       lifecycle of a Kubernetes Pod, and the Kubernetes Volume is
+       destroyed when the Pod is deleted.
+     * [8]Kubernetes Persistent Volumes: As the name indicates, a
+       Kubernetes Persistent Volume (PV) lifecycle is separate from the
+       Pod that uses it. Persistent Volumes are referenced by Persistent
+       Volume Claims (PVC), which are in turn referenced by Pods. Multiple
+       Pods can claim a single PVC, but only a single PVC can bind with a
+       PV.
+     * [9]Storage Classes: A Storage Class is a way for administrators to
+       advertise the different classes of storage they offer. For example,
+       the admin can provide parameters in the storage class that define
+       the frequency of snapshots or the number of mirrors associated with
+       the storage. Storage Classes are used to dynamically provision a
+       new storage volume for use by containers.
+     * [10]MapR Volumes: The [11]MapR glossary defines a MapR volume as a
+       tree of files and directories grouped for the purpose of applying a
+       policy or set of policies to all of them at once. To avoid
+       confusion, this document uses the terms Kubernetes volume and MapR
+       volume to distinguish between the different types of volumes.
+
+Kubernetes and MapR Volumes
+
+   In general, Kubernetes is not aware of MapR volumes. When static
+   provisioning a MapR path, Kubernetes simply uses a MapR POSIX client to
+   obtain a specific mount point within the MapR filesystem. When
+   dynamically provisioning a new MapR volume for a container to use, the
+   dynamic provisioner issues REST calls to the MapR REST server to create
+   actual MapR volumes.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_installation.html#concept_ogr_sxc_qcb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuration.html#concept_ogr_sxc_qcb
+   3. https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/
+   4. https://github.com/kubernetes/community/blob/master/contributors/devel/flexvolume.md
+   5. https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/
+   6. https://kubernetes.io/docs/concepts/storage/volumes/
+   7. https://kubernetes.io/docs/concepts/workloads/pods/pod/
+   8. https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+   9. https://kubernetes.io/docs/concepts/storage/storage-classes/
+  10. https://maprdocs.mapr.com/home/MapROverview/c_volumes.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Glossary.html#Glossary

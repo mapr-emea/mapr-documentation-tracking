@@ -1,0 +1,24 @@
+Configuring Persistent Configuration Data
+
+   If you have MapR-DB in your cluster, you can use MapR-DB for
+   [1]persistent configuration storage. Using MapR-DB to store persistent
+   configuration data can prevent memory strain on ZooKeeper in clusters
+   running heavy workloads.To change the persistent storage mode to
+   MapR-DB, add or modify the sys.store.provider block in
+   <drill_installation_directory>/conf/drill-override.conf on each Drill
+   node and then restart the Drillbit service.
+   For example:
+sys.store.provider: {
+class: "org.apache.drill.exec.store.hbase.config.HBasePStoreProvider",
+hbase: {
+  table : "/tables/drill_store"
+    }
+},
+
+   Issue the following command to restart the Drillbit on all Drill nodes:
+maprcli node services -name drill-bits -action restart -nodes <node IP addresses
+ separated by a space>
+
+References
+
+   1. http://drill.apache.org/docs/persistent-configuration-storage/

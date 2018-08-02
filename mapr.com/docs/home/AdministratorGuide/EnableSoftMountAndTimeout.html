@@ -1,0 +1,70 @@
+Enabling Soft Mount and Setting the Timeout
+
+   By default, all MapR-FS, MapR-DB, and MapR-Streams operations never
+   timeout as they wait (hard mount behavior) for the operation to succeed
+   and/or the server to respond. You can configure a soft mount behavior
+   by setting the values for the following parameters in the core-site.xml
+   or hbase-site.xml file:
+
+   fs.mapr.hardmount
+          Specifies whether or not to enable hard mount. Value can be:
+
+          + true - enable hard mount
+          + false - disable hard mount
+
+          The default value is true.
+
+   fs.mapr.rpc.timeout
+          This parameter is valid for MapR 6.0.0 and earlier. Specifies
+          the RPC timeout value in seconds. The default value is 300
+          seconds. The value cannot be less than 30 seconds. If the value
+          is greater than 300 seconds, TCP keepalive probes are sent to
+          prevent the TCP socket from timing out. If value is below 300
+          seconds, the RPCs will timeout after the specified time.
+
+   streams.rpc.timeout.ms
+          This parameter is new as of MapR 6.0.1. Specifies the RPC
+          timeout value in milliseconds. The default value is 3000000
+          seconds. The value cannot be less than 30000 seconds. If the
+          value is greater than 30000 seconds, TCP keepalive probes are
+          sent to prevent the TCP socket from timing out. If value is
+          below 30000 seconds, the RPCs will timeout after the specified
+          time.
+
+   These parameter settings affect all clients.
+   Note: For MapR-Streams, these parameters can be set as configuration
+   properties when constructing the Consumer or Producer Java object. For
+   more information, see [1]MapR-Streams.
+
+Enabling Soft Mount
+
+    1. Open the core-site.xml or hbase-site.xml file and add the parameter
+       as shown below:
+<property>
+  <name>fs.mapr.hardmount</name>
+  <value>false</value>
+  <description>enabling soft mount by setting value to false</description>
+</property>
+    2. Save and close the file.
+
+Setting RPC Timeout
+
+    1. Open the core-site.xml or hbase-site.xml file and add the parameter
+       as shown below:
+       As of MapR 6.0.1:
+<property>
+  <name>streams.rpc.timeout.ms</name>
+  <value>300000</value>
+  <description>RPC timeout value</description>
+</property>
+       For MapR 6.0.0 and earlier:
+<property>
+  <name>fs.mapr.rpc.timeout</name>
+  <value>30</value>
+  <description>RPC timeout value</description>
+</property>
+    2. Save and close the file.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/mapr_streams.html#streams

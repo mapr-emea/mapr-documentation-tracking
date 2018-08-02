@@ -1,0 +1,389 @@
+configure.sh
+
+   Run configure.sh to [1]set up a MapR cluster node, or to [2]set up a
+   MapR client node for communication with one or more clusters. You can
+   also run configure.sh to update the configuration of a node. For
+   example, you can use configure.sh to [3]change the services running on
+   a node or specify the [4]user that runs MapR services.
+   Note: On a Windows client, the configure.sh script is named
+   configure.bat. It requires the -c parameter and does not accept the -Z
+   parameter, but otherwise works in a similar way.
+
+Steps Performed by configure.sh
+
+   Each time configure.sh is run, it performs the following steps:
+     * Updates /opt/mapr/conf/mapr-clusters.conf with the cluster name. It
+       creates or modifies a line in /opt/mapr/conf/mapr-clusters.conf
+       containing a cluster name followed by a list of CLDB nodes. New
+       entries are added to mapr-clusters.conf when the cluster name
+       passed to the -N parameter is different from the existing cluster
+       name in that file.
+     * Checks that the node has at least 4GB of RAM and that the /tmp and
+       /opt partitions each have at least 1 GB of free space. If these
+       conditions are not met, the script asks for confirmation before
+       continuing.
+     * Disables standard NFS daemons. If the node has the mapr-nfs role,
+       the script disables the standard Linux NFS daemon because both NFS
+       processes cannot run on the same node.
+     * Updates additional *.conf and *.xml files related to the cluster
+       and the services running on the node. For example, yarn-site.xml,
+       warden.conf, and cldb.conf may be updated based on input to
+       configure.sh.
+     * On cluster nodes, it creates a group named shadow, adds the MapR
+       user to this group, and then enables members of the shadow group to
+       view the etc/shadow file. Read access to the etc/shadow file
+       enables MapR users to authenticate with the MapR cluster.
+     * Starts newly installed services. As long as Warden is running at
+       the time you run configure.sh, new services are started.
+     * All changes of configuration options or system files are logged to
+       /opt/mapr/logs/configure.log. You can use the -L parameter to
+       specify a different log file name.
+
+   When you include disk-setup options (-D or -F) on nodes with the
+   mapr-fileserver role, the script also performs the following steps:
+     * Runs disksetup to create the disktab file. configure.sh takes the
+       values you specify in the -disk-opts option and passes the value to
+       disksetup. For example, if you include -disk-opts FW5 when you run
+       configure.sh, configure.sh runs disksteup -F -W5. If disksetup
+       fails, configure.sh exits with an error.
+     * Starts Zookeeper and Warden. When the configure.sh script starts
+       services, the message starting <servicename> is echoed to the
+       standard output, to enable the user to see which services are
+       starting. When Warden starts, Warden and ZooKeeper services are
+       added to the inittab file as the first available inittab IDs,
+       enabling these services to restart automatically upon failure.
+       Note: You can specify the -no-autostart option to prevent the
+       script from starting Zookeeper or Warden when you run configure.sh
+       with the -F or -D options.
+
+Syntax
+
+/opt/mapr/server/configure.sh
+        -C <cldb_list>
+        -Z <zookeeper_list>
+        -EZ <ext_zookeeper_list>
+        [<parameters>]
+/opt/mapr/server/configure.sh
+        -C <cldb_list>
+        [ -M <cldb_mh_list ...> ]
+        -Z <zookeeper_list>
+        [<parameters>]
+/opt/mapr/server/configure.sh
+        -c
+        [ -R ]
+        [<parameters>]
+/opt/mapr/server/configure.sh
+        -R
+        [ -c ]
+        [<parameters>]
+
+Options
+
+   Option Description
+   -C Use the -C option only for CLDB servers that have a single IP
+   address each. This option takes a list of the CLDB nodes that this
+   machine uses to connect to the MapR cluster. The list is in the
+   following format:
+hostname[:port_no][,hostname[:port_no]...]
+
+   -c Specifies client setup. The -C option is required and -Z is
+   optional. See [5]Setting Up the Client.
+   -EZ The -EZ option is optional when configuring the cluster and is not
+   applicable when configuring a client. This option takes a
+   comma-separated list of the external IP addresses of the ZooKeeper
+   nodes in the cluster. The list is in the following format:
+hostname[:port_no][,hostname[:port_no] ...]
+
+   -M Use the -M option only for multihomed CLDB servers that have more
+   than one IP address. This option takes a list of the multihomed CLDB
+   nodes that this machine uses to connect to the MapR cluster. The list
+   is in the follwing format:
+hostname[:port_no][,[hostname[:port_no]...]]
+
+   -R After initial node configuration, specifies that configure.sh should
+   use the previously configured ZooKeeper and CLDB nodes. The -C and -Z
+   parameters are not required when -R is specified. When -R is specified,
+   the CLDB credentials are read from mapr-clusters.conf and the ZooKeeper
+   credentials are read from warden.conf. Use the -R option when you make
+   changes to the services configured on a node without changing the CLDB
+   and ZooKeeper nodes. Specify the --noRecalcMem parameter to skip
+   recalculating memory settings when refreshing roles.
+   -Z The -Z option is required unless -c (lowercase) or -R is specified.
+   This option takes a list of the ZooKeeper nodes in the cluster. The
+   list is in the following format:
+hostname[:port_no][,hostname[:port_no]...]
+
+Parameters
+
+   Parameter Description
+   -certdomain Specifies a DNS domain for generated SSL wildcard
+   certificates. This domain overrides the default DNS domain.
+   --create-user | -a Create a local user to run MapR services, using the
+   specified user from -u or the environment variable $MAPR_USER.
+   -D Specifies a comma-delimited [6]list of disks to use with the MapR
+   file system. With the -D option, you cannot specify partitions. By
+   default, the configure.sh script automatically starts cluster services
+   after configuration finishes successfully. If you do not want cluster
+   services to be restarted, include the -no-autostart option along with
+   the -D option.
+   -d The host and port of the MySQL database to use for storing MapR
+   Metrics data.
+   -defaultdb Sets the default database (HBase or MapR-DB) that HBase
+   clients connect to. Since Apache HBase is deprecated, there will be no
+   HBase services (mapr-hbase-regionserver, mapr-hbase-master) installed
+   on the cluster; therefore, this parameter will default to MapR-DB.
+   -disk-opts Enables you to specify a series of [7]disksetup formatting
+   options. Do not include spaces or commas between the disksetup options.
+   For example, you can specify -disk-opts FW5 to format the disks (F) and
+   configure five disks per storage pool (W5).
+   -dp Specifies the password for logging into the MySQL database used for
+   storing MapR Metrics data.
+   -ds Specifies the name of the database schema to use for the MySQL
+   database used for storing MapR Metrics data. The default schema name is
+   metrics.
+   -du Specifies the username for logging into the MySQL database used for
+   storing MapR Metrics data.
+   -EP Specifies an option that is passed directly to an ecosystem
+   configure.sh script. These commands follow the form ‑EP<ecosystem
+   component name> <option>. In general, ‑EP options are not documented
+   and should be used only if the documentation specifically instructs you
+   to use them.
+   In MapR 6.0 and later, some ecosystem components have their own
+   configure.sh scripts, and the server configure.sh script or a user can
+   pass options directly to the ecosystem component by using the ‑EP
+   syntax. For example, in this command:
+/opt/mapr/server/configure.sh -R -EPkibana '-kibanaPort 5610'
+
+   -EPkibana '-kibanaPort 5610' changes the default port for Kibana to
+   5610.
+
+   Because ecosystem components are updated more frequently than MapR Core
+   (which contains the server configure.sh script) implementing some
+   configure.sh functions through an ecosystem configure.sh can accelerate
+   the introduction of new features.
+   -ES Specifies a comma-separated list of host names or IP addresses that
+   identify the Elasticsearch nodes. The Elasticsearch nodes can be part
+   of the current MapR cluster or part of a different MapR cluster. Do not
+   use this option when you configure a node for the first time. Use this
+   option along with the -R parameter.
+   The list is in the following format:
+hostname/IPaddress[:port_no][,hostname/IPaddress[:port_no]...]
+
+   Note: The default Elasticsearch port is 9200. If you want to use a
+   different port, specify the port number when you list the Elasticsearch
+   nodes.
+   -ESDB Specifies a non-default location for writing index data on
+   Elasticsearch nodes. In order to configure an index location, you only
+   need to include this parameter on Elasticsearch nodes.
+   Note: Elasticsearch requires a lot of disk space. Therefore, a separate
+   file system for the index is recommend. It is not recommended to store
+   index data under the / or the /var file system.
+   For more information, see [8]Log Aggregation and Storage
+   -F Specifies a path to a text file that [9]specifies the disks and
+   partitions to use with the MapR file system. By default, the
+   configure.sh script automatically starts cluster services after
+   configuration finishes successfully. If you do not want cluster
+   services to be restarted, include the -no-autostart option along with
+   the -F option.
+   -f Specifies that the node should be configured without the system
+   prerequisite check.
+   ‑forceSecurityDefaults Instructs configure.sh to undo any custom
+   security settings for a cluster and reconfigure security to the default
+   MapR values for -unsecure or -secure. You must specify either the
+   -secure or the -unsecure option. Using the ‑forceSecurityDefaults
+   option causes the /opt/mapr/conf/.customSecure file to be removed. Use
+   this syntax:
+/opt/mapr/server/configure.sh -forceSecurityDefaults [ -unsecure | -secure ] -C
+<CLDB_node> -Z <ZK_node>
+
+   For more information, see [10]Custom Security in MapR.
+   Important: It is possible that the -forceSecurityDefaults operation
+   might not undo all custom security settings since configure.sh cannot
+   know all of the custom settings that were implemented. Therefore, some
+   hand editing of configuration files and settings might be required to
+   restore the cluster to full functionality.
+   -G The group ID to use when creating $MAPR_USER with the -create-user
+   or -a option; corresponds to the -g or -gid option of the useradd
+   command in Linux.
+   -g The group name under which MapR services will run.
+   -genkeys Generates needed keys and certificates for the initial CLDB
+   node in a secure cluster.
+   -H Specifies the HTTPS port number for connecting to the CLDB. The
+   default port is 7443.
+   -HS Specifies the IP or hostname of the node in the cluster that has
+   the HistoryServer role. This parameter is required when a node in the
+   cluster contains the HistoryServer role. In MapR 5.1 and later, this
+   parameter is expanded to support the Mesos DNS-style name with format
+   for Job History. The format is <myriad-fwk-name>.mesos. For example, if
+   the -MF parameter is myriadA, the name is: jobhistory.myriadA.mesos.
+   --isvm Specifies the virtual machine setup. Required when configure.sh
+   is run on a cluster node that is on a virtual machine. This option
+   configures the script to use less memory.
+   -J Specifies the [11]JMX port for the CLDB. Default: 7220
+   -K | -kerberosEnable Indicates that [12]Kerberos security has been
+   enabled. Kerberos security is disabled by default.
+   -L Specifies a log file. If not specified, configure.sh logs errors to
+   /opt/mapr/logs/configure.log.
+   -logHTTPFS Specifies the hostname to enable centralized logging via
+   fluentd.
+   -MCL Specifies the top-level directory where all the staging data as
+   well as shuffle data is written for a specific Myriad framework. Used
+   when multiple clusters are implementing Myriad.
+   -MF Specifies the name of the Myriad framework that is displayed in the
+   Mesos UI.
+   -MHA Enables Myriad high availability.
+   -M7 Deprecated as of MapR 4.0.1.
+   -maprpam When specified, the configure.sh script installs the MapR
+   version of Pluggable Authentication Modules (PAM). This option is
+   ignored if -S is not set.
+   -N
+
+   Specifies the cluster name. If you do not specify a name, configure.sh
+   applies a default name (my.cluster.com) to the cluster. Whenever you
+   run configure.sh, be aware of the existing cluster name or names in
+   mapr-clusters.conf and specify the -N parameter accordingly. If you
+   specify a name that does not exist, a new line is created in
+   mapr-clusters.conf and treated as a configuration for a separate
+   cluster.
+
+   Subsequent runs of configure.sh without the -N parameter operate on
+   this default cluster. If you specify a name when you first run
+   configure.sh, you can modify the CLDB and ZooKeeper settings
+   corresponding to the named cluster by specifying the same name and
+   running configure.sh again. Whenever you need to re-run configure.sh on
+   a given cluster (to add or rename nodes, for example), be sure to
+   specify the same cluster name that you used when you ran configure.sh
+   for the first time.
+   -no-autostart Specifies that the script should not start Zookeeper or
+   Warden when you run configure.sh.
+   -no-auto-permission-update Pass this option to prevent MapR from
+   silently altering permissions in /etc/shadow.
+   -nocerts When specified, the configure.sh script does not generate SSL
+   certificates even when the -genkeys option is specified.
+   -noDB Specifies that MapR-DB is not in use.
+   -noRecalcMem Skip recalculating memory settings when refreshing roles.
+   Can be used only with the -R option.
+   -OT Specifies a comma-separated list of host names or IP addresses that
+   identify the OpenTSDB nodes. The OpenTSDB nodes can be part of the
+   current MapR cluster or part of a different MapR cluster. Do not use
+   this option when you configure a node for the first time. Use this
+   option along with the -R parameter. A Warden service must be running
+   when you use configure.sh -R -OT.
+   The hostname list should use the following format:
+hostname/IP address[:port_no][,hostname/IP address[:port_no]...]
+
+   Note: The default OpenTSDB port is 4242. If you want to use a different
+   port, specify the port number when you list the OpenTSDB nodes.
+   -on-prompt-cont Specify:
+     * y to automatically respond Yes to all prompts.
+     * n to automatically respond No to all prompts.
+
+   -P Specifies the Kerberos instance which is used to form a CLDB
+   Kerberos principal in the form of mapr/<instance-name>@<realm-name>.
+   Enclose this value in quotes ("). This value is ignored if Kerberos
+   security is not enabled.
+   -QS Use the -QS option to configure the OJAI Distributed Query Service.
+   See [13]Configure the OJAI Distributed Query Service.
+   -RM
+
+   In MapR 5.1, this parameter is expanded to support the Mesos DNS-style
+   hostname for Myriad configuration. The Mesos-style hostname is
+   <application name>.marathon.mesos. When starting ResourceManager from
+   Marathon, the <application name> rm, for example, rm.marathon.mesos.
+
+   In MapR 4.0.2, this parameter is not required unless you want to
+   configure manual or automatic failover; zero configuration failover is
+   enabled by default. In MapR 4.0.1, this parameter specifies the nodes
+   in the cluster with the ResourceManager role.
+
+   List the nodes in the following format: hostname[,hostname]...]
+
+   For more information, see [14]ResourceManager High Availability.
+   -S | -secure Specifies that this cluster is a secure cluster. Default:
+   unsecure.
+   -syschk configures the system checks to be enabled or disabled. Value:
+   Y/N
+   -TL Specifies the single node on which the timeline server is installed
+   for the Hive-on-Tez user interface. When you install Tez manually, you
+   must also install the timeline server and run configure.sh -TL
+   <timeline_server_node> on all nodes to indicate where the timeline
+   server resides.
+   -U The user ID to use when creating $MAPR_USER with the --create-user
+   or -a option; corresponds to the -u or --uid option of the useradd
+   command in Linux.
+   -u The user name under which MapR services will run.
+   -unsecure Specifies that this cluster is not secure. Default: unsecure.
+   -v In addition to logging information, also prints to stdout.
+
+Examples
+
+   Add a node (not CLDB or ZooKeeper) to a cluster that is running the
+   CLDB and ZooKeeper on three nodes:
+
+   On the new node, run the following command:
+/opt/mapr/server/configure.sh -C nodeA,nodeB,nodeC -Z nodeA,nodeB,nodeC
+
+   Configure a client to work with cluster my.cluster.com, which has one
+   CLDB at nodeA:
+
+   On a Linux client, run the following command:
+/opt/mapr/server/configure.sh -N my.cluster.com -c -C nodeA
+
+   On a Windows 7 client, run the following command:
+C:\opt\mapr\server\configure.bat -N my.cluster.com -c -C nodeA
+
+   Add a second cluster to the configuration:
+
+   On a node in the second cluster your.cluster.com, run the following
+   command:
+configure.sh -C nodeZ -N your.cluster.com -Z <zkNodeA,zkNodeB,zkNodeC>
+
+   Add CLDB servers with multiple IP addresses to a cluster:
+
+   In this example, the cluster my.cluster.com has CLDB servers at nodeA,
+   nodeB, nodeC, and nodeD. The CLDB servers nodeB and nodeD have two NICs
+   each at eth0 and eth1.
+
+   On a node in the cluster my.cluster.com, run the following command:
+
+   configure.sh -N my.cluster.com -C nodeAeth0,nodeCeth0 -M
+   nodeBeth0,nodeBeth1 -M nodeDeth0,nodeDeth1 -Z zknodeA
+   Start a cluster in secure mode using configure.sh
+
+   In this example, the cluster my.cluster.com has two CLDB servers at
+   nodeA and nodeB. The ZooKeeper node for this cluster is at nodeC. To
+   start the cluster in secure mode, run the following command on nodeA:
+
+   configure.sh -N my.cluster.com –C nodeA,nodeB –Z nodeC –secure –genkeys
+   –F <disklist file>
+
+   This command creates the ssl_truststore, ssl_keystore,
+   maprserverticket, and cldb.key files. Copy those files from nodeA's
+   /opt/mapr/conf directory to nodeB's /opt/mapr/conf directory.
+
+   On nodeB, change the permissions on these files to the mapr user with
+   the following command:
+
+   chown 600 ssl_truststore ssl_keystore maprserverticket cldb.key
+
+   On nodeB, run the following command:
+
+   configure.sh –N mycluster.com –C nodeA,nodeB –Z nodeC –secure –F
+   <disklist file>
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingMapRSoftware-config-nodes.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AddingRolesToNode.html#concept_odq_4dv_jt
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_changing_the_user_for_MapR_srvcs.html#Changing-the-User-for-Map-Allservicesshouldber-d3e72
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient.html#SettingUptheClient
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c-setting-up-disks-for-mapr.html#c-setting-up-disks-for-mapr
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/disksetup.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LogAggregationAndStorage.html#concept_wzf_rwy_kw
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c-setting-up-disks-for-mapr.html#c-setting-up-disks-for-mapr
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb
+  11. http://en.wikipedia.org/wiki/Java_Management_Extensions
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Configuring-Kerberos-User-Authentication.html#ConfiguringKerberosUserAuthentication
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/configure_query_services.html#task_gmp_tmg_2bb
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ResourceManager-HighAvailability.html#ResourceManager-High-Avai-TheResourceManagerse-d3e62

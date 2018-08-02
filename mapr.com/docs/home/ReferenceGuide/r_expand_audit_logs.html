@@ -1,0 +1,118 @@
+expandaudit
+
+   As operations are performed on the directories, files, and tables that
+   you are auditing, the audit logs capture records of those operations.
+   Those records identify the affected directories, files, and tables by
+   means of file IDs, the volumes on which the operations took place by
+   means of volume identifiers, and the users who performed the operations
+   by means of user IDs. These IDs are used instead of names in the audit
+   records because fetching the actual names of these objects and users in
+   real-time is costly in terms of performance.
+
+   You can use the expandaudit utility, however, to create copies of your
+   logs files in which the IDs are resolved into names and inserted into
+   the audit records.
+
+   This utility acts on audit logs that exist in the current MapR cluster
+   at the time that the utility is run.
+
+Restrictions
+
+   This utility operates on audit logs for filesystem operations and
+   MapR-DB operations, which are logged in a local MapR volume on each
+   node where the operations are performed. These operations are logged in
+   FSAudit and DBAudit log files.
+   File identifiers are converted to names only when either of these
+   conditions is met:
+     * The file exists at the time that expandaudit is run.
+     * The file has been deleted but the deletion of the file was logged
+       and the log files being processed by expandaudit include the record
+       of the file deletion.
+
+   If a volume is deleted, expandaudit will not be able to convert
+   identifiers for files that were in the volume unless the creation of
+   the volume and files were logged.
+
+   If the creation of a file is audited and the file is later renamed, the
+   file ID is converted to the current name.
+
+Permissions
+
+   Although the permissions on the tool are 755, the tool generates output
+   only when run by root or the user mapr.
+
+Syntax
+
+expandaudit
+    -volumename <volume name> | -volumeid <volume identifier>
+    -o <output directory>
+    [ -d ]
+    [ -cluster <cluster name> ]
+    [ -t <number of threads> ]
+
+Parameters
+
+   Parameter Description
+   cluster The name of the cluster on which to run the command.
+   d Required for deleted volumes as it indicates volume was deleted. If
+   this is specified, user specified volume name is used during expansion.
+   volumename The name of the volume being audited. If neither this
+   parameter nor the -volumeid parameter is used, all audit logs on the
+   cluster are included in the operation.
+   volumeid The ID of the volume being audited. If neither this parameter
+   nor the -volumename parameter is used, all audit logs on the cluster
+   are included in the operation.
+   o The directory in the MapR filesystem in which to create the copies of
+   the audit logs. The directory must already exist.
+   The directory structure is:
+<output directory>/<volume id>/<node>/<day>/<expanded audit log files>
+
+   The file names are the same as the names of the input files, though you
+   might see the following extensions:
+     * .part : If present, this extension is on the log file with the most
+       recent date. The input log file that corresponds to this output
+       file might still have been receiving new audit records at the time
+       that the expandaudit utility was run. If the utility is run again
+       with the same output directory, the utility will update the .part
+       file by including the most recent records and converting the
+       identifiers in those records.
+     * .pending: This extension indicates files that contain one or more
+       identifiers that the utility could not convert.
+
+   Note: Sometimes, you might see a combination of these two types of
+   files, part.pending, which indicates a problem converting identifiers
+   in the most recent audit file.
+   t The number of threads to use for parallel expansion across cluster
+   nodes. The default value is 10.
+
+Sample Expansion of a Record for Filesystem Operations
+
+   Original record
+{"timestamp":{"$date":"2015-06-06T13:02:23.746Z"},"operation":"GETATTR","uid":"1
+","ipAddress":
+"10.10.104.53","srcFid":"2049.652.263696","volumeId":68048396,"status":0}
+
+   Record processed by the expandaudit utility
+{"timestamp":{"$date":"2015-06-06T13:02:23.746Z"},"operation":"GETATTR","user":
+"userA","uid":"1","ipAddress":"10.10.104.53","srcPath":"/customers/US_Western_Re
+gion.json",
+"srcFid":"2049.3296.268968","volumeName":"data_analysis","volumeId":68048396,"st
+atus":0}
+
+Sample Expansion of a Record for MapR-DB Table Operations
+
+   Original record
+{"timestamp":{"$date":"2015-06-06T13:08:54.474Z"},"operation":"DB_PUT","uid":"1"
+,"ipAddress":
+"10.10.104.51","volumeId":68048396,"columnFamily":"fam63","columnQualifier":"col
+_96","tableFid":
+"2049.56.262518","status":0}
+
+   Record processed by the expandaudit utility
+{"timestamp":"{$date=2015-06-06T13:08:54.474Z}","operation":"DB_PUT","user":"use
+rA","uid":
+"1","ipAddress":"10.10.104.51","VolumeName":"mapr.cluster.root","volumeId":"6804
+8396",
+"columnFamily":"fam63","columnQualifier":"col_96","tablePath":"/mytable","tableF
+id":"2049.56.262518",
+"status":"0"}

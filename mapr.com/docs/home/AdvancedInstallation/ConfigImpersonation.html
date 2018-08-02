@@ -1,0 +1,31 @@
+Configuring Impersonation
+
+   Impersonation, also known as identity assertion, is one user (the mapr
+   super user) accessing data and submitting jobs on behalf of another
+   user.
+   Note: Only the mapr user can impersonate other users.
+
+   For secure clusters, to have a request processed as an impersonated
+   user:
+    1. The user submitting the request must be the mapr user and the
+       request should have the HTTP header X-MAPR-IMPERSONATED-USER,
+       passed in the request.
+       The value of the header is the username of the impersonated user.
+    2. The header must also include "Authorization: Basic
+       <base64_encoding_of_userID:pwd>" for the apiserver to authorize the
+       request.
+       Here userID is mapr and the password is the PAM Linux password for
+       mapr user on the node on which the apiserver is running.
+
+   For example:
+curl -XPOST -H "Accept: application/json" -H  "X-MAPR-IMPERSONATED-USER: m7user1
+" -H "Authorization: Basic bWFwcjptYXBy" -k https://10.20.30.40:8443/rest/table/
+create?path=%2Ftmp%2FsrcC -v
+
+   For non-secure cluster, MapR requires a file for the user to
+   impersonate in /opt/mapr/conf/proxy directory. The logged-in user is
+   allowed to impersonate only if the
+   /opt/mapr/conf/proxy/<user_to_impersonate> file is present. By default,
+   this file is created during installation for mapr user and root user.
+   If the file is not present, HTTP 403 is returned to the client if the
+   client attempts to impersonate a user who does not have the file.

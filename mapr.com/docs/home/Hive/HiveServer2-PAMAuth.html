@@ -1,0 +1,40 @@
+Configure HiveServer2 to use PAM Authentication
+
+   You can configure HiveServer2 to use Pluggable Access Modules (PAM).
+   The configuration requirements for PAM differ based on the version of
+   Hive that you have installed.
+   Hive Version Default Configuration Configuration Requirement
+   Hive 2.1 1707 MapR-SASL and PAM are enabled by default on a secure
+   cluster. No configuration is required.
+   Hive 1.2 1510 MapR-SASL and PAM are enabled by default on a secure
+   cluster. No configuration is required.
+   Hive 1.0 1510 MapR-SASL and PAM are enabled by default on a secure
+   cluster. No configuration is required.
+   1508 PAM is the default authentication method for HiveServer2 on a
+   secure cluster. No configuration is required.
+   1504 PAM is not the default authentication method. The configuration
+   procedure below is required.
+   Hive 0.13 1508 PAM is the default authentication method for HiveServer2
+   on a secure cluster. No configuration is required.
+   1504 PAM is not the default authentication method. The configuration
+   procedure below is required.
+   1501 MapR-SASL and PAM are enabled by default on a secure cluster. No
+   configuration is required.
+    1. In the hive-site.xml on the HiveServer2 node, set the
+       hive.server2.authentication property to PAM.
+<property>
+    <name>hive.server2.authentication</name>
+    <value>PAM</value>
+</property>
+
+   Note: To configure PAM services, modify the JPam_login stanza in the
+   mapr.login.conf file. See [1]The jPam_login Stanza, and see [2]JAAS
+   Login Configuration File for related information.
+    2. Restart HiveServer2 to apply these changes.
+maprcli node services -name hs2 -action restart -nodes <comma-separated list of
+nodes>
+
+References
+
+   1. http://maprdocs.mapr.com/home/ReferenceGuide/mapr.login.conf.html
+   2. http://docs.oracle.com/javase/7/docs/technotes/guides/security/jgss/tutorials/LoginConfigFile.html

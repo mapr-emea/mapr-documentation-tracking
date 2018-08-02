@@ -1,0 +1,104 @@
+Non-Hashed and Hashed Indexes
+
+   You can create non-hashed and hashed indexes for queries on JSON tables
+   in MapR-DB.
+
+   Non-hashed indexes support conditional queries with an ORDER BY clause
+   because MapR-DB sorts the data in non-hashed indexes. When processing
+   ORDER BY queries, Drill does not have to perform sort operations on the
+   data.
+
+   Hashed indexes support the same conditional queries as non-hashed
+   indexes, but they do not have a guaranteed sort order. Hashed indexes
+   enable MapR-DB to evenly distribute new writes on an index across
+   logical partitions to avoid hot spotting. Drill must perform a sort for
+   ORDER BY queries that use hashed indexes. Sorting the data can increase
+   the CPU costs and negatively impact performance. See [1]Hashed Indexes
+   for additional information.
+
+   If you notice performance issues with ORDER BY queries that use hashed
+   indexes, review the query plans to see if the plans include sort and
+   merge operations. If this is the case, create non-hashed indexes to
+   support the queries and achieve the best performance.
+
+Examples of Hashed and Non-Hashed Index Plans for an ORDER BY Query
+
+   The examples here show the difference between a hashed and non-hashed
+   index plan for the following query on the lineitem table that contains
+   the [2]ORDER BY clause:
+SELECT L_LINESTATUS, L_QUANTITY FROM lineitem WHERE L_LINENUMBER = 1 AND L_ORDER
+KEY BETWEEN 40 AND 75 ORDER BY L_LINENUMBER;
+
+   Hashed Index Plan Example
+   A hashed index, l_hash_comp_1, was created using the maprcli table
+   index add command on a table, lineitem, as shown:
+maprcli table index add -path /drill/testdata/tpch/sf1/maprdb/json/hash/lineitem
+ -index l_hash_comp_1 -indexedfields L_LINENUMBER,L_ORDERKEY -includedfields L_L
+INESTATUS,L_QUANTITY -hashed true
+
+   Running the example query with the [3]EXPLAIN PLAN FOR command shows
+   that Drill produces an index plan with sort and merge operations to
+   process the query when using the hashed index, as follows:
+EXPLAIN PLAN FOR SELECT L_LINESTATUS, L_QUANTITY FROM lineitem WHERE L_LINENUMBE
+R = 1 AND L_ORDERKEY BETWEEN 40 AND 75 ORDER BY L_LINENUMBER;
+
+00-00    Screen
+00-01      Project(L_LINESTATUS=[$0], L_QUANTITY=[$1])
+00-02        SingleMergeExchange(sort0=[2])
+01-01          SelectionVectorRemover
+01-02            Sort(sort0=[$2], dir0=[ASC])
+01-03              Project(L_LINESTATUS=[$2], L_QUANTITY=[$3], L_LINENUMBER=[$0]
+)
+01-04                Scan(table=[[si, tpch_sf1_maprdb_hash, lineitem]], groupsca
+n=[JsonTableGroupScan [ScanSpec=JsonScanSpec [tableName=maprfs:///drill/testdata
+/tpch/sf1/maprdb/json/hash/lineitem, condition=(((L_LINENUMBER = {"$numberLong":
+1}) and (L_ORDERKEY >= {"$numberLong":40})) and (L_ORDERKEY <= {"$numberLong":75
+})), indexName=l_hash_comp_1], columns=[`L_LINENUMBER`, `L_ORDERKEY`, `L_LINESTA
+TUS`, `L_QUANTITY`]]])
+
+   Reading the query plan, you can see that Drill uses the hashed index in
+   the plan, as indicated by indexName=l_hash_comp_1. To process the
+   query, MapR-DB can use the index, but Drill must sort and merge the
+   data, as indicated by the Sort and SingleMergeExchange operations in
+   the query plan.
+
+   Using the hashed index plan for this ORDER BY query requires additional
+   processing and negatively impacts performance.
+
+   Non-Hashed Index Plan Example
+   A non-hashed index, l_comp_1, was created using the maprcli table index
+   add command on a table, lineitem, as shown:
+maprcli table index add -path /drill/testdata/tpch/sf1/maprdb/json/range/lineite
+m -index l_comp_1 -indexedfields L_LINENUMBER,L_ORDERKEY -includedfields L_LINES
+TATUS,L_QUANTITY
+
+   Running the example query with the [4]EXPLAIN PLAN FOR command shows
+   that Drill produces an index plan without the additional sort and merge
+   operations when using the non-hashed index to process the query, as
+   follows:
+EXPLAIN PLAN FOR SELECT L_LINESTATUS, L_QUANTITY FROM lineitem WHERE L_LINENUMBE
+R = 1 AND L_ORDERKEY BETWEEN 40 AND 75 ORDER BY L_LINENUMBER;
+
+00-00    Screen
+00-01      Project(L_LINESTATUS=[$0], L_QUANTITY=[$1])
+00-02        Project(L_LINESTATUS=[$2], L_QUANTITY=[$3], L_LINENUMBER=[$0])
+00-03          Scan(table=[[si, tpch_sf1_maprdb_range, lineitem]], groupscan=[Js
+onTableGroupScan [ScanSpec=JsonScanSpec [tableName=maprfs:///drill/testdata/tpch
+/sf1/maprdb/json/range/lineitem, condition=(((L_LINENUMBER = {"$numberLong":1})
+and (L_ORDERKEY >= {"$numberLong":40})) and (L_ORDERKEY <= {"$numberLong":75})),
+ indexName=l_comp_1], columns=[`L_LINENUMBER`, `L_ORDERKEY`, `L_LINESTATUS`, `L_
+QUANTITY`]]])
+
+   Reading the query plan, you can see that Drill uses the non-hashed
+   index plan, as indicated by indexName=l_comp_1. To process the query,
+   MapR-DB uses the index and Drill does not have to perform sort and
+   merge operations on the data, as indicated by the absence of the Sort
+   and SingleMergeExchange operations in the query plan. MapR-DB sorted
+   the data in the index when the index was created.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/hashed-index.html#hashed-index
+   2. https://drill.apache.org/docs/order-by-clause/
+   3. https://drill.apache.org/docs/explain/
+   4. https://drill.apache.org/docs/explain/

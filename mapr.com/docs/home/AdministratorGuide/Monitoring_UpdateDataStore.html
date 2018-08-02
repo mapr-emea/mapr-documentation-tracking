@@ -1,0 +1,40 @@
+Update the Monitoring Storage Nodes
+
+   You must reconfigure MapR Monitoring when you add additional OpenTSDB
+   or Elasticsearch nodes or when you change the OpenTSDB or Elasticsearch
+   node locations.
+    1. Run configure.sh on each node in the MapR cluster with the -R, -ES,
+       and -OT parameters. Optionally, you can include the -ESDB
+       parameter.
+/opt/mapr/server/configure.sh -R -ES <comma-separate list of Elasticsearch nodes
+> -OT <comma-separate list of OpenTSDB nodes> [-ESDB <filepath>]
+       For the entire list of available configure.sh parameters, see
+       [1]configure.sh
+       If you encounter any errors after running configure.sh, see
+       [2]Troubleshoot MapR Monitoring Installation Errors
+    2. If you updated the list of Elasticsearch nodes, restart the all the
+       Fluentd, Elasticsearch, and Kibana services.
+maprcli node services -name fluentd -nodes <space separated list of Fluentd node
+s> -action restart
+
+maprcli node services -name elasticsearch -nodes <space separated list of Elasti
+csearch nodes> -action restart
+
+maprcli node services -name kibana -nodes <space separated list of Kibana nodes>
+ -action restart
+
+    3. If you updated the list of OpenTSDB nodes, restart the collectd,
+       OpenTSDB, and Grafana services.
+maprcli node services -name opentsdb -nodes <space separated list of OpenTSDB no
+des> -action restart
+
+maprcli node services -name collectd -nodes <space separated list of collectd no
+des> -action restart
+
+maprcli node services -name grafana -nodes <space separated list of Grafana node
+s> -action restart
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/TroubleshootMonitoringInstall.html#concept_k4r_y2h_qw

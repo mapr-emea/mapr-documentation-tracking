@@ -1,0 +1,39 @@
+Configure Sentry to use Kerberos Authentication
+
+   You can configure Sentry to run in a secure cluster that uses Kerberos
+   authentication.
+   The same settings are valid for both the file-based and DB storage
+   modes.
+
+    1. Configure the following properties in the sentry-site.xml file
+       (/opt/mapr/sentry/sentry-<version>/conf/sentry-site.xml):
+<property>
+                        <name>sentry.service.security.mode</name>
+                        <value>kerberos</value>
+                        <description>Options: kerberos, other, none. Authenticat
+ion mode for Sentry service.</description>
+                        </property>
+
+                        <property>
+                        <name>sentry.hive.testing.mode</name>
+                        <value>false</value>
+                        </property>
+    2. Add the following properties to sentry-site.xml
+       (/opt/mapr/sentry/sentry-<version>/conf/sentry-site.xml):
+property>
+                        <name>sentry.service.server.principal</name>
+                        <value>mapr/<FQDN@REALM></value>
+                        </property>
+
+                        <property>
+                        <name>sentry.service.server.keytab</name>
+                        <value>/opt/mapr/conf/mapr.keytab</value></property>
+
+                        <property>
+                        <name>sentry.service.allow.connect</name>
+                        <value>mapr,hive,impala</value>
+                        </property>
+    3. Before starting Sentry, use the kinit tool:
+kinit -kt /opt/mapr/conf/mapr.keytab -p mapr/<CLUSTER_NAME@REALM>
+       For example:
+kinit -kt /opt/mapr/conf/mapr.keytab -p mapr/my.cluster.com@NODE1

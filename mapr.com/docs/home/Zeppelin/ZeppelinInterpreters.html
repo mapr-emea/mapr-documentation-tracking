@@ -1,0 +1,168 @@
+Understanding Zeppelin Interpreters
+
+   Apache Zeppelin interpreters enable you to access specific languages
+   and data processing backends. This section describes the interpreters
+   you can use with MapR and the use cases they serve.
+
+   Apache Zeppelin on MapR supports the following interpreters:
+
+   Shell
+          With the Shell interpreter, you can invoke system shell
+          commands. If you have a MapR-FS mount point, you can access
+          MapR-FS using shell commands like ls and cat by using the
+          [1]FUSE-Based POSIX Client. See [2]Running Shell Commands in
+          Zeppelin for examples that use this interpreter.
+
+   Pig
+          The Apache Pig interpreter enables you to run Apache Pig scripts
+          and queries. See [3]Running Pig Scripts in Zeppelin for examples
+          that use this interpreter.
+
+   JDBC
+          Apache Zeppelin on MapR provides preconfigured Apache Drill and
+          Apache Hive JDBC interpreters. See [4]Running Drill Queries in
+          Zeppelin and [5]Running Hive Queries in Zeppelin for examples
+          that use these interpreters.
+
+   Livy
+          The Apache Livy interpreter is a RESTful interface for
+          interacting with Apache Spark. With this interpreter, you can
+          run interactive Scala, Python, and R shells, and submit Spark
+          jobs.
+
+          The Spark jobs run in YARN cluster mode so they run inside an
+          application master process managed by YARN. This has the
+          following implications:
+
+          + Allows you to close your Zeppelin notebook without killing
+            your Spark jobs.
+          + Supports Spark Dynamic Resource Allocation, which allows you
+            to set idle timeouts in your Spark context to recapture
+            wayward memory.
+
+          The Livy interpreter does not support [6]ZeppelinContext and
+          [7]AngularBind. See the description of the Spark interpreter for
+          details about these features.
+
+          The following topics contain examples that use the Livy
+          interpreter to access different backend engines:
+
+          + [8]Running Spark Jobs in Zeppelin
+          + [9]Accessing MapR-DB in Zeppelin Using the MapR-DB Binary
+            Connector
+          + [10]Accessing MapR-ES in Zeppelin Using the Livy Interpreter
+            Note: You cannot use access MapR-ES using either the Livy or
+            Spark interpreters with Data Science Refinery 1.2, if you are
+            connecting to a MapR cluster older than version 6.0.1.
+
+   Spark
+          The Apache Spark interpreter is available starting in the 1.1
+          release of the MapR Data Science Refinery. It provides an
+          alternative to the Livy interpreter.
+
+          The Spark interpreter supports the following features not
+          supported by the Livy interpreter:
+
+          + [11]ZeppelinContext - Allows you to create dynamic forms and
+            share objects between Spark Scala and PySpark code
+          + [12]AngularBind - Allows you to display charts using data
+            returned from Spark and to pass variables from the Spark
+            interpreter to the Angular interpreter
+
+          The Spark interpreter launches Spark jobs in YARN client mode.
+          In this mode, the interpreter launches the Spark driver process
+          on the host machine of the Zeppelin container. This can result
+          in high resource consumption. You also lose the other advantages
+          of running in YARN cluster mode described earlier for the Livy
+          interpreter.
+
+          You can run only one version of Python in your container when
+          using the Spark interpreter. The Livy interpreter does not have
+          this limitation.
+
+          The following topics contain examples that use the Spark
+          interpreter to access different backend engines:
+
+          + [13]Running Spark Jobs in Zeppelin
+          + [14]Accessing MapR-DB in Zeppelin Using the MapR-DB Binary
+            Connector
+          + [15]Accessing MapR-DB in Zeppelin Using the MapR-DB OJAI
+            Connector
+          + [16]Accessing MapR-ES in Zeppelin Using the Spark Interpreter
+            Note: You cannot use access MapR-ES using either the Livy or
+            Spark interpreters with Data Science Refinery 1.2, if you are
+            connecting to a MapR cluster older than version 6.0.1.
+
+   MapR-DB Shell
+          The MapR-DB Shell interpreter allows you to run commands
+          available in [17]MapR-DB Shell (JSON Tables) in the Zeppelin UI.
+          Using dbshell commands, you can access MapR-DB JSON tables
+          without having to write Spark code. The interpreter supports all
+          dbshell commands except find commands that specify an ordering.
+
+          The interpreter is available starting in the 1.2 release of the
+          MapR Data Science Refinery. You do not have to run any new
+          additional configuration steps to use this interpreter.
+
+          Specify the following in the Zeppelin UI to invoke the
+          interpreter:
+
+%maprdb
+
+          See [18]Running MapR-DB Shell Commands in Zeppelin for examples
+          that use this interpreter.
+
+   The table below summarizes which interpreters to use to access
+   different backend engines for different data processing goals:
+   Data Processing Goal Zeppelin Interpreter Backend Engine
+   Data discovery, exploratory querying Livy, Spark Spark SQL
+   JDBC Hive, Drill
+   Shell MapR-FS
+   MapR-DB Shell MapR-DB JSON
+   ETL, preparation Livy, Spark Spark, PySpark, SparkSQL, SparkStreaming,
+   Livy, Spark MapR-DB (through the [19]MapR-DB Connectors for Apache
+   Spark)
+   Livy, Spark MapR-ES (through [20]Spark jobs that query MapR-ES)
+   Note: You cannot use access MapR-ES using either the Livy or Spark
+   interpreters with Data Science Refinery 1.2 if you are connecting to a
+   MapR cluster older than version 6.0.1.
+   JDBC Hive
+   Pig MapReduce
+   Machine and deep learning, data science Livy, Spark SparkML
+   Reporting, visualization JDBC Hive, Drill
+
+   The following are general guidelines for choosing between the Livy and
+   Spark interpreters:
+     * Use Livy for jobs that are long running or resource intensive
+     * Use Spark if you use visualization features that Livy does not
+       support
+
+Unsupported Interpreters
+
+   Apache Zeppelin on MapR does not support the HBase interpreter. To
+   access MapR-DB binary tables, use the [21]MapR-DB Binary Connector for
+   Apache Spark with either the Livy or Spark interpreter.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_i4r_5c2_rbb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinShell.html#task_y2t_g5c_rbb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinPig.html#ZeppelinPig
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDrill.html#concept_msx_yzh_qbb
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinHive.html#concept_nlc_lb3_qbb
+   6. https://zeppelin.apache.org/docs/latest/interpreter/spark.html#zeppelincontext
+   7. https://zeppelin.apache.org/docs/latest/displaysystem/back-end-angular.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinSpark.html#ZeppelinSpark
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinMapRDB.html#ZeppelinMapRDB
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinMapRES.html#concept_kv3_ws3_qbb
+  11. https://zeppelin.apache.org/docs/latest/interpreter/spark.html#zeppelincontext
+  12. https://zeppelin.apache.org/docs/latest/displaysystem/back-end-angular.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinSpark.html#ZeppelinSpark
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinMapRDB.html#ZeppelinMapRDB
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinMapRDBOJAI.html#ZeppelinMapRDB
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinMapRESSpark.html#concept_kv3_ws3_qbb
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_dbshell.html#mapr_dbshell
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinMapRDBShell.html#ZeppelinMapRDBShell
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SparkConnectorsMapRDB.html#concept_ygh_ywm_gz
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/Spark_IntegrateMapRStreams_Consume.html#task_mm5_b5j_w5
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/SparkHBaseConnector.html#concept_gth_txm_gz

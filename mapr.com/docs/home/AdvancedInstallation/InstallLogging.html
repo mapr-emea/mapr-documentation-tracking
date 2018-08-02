@@ -1,0 +1,229 @@
+Step 9: Install Log Monitoring
+
+   Installing the logging components of MapR Monitoring is optional. MapR
+   Monitoring components are available as part of the MapR Expansion Pack
+   (MEP) that you selected for the cluster.
+   Note: As of MapR 6.0, if you install the logging components on a secure
+   cluster, you must generate the Elasticsearch keys, certifications, and
+   trust stores on an Elasticsearch node (designated as the master) and
+   then distribute them to the other Elasticsearch nodes in the cluster,
+   as shown below in step 3.
+
+   Complete the steps to install the logging components as the root user
+   or using sudo.
+    1. For log monitoring, install the following packages:
+
+   Component Requirements
+   fluentd Install the mapr-fluentd package on each node in the cluster.
+   Elasticsearch Install the mapr-elasticsearch package on at least three
+   nodes in the cluster to allow failover of log storage in the event that
+   one Elasticsearch node is unavailable.
+   Kibana Install the mapr-kibana package on at least one node in the
+   cluster.
+       Note: On secure Ubuntu 14.04 or 16.04 clusters, Elasticsearch can
+       fail to generate a keystore password if the uuid-runtime package is
+       not installed. uuid-runtime is one of the package dependencies
+       required for installing without the MapR Installer. See the entry
+       for SPYG-934 and uuid-runtime in the [1]MapR Monitoring Known
+       Issues.
+       For example, on a three node MapR cluster, you can run the
+       following commands to install log packages:
+          + For CentOS/RedHat:
+               o Node A: yum install mapr-fluentd mapr-elasticsearch
+               o Node B: yum install mapr-fluentd mapr-elasticsearch
+               o Node C: yum install mapr-fluentd mapr-elasticsearch
+                 mapr-kibana
+          + For Ubuntu:
+               o Node A: apt-get install mapr-fluentd mapr-elasticsearch
+               o Node B: apt-get install mapr-fluentd mapr-elasticsearch
+               o Node C: apt-get install mapr-fluentd mapr-elasticsearch
+                 mapr-kibana
+          + For SUSE:
+               o Node A: zypper install mapr-fluentd mapr-elasticsearch
+               o Node B: zypper install mapr-fluentd mapr-elasticsearch
+               o Node C: zypper install mapr-fluentd mapr-elasticsearch
+                 mapr-kibana
+    2. For secure MapR clusters, run maprlogin print to verify that you
+       have a MapR user ticket for the mapr user and the root user. These
+       user tickets are required for a successful installation.
+       If you need to generate a MapR user ticket, run maprlogin password.
+       For more information, see [2]Generating a MapR User Ticket
+    3. For secure MapR clusters, complete the following steps to generate
+       the Elasticsearch keys, certifications, and trust stores on the
+       master Elasticsearch node and then distribute them to the other
+       Elasticsearch nodes:
+         a. Select one Elasticsearch node as the master, and run
+            configure.sh -R on that node.
+         b. Run the following command on the master Elasticsearch node:
+/opt/mapr/server/configure.sh -OT <comma-separated list of OpenTSDB nodes> -ES <
+comma-separated list of Elasticsearch nodes> -R -EPelasticsearch -genESKeys
+            Note: The table in step 6 lists descriptions for parameters
+            used in this command.
+            Important: If DNS resolution on the nodes is not completely
+            configured, running the configure.sh -genESKeys step will
+            fail. For example, key creation will fail if reverse lookups
+            do not work. Suppose that the DNS lookup for a node with
+            hostname node1.qa.lab returns 192.100.1.1. If the DNS lookup
+            for 192.100.1.1 returns nothing (instead of hostname
+            node1.qa.lab), key creation will fail.
+         c. Copy the specified files to the locations indicated in the
+            table below:
+
+   File Permissions Copy from location (on master) Copy to location (on
+   other ES nodes)*
+   es-root-ca.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/ca/es-
+   root-ca.pem
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/ca
+   truststore.jks 0640
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/trusts
+   tore.jks
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/keystores
+   admin-usr-keystore.jks 0640
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/admin-
+   usr-keystore.jks
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/keystores
+   /admin-usr-keystore.jks
+   <node-fqdn>-srvr-keystore.jks 0640
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/<node-
+   fqdn>-srvr-keystore.jks
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/keystores
+
+   Note: Only include the file that matches the nodename.
+   sg2.yml 0600
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/sg2.ym
+   l /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/
+   sg_http_<node-fqdn>.yml 0600
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/sg_htt
+   p_<node-fqdn>.yml
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch
+
+   Note: Only include the file that matches the nodename.
+   sg_ssl_<node-fqdn>.yml 0600
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/sg_ssl
+   _<node-fqdn>.yml
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch
+
+   Note: Only include the file that matches the nodename.
+   .keystore_password 0600
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/.keystore
+   _password
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/.keystore
+   _password
+            *The Copy to directories might not exist and might need to be
+            created.
+         d. Copy the es-root-ca.pem file from the master Elasticsearch
+            node to each Kibana node, as shown:
+cp /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/ca/es-root-c
+a.pem /opt/mapr/kibana/kibana-5.4.1/config/ca/es-root-ca.pem
+         e. Copy the es-root-ca.pem file from the master Elasticsearch
+            node to the Fluentd
+            /opt/mapr/fluentd/fluentd-<version>/etc/fluentd/ca/ directory
+            on every node in the cluster, as shown:
+cp /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/ca/es-root-c
+a.pem /opt/mapr/fluentd/fluentd-<version>/etc/fluentd/ca/es-root-ca.pem
+    4. MapR 6.0.1 and later: For secure MapR clusters, copy the
+       $ES_HOME/etc/elasticsearch/.keystore_password file from the
+       Elasticsearch master node to $KIBANA_HOME/config/.keystore_password
+       on the nodes where you are running Kibana. The .keystore_password
+       file contains a system-generated password that is used to
+       authenticate Kibana-server-to-Elasticsearch-server communication.
+    5. MapR 6.0.1 and later: For secure MapR clusters, configure a
+       password for the Elasticsearch admin user to enable authentication
+       for the end user using Kibana to search the Elasticsearch log
+       index. This password needs to be provided at the time of running
+       configure.sh. If no password is specified, you will default to the
+       pre-mep-5.0.0, default password of admin. Use one of the following
+       methods to pass the password to Elasticsearch/Kibana:
+          + On the nodes where Fluentd/Elasticsearch/Kibana is installed,
+            export the password as an environment variable before calling
+            configure.sh:
+export ES_ADMIN_PASSWORD="<newElasticsearchPassword>"
+            Then run configure.sh as you normally would run it (go to step
+            6).
+          + Add the following options to the configure.sh command in step
+            6. This method explicitly passes the password on the
+            configure.sh command line:
+-EPelasticsearch '-password <newElasticsearchPassword>' -EPkibana '-password <ne
+wElasticsearchPassword>' -EPfluentd '-password <newElasticsearchPassword>'
+            Example
+/opt/mapr/server/configure.sh -R -v -ES mfs74.qa.lab -ESDB /opt/mapr/es_db -OT m
+fs74.qa.lab -C mfs74.qa.lab -Z mfs74.qa.lab -EPelasticsearch '-password helloMap
+R' -EPkibana '-password helloMapR' -EPfluentd '-password helloMapR'
+          + Add the following options to the configure.sh command in step
+            6. This method explicitly passes the password on the
+            configure.sh command line by specifying a file:
+-EPelasticsearch '-password <name of local file containing new password>'  -EPki
+bana '-password <name of local file containing new password>' -EPfluentd '-passw
+ord <name of local file containing new password>'
+            Example
+/opt/mapr/server/configure.sh -R -v -ES mfs74.qa.lab -ESDB /opt/mapr/es_db -OT m
+fs74.qa.lab -C mfs74.qa.lab -Z mfs74.qa.lab -EPelasticsearch '-password /tmp/es_
+password' -EPkibana '-password /tmp/es_password' -EPfluentd '-password /tmp/es_p
+assword'
+    6. Run configure.sh on each node in the MapR cluster with the -R and
+       -ES parameters, adding parameters to configure the
+       Fluentd/Elasticsearch/Kibana password as needed. Optionally, you
+       can include the -ESDB parameter. You must have a warden service
+       running during configure.sh -R.
+/opt/mapr/server/configure.sh -R -ES <comma-separate list of Elasticsearch nodes
+> [-ESDB <filepath>]
+
+   Parameter Description
+   -R After initial node configuration, specifies that configure.sh should
+   use the previously configured ZooKeeper and CLDB nodes.
+   -ES Specifies a comma-separated list of host names or IP addresses that
+   identify the Elasticsearch nodes. The Elasticsearch nodes can be part
+   of the current MapR cluster or part of a different MapR cluster. The
+   list is in the following format:
+          + hostname/IPaddress[:port_no]
+            [,hostname/IPaddress[:port_no]...]
+
+   Note: The default Elasticsearch port is 9200. If you want to use a
+   different port, specify the port number when you list the Elasticsearch
+   nodes.
+   -ESDB Specifies a non-default location for writing index data on
+   Elasticsearch nodes. In order to configure an index location, you only
+   need to include this parameter on Elasticsearch nodes. By default, the
+   Elasticsearch index is written to
+   /opt/mapr/elasticsearch/elasticsearch-<version>/var/lib/MaprMonitoring/
+   .
+
+   Note: Elasticsearch requires a lot of disk space. Therefore, a separate
+   file system for the index is recommend. It is not recommended to store
+   index data under the / or the /var file system.
+       For example, to configure MapR Monitoring components you can run
+       one of the following commands:
+          + In this example, a location is specified for the Elasticsearch
+            index directory, and default ports are used for Elasticsearch
+            nodes:
+/opt/mapr/server/configure.sh -R -ES NodeA,NodeB,NodeC -ESDB /opt/mapr/myindexlo
+cation
+          + In this example, non-default ports are specified for
+            Elasticsearch, and the default location is used for the
+            Elasticsearch index directory:
+/opt/mapr/server/configure.sh -R -ES NodeA:9595,NodeB:9595,NodeC:9595
+       After you run configure.sh -R, if errors are displayed see
+       [3]Troubleshoot MapR Monitoring Installation Errors.
+    7. If you installed Kibana, perform the following steps: :
+         a. Use one of the following methods to load the Kibana URL:
+               o From the MCS, select the Kibana view. After you select
+                 the Kibana view, you may also need to select the Pop-out
+                 page into a tab option.
+               o From a web browser, launch the following URL:
+                 https://<IPaddressOfKibanaNode>:5601
+         b. When the Kibana page loads, it displays a Configure an index
+            pattern screen. Provide the following values:
+            Note: The Index contains time-based events option is selected
+            by default and should remain selected.
+
+                    Field               Value
+            Index name or pattern mapr_monitoring-*
+            Time-field            @timestamp
+         c. Click Create.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_known_issues.html#concept_qpc_pvb_tt__section_egs_rnh_5bb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingMapRUserTicket.html#TicketsandCertificates-Ge_26281159-d3e202
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/TroubleshootMonitoringInstall.html#concept_k4r_y2h_qw

@@ -1,0 +1,27 @@
+Destroy the client and the connection
+
+APIs used
+
+     * hb_client_destroy(): Cleans up hb_client_t handle and releases any
+       held resources. The callback is called after the connections are
+       closed, but just before the client is freed. This API is defined in
+       the header file client.h.
+     * hb_connection_destroy(): Destroys the connection and frees all
+       resources allocated at creation time. This API is defined in the
+       header file connection.h.
+
+Sequence of steps
+
+    1. Destroy the client.
+    2. Destroy the connection.
+
+Code
+
+  if (client) {
+    HBASE_LOG_INFO("Disconnecting client.");
+    hb_client_destroy(client, client_disconnection_callback, NULL);
+    wait_client_disconnection();
+  }
+  if (connection) {
+    hb_connection_destroy(connection);
+  }

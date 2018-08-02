@@ -1,0 +1,67 @@
+Mounting a Read-Only Volume
+
+   This page describes how to specify a volume that should be mounted as
+   read-only.
+
+   The following example specifies a volume that should be mounted as
+   read-only in a MapR path or PersistentVolume during static
+   provisioning:
+flexVolume:
+        driver: "mapr.com/maprfs"
+        readOnly: true
+        options:
+          volumePath: "/path/to/data/in/mapr"
+          cluster: "mycluster"
+          cldbHosts: "cldb1 cldb2 cldb3"
+          securityType: "secure"
+          ticketSecretName: "mapr-ticket-secret"
+          ticketSecretNamespace: "mapr-examples"
+
+   The following example shows how to specify that the volume should be
+   mounted read-only in a StorageClass for dynamic provisioning. The
+   example specifies that the POSIX driver should mount the MapR path as
+   read only. This is different from the readonly parameter for volume
+   creation that creates the volume as readonly.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+   name: secure-maprfs
+   namespace: mapr-examples
+provisioner: mapr.com/maprfs
+parameters:
+    restServers: "rest1:8443"
+    cldbHosts: "cldb1 cldb2 cldb3"
+    cluster: "mysecurecluster"
+    securityType: "secure"
+    ticketSecretName: "mapr-ticket-secret"
+    ticketSecretNamespace: "mapr-examples"
+    maprSecretName: "mapr-provisioner-secrets"
+    maprSecretNamespace: "mapr-examples"
+    namePrefix: "pv"
+    mountPrefix: "/pv"
+    readOnly: "true"
+    reclaimPolicy: "Retain"
+    advisoryquota: "100M"
+
+   The following example specifies that the volume should be created as
+   readOnly in a StorageClass for dynamic provisioning:
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+   name: secure-maprfs
+   namespace: mapr-examples
+provisioner: mapr.com/maprfs
+parameters:
+    restServers: "rest1:8443"
+    cldbHosts: "cldb1 cldb2 cldb3"
+    cluster: "mysecurecluster"
+    securityType: "secure"
+    ticketSecretName: "mapr-ticket-secret"
+    ticketSecretNamespace: "mapr-examples"
+    maprSecretName: "mapr-provisioner-secrets"
+    maprSecretNamespace: "mapr-examples"
+    namePrefix: "pv"
+    mountPrefix: "/pv"
+    reclaimPolicy: "Retain"
+    advisoryquota: "100M"
+    readonly: "1"

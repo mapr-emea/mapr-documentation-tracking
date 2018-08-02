@@ -1,0 +1,44 @@
+Reducing Failure Detection Time for File Clients
+
+   To reduce the amount of time it takes (hadoop and FUSE-based POSIX)
+   clients to detect (CLDB and data node) failure, define the property,
+   fs.mapr.connect.timeout, in the core-site.xml file. The value for this
+   property can be set in 100 milliseconds and will be rounded up to the
+   nearest 100 milliseconds. The minimum value for this property is 100
+   milliseconds, which can be incremented only by units of 100
+   milliseconds. Suppose a value of 260 milliseconds is specified, by
+   default, the value will automatically be rounded up to 300
+   milliseconds. The default value for this property is 0, which means
+   that the Linux TCP timeout setting will be used for connections if this
+   property is not set.
+
+   Your entry in core-site.xml file should look similar to the following:
+<property>
+  <name>fs.mapr.connect.timeout</name>
+  <value>200</value>
+  <description>file client wait time of 200 milliseconds</description>
+</property>
+
+   This setting (for hadoop and FUSE-based POSIX clients) ensures that the
+   clients wait only for the specified amount of time to establish a
+   connection. That is, it is used only for the first request sent to CLDB
+   or a data node before or after a failure. For subsequent requests, the
+   default system connection timeout value is used. In the event of a
+   failure after a connection has been established, the client will wait
+   for the connection to timeout (based on the system timeout value)
+   before it contacts the next (CLDB or data) node to process the request.
+
+   For example, suppose the value for this parameter is 100 milliseconds
+   and the Linux TCP connection timeout value is 30 seconds. When a hadoop
+   or FUSE-based POSIX client contacts CLDB or a data node for the first
+   time to establish a connection, the client will wait for 100
+   milliseconds before trying the next CLDB or data node. After a
+   connection is established, for subsequent requests, the client will
+   wait for 30 seconds for a response. If the node goes down after a
+   connection has been established, the client will wait for 30 seconds
+   before trying the next node. If the client contacts a recovered node
+   for the first time, it will wait for 100 milliseconds to establish the
+   connection.
+   Note: MapR-FS does not use this property internally; it is used by
+   hadoop and FUSE-based POSIX clients only. This setting is not
+   applicable to NFS gateway and loopbacknfs POSIX clients.

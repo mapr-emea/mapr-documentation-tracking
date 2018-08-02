@@ -1,0 +1,154 @@
+How the File Upload Process Works
+
+   The File Migration service maintains in memory information regarding
+   directories, subdirectories, and files within each directory tree to
+   monitor. When started, the service first looks for changed and new
+   files in the configured directories. To detect changes to existing
+   files, the service looks at the extended attribute user.s3uploadtime,
+   which is set on each file and contains the modification time (in
+   milliseconds) when the file was last uploaded to the AWS S3 bucket. It
+   then places the new and changed files in a queue for upload, sorted by
+   the oldest modification timestamp. The service then uploads multiple
+   files in parallel and provides logs as files upload, fail to upload, or
+   complete uploading.
+   Note: For each directory tree, you can set up any file or directory
+   that matches a specified regex pattern to be ignored. For example, all
+   files ending in .tmp or all files in /tmp directory can be set up to be
+   ignored. Additionally, only files are considered for upload; empty
+   directories, symbolic links, and tables or streams are ignored.
+
+Scanning for New and Changed Files
+
+   The service scans for new and changed files in the monitored
+   directories using a full scan or a lite scan.
+     * [1]Full Scan
+     * [2]Lite Scan
+
+   The service performs a full scan when it is first started and
+   periodically or randomly for a subset of the directories in the
+   directory tree after. This allows you to spread the cost of the full
+   scan over time rather than performing a full scan of all directories at
+   once.
+
+   During a full scan, the service examines each file in a directory to
+   determine if it has changed since the last time the directory was
+   examined. If the file contains changes, then the file is examined more
+   carefully.
+
+   If the file was uploaded, the service retrieves the modification time
+   of the file, which was set on the file at the time the file was
+   uploaded. If the file was not uploaded or if the file was uploaded but
+   the modification time changed since the last upload, the service places
+   the file in the queue for upload.
+
+   A full scan also discovers new directories and adds them to the list of
+   directories to be monitored.
+   The service performs an incremental scan to detect the last modified
+   timestamp on each directory recursively using the in-memory directory
+   tree from the last scan. If there is no change in the timestamp since
+   the last scan, the service does not examine the directory contents and
+   proceeds to the next directory; this makes the incremental scan very
+   fast. If there is a change in the timestamp since the last scan, the
+   service performs a full scan on the directory.
+   Note: Before starting an incremental scan, the service checks to see if
+   a directory tree is due for a full scan. Only a full scan allows the
+   service to detect if a file was modified after upload. With a lite
+   scan, the service checks only the modification time of the directory,
+   which is not changed by the modification (such as due to late writes)
+   of a file.
+
+Queueing Files for Upload
+
+   Files are placed in the queue with a configurable delay from the last
+   known modification time of the file to avoid uploading a file that is
+   still changing.
+
+   For example, with the default of 15 seconds, a file that was modified 5
+   seconds ago would remain on the queue for another 10 seconds, whereas a
+   file modified 5 minutes ago would be immediately considered for upload.
+   This allows files to be uploaded roughly in order by last modification
+   time.
+
+   The service places (by default, 10) files in the queue for parallel
+   upload. The scanning service is paused if the pending queue exceeds 10
+   times the number of files allowed for parallel update to avoid too many
+   pending files.
+
+Uploading Files to S3
+
+   Uploads are in one of three states: waiting to be uploaded, uploading,
+   finished with uploading. By default, the service performs a check on
+   the status of the files being uploaded every 3 seconds and detects
+   uploads that are approaching completion. The service then sets the
+   extended attribute (user.s3uploadtime) to the file on MapR-FS to
+   indicate that the file was uploaded.
+
+   If an error occurs during upload, the file is requeued for another try
+   after a brief wait, which is 5 minutes by default. If the file could
+   not be uploaded after a specified number of attempts, the file is
+   dequeued to allow other files to upload. Note that the file is
+   rediscovered, if it is still there, during the next full scan and
+   queued for upload.
+   Note: When files are uploaded, although the file name remains the same,
+   but the leading slash is removed and the full path is converted to a
+   key on the AWS S3 bucket. For example, /tmp/foo after upload becomes
+   the key tmp/foo on AWS S3 bucket.
+
+Setting Extended Attributes
+
+   When the upload completes, the service uses an extended attribute,
+   user.s3uploadtime, to set the timestamp on the file to when the file
+   was uploaded. This extended attribute, which contains the last upload
+   timestamp, is used by the service to determine if a file has changed
+   since the file was last uploaded.
+
+Purging the Files and Directories
+
+   The service also optionally deletes files after uploading and deletes
+   empty directories. You can configure file deletion after upload in
+   hours or fractions of an hour and configure empty directory deletion in
+   minutes. Both can be set to zero, which disables the deletion function.
+   Both functions are disabled by default.
+
+   Deletion of files and directories happen only during a full scan:
+     * [3]For files
+     * [4]For directories
+
+   For files, the modification timestamp on the file is examined to see
+   how far back in time it was last modified.
+
+   If the file has been uploaded in its present form and if it matches or
+   exceeds the interval configured for file deletion, the file is
+   immediately deleted. If it does not match the configured interval for
+   file deletion, a message is printed (to the log file, filemigrate.log)
+   as to when the file will be deleted if it will be deleted fairly soon.
+
+   Files that were never uploaded (such as the files that were ignored)
+   will not be deleted by the service.
+   For directories, the contents of the directory and the modification
+   timestamp on the directory are examined.
+
+   If the directory is empty and the modification timestamp matches or
+   exceeds the configured interval of time for directory deletion, the
+   directory is deleted.
+
+   The act of deleting a file or directory from a parent directory causes
+   the modification timestamp of the parent directory to change.
+   Therefore, an idle or empty (parent) directory is deleted only after
+   the configured interval of time since the deletion of its children
+   (file or subdirectory).
+
+   The recursive deletion of directories has a slow bottom up behavior:
+   first empty leaf directories are deleted and then the parents are
+   deleted during a future full scan after the interval of time has
+   elapsed.
+
+   If a directory contains files that were never uploaded (ignored), the
+   directory will not be deleted.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/UploadProcess.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/UploadProcess.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/UploadProcess.html#div2entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/UploadProcess.html#div2entry2

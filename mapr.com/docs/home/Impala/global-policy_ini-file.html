@@ -1,0 +1,35 @@
+The global-policy.ini File
+
+   The default global-policy.ini file defines the admin_role, which gives
+   full access to the Hiveserver2 server for the mapr user. The file is
+   located in /opt/mapr/sentry/sentry-<version>/conf in your local file
+   system. You can relocate the file to MapR-FS if you prefer. By default,
+   this file contains these sections:
+[groups]
+      mapr = admin_role
+
+      [roles]
+      admin_role = server=HS2
+
+Sample sentry-provider.ini File
+
+[databases]
+        # Defines the location of the per-DB policy file for the customer's DB o
+r schema
+        customers = /etc/sentry/customers.ini
+
+        [groups]
+        customers_admin = customers_admin_role
+
+        [roles]
+        customers_admin_role = server=HS2->db=customers
+
+Sample customers.ini File
+
+[groups]
+        manager = customers_insert_role, customers_select_role
+        analyst = customers_select_role
+
+        [roles]
+        customers_insert_role = server=HS2->db=customers->table=*->action=insert
+        customers_select_role = server=HS2->db=customers->table=*->action=select

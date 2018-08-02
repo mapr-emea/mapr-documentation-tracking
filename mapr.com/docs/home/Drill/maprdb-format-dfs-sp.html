@@ -1,0 +1,68 @@
+Modifying the maprdb Format Settings within the dfs Storage Plugin
+Configuration
+
+   You can add or modify certain maprdb format plugin settings within the
+   dfs storage plugin configuration on the Storage page in the Drill Web
+   Console.
+   The following table provides a list of the maprdb format options that
+   you can set within the dfs storage plugin configuration:
+   Option Description Value
+   allTextMode When enabled, Drill reads all values as type varchar.
+   Useful when the underlying data set has type values of mixed scalar
+   types, such as integers, floating point, varchars, date, time, and
+   timestamp. Disabled by default. true|false
+   disableCountOptimization When enabled, this option disables
+   optimization for queries with the COUNT (*) aggregate function.
+   Disabled by default. true|false
+   enablePushdown When enabled, Drill pushes down filters to MapR-DB.
+   Disabling this option is not recommended unless you intend to use it
+   for troubleshooting purposes. Enabled by default. true|false
+   ignoreSchemaChange When enabled, Drill ignores schema changes. Disabled
+   by default. true|false
+   nonExistentColumnsProjection When enabled, Drill can distinguish
+   between null and non-existent fields. Disabled by default. true|false
+   readNumbersAsDouble When enabled, Drill reads all numeric values as
+   type double. Useful when the underlying data set has type values of
+   mixed numeric types, such as integers and floating point. Disabled by
+   default. true|false
+   The following example configuration shows you how to include the
+   options in the maprdb format configuration within the dfs storage
+   plugin configuration:
+{
+  "type": "file",
+  "enabled": true,
+  "connection": "maprfs:///",
+  "config": null,
+  "workspaces": {
+    "root": {
+      "location": "/",
+      "writable": false,
+      "defaultInputFormat": "maprdb",
+      "allowAccessOutsideWorkspace": false
+    },
+  "formats": {
+    "maprdb": {
+      "type": "maprdb",
+      "allTextMode": true,
+      "disableCountOptimization": true,
+      "enablePushdown": false
+    },
+    "parquet": {
+      "type": "parquet"
+    },
+    "json": {
+      "type": "json",
+      "extensions": [
+        "json"
+      ]
+    }
+  }
+}
+
+   See [1]Plugin Configuration Basics and [2]File System Storage Plugin
+   for more information.
+
+References
+
+   1. https://drill.apache.org/docs/plugin-configuration-basics/
+   2. https://drill.apache.org/docs/file-system-storage-plugin/

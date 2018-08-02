@@ -1,0 +1,52 @@
+ResourceManager
+
+   The ResourceManager is mainly concerned with arbitrating available
+   resources in the cluster among competing applications, with the goal of
+   maximum cluster utilization. The ResourceManager includes a pluggable
+   scheduler called the YarnScheduler, which allows different policies for
+   managing constraints such as capacity, fairness, and service level
+   agreements.
+
+   Figure 1. Internal Components of the Resource Manager
+   The Resource manager manages resources as follows:
+     * Each NodeManager takes instructions from the ResourceManager,
+       reporting and handling containers on a single node
+     * Each ApplicationMaster requests resources from the ResourceManager,
+       then works with containers provided by NodeManagers
+
+   The ResourceManager communicates with application clients via an
+   interface called the ClientService. A client can submit or terminate an
+   application and gain information about the scheduling queue or cluster
+   statistics through the ClientService.
+
+   Administrative requests are served by a separate interface called the
+   AdminService, through which operators can get updated information about
+   cluster operation.
+
+   Behind the scenes, the ResourceTrackerService receives node heartbeats
+   from the NodeManager to track new or decommissioned nodes. The
+   NMLivelinessMonitor and NodesListManager keep an updated status of
+   which nodes are healthy so that the scheduler and the
+   ResourceTrackerService can allocate work appropriately.
+
+   A component called the ApplicationMasterService manages
+   ApplicationMasters on all nodes, keeping the scheduler informed. A
+   component called the AMLivelinessMonitor keeps a list of
+   ApplicationMasters and their last heartbeat times, in order to let the
+   ResourceManager know what applications are healthy on the cluster. Any
+   ApplicationMaster that does not heartbeat within a certain interval is
+   marked as dead and re-scheduled to run on a new container.
+
+   At the core of the ResourceManager is an interface called the
+   ApplicationsManager, which maintains a list of applications that have
+   been submitted, are running, or are completed. The ApplicationsManager
+   accepts job submissions, negotiates the first container for an
+   application (in which the ApplicationMaster will run) and restarts the
+   ApplicationMaster if it fails.
+
+   The ResourceManager and NodeManagers communicate via heartbeats.
+
+   Configure the ResourceManager for high availability so that the failure
+   of the ResourceManager service is a not single point of failure for the
+   cluster. High availability of the ResourceManager is configured by
+   default when you run configure.sh without specifying the -RM parameter.

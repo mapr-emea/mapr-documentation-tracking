@@ -1,0 +1,54 @@
+Using probe and import to Generate the Installer Database
+
+   If a cluster has MapR software installed but has no installer database,
+   you cannot install or upgrade the cluster using MapR Installer Stanza
+   commands. And you cannot use the web-based MapR Installer on the
+   cluster. However, you can generate an installer database on a cluster
+   by using the probe and import commands. Once the installer database is
+   generated, you can use the web-based installer and all MapR Installer
+   Stanza commands on the cluster.
+   Note: Using probe and import to generate the installer database is
+   supported only on MapR 5.2 and later. If you need to use this feature
+   on an earlier MapR version, please contact your MapR representative.
+   Note: If you are not sure if your cluster has an installer database,
+   you can use the export command to generate a YAML file that describes
+   the cluster configuration. See [1]Exporting a Cluster Configuration.
+
+Using probe
+
+   Before using the probe command, you must know the host names or IP
+   addresses of the cluster nodes and the root user, which must be the
+   same on all nodes. The probe command generates a template that will be
+   used by the import command.
+   Note: Do not make changes to the probe-generated template file. After
+   the installer database is created, you can use the export command to
+   export a YAML for making changes.
+
+   In this example, the probing user, mapr1, probes an array of hosts
+   (config.hosts) and generates a template file /tmp/location.yaml. Note
+   that the probing user must be able to do rpm and pkg queries and have
+   permission to read certain files and directories within /opt/mapr.
+mapr-installer-cli probe -n -o config.ssh_id=mapr1 config.ssh_password=xyz confi
+g.hosts='["hostname[1-3]","hostname7"]' > /tmp/location.yaml
+
+   Note: The probe command can use various methods to determine the MEP
+   version of a node. One method checks the MEP repo URL defined on the
+   node. If multiple MEP repos are defined on the same node, the probe
+   command ignores all of them and tries to determine the MEP version
+   based on the MapR packages that are present.
+
+Using import
+
+   The import command prepares the installer database based on the probed
+   template file. This example imports the probed YAML template file from
+   the previous example. -t specifies the location of the template file:
+mapr-installer-cli import -n -t /tmp/location.yaml
+
+   After you use the import command, the installer database should be
+   operational. You can then use the web-based MapR Installer or Stanzas
+   to perform additional operations on the cluster. See [2]MapR Installer.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/ExportClusterConfig.html#concept_lqf_4wp_cy
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapRInstaller.html#untitled3

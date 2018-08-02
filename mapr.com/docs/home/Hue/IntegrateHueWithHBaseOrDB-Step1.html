@@ -1,0 +1,37 @@
+Step 1: Setting up MapR-DB Binary Table Mapping
+
+   To use the Hue HBase application to access MapR-DB binary tables, you
+   need to set the hbase.table.namespace.mappings property.
+
+Table Mapping Naming Conventions
+
+   A table mapping takes the form name:map , where name is the table name
+   to redirect and map is the modification made to the name. The value in
+   name can be a literal string or contain the * wildcard. When mapping a
+   name with a wild card, the mapping is treated as a directory. Requests
+   to tables with names that match the wild card are sent to the directory
+   in the mapping.
+
+   When mapping a name that is a literal string, you can choose from two
+   different behaviors:
+     * End the mapping with a slash to indicate that this mapping is to a
+       directory. For example, the mapping mytable1:/user/aaa/ sends
+       requests for table mytable1 to the full path /user/aaa/mytable1.
+     * End the mapping without a slash, which creates an alias and treats
+       the mapping as a full path. For example, the mapping
+       mytable1:/user/aaa sends requests for table mytable1 to the full
+       path /user/aaa.
+
+Example: Map Table Names to MapR-DB
+
+   In the following example, the hbase.table.namespace.mappings property
+   is set so that any flat table name, such as mytable, is treated as a
+   MapR-DB table in the directory /tables_dir/mytable.
+<property>
+  <name>hbase.table.namespace.mappings</name>
+  <value>*:/tables_dir</value>
+</property>
+
+   Once you finish enabling table mapping in the core-site.xml file, start
+   (or restart) the HBase thrift server so the changes will take effect.
+maprcli node services -name hbasethrift -action start -nodes node001

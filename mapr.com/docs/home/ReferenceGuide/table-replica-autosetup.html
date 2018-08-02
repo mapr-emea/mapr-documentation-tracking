@@ -1,0 +1,218 @@
+table replica autosetup
+
+   Sets up and starts replication between a source MapR-DB binary or JSON
+   table to a replica MapR-DB binary or JSON table.
+
+   The maprcli table replica autosetup command performs the following
+   steps to set up replication:
+    1. Creates a new table with metadata from the source table in the
+       destination cluster.
+    2. Declares the new table to be a replica of the source table and
+       ensures that replication does not begin immediately after the next
+       step.
+    3. Declares the source table as an upstream source for the replica.
+    4. For multi-master replication, replica autosetup declares the source
+       table to be a replica of the new table and then declares the new
+       table to be an upstream source for the source table.
+    5. Loads a copy of the source data into the replica(s).
+    6. Clears the paused replication state to start the replication
+       stream.
+
+   For more information about the automatic setup process, see [1]Replica
+   Autosetup for MapR-DB Tables.
+   Note: Before you set up replication for a table, verify that the
+   cluster is setup for replication. For more information, see
+   [2]Preparing Clusters for Table Replication.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [3]readAce and [4]writeAce on both the source volume and the target
+       volume
+     * [5]lookupdir on directories in the paths of both tables
+     * readperm and replperm permissions on the source table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions
+
+Syntax
+
+   CLI
+
+maprcli table replica autosetup
+  -path <table path>
+  -replica <replica table path>
+  [ -columns <comma separated list of <family>[:<column>]> ]
+  [ -synchronous <is synchronous replication> default: false ]
+  [ -multimaster <is multi master replication> default: false ]
+  [ -throttle <throttle replication ops> default: false ]
+  [ -networkencryption <enable on-wire encryption> default: false ]
+  [ -networkcompression <on-wire compression type: off|on|lzf|lz4|zlib> default:
+ on ]
+  [ -directcopy <enable directcopy> default: true ]
+  [ -useexistingreplica <use existing replica table if present> default: false ]
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/replica/autosetup?path=<path>&replica=<pat
+h>&<parameters>'
+  -u <username>:<password>
+
+Parameters
+
+   path
+
+   The path to the source table that you want to replicate.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named testsrc under a volume with a
+       mount point at /volume1, specify the following path:
+       /volume1/testsrc
+
+     * For a path on another cluster, you must also specify the cluster
+       name in the path. For example, for a table named customersrc under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customersrc
+
+   replica
+
+   The path to the replica.
+     * For a table on the local cluster, start the path at the volume
+       mount point. For example, for a table named testdst under a volume
+       with a mount point at /volume1, specify the following path:
+       /volume1/testdst
+     * For a table on another cluster, you must also specify the cluster
+       name in the path. For example, for a table named customerdst
+       undervolume1 in the sanfrancisco cluster, specify the following
+       path: /mapr/sanfrancisco/volume1/customerdst
+
+   Note: For replication to a table, the command will fail if the replica
+   path you specify points to table that already exists.
+   columns
+
+   By default, all columns in the source table are replicated.
+   If you do not want to replicate all columns in the table, you can
+   specify specific columns to replicate:
+
+   For binary tables
+          Provide a comma-separated list of column families or columns
+          from a certain column family (column family:qualifier). For
+          example, use the following syntax to replicate the column family
+          purchases and the column stars in the reviews column family:
+          -columns purchases,reviews:stars
+
+          Note: While the column families that you specify must already
+          exist in the source table, the columns that you specify do not
+          have to exist in the destination table for replication to
+          succeed. If the column is added at a later date, replication for
+          that column will start at that time.
+
+   For JSON tables
+          Provide a comma-delimited list of fields to replicate. Include
+          the full field path for each field.
+
+          Example
+
+          Suppose your table contains documents that contain this general
+          structure:
+
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" :
+                    {
+                         "c" : "value",
+                    },
+               "e" : "value"
+          }
+}
+
+          To replicate fields a, c, and e, you would specify these field
+          paths:
+
+a,a.b.c,a.e
+
+          Do not use quotation marks and do not include spaces after
+          commas.
+
+          Suppose now that a.b and a.e were custom column families. You
+          want to replicate only the default column family and column
+          family a.e. To do so, you would specify field paths like this:
+
+",a.e"
+
+          The empty string before the comma indicates the default column
+          family.
+
+   synchronous A Boolean value that specifies whether replication is
+   synchronous or asynchronous. The values are true or false. Asynchronous
+   (false) is the default.
+   multimaster A Boolean value that specifies whether or not to set up a
+   multi-master topology. The values are true or false. Basic master-slave
+   topology (false) is the default.
+   throttle A Boolean value that specifies whether or not to throttle
+   replication operations. Throttle the replication stream to minimize the
+   impact of the replication process on incoming operations during periods
+   of heavy load. The values are true or false. No throttle (false) is the
+   default.
+   networkencryption A Boolean value that specifies whether or not to
+   enable on-wire encryption. The values are true or false. No encryption
+   (false) is the default. If you set this to true, the local cluster and
+   any other cluster that is part of the replication process must be
+   enabled for security.
+   networkcompression
+
+   The type of on-wire compression.
+
+   The types are:
+     * off
+     * on (default)
+     * lzf
+     * lz4
+     * zlib
+
+   lz4 is the default compression which it set by parameter values on or
+   lz4.
+   directcopy A Boolean value that specifies whether or not autosetup will
+   use the directcopy option . The values are true or false. Autosetup
+   with direct copy (true) is the default. If you set this parameter to
+   false, the cluster will run autosetup without the directcopy option.
+   For more information, see [6]Replica Autosetup for MapR-DB Tables.
+   Note: If a table was originally created in MapR 5.x and the maprcli
+   table replica autosetup command is specified with directcopy=false,
+   then an error, “Copy Table failed for tables”, occurs. This is due to
+   the introduction of new table meta information in 6.0. It is
+   recommended that replication be setup using directcopy=true (which is
+   the default). If the default method is not desired, then replication
+   should be setup manually.
+   useexistingreplica When the directcopy parameter is set to true
+   (default), this Boolean value specifies whether or not an existing
+   table can be used as the replica table. The values for this parameter
+   are true or false. No reuse of existing tables (false) is the default.
+   If a table exists with the specified name, and this parameter is set to
+   false, the create table operation will fail.
+
+Example
+
+   CLI
+
+maprcli table replica autosetup -path /volume1/custBsrc -replica /volume2/custBd
+st
+
+   REST
+
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/replica/autosetup?path=%2Fvolume2%2FcustBs
+rc&replica=%2Fvolume2%2FcustBdst' \
+  -u mapr:mapr
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/DB_AutoSetupReplication.html#concept_ij1_55l_b1b
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ConfiguringMapRClustersForTR.html#task_evy_rnz_5t
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/DB_AutoSetupReplication.html#concept_ij1_55l_b1b

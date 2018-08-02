@@ -1,0 +1,48 @@
+Creating User Roles for ACEs
+
+   Roles are a label attached to a set of users that defines a common task
+   or set of behaviors for those users. Roles enable you to use
+   functionality similar to Unix groups for your users without requiring
+   you to alter your system's existing group hierarchy. A role's name can
+   be up to 64 characters long and cannot use the :, &, |, or !
+   characters. User roles are defined in the
+   /opt/mapr/conf/m7_permissions_roles_refimpl.conf file, which must be
+   identical across all nodes in the cluster. The
+   m7_permissions_roles_refimpl.conf file has the following format:
+# The # character indicates comments. Role names must end with a : character.
+rolename1:
+# Usernames or user IDs are specified on a line after the role name. You can mix
+ user names and user IDs.
+username1|userid1
+username2|userid2
+...
+usernameN|useridN
+rolename2:
+...
+# The m7_security_ref_impl.conf file can have any number of blank lines.
+rolenameN:
+
+   After adding a new role to the m7_permissions_roles_refimpl.conf file,
+   you must issue the following command to enable the MapR-FS layer to
+   pick up the new role:
+$ /opt/mapr/server/mrconfig dbrolescache invalidate
+
+   Note: This command must be run on all the nodes whenever there is a
+   change in the roles configuration file.
+
+The Roles Library Shared Object and Access Control Expressions
+
+   By default, the roles library shared object libmapr_roles_refimpl.so is
+   located in the /opt/mapr/server/permissions/ directory. This shared
+   object uses the C++ syntax and contains the GetSecurityMembership
+   class. Each time an object secured by an ACE is accessed, the MapR-FS
+   layer calls the roles library shared object and checks the permissions
+   of the entity requesting access against the contents of the roles file.
+   The roles library shared object reads the roles file every 600 seconds.
+   You can specify your own roles library shared object and specify the
+   location of that object using the parameter mfs.dbroles.sopath in the
+   [1]/opt/mapr/conf/mfs.conf file.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mfs.conf.html

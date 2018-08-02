@@ -1,0 +1,150 @@
+Managing Impala
+
+   To manage Impala, you can start and stop the Impala services, modify
+   resource allocation, and use log files to identify and resolve issues.
+
+Starting/Stopping Impala
+
+   From the MCS
+
+   You must start the statestore service before you start the catalog or
+   the Impala service.
+
+   To start the Impala statestore and catalog services from the MCS,
+   complete the following steps:
+    1. In the Navigation pane, expand the Cluster Views pane and click
+       Dashboard.
+    2. In the Services pane, click Impala statestore. The Nodes screen
+       appears and displays the node configured with the statestore
+       service.
+    3. Click the hostname of the node with the statestore and catalog
+       services configured to display the Node Properties screen.
+    4. Use the Stop/Start button in the Impala statestore row under Manage
+       Services to start Impala statestore.
+    5. Use the Stop/Start button in the Impala catalog row under Manage
+       Services to start Impala catalog.
+
+   To start Impala server from the MCS, complete the following steps:
+    1. In the Navigation pane, expand the Cluster Views pane and click
+       Dashboard.
+    2. In the Services pane, click Impala server. The Nodes screen appears
+       and displays the nodes configured with the Impala server.
+    3. Click the hostname of the a node with the Impala server configured
+       to display its Node Properties screen.
+    4. Use the Stop/Start button in the Impala server row under Manage
+       Services to start the Impala server.
+    5. Repeat steps 3 and 4 for the remaining nodes configured with the
+       Impala server.
+
+   From the CLI
+
+   You must start the statestore service before you start the catalog or
+   the Impala service.
+
+   To start Impala from the command line, complete the following steps:
+    1. Issue the following command to start the statestore service on the
+       node with statestored:
+$ sudo maprcli node services -name impalastore -action start|stop -nodes <node I
+P addresses separated by a space>
+Example:
+$ sudo maprcli node services -name impalastore -action start -nodes 10.10.30.166
+    2. Issue the following command to start the catalog service on the
+       node with catalogd:
+$ sudo maprcli node services -name impalacatalog -action start|stop -nodes <node
+ IP addresses separated by a space>
+Example:
+$ sudo maprcli node services -name impalacatalog -action start -nodes 10.10.30.1
+66
+    3. Issue the following command to start the Impala service on the
+       node(s) with impalad:
+$ sudo maprcli node services -name impalaserver -action start|stop -nodes < node
+ IP addresses separated by a space >
+Example:
+$ sudo maprcli node services -name impalaserver -action start -nodes 10.10.30.16
+6
+    4. Optionally, you can run the following command to launch the
+       impala-shell if you want to issue queries from the command line:
+${IMPALA_HOME}/bin/impala-shell.sh
+
+Modify Resource Allocation
+
+   If you run Impala on nodes that also run MapReduce, both frameworks may
+   suffer poor performance if they have to compete for resources. You can
+   configure memory based on your job requirements and SLAs to ensure that
+   each framework has enough resources to avoid conflicts. For information
+   about modifying memory, refer to [1]Additional Impala Configuration
+   Options.
+
+Impala Logs
+
+   Impala logs provide information errors, configuration, and completed
+   jobs. You can review log files on each node. An Impala administrator
+   should review the log files and set log levels.
+
+   Impala uses the glog_v logging system to store information. Some
+   messages refer to C++ file names. The GLOG_v environment variable
+   specifies which types of messages Impala logs.
+
+   Reviewing Logs
+
+   You can locate log files in the Impala installation directory
+   (/opt/mapr/impala/impala-<version>/logs) on each node with Impala.
+   Impala creates a new set of log files on each statestored or impalad
+   restart.
+
+   The following table provides a list of the important log files for the
+   impalad and statestored processes with descriptions:
+   Log Type Impalad Filename Statestored Filename File Content
+   INFO impalad.INFO statestored.INFO Shows configuration settings for the
+   processes.
+   WARNING impalad.WARNING statestored.WARNING Shows problem information,
+   including such things as suboptimal settings and also serious runtime
+   errors.
+   ERROR impalad.ERROR statestored.ERROR Shows the most serious errors,
+   such as process crashes, failed queries. The .WARNING file also shows
+   these messages.
+
+   Setting Log Levels
+
+   The GLOG system has three logging levels that you can adjust by
+   exporting variable settings. The logging levels are cumulative.
+   Increasing logging levels may decrease performance and increases log
+   size. Change logging settings before you start impalad.
+
+   The following table provides the logging levels and their descriptions:
+   Level Description
+   GLOG_v=1 Default. Logs information about each connection and query that
+   is initiated to an impalad instance, including runtime profiles
+   GLOG_v=2 Logs everything from GLOG_v=1 plus information for each RPC
+   initiated. This level also records query execution progress
+   information, including details on each file read.
+   GLOG_v=3 Logs everything from GLOG_v=2 plus it logs row read. This
+   level is only applicable for the most serious troubleshooting and
+   tuning scenarios, because it can produce exceptionally large and
+   detailed large log files.
+
+   Use the following command to change logging settings:
+export GLOG_v=1
+
+   For more information on how to configure GLOG, including how to set
+   variable logging levels for different system components, see [2]Fixed
+   in 5.2 r1.0.
+
+   Log Rotation
+   Log rotation is the automatic removal of unneeded or old log files. By
+   default, Impala switches out old log files every 5 seconds, based on
+   the default interval specified in the logbufsecs setting. The
+   -max_log_files configuration option specifies how many log files to
+   keep at each severity level (INFO, WARNING, ERROR, and FATAL). You can
+   configure the -max_log_files option for each Impala daemon (impalad,
+   statestored, and catalogd) in the env.sh configuration file. By
+   default, Impala preserves the latest 10 log files for each severity
+   level and removes old logs based on the logbufsecs setting. Setting
+   -max_log_files to 0 preserves all of the log files. This setting
+   requires manual log rotation. Setting max_log_files to 1 preserves only
+   the latest log file.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/AdditionalImpalaConfigurOptions.html
+   2. https://code.google.com/archive/p/google-glog/

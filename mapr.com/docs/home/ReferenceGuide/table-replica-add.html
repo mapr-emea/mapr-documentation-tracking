@@ -1,0 +1,181 @@
+table replica add
+
+   Registers a table as a replica of another MapR-DB binary or JSON table.
+   Note: You do not need to use this command it you use the table replica
+   autosetup command.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * readAce and writeAce on both the source volume and the target
+       volume
+     * lookupdir on directories in the paths of both tables
+     * readperm and replperm permissions on the source table
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+
+maprcli table replica add
+  -path <table path>
+  -replica <replica table path>
+  [ -columns <comma separated list of <family>[:<column>]>  ]
+  [ -paused <is replication paused> default: false ]
+  [ -throttle <throttle replication ops> default: false> ]
+  [ -networkencryption <enable on-wire encryption> default: false> ]
+  [ -synchronous <is synchronous replication> default: false ]
+  [ -networkcompression <on-wire compression type: off|on|lzf|lz4|zlib> default:
+ on ]
+
+   REST
+
+curl -k -X POST
+  'http[s]://<host>:<port>/rest/table/replica/add?path=<path>&replica=<name>&<pa
+rameters>
+  -u <username>:<password>
+
+   Note: The mapr user is not treated as a superuser. MapR-DB does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Parameters
+
+   Parameter Description
+   path
+
+   The path to the source table that you want to replicate.
+     * For a path on the local cluster, start the path at the volume mount
+       point. For example, for a table named testsrc under a volume with a
+       mount point at /volume1, specify the following path:
+       /volume1/testsrc
+
+     * For a path on another cluster, you must also specify the cluster
+       name in the path. For example, for a table named customersrc under
+       volume1 in the sanfrancisco cluster, specify the following
+       path:/mapr/sanfrancisco/volume1/customersrc
+
+   replica
+
+   The path to the replica.
+     * For a table on the local cluster, start the path at the volume
+       mount point. For example, for a table named testdst under a volume
+       with a mount point at /volume1, specify the following path:
+       /volume1/testdst
+
+     * For a table on a remote cluster, you must also specify the cluster
+       name in the path. For example, for a table named customerdst under
+       volume1 in the sanfrancisco cluster, specify the following path:
+       /mapr/sanfrancisco/volume1/customerdst
+
+   Note: For replication to a table, the command will fail if the table in
+   the replica path does not exist.
+   columns
+
+   By default, all columns in the source table are replicated.
+   If you do not want to replicate all columns in the table, you can
+   specify specific columns to replicate:
+
+   For binary tables
+          Provide a comma-separated list of column families or columns
+          from a certain column family (column family:qualifier). For
+          example, use the following syntax to replicate the column family
+          purchases and the column stars in the reviews column family:
+          -columns purchases,reviews:stars
+
+          Note: While the column families that you specify must already
+          exist in the source table, the columns that you specify do not
+          have to exist in the destination table for replication to
+          succeed. If the column is added at a later date, replication for
+          that column will start at that time.
+
+   For JSON tables
+          Provide a comma-delimited list of fields to replicate. Include
+          the full field path for each field.
+
+          Example
+
+          Suppose your table contains documents that contain this general
+          structure:
+
+{
+     "_id" : "ID",
+     "a" :
+          {
+               "b" :
+                    {
+                         "c" : "value",
+                    },
+               "e" : "value"
+          }
+}
+
+          To replicate fields a, c, and e, you would specify these field
+          paths:
+
+a,a.b.c,a.e
+
+          Do not use quotation marks and do not include spaces after
+          commas.
+
+          Suppose now that a.b and a.e were custom column families. You
+          want to replicate only the default column family and column
+          family a.e. To do so, you would specify field paths like this:
+
+",a.e"
+
+          The empty string before the comma indicates the default column
+          family.
+
+   paused
+
+   A Boolean value that specifies whether to pause the replication so that
+   it does not start immediately. The replication can be resumed using the
+   replica resume command at a later time. The values are true or false.
+   Default: Not paused (false)
+   throttle A Boolean value that specifies whether to throttle replication
+   operations. Throttle the replication stream to minimize the impact of
+   the replication process on incoming operations during periods of heavy
+   load. The values are true or false. Default: No throttle (false)
+   networkencryption A Boolean value that specifies whether or not to
+   enable on-wire encryption. The values are true or false. If you set
+   this to true, the local cluster and any other cluster that is part of
+   the replication process must be enabled for security. Default: No
+   encryption (false)
+   synchronous
+
+   A Boolean value that specifies whether replication is synchronous or
+   asynchronous. The values are true or false. Default: Asynchronous
+   (false)
+   networkcompression
+
+   The type of on-wire compression. Default: on
+
+   The types are:
+     * off
+     * on (default)
+     * lzf
+     * lz4
+     * zlib
+
+   The default compression is lz4, which can be set by specifying on or
+   lz4 as value.
+
+Example
+
+   Registers a table on the local cluster as a replica of another table on
+   the local cluster:
+
+   CLI
+
+maprcli table replica add -path /volume1/custA -replica /volume2/custA
+
+   REST
+
+curl -k -X POST \
+  'https://r1n1.sj.us:8443/rest/table/replica/add?path=%2Fvolume1%2FcustA&replic
+a=%2Fvolume2%2FcustA' \
+  -u mapr:mapr

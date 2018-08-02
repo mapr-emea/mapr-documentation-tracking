@@ -1,0 +1,105 @@
+Troubleshooting the MapR Container for Developers
+
+   This section describes problems you may encounter when deploying,
+   running, and accessing the MapR Container for Developers. It also
+   includes steps to troubleshoot and resolve the problems.
+
+Docker Login Problems
+
+   Problem
+          Attempting to log in to your docker container returns the
+          following error:
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!    @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+   Possible Cause
+          You have an old ssh key in your .ssh/known_hosts file
+
+   Solution
+          Replace the old ssh key with the correct key:
+
+ssh-keygen -R [localhost]:2222
+
+Docker Failures
+
+   Problem
+          Docker fails to run the container
+
+   Possible Cause
+          Docker encounters problems starting Zookeeper or Warden
+
+   Solution
+
+         1. Determine your docker <container-id> by examining the output
+            of the docker ps command
+         2. Examine the docker log files by running:
+docker logs <container-id>
+         3. Examine the MapR log files specified in the output for further
+            diagnostics. You need to log in to the container to see those
+            files.
+
+   Problem
+          Docker completes its startup as shown by the following output
+          from docker logs:
+
+This container IP : 172.17.0.2
+
+          But docker is killed before MapR processes are running.
+
+   Possible Cause
+          You have not allocated enough memory to docker
+
+   Solution
+          Make sure you have configured docker with at least 6 GB of
+          memory as described at [1]Step 2c at Prerequisites to Running
+          the MapR Container for Developers.
+
+MapR Connection Problems
+
+   Problem
+          Unable to connect to MCS in your browser
+
+   Possible Cause Solution
+   The AdminApplication process is not running yet
+
+   Run jps and wait for AdminApplication to appear in the list of running
+   java processes
+   You are accessing an older, cached copy of the MCS URL Clear your
+   browser cache and retry connecting to the URL
+
+Unable to Access MapR-DB Table
+
+   Problem
+          You cannot access a MapR-DB table
+
+   Possible Cause
+          You do not have permissions on the volume where the table is
+          stored
+
+   Solution
+          When creating a volume, make sure you set up the user access
+          controls appropriately. See [2]Creating a Volume for details.
+
+Unable to run OJAI Queries Due to Query Service Errors
+
+   Problem
+          When running an OJAI query, you encounter an error indicating
+          that the Query Service is not enabled.
+
+   Possible Cause
+          The MapR cluster running in the container is setup with only
+          users mapr and root. You are running as some other user and your
+          query requires the [3]OJAI Distributed Query Service.
+
+   Solution
+          Add your user name to the MapR cluster node by running useradd
+          as described at [4]Managing Users and Groups.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapRContainerDevelopers/MapRContainerDevelopersPreReqs.html#task_e4q_qyf_wbb__cmd_ahm_y2g_wbb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html#task_z5w_vnd_4y
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c-managing-users-and-groups.html#Managing-Users-and-Groups-rootisusedtoinstallM-d3e62

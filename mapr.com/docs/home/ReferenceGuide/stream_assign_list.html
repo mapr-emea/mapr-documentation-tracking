@@ -1,0 +1,120 @@
+stream assign list
+
+   For the given stream, lists consumers and the topics and partitions
+   that the consumers are reading messages from.
+
+Permissions Required
+
+   To run this command, your user ID must have the following permissions:
+     * [1]readAce on the volume
+     * [2]lookupdir on directories in the path
+     * adminperm, consumeperm, produceperm, or topicperm permission on the
+       stream
+
+   Note: The mapr user is not treated as a superuser. MapR-ES does not
+   allow the mapr user to run this command unless that user is given the
+   relevant permission or permissions with access-control expressions.
+
+Syntax
+
+   CLI
+maprcli stream assign list
+   -path <Stream Path >
+   [ -consumergroup <Consumer Group ID> ]
+   [ -topic <Topic Name> ]
+   [ -partition <Partition ID> ]
+   [ -detail <Detail Parameter takes no value>  ]
+
+   REST http[s]://<host>:<port>/rest/stream/assign/list?path=<path>
+
+Parameters
+
+   Parameter Description
+   path The path and name of the stream.
+   consumergroup Specifies the ID of a particular consumer group that you
+   want to list the consumers for.
+   topic The name of a topic to list the consumers for. If you also
+   specify the -partition parameter, only the consumers that are reading
+   from the indicated partition are listed.
+   partition The ID of a specific partition. If you specify this ID, you
+   must also use the -topic parameter.
+   detail Includes the values of additional parameters in the output.
+   These parameters are used internally.
+
+Sample Output
+
+   With the -detail parameter:
+# maprcli stream assign list -path /s1 -json -detail
+{
+        "timestamp":1441965109585,
+        "timeofday":"2015-09-11 02:51:49.585 GMT-0700",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "consumergroup":"xyzt1",
+                        "topic":"topic1",
+                        "assignseqnum":1,
+                        "consumerguid":"F3693413-2600-0876-CC91-052FA4F25500",
+                        "consumer":"ravindra.perf",
+                        "consumerip":"10.10.30.200",
+                        "consumerpid":"30768",
+                        "assignment":"0,1,2,3"
+                }
+        ]
+}
+
+   Without the -detail parameter:
+# maprcli stream assign list -path /s1 -json
+{
+        "timestamp":1441965116100,
+        "timeofday":"2015-09-11 02:51:56.100 GMT-0700",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "consumergroup":"xyzt1",
+                        "topic":"topic1",
+                        "consumer":"ravindra.perf",
+                        "consumerip":"10.10.30.200",
+                        "consumerpid":"30768",
+                        "assignment":"0,1,2,3"
+                }
+        ]
+}
+
+Field Descriptions
+
+   consumergroup
+          The name of the consumer group that is reading messages from
+          this topic partition.
+
+   topic
+          The name of the topic.
+
+   assignseqnum
+          The sequence number of the current assignment of this partition.
+          This value is used internally.
+
+   consumerguid
+          The globally unique identifer for the consumer. This value is
+          used internally.
+
+   consumer
+          The ID of the consumer. This value is set with the client.id
+          configuration parameter.
+
+   consumerip
+          The IP address of the consumer.
+
+   consumerpid
+          The process ID of the consumer.
+
+   assignment
+          The index numbers of the partitions that are assigned to this
+          consumer.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs

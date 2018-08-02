@@ -1,0 +1,63 @@
+Configure HiveServer 2 to use Kerberos
+
+   Note: You can configure HiveServer2 to use Kerberos authentication.
+   MapR clusters do not provide Kerberos infrastructure. The tips in this
+   section assume a Linux-based Kerberos environment, and the specific
+   commands for your environment may vary. Consult with your Kerberos
+   administrator for assistance.
+
+   Enabling HiveServer to use Kerberos authentication requires following
+   steps on each node where HiveServer 2 is installed:
+    1. Create a Kerberos Identity and keytab. You can use the following
+       commands in a Linux-based Kerberos environment to set up the
+       identity and update the keytab file: The hive.keytab file must be
+       owned and readable only by the mapr user.
+# kadmin
+    : addprinc -randkey username/<FQDN@REALM>
+    : ktadd -k /opt/mapr/conf/hive.keytab username/<FQDN@REALM>
+    2. Configure the following properties in hive-site.xml on each node
+       where hiveserver2 is installed:
+
+   Property Value
+   hive.server2.authentication KERBEROS
+   hive.server2.authentication.kerberos.principal <HiveServer2 Principle.
+   For example, mapr/FQDN@REALM>
+   hive.server2.authentication.kerberos.keytab <The keytab file for the
+   HiverServer2 principle. For example, /opt/mapr/conf/hive.keytab>
+<property>
+  <name>hive.server2.authentication</name>
+  <value>KERBEROS</value>
+  <description>authenticationtype</description>
+</property>
+<property>
+  <name>hive.server2.authentication.kerberos.principal</name>
+  <value>mapr/FQDN@REALM</value>
+  <description>HiveServer2 principal. If _HOST is used as the FQDN portion, it w
+ill be replaced with the actual hostname of the running instance.</description>
+</property>
+<property>
+  <name>hive.server2.authentication.kerberos.keytab</name>
+  <value>/opt/mapr/conf/hive.keytab</value>
+  <description>Keytab file for HiveServer2 principal</description>
+</property>
+    3. Reconfigure the following options in env.sh (/opt/mapr/conf/env.sh)
+       on each node where hiveserver2 is installed:
+       Note: These configurations are listed in the portion of the file
+       that begins with if [ "$MAPR_SECURITY_STATUS" = "true" ];. However,
+       you should make the changes in the /opt/mapr/conf/env_override.sh
+       file. For more information, see [1]About env_override.sh.
+
+   Existing Configuration Required Configuration
+   MAPR_HIVE_SERVER_LOGIN_OPTS="-Dhadoop.login=maprsasl_keytab"
+   MAPR_HIVE_LOGIN_OPTS="-Dhadoop.login=maprsasl"
+MAPR_HIVE_SERVER_LOGIN_OPTS="-Dhadoop.login=hybrid"
+
+MAPR_HIVE_LOGIN_OPTS="-Dhadoop.login=hybrid"
+
+    4. Restart HiveServer2 to apply these changes.
+maprcli node services -name hs2 -action restart -nodes <comma separated list of
+nodes>
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb

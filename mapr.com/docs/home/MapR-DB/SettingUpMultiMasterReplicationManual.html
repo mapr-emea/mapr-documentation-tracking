@@ -1,0 +1,118 @@
+Setting Up Multi-Master Replication Manually
+
+   You can run maprcli commands to set up multi-master replication, first
+   establishing replication in one direction, and then establishing it in
+   the other direction.
+     * Verify that you have complete the steps to configure the clusters
+       for table replication. For more information, see [1]Preparing
+       Clusters for Table Replication.
+     * Run the maprcli table info command on the source table to verify
+       that you have the following permissions:
+          + readperm, which is required for reading from the table.
+          + replperm, which is required for replicating from the table.
+     * Run the maprcli table info command on the destination table (if it
+       already exists) to verify that you have the following permissions:
+          + bulkload, which is required for the initial copy of source
+            data into the destination table.
+          + replperm, which is required for receiving replicated updates
+            from the source table.
+
+    1. For manual setup in one direction, follow these steps:
+         a. Create the replica manually with the maprcli table create
+            command. Use the -copyMetaFrom option to ensure that the
+            metadata for the replica is identical to the metadata for the
+            source table. Metadata includes column families, access
+            control expressions (ACEs), and other attributes.
+maprcli table create -path <path to the replica> -copyMetaFrom <path to the sour
+ce table>
+            For example, to create the replica customers in the newyork
+            cluster and use the metadata from the source table in the
+            sanfrancisco cluster, you could use this command:
+maprcli table create -path /mapr/newyork/customers -copymetafrom /mapr/sanfranci
+sco/customers
+         b. Register the replica as a replica of the source table by
+            running the maprcli table replica add command.
+maprcli table replica add -path <path to the source table> -replica <path to the
+ replica> -paused true
+            For example, to register the customers table in the newyork
+            cluster as a replica of the customers table in the
+            sanfrancisco cluster, you could use this command:
+maprcli table replica add -path /mapr/sanfrancisco/customers -replica /mapr/newy
+ork/customers -paused true
+            The -paused parameter ensures that replication does not start
+            immediately after you register the source table as a source
+            for this replica. You do this registration in step d.
+         c. Verify that you specified the correct replica by running the
+            maprcli table replica list command.
+maprcli table replica list -path <path to the source table>
+            To verify that the customers table in the newyork cluster is a
+            replica of the customers table in the sanfrancisco cluster,
+            you could look at the output of this command:
+maprcli table replica list -path /mapr/sanfrancisco/customers
+         d. Authorize replication between the tables by registering the
+            source table as the upstream table for the replica by running
+            the maprcli table upstream add command. Definition of the
+            upstream table ensures that a table cannot replicate updates
+            to any replica. Replication depends on a two-way agreement
+            between the owners of the two tables.
+maprcli table upstream add -path <path to the replica> -upstream <path to the so
+urce table>
+            To add the customers table in the sanfrancisco cluster as an
+            upstream source for the customers table in the newyork
+            cluster:
+maprcli table upstream add -path /mapr/newyork/customers -upstream /mapr/sanfran
+cisco/customers
+         e. Verify that you specified the correct source table by running
+            the maprcli table upstream list command.
+maprcli table upstream list -path <path to the replica>
+            To verify this in our example scenario, you could use this
+            command:
+maprcli table upstream list -path /mapr/newyork/customers
+         f. If you set -paused to true when adding the replica, follow
+            these steps:
+              i. Load the replica with data from the source table by using
+                 the MapR-DB [2]CopyTable utility for binary tables or the
+                 [3]MapR-DB JSON CopyTable utility for JSON tables.
+             ii. Start replication with the command maprcli table replica
+                 resume. Here is the maprcli command:
+maprcli table replica resume -path <path to the source table> -replica <path to
+the replica>
+                 For our example scenario, you could use this command:
+maprcli table replica resume -path mapr/sanfrancisco/customers -replica /mapr/ne
+wyork/customers
+    2. For manual setup in the other direction, follow these steps:
+         a. Log into both the source and destination clusters.
+         b. Register the replica as a replica of the source table by
+            running the maprcli table replica add command.
+maprcli table replica add -path <path to the source table> -replica <path to the
+ replica>
+         c. Verify that you specified the correct replica by running the
+            maprcli table replica list command.
+maprcli table replica list -path <path to the source table>
+         d. Authorize replication between the tables by defining the
+            source table as the upstream table for the replica by running
+            the maprcli table upstream add command. Definition of the
+            upstream table ensures that a table cannot replicate updates
+            to any replica. Replication depends on a two-way agreement
+            between the owners of the two tables.
+maprcli table upstream add -path <path to the replica> -upstream <path to the so
+urce table>
+
+     * With multi-master replication, if one of the tables goes offline,
+       direct client applications to the other table. For more
+       information, see [4]Multi-Master replication.
+     * Be aware that changes to the structure of a source table are not
+       replicated automatically to replicas. For more information, see
+       [5]Adding a Column Family to a Replica
+     * You can check for alarms related to replication and whether
+       synchronous replication is switched temporarily to asynchronous
+       replication by looking in MCS. See [6]Table-Replication Alarms.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ConfiguringMapRClustersForTR.html#task_evy_rnz_5t
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/CopyTable.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr_copytable.html#mapr_copytable
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ReplicatingMapR-DBTables-multimaster.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/AddColumnFamilyToReplica.html#task_xtq_2ph_21b
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Table-Replication-Alarms.html
