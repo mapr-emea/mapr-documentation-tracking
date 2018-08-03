@@ -8,11 +8,19 @@ Preparing Clusters for Table Replication
 
 Before You Begin
 
-   The following topics identify concepts and tasks that that you need to
-   do before setting up your environment for table replication.
+   The following topics identify concepts and tasks that you need to do
+   before setting up your environment for table replication.
      * Plan which replication topology you want to use. For information
        about the various topologies, see [1]Supported replication
        topologies.
+     * In general, if you are replicating tables, you should store them in
+       their own volumes to avoid overlap with volume mirroring.
+       Otherwise, if a source volume fails, you may have a scenario where
+       a table in a promoted mirror lags behind the table's replica.
+       For example, suppose /vol mirrors to /vol.mirror and contains a
+       table replTab that replicates to /replVol/replTab. If /vol fails,
+       /vol.mirror/replTab may lag /replVol/replTab when /vol.mirror is
+       promoted.
      * Ensure that your user ID has the readAce permission on the volume
        where the source tables are located and the writeAce permission on
        the volumes where the replicas are located. For information about
@@ -90,7 +98,7 @@ maprlogin generateticket -type service -cluster <destination cluster>
             the file /opt/mapr/conf/mapruserticket file that was created
             when you secured the source cluster:
 at <path and filename of the service ticket> >> /opt/mapr/conf/mapruserticket
-         c. Restart the webserver by running the maprcli node services
+         c. Restart the web server by running the maprcli node services
             command. For the syntax of this command, see [8]node services.
          d. Add the following two properties to the core-site.xml file.
             For Hadoop 2.7.0, edit the file
