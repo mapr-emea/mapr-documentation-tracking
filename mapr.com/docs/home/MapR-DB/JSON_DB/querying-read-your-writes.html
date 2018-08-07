@@ -6,20 +6,28 @@ Reading Your Own Writes in Java OJAI
 
 Description
 
-   This feature might be used when it is important for a query to reflect
-   data synchronized between a JSON table and its secondary indexes. For
-   example, consider the following expense tracking system:
-     * You have been adding and tracking expenses for the quarter.
-     * You have some last minute expenses being added to the system.
-     * You have a secondary index that has a single indexed field, the
-       expenses field.
-     * You want to run a query that returns all of the expenses for the
-       quarter including the last minute ones.
+   You should use this feature if it is important for your query results
+   to reflect synchronized data between a JSON table and its secondary
+   indexes. Because MapR-DB updates secondary indexes asynchronously, it
+   is possible for a JSON table and its secondary indexes to become
+   out-of-sync while the index update is in progress.
 
-   In this case, you should use the DocumentStore and Query APIs to
-   resolve stale data associated with asynchronous indexes. The APIs allow
-   you to synchronize write operations on the JSON table with read
-   operations on a secondary index.
+   For example, consider the following scenario:
+     * Your application updates a JSON table.
+     * The JSON table includes an address field that is a nested document
+       with a zipCode subfield.
+     * You have a secondary index on zipCode.
+     * Later in your application, you query the JSON table filtering on
+       zipCode.
+
+   You want your query result to reflect the updates from earlier in your
+   application. To achieve this, use the DocumentStore and Query APIs that
+   enable you to retrieve up-to-date information from the index. The APIs
+   synchronize write operations on the JSON table with read operations on
+   a secondary index.
+
+   See [1]Asynchronous Secondary Index Updates for more information about
+   index updates.
 
 API Details
 
@@ -51,37 +59,66 @@ API Details
           allows this query to "see" all the writes that happened inside
           the writesContext of a DocumentStore.
 
-   For the complete API, see [1]Java OJAI Client API.
+   For the complete API, see [2]Java OJAI Client API.
 
 Read Your Own Writes Example
 
-   The following code snippet demonstrates these calls. See
-   [2]OJAI_013_ReadYourOwnWrite.java for the complete example.
-public void updateAndQuery(Connection c, DocumentStore store) throws Exception {
-    store.beginTrackingWrites();
-    store.update("user0000", c.newMutation().set("salary", 114526.00));
-    // more mutations, then get the commit-context
-    String writesContext = store.endTrackingWrites();
-    System.out.println("updated");
-    Query query = c.newQuery()
-        .waitForTrackedWrites(writesContext)
-        .select("salary")
-        .where(c.newCondition().is("salary", Op.GREATER, 100000.00).build())
-        .build();
-    DocumentStream stream = store.findQuery(query);
-    // process query results
+   A complete code example is available on github at
+   [3]OJAI_013_ReadYourOwnWrite.java. The following are code snippets from
+   that example. Each step contains links to corresponding lines of code
+   in the github example:
+    1. Call [4]beginTrackingWrites to set the starting point for the
+       commit context on the JSON table /demo_table:
+// Create an OJAI connection to MapR cluster
+final Connection connectionNode1 = DriverManager.getConnection("ojai:mapr:");
 
-    store.beginTrackingWrites();
+// Get an instance of OJAI DocumentStore
+final DocumentStore storeNode1 = connectionNode1.getStore("/demo_table");
 
-    try {
-        store.update("user0000", c.newMutation().set("salary", "abcd"));
-    } catch (Exception e) {
-        store.clearTrackedWrites();
-        throw e;
-    }
-}
+// initiate tracking of commit-context
+storeNode1.beginTrackingWrites();
+    2. [5]Update the zipCode of an existing user and [6]insert a new user
+       in /demo_table:
+// issue a set of mutations/insert/delete/etc
+storeNode1.update("user0000", connectionNode1.newMutation().set("address.zipCode
+", 95110L));
+storeNode1.insertOrReplace(connectionNode1.newDocument(
+    "{\"_id\": \"user0004\", \"firstName\": \"Joel\", \"lastName\": \"Smith\", \
+"age\": 56, \"address\": {\"zipCode\":{\"$numberLong\":95110}}}"));
+    3. Call [7]endTrackingWrites to flush the write operations after step
+       1, including updates to the secondary index:
+final String commitContext = storeNode1.endTrackingWrites();
+       The call also returns a commitContext.
+    4. Issue a query that calls [8]waitForTrackedWrites with the
+       commitContext from step 3:
+/*
+ * Next section of the code can run on the same or on a different node,
+ * the `commitContext` obtained earlier needs to be propagated to that node.
+ */
+
+// Create an OJAI connection to MapR cluster
+final Connection connectionNode2 = DriverManager.getConnection("ojai:mapr:");
+
+// Get an instance of OJAI DocumentStore
+final DocumentStore storeNode2 = connectionNode2.getStore("/demo_table");
+
+// Build an OJAI query and set its commit context with timeout of 2 seconds
+final Query query = connectionNode2.newQuery()
+    .select("_id", "firstName", "lastName", "address.zipCode")
+    .where("{\"$gt\": {\"address.zipCode\": 95110}}")
+    .waitForTrackedWrites(commitContext)
+    .build();
+       The query filters on the indexed subfield address.zipCode. The
+       commitContext ensures that the query result includes the changes
+       made in step 2.
 
 References
 
-   1. https://maprdocs.mapr.com/apidocs/60/OJAI/index.html
-   2. https://github.com/mapr-demos/ojai-2-examples/tree/master/src/main/java/com/mapr/ojai/examples/OJAI_013_ReadYourOwnWrite.java
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-consistency.html#indexes-consistency
+   2. https://maprdocs.mapr.com/apidocs/60/OJAI/index.html
+   3. https://github.com/mapr-demos/ojai-2-examples/tree/master/src/main/java/com/mapr/ojai/examples/OJAI_013_ReadYourOwnWrite.java
+   4. https://github.com/mapr-demos/ojai-2-examples/blob/master/src/main/java/com/mapr/ojai/examples/OJAI_013_ReadYourOwnWrite.java#L40
+   5. https://github.com/mapr-demos/ojai-2-examples/blob/61634ca3cbba4f258bf976024ce15904d58fe132/src/main/java/com/mapr/ojai/examples/OJAI_013_ReadYourOwnWrite.java#L43
+   6. https://github.com/mapr-demos/ojai-2-examples/blob/61634ca3cbba4f258bf976024ce15904d58fe132/src/main/java/com/mapr/ojai/examples/OJAI_013_ReadYourOwnWrite.java#L44-L45
+   7. https://github.com/mapr-demos/ojai-2-examples/blob/61634ca3cbba4f258bf976024ce15904d58fe132/src/main/java/com/mapr/ojai/examples/OJAI_013_ReadYourOwnWrite.java#L47
+   8. https://github.com/mapr-demos/ojai-2-examples/blob/61634ca3cbba4f258bf976024ce15904d58fe132/src/main/java/com/mapr/ojai/examples/OJAI_013_ReadYourOwnWrite.java#L70
