@@ -291,15 +291,15 @@ Output
    lines listing the chunks that make up the file, in the following
    format:
 
-   {mode} {compression} {encryption} {audit} {replication} {owner} {group}
-   {size} {date} {chunk size} {name} {chunk} {fid} {host} [{host}...]
-   {chunk} {fid} {host} [{host}...] ...
+   {mode} {compression} {encryption} {audit} {diskFlush} {replication}
+   {owner} {group} {size} {date} {chunk size} {name} {chunk} {fid} {host}
+   [{host}...] {chunk} {fid} {host} [{host}...] ...
 
    Volume links are displayed as follows:
 
-   {mode} {compression} {encryption} {audit} {replication} {owner} {group}
-   {size} {date} {chunk size} {name} {chunk} {target volume name}
-   {writability} {fid} -> {fid} [{host}...]
+   {mode} {compression} {encryption} {audit} {diskFlush} {replication}
+   {owner} {group} {size} {date} {chunk size} {name} {chunk} {target
+   volume name} {writability} {fid} -> {fid} [{host}...]
 
    The following table describes the values:
 
@@ -317,6 +317,7 @@ Output
 
    encryption         U: unencrypted; E: encrypted
    audit              U: disabled; A: enabled
+   disk flush         U:disabled; F:enabled
 
    replication
 
@@ -436,22 +437,23 @@ Examples
    command to check if compression is turned off in a directory or mounted
    volume. For example,
 # hadoop mfs -ls /
-Found 23 items
-vrwxr-xr-x Z U U   3 root root         13 2015-11-29 10:24  268435456 /.rw
-               p mapr.cluster.root writeable 2049.35.16584 -> 2049.16.2  scale-5
-0.scale.lab:5660 scale-51.scale.lab:5660 scale-52.scale.lab:5660
-vrwxr-xr-x U U U   3 root root          7 2015-11-28 22:16   67108864 /hbase
-               p mapr.hbase default 2049.32.16578 -> 2050.16.2  scale-50.scale.l
-ab:5660 scale-51.scale.lab:5660 scale-52.scale.lab:5660
-drwxr-xr-x Z U U   3 root root          0 2015-11-29 09:14  268435456 /tmp
-               p 2049.41.16596  scale-50.scale.lab:5660 scale-51.scale.lab:5660
-scale-52.scale.lab:5660
-vrwxr-xr-x Z U A   3 root root          1 2015-11-27 22:59  268435456 /user
-               p users default 2049.36.16586 -> 2055.16.2  scale-50.scale.lab:56
-60 scale-52.scale.lab:5660 scale-51.scale.lab:5660
-drwxr-xr-x Z U U   3 root root          1 2015-11-27 22:37  268435456 /var
-               p 2049.33.16580  scale-50.scale.lab:5660 scale-51.scale.lab:5660
-scale-52.scale.lab:5660
+Found 121 items
+vrwxr-xr-x  Z E U U   3 mapr mapr        121 2018-08-10 01:07  268435456 /.rw
+               p mapr.cluster.root writeable 2049.50.131362 -> 2049.16.2  physic
+al19.qa.lab:5660 physical20.qa.lab:5660 physical23.qa.lab:5660
+vrwxr-xr-x  Z E U U   3 root root          1 2018-08-09 19:26  268435456 /ATS-VO
+L1533867958
+               p ATS-VOL1533867958 default 2049.138.131538 -> 2322.16.2  physica
+l20.qa.lab:5660 physical19.qa.lab:5660 physical22.qa.lab:5660
+vrwxr-xr-x  Z E U U   3 root root          1 2018-08-09 21:31  268435456 /ATS-VO
+L1533875473
+               p ATS-VOL1533875473 default 2049.190.131642 -> 2685.16.2  physica
+l21.qa.lab:5660 physical27.qa.lab:5660 physical23.qa.lab:5660
+drwxr-xr-x  Z E U U   - root root          1 2018-08-09 18:15  268435456 /ATS-VO
+LUME-1533863729955
+               p 2049.102.131466  physical19.qa.lab:5660 physical20.qa.lab:5660
+physical23.qa.lab:5660
+...
 
    In the above example, the letter Z indicates LZ4 compression on the
    directory; the letter U indicates that the directory is uncompressed.
@@ -459,9 +461,10 @@ scale-52.scale.lab:5660
    U) and unencrypted (second U).
 [root@node1-302 ~]# hadoop mfs -ls /hbase
 Found 10 items
-drwxr-xr-x U U U   3 mapr mapr          3 2015-11-28 12:05   67108864 /hbase/-RO
-OT-
-                 p 2050.34.3674200  node2-302:5660 node1-302:5660 node3-302:5660
+drwxr-xr-x  Z E U U   - root root          1 2018-08-09 19:26  268435456 /ATS-VO
+L1533867958/data1533867963
+               p 2322.32.131374  physical20.qa.lab:5660 physical19.qa.lab:5660 p
+hysical22.qa.lab:5660
 ...
 
    Set ACEs
