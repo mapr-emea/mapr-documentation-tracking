@@ -21,17 +21,7 @@ apt-get remove mapr-hue-base
 ...
   # Choose whether to show the new SQL editor.
   use_new_editor=false
-    4. If Hue is installed on CentOS/RedHat 7.x nodes, complete the
-       following steps:
-         a. Create the following symlink to the Cyrus SASL library:
-ln -s /lib64/libsasl2.so.3.0.0 /lib64/libsasl2.so.2
-         b. If Hue is also configured to use a MySQL database, run the
-            following commands to install MariaDB and the Redhat 6
-            compatibility library:
-yum install mariadb
- rpm -ivh --nodeps http://yum.mariadb.org/<mariadb_version>/rhel7-amd64/rpms/Mar
-iaDB-<mariadb_version>-centos7-x86_64-compat.rpm
-    5. If you use SQLite as the Hue database, load its backup:
+    4. If you use SQLite as the Hue database, load its backup:
          a. If the Hue node runs on Ubuntu, install sqlite3:
 apt-get install sqlite3
          b. Run the following commands:
@@ -41,9 +31,9 @@ sqlite3 desktop.db < ~/dump-hue-<old_version>-sqlite.bak
 sqlite3 desktop.db
 DELETE FROM django_content_type;
 
-    6. Update the old database schema so that it is compatible with the
+    5. Update the old database schema so that it is compatible with the
        new upgraded version:
-source /opt/mapr/hue/hue-<new_version>/build/env/bin/activate
+source /opt/mapr/hue/hue-<new_version>/bin/activate
 hue syncdb --noinput
 hue migrate --merge
 deactivate
@@ -57,10 +47,10 @@ deactivate
        with the database during the Hue upgrade, you can restore your data
        from the backup that you created during the [2]Pre-Upgrade Steps
        for Hue:
-source /opt/mapr/hue/hue-<new_version>/build/env/bin/activate
+source /opt/mapr/hue/hue-<new_version>/bin/activate
 hue loaddata --ignorenonexistent ~/dump-hue-<old_version>.json
 deactivate
-    7. For upgrades performed without the MapR Installer: If you are using
+    6. For upgrades performed without the MapR Installer: If you are using
        Hadoop MRv1, complete the following steps to establish
        communication between Hue and the JobTracker processes:
          a. Remove existing Hue plugins from the MapReduce lib directory:
@@ -74,12 +64,12 @@ cp /opt/mapr/hue/hue-3.10.0/desktop/libs/hadoop/java-lib/hue-plugins-*.jar /opt/
 mapr/hadoop/hadoop-0.20*/lib/
          c. Restart the JobTracker services:
 maprcli node services -jobtracker restart -nodes <ip_addresses>
-    8. Run configure.sh -R:
+    7. Run configure.sh -R:
 /opt/mapr/server/configure.sh -R
        If you do not complete this step, Hue may fail to start and the MCS
        may still display references to the Hue version that you upgraded
        from.
-    9. Restart the Hue service:
+    8. Restart the Hue service:
 maprcli node services -name hue -action restart -nodes <ip_address>
 
 References

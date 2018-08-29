@@ -302,6 +302,31 @@ MapR Control System
 
 MapR Monitoring
 
+   OTSDB-72
+          Issue: The memory allocated to OpenTSDB can be insufficient,
+          resulting in empty graphs and out-of-memory or GC overhead limit
+          exceeded errors.
+          Workaround: Increase the default memory for OpenTSDB by making
+          the following changes on all OpenTSDB nodes:
+
+         1. Edit the /opt/mapr/conf/conf.d/warden.opentsdb.conf file to
+            change:
+service.heapsize.max=2000
+service.heapsize.min=2000
+            to
+service.heapsize.max=6000
+service.heapsize.min=6000
+         2. Edit the /opt/mapr/opentsdb/opentsdb-*/etc/init.d/opentsdb
+            file to change:
+$
+{JVMXMX:=-Xmx2000m -Xss1m -XX:MaxMetaspaceSize=128m}
+            to
+$
+{JVMXMX:=-Xmx6000m -Xss1m -XX:MaxMetaspaceSize=128m}
+         3. Restart the OpenTSDB service:
+maprcli node services -name opentsdb -nodes <space-separated list of OpenTSDB no
+des> -action restart
+
    ES-27
           Issue: On a new installation of a secure cluster using the MapR
           Installer, Elasticsearch fails to start, and logs indicate that

@@ -6,7 +6,9 @@ Enable SSL Encryption Between Hue and HttpFS
 
    Complete the following steps to enable SSL encryption and mutual-based
    authentication between Hue and HttpFS on a secure cluster:
-    1. Start Hue:
+    1. Configure HttpFS to use SSL or verify that HttpFS is configured to
+       use SSL. For details, see [1]SSL Security for HttpFS.
+    2. Start Hue:
 maprcli node services -name hue -action start -nodes <node name>
        When you start or restart Hue on a secure cluster, the secure.sh
        script ($HUE_HOME/bin/secure.sh) generates the following files in
@@ -19,7 +21,7 @@ maprcli node services -name hue -action start -nodes <node name>
        The secure.sh script runs with a set of default parameters, which
        should not be changed. If generated keystore files already exist in
        that location, the script does not regenerate the files.
-    2. Add the following configuration in the hue.ini file under the
+    3. Add the following configuration in the hue.ini file under the
        [[hdfs_clusters]] [[[default]]] section. (Use the absolute paths
        for ssl_cert and ssl_key.)
           +
@@ -52,8 +54,6 @@ ssl_cert_ca_verify=False
 
       # If certificate verified against certificate authority
       ssl_cert_ca_verify=False
-    3. Configure HttpFS to use SSL or verify that HttpFS is configured to
-       use SSL. For details, see [1]SSL Security for HttpFS.
     4. Restart Hue.
 maprcli node services -name hue -action start -nodes <ip_address>
     5. To test that SSL encryption is enabled for HttpFS, run the
