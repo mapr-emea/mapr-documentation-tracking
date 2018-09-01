@@ -3,7 +3,18 @@ Adding Secondary Indexes on JSON Tables
    Describes how to add secondary indexes on MapR-DB JSON tables.
 
    You can add secondary indexes using the MapR Control System (MCS) or
-   the maprcli table index commands. You need the following permissions:
+   the maprcli table index commands.
+
+   If you are adding an index on a large table, particularly if it
+   contains complex data, you should consider modifying the
+   [1]mfs.db.parallel.copyregions parameter using the [2]maprcli config
+   save command. The parameter controls the degree of parallel processing
+   in your MapR cluster. Increasing parallelism can improve the index
+   build time by optimizing the build's intermediate copy operation.
+
+   Permissions
+
+   You need the following permissions to add an index:
      * readAce on the volume
      * lookupdir on directories in the table path
      * indexperm permission on the table
@@ -16,12 +27,12 @@ Adding Secondary Indexes on JSON Tables
    allow the mapr user to perform this operation unless that user is given
    the relevant permission or permissions with access-control expressions.
 
-   See [1]Restrictions on Secondary Indexes for information about other
+   See [3]Restrictions on Secondary Indexes for information about other
    restrictions.
 
 Adding Indexes Using the MapR Control System
 
-    1. Log in to MCS and go to the Indexes tab in the [2]table information
+    1. Log in to MCS and go to the Indexes tab in the [4]table information
        page.
     2. Click Add Index to display the Add Index page.
     3. Specify the following settings:
@@ -29,7 +40,7 @@ Adding Indexes Using the MapR Control System
          b. Specify whether (Yes) or not (No) the index is hashed in the
             Hashed field. If Yes, specify the number of hash index
             partitions for distributing the keys.
-            See [3]Hashed Indexes for information about whether you should
+            See [5]Hashed Indexes for information about whether you should
             create a hashed index.
     4. Specify the list of indexed fields under FIELDS INDEXED.
          a. Specify the name of the indexed field in the Field Name text
@@ -39,12 +50,12 @@ Adding Indexes Using the MapR Control System
          c. Select the function of the field from the Function dropdown
             menu.
             Before defining an index that specifies index keys with CAST
-            functions, see [4]Using Casts in Secondary Indexes for more
+            functions, see [6]Using Casts in Secondary Indexes for more
             information on creating indexes using CAST functions.
        Tip: To add more indexed fields, click Add Another and repeat step
        4.
     5. Specify the names of the included fields under INCLUDED FIELDS.
-       For more information, see [5]Covering Indexes.
+       For more information, see [7]Covering Indexes.
        Tip: To add additional included fields, click Add Another and
        repeat step 5.
     6. Click Add Index to create the index.
@@ -58,13 +69,15 @@ maprcli table index add
   -index <index name>
   -indexedfields < indexed field names >
 
-   See [6]table index add for a description of the complete syntax.
+   See [8]table index add for a description of the complete syntax.
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-restrictions.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ViewTables.html#task_cz4_ymq_fz
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/hashed-index.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-functional-index.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-index-add.html
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config.html#config
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-save.html#configsave
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-restrictions.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ViewTables.html#task_cz4_ymq_fz
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/hashed-index.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-functional-index.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-index-add.html
