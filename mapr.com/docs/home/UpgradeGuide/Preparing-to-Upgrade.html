@@ -34,11 +34,13 @@ Preparing to Upgrade MapR Core
      * OS requirements. MapR OS requirements do not change frequently. If
        the OS on a node doesn’t meet the requirements for the newer
        version of MapR, plan to decommission the node and re-deploy it
-       with an updated OS after the upgrade.
-     * Certificate requirements. Recent versions of [3]Safari and
-       [4]Chrome web browsers have removed support for older certificate
+       with an updated OS after the upgrade. See [3]Operating System
+       Support Matrix (MapR 6.x) and [4]Operating System Support Matrix
+       (MapR 5.x).
+     * Certificate requirements. Recent versions of [5]Safari and
+       [6]Chrome web browsers have removed support for older certificate
        cipher algorithms, including those used by some versions of MapR.
-       For more information on resolving this issue, see [5]Unable to
+       For more information on resolving this issue, see [7]Unable to
        Establish a Secure Connection.
 
 2. Design Health Checks
@@ -80,9 +82,9 @@ NEAR_EXPIRATION  1366142919009
 ogs at: /opt/mapr/logs/nfsserver.log            centos58  NODE_ALARM_SERVICE_NFS
 _DOWN            1366194786905
        In this example you can see that an alarm is raised indicating that
-       MapR is expecting an NFS server to be running on node centos58, and
-       the node list of running services confirms that the nfs service is
-       not running on this node.
+       MapR software expects an NFS server to be running on node centos58,
+       and the node list of running services confirms that the nfs service
+       is not running on this node.
      * Batch create a set of test files.
      * Submit a MapReduce application.
      * Run simple checks on installed Hadoop ecosystem components. For
@@ -100,17 +102,17 @@ _DOWN            1366194786905
        deviation from expected completion times.
      * Test correct inter-operation of all components in the Hadoop stack
        and third-party tools.
-     * Confirm the integrity of critical data stored on cluster.
+     * Confirm the integrity of critical data stored on the cluster.
 
 3. Verify Cluster Health
 
    Run the test you designed in step 2 to verify the cluster health prior
    to upgrade.
      * Run the suite of simple tests to verify that basic features of the
-       MapR core are functioning correctly, and that any alarms are known
+       MapR Core are functioning correctly, and that any alarms are known
        and accounted for.
      * Run the suite of non-trivial tests to verify that the cluster is
-       running as expected for typical workload, including integration
+       running as expected for a typical workload, including integration
        with Hadoop ecosystem components and third-party tools.
 
    Proceed with the upgrade only if the cluster is in an expected, healthy
@@ -156,31 +158,31 @@ _DOWN            1366194786905
        this cluster, use one of the following options to stop the
        mirroring of volumes on this cluster:
 
-   Using the MCS See [6]Stopping the Mirror.
+   Using the MCS See [8]Stopping the Mirror.
    Using a maprcli command Run the maprcli volume mirror stop command on
-   this cluster. See [7]volume mirror stop.
+   this cluster. See [9]volume mirror stop.
      * Table Replication. If source tables on this cluster are replicated
        to tables on another cluster, pause the replication of tables on
        this cluster. Use one of the following options for each source
        table on this cluster:
 
    Using the MCS
-         1. Log in to MCS and go to the source [8]table information page.
+         1. Log in to MCS and go to the source [10]table information page.
          2. On the Replications tab associated with the source table,
             select each replica and then click Actions > Pause Replication
             > .
 
    Using a maprcli command Run the maprcli table replica pause command.
-   See [9]table replica pause.
+   See [11]table replica pause.
 
    Note: Once you have completed the MapR Core upgade and the
-   [10]Post-Upgrade Steps for MapR Core, you can resume cross-cluster
+   [12]Post-Upgrade Steps for MapR Core, you can resume cross-cluster
    operations.
 
-7. Backup Configuration Files
+7. Back up Configuration Files
 
    If you are upgrading the MapR FUSE-based POSIX client on Ubuntu, create
-   a backup copy of your custom settings in the the fuse.conf file in
+   a backup copy of your custom settings in the fuse.conf file in
    /opt/mapr/conf directory. If you do not create a backup copy, you may
    lose your custom settings for the POSIX client because the new
    fuse.conf file with default settings will overwrite your current
@@ -188,6 +190,12 @@ _DOWN            1366194786905
    FUSE-based POSIX client on other supported operating systems, during
    upgrade, MapR automatically sets up the fuse.conf.backup file in
    addition to the new fuse.conf file in the /opt/mapr/conf directory.
+
+   Consider creating the env_override.sh file to store custom settings for
+   environmental variables. Upgrading to a new MapR release causes the
+   env.sh file to be replaced and removes any custom settings. Creating
+   the env_override.sh file can simplify the management of environmental
+   variables easier. For more information, see [13]About env_override.sh.
 
 8. Migrate from MapReduce Version 1
 
@@ -199,8 +207,8 @@ _DOWN            1366194786905
        is an application that runs on top of YARN.
      * Uninstall all packages associated with MRv1.
 
-   For more information on how to prepare your cluster to run MRv2
-   applications, see [11]Migrating from MapReduce Version 1 to MapReduce
+   For more information about how to prepare your cluster to run MRv2
+   applications, see [14]Migrating from MapReduce Version 1 to MapReduce
    Version 2.
 
 9. Migrate from Apache HBase
@@ -217,32 +225,41 @@ configure.sh -R -defaultdb maprdb
      * If you would like to migrate data from Apache HBase tables to
        MapR-DB binary tables, you must do so before upgrading to MapR 6.0
        or later. For more information on how to migrate your data, see
-       [12]Migrating between Apache HBase and MapR-DB Binary Tables.
+       [15]Migrating between Apache HBase and MapR-DB Binary Tables.
 
-10. Prepare to Upgrade the Expansion Pack
+10. Migrate from Mahout and Storm
 
-   Complete the pre-upgrade steps in [13]Preparing to Upgrade the
+   Mahout and Storm are not supported on MapR 6.0 or later. Before the
+   upgrade, disable applications that use these components, and remove the
+   Mahout and Storm packages.
+
+11. Prepare to Upgrade the Expansion Pack
+
+   Complete the pre-upgrade steps in [16]Preparing to Upgrade the
    Expansion Pack. Then return to this section.
 
 What's Next
 
-   Go to [14]Upgrading MapR Core with the MapR Installer or [15]Upgrading
+   Go to [17]Upgrading MapR Core with the MapR Installer or [18]Upgrading
    MapR Core Without the MapR Installer.
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_packages_and_deps_60.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/PreparingEachNode.html#PreparingEachNode
-   3. http://support.apple.com/en-us/HT203107
-   4. http://www.zdnet.com/google-advances-ssl-with-new-chrome-versions-7000035966/
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_browser_connection.html#c_browser_connection
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/MirrorVols-MirrorStop.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-mirror-stop.html#volumemirrorstop
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ViewTableDetails.html
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-pause.html#tablereplicapause
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PostUpgradeCore.html#PostUpgradeCore
-  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/MRv1_migration.html#MRv1_migration
-  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/MigratingBetweenApacheHBaseandMapRDB.html#MigratingBetweenApacheHBaseandMapRDB
-  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PerformInstallerPreupgrade.html#PreupgradeMapRInstaller
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingWithInstaller.html#upgradingwithmaprinstaller
-  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingWithoutInstaller.html#upgradingwithoutmaprinstaller
+   3. https://mapr.com/docs/home/InteropMatrix/r_os_matrix_6.x.html
+   4. https://mapr.com/docs/home/InteropMatrix/r_os_matrix.html
+   5. http://support.apple.com/en-us/HT203107
+   6. http://www.zdnet.com/google-advances-ssl-with-new-chrome-versions-7000035966/
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_browser_connection.html#c_browser_connection
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/MirrorVols-MirrorStop.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-mirror-stop.html#volumemirrorstop
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ViewTableDetails.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-pause.html#tablereplicapause
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PostUpgradeCore.html#PostUpgradeCore
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/env_override.sh.html#concept_hnz_4yd_mdb
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/MRv1_migration.html#MRv1_migration
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/MigratingBetweenApacheHBaseandMapRDB.html#MigratingBetweenApacheHBaseandMapRDB
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PerformInstallerPreupgrade.html#PreupgradeMapRInstaller
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingWithInstaller.html#upgradingwithmaprinstaller
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingWithoutInstaller.html#upgradingwithoutmaprinstaller
