@@ -1,15 +1,17 @@
 Authentication in MapR
 
-   Describes robust MapR authentication that prevents third parties from
-   representing themselves as legitimate users.
+   Describes types of authentication available with the MapR Data Platform
+   and how to manage user authentication with the maprlogin utility.
 
-   Authentication ensures that the identity of the end user or system is
-   known reliably in a network safe way. The core component of user
-   authentication in MapR is the ticket. A ticket is an object that
-   contains specific information about a user, an expiration time, and a
-   key. Tickets uniquely identify a user and are encrypted to protect
-   their contents. You can use tickets to establish sessions between a
-   user and the cluster.
+   Authentication ensures who you are and who you claim you are in
+   identifying the end user to the system. MapR authentication supports
+   standard Basic Authentication and SPNEGO authentication for web-based
+   interfaces and supports MapR tickets for many of the core system
+   component non-web-based interfaces. A ticket is an object that contains
+   specific information about a user, an expiration time, and a key.
+   Tickets uniquely identify a user and are encrypted to protect their
+   contents. You can use tickets to establish sessions between a user and
+   the cluster.
 
 Types of Authentication in MapR
 
@@ -33,10 +35,56 @@ Types of Authentication in MapR
    features enabled does not rely on the client-side operating system
    identity.
 
-   The [2]Security Architecture section discusses the implementation
-   details of these authentication methods.
+The maprlogin Utility for Generating Tickets
+
+   The [2]maprlogin utility supports user authentication with either
+   username and password or Kerberos to generate a unique session token
+   called a ticket. The following diagram outlines the process flow:
+   [maprlogin.png]
+
+   MapR tickets are either implicitly or explicitly generated. On clusters
+   that use Kerberos for authentication, a user that runs a MapR command
+   without first using the maprlogin utility implicitly obtains a MapR
+   ticket. During usage, the client runtime process first checks for a
+   valid user ticket, and uses that ticket if it exists. If a ticket does
+   not exist, the runtime process checks if Kerberos is enabled for the
+   cluster and then checks for an existing valid Kerberos identity. When a
+   valid Kerberos identity is found, the client implicitly generates a
+   ticket for that Kerberos identity.
+
+   When you explicitly generate a ticket, you can authenticate either with
+   your username and password or with Kerberos:
+    1. The user on the client machine invokes the maprlogin utility, which
+       connects to a CLDB node in the cluster using HTTPS. The host name
+       for the CLDB node is specified in the mapr-clusters.conf file.
+          + For username-password authentication, the node authenticates
+            using PAM modules with the Java Authentication and
+            Authorization Service (JAAS).
+            The JAAS configuration is specified in the [3]mapr.login.conf
+            file. The system can use any registry that has a PAM module
+            available.
+          + For Kerberos authentication, the CLDB node verifies the
+            Kerberos principal with the keytab file.
+    2. After authenticating, the CLDB node uses the standard UNIX APIs
+       getpwnam_r and getgrouplist, which are controlled by the
+       /etc/nsswitch.conf file, to determine the user's user IDs and group
+       IDs.
+    3. The CLDB node generates a ticket and returns it to the client
+       machine, completing the login communication between the client and
+       the CLDB.
+    4. After login, the MapR server validates that the ticket is properly
+       encrypted, to verify that the ticket was issued by the cluster's
+       CLDB.
+    5. The server also verifies that the ticket has not expired or been
+       blacklisted.
+    6. The server checks the ticket for a privileged identity such as the
+       mapr user.
+       Privileged identities have impersonation functionality enabled.
+    7. The ticket's user and group information are used for authorization
+       to the cluster, unless impersonation is in effect.
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SecurityArchitecture.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr.login.conf.html

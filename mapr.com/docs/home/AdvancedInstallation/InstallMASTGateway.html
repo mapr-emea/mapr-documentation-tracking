@@ -1,0 +1,59 @@
+Installing the MAST Gateway
+
+   Describes how to install the MapR Automated Storage Tiering (MAST)
+   Gateway service.
+
+   The MAST Gateway acts as the centralized entry point for all the
+   operations that need to be performed on the tiered storage. The MAST
+   Gateway can be installed (with or without MapR Filesystem) on specific
+   hosts on the MapR cluster with access to the 3rd party cloud storage
+   (for cold tier operations) or on the edge node. Before you install the
+   MAST Gateway, review the [1]Pre-Installation Considerations.
+   See [2]Configuring the MAST Gateway Service after installing the MAST
+   Gateway.
+
+Installing the MAST Gateway Using the MapR Installer
+
+   When you install MapR 6.1 or later using the [3]MapR Installer, select
+   the MapR-XD: Cloud Scale Data Platform auto-provisioning template to
+   automatically install the MAST Gateway on all the nodes.
+
+Installing the MAST Gateway from the Command-line
+
+   Run the following command on the node where you want to install the
+   MAST Gateway:
+   CentOS yum install mapr-mastgateway
+   Ubuntu apt-get install mapr-mastgateway
+   Suse   zypper install mapr-mastgateway
+
+Installing Additional MAST Gateways from the Command-line
+
+   If you install a new MAST Gateway on a cluster already performing
+   tiering operations (using other installed MAST Gateways), perform the
+   following steps to force CLDB to rebalance utilization of all the MAST
+   Gateways including the newly added MAST Gateway:
+    1. Install the mapr-mastgateway package on the node.
+    2. Run [4]configure.sh with the -R option to register the MAST Gateway
+       with CLDB.
+       For example:
+/opt/mapr/server/configure.sh -R
+       After this command runs, newly created volumes are assigned to this
+       MAST Gateway.
+    3. Run the following command to force CLDB to reassign existing
+       volumes to the least utilized MAST Gateways:
+/opt/mapr/server/mrconfig mastgateway refreshvolassignment <volume-name>
+       You must run this command once for each volume to reassign. MapR
+       recommends running this command for all volumes if MAST Gateway is
+       either newly added to the cluster or permanently removed from the
+       cluster. When this command runs, CLDB reassigns the volume tiering
+       operation to the least utilized MAST Gateway, which might be the
+       newly added MAST Gateway, to force rebalancing.
+       For more information, see [5]mastgateway refreshvolassignment.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/MASTGatewayRecommendations.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ConfigMASTGateway.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapRInstaller.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mrconfig-mastgateway-refreshvolassignment.html

@@ -1,20 +1,25 @@
-Developing MapR-ES Python Applications
+Developing MapR Event Store For Apache Kafka Python Applications
 
-   This topic includes basic information about how to develop a MapR-ES
-   Python application and an example program that you can run.
+   This topic includes basic information about how to develop a MapR Event
+   Store For Apache Kafka Python application and an example program that
+   you can run.
 
 Before you Begin
 
    Confirm that your environment meets the following requirements:
      * MapR cluster version 5.2.1 or greater.
-     * MapR-ES C Client (mapr-librdkafka) is installed and configured on
-       the node. See [1]Configuring the MapR-ES C Client.
-     * MapR-ES Python Client (mapr-streams-python) is installed on the
-       node. See [2]Installing MapR-ES Python Client.
+     * MapR core client (mapr-client) package. See [1]Installing the MapR
+       Client for more information.
+     * MapR Event Store For Apache Kafka C Client (mapr-librdkafka) is
+       installed and configured on the node. See [2]Configuring the MapR
+       Event Store For Apache Kafka C Client.
+     * MapR Event Store For Apache Kafka Python Client
+       (mapr-streams-python) is installed on the node. See [3]Installing
+       MapR Event Store For Apache Kafka Python Client.
      * Python 2.7.x and greater or Python 3.x and greater is installed on
        the node.
 
-Create a MapR-ES Producer Application
+Create a MapR Event Store For Apache Kafka Producer Application
 
    In general, you want to create a producer that performs the following
    steps:
@@ -23,9 +28,9 @@ Create a MapR-ES Producer Application
     3. Produce data.
     4. Wait for all messages to be sent to consumer.
 
-   As of MEP 5.0 MapR-ES Python Client: In the following example code,
-   three messages are produced to a topic named mytopic in a stream named
-   my_stream.
+   As of MEP 5.0 MapR Event Store For Apache Kafka Python Client: In the
+   following example code, three messages are produced to a topic named
+   mytopic in a stream named my_stream.
 from confluent_kafka import Producer
 p = Producer({'streams.producer.default.stream': '/my_stream'})
 some_data_source= ["msg1", "msg2", "msg3"]
@@ -33,9 +38,9 @@ for data in some_data_source:
      p.produce('mytopic', data.encode('utf-8'))
      p.flush()
 
-   As of MEP 3.0 MapR-ES Python Client: In the following example code,
-   three messages are produced to a topic named mytopic in a stream named
-   my_stream.
+   As of MEP 3.0 MapR Event Store For Apache Kafka Python Client: In the
+   following example code, three messages are produced to a topic named
+   mytopic in a stream named my_stream.
 from mapr_streams_python import Producer
 p = Producer({'streams.producer.default.stream': '/my_stream'})
 some_data_source= ["msg1", "msg2", "msg3"]
@@ -43,7 +48,7 @@ for data in some_data_source:
     p.produce('mytopic', data.encode('utf-8'))
     p.flush()
 
-Create a MapR-ES Consumer Application
+Create a MapR Event Store For Apache Kafka Consumer Application
 
    In general, you want to create a consumer that performs the following
    steps:
@@ -52,9 +57,10 @@ Create a MapR-ES Consumer Application
     3. Consume data.
     4. Wait for all messages to be consumed.
 
-   As of MEP 5.0 MapR-ES Python Client: In following example code, the
-   MapR-ES consumer is subscribed to my_stream/mytopic and it prints the
-   content of each message that it reads.
+   As of MEP 5.0 MapR Event Store For Apache Kafka Python Client: In
+   following example code, the MapR Event Store For Apache Kafka consumer
+   is subscribed to my_stream/mytopic and it prints the content of each
+   message that it reads.
 from confluent_kafka import Consumer, KafkaError
 c = Consumer({'group.id': 'mygroup',
               'default.topic.config': {'auto.offset.reset': 'earliest'}})
@@ -70,9 +76,10 @@ while running:
     running = False
 c.close()
 
-   As of MEP 3.0 MapR-ES Python Client: In following example code, the
-   MapR-ES consumer is subscribed to my_stream/mytopic and it prints the
-   content of each message that it reads.
+   As of MEP 3.0 MapR Event Store For Apache Kafka Python Client: In
+   following example code, the MapR Event Store For Apache Kafka consumer
+   is subscribed to my_stream/mytopic and it prints the content of each
+   message that it reads.
 from mapr_streams_python import Consumer, KafkaError
 c = Consumer({'group.id': 'mygroup',
               'default.topic.config': {'auto.offset.reset': 'earliest'}})
@@ -96,12 +103,13 @@ Run the Example Applications
     3. Add the producer example code into the producer.py file.
     4. Create a file named consumer.py.
     5. Add the consumer example code into the consumer.py file.
-    6. Verify that you have completed the steps to configure the MapR-ES C
-       client or complete the steps now. See [3]Configuring the MapR-ES C
-       Client.
-       Note: The MapR-ES Python Client is dependent on the MapR-ES C
-       Client. Therefore, the MapR-ES C Client must be configured before
-       you can run the application.
+    6. Verify that you have completed the steps to configure the MapR
+       Event Store For Apache Kafka C client or complete the steps now.
+       See [4]Configuring the MapR Event Store For Apache Kafka C Client.
+       Note: The MapR Event Store For Apache Kafka Python Client is
+       dependent on the MapR Event Store For Apache Kafka C Client.
+       Therefore, the MapR Event Store For Apache Kafka C Client must be
+       configured before you can run the application.
     7. Run producer.py from the command line to generate messages.
 $ python producer.py
     8. Run consumer.py from the command line:
@@ -109,6 +117,7 @@ $ python consumer.py
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/MapRStreamCAPISetup.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingStreamsPYClient.html#task_fc1_ssg_3z
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/MapRStreamCAPISetup.html
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient-install-mapr-client.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/MapRStreamCAPISetup.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingStreamsPYClient.html#task_fc1_ssg_3z
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/MapRStreamCAPISetup.html

@@ -1,13 +1,13 @@
-Query MapR-DB Binary Tables with Impala
+Query MapR Database Binary Tables with Impala
 
-   You can use Impala to query data in MapR-DB binary tables. Create an
-   external table in the Hive shell and then map the Hive table to the
-   corresponding MapR-DB binary table. You can map a MapR-DB binary table
-   to a Hive table with or without string row keys. When you create an
-   external table in Hive, use the HBaseStorageHandler clause in the Hive
-   CREATE TABLE statement to allow Hive to access data stored in the
-   MapR-DB binary table. The HBaseStorageHandler has two important
-   properties:
+   You can use Impala to query data in MapR Database binary tables. Create
+   an external table in the Hive shell and then map the Hive table to the
+   corresponding MapR Database binary table. You can map a MapR Database
+   binary table to a Hive table with or without string row keys. When you
+   create an external table in Hive, use the HBaseStorageHandler clause in
+   the Hive CREATE TABLE statement to allow Hive to access data stored in
+   the MapR Database binary table. The HBaseStorageHandler has two
+   important properties:
 
    hbase.columns.mapping
           Specifies the Hive column to column family mapping.
@@ -29,14 +29,14 @@ S
 ss:state')
 TBLPROPERTIES ('hbase.table.name'='/user/userA/students');
 
-   Once you have mapped the MapR-DB binary table to Hive, you can query or
-   insert into the table from Impala because Hive and Impala share the
-   metastore database. Impala nodes cache table metadata if a table
-   contains a large amount of data or has many partitions. Caching the
-   metadata reduces runtime for future queries on the table.
+   Once you have mapped the MapR Database binary table to Hive, you can
+   query or insert into the table from Impala because Hive and Impala
+   share the metastore database. Impala nodes cache table metadata if a
+   table contains a large amount of data or has many partitions. Caching
+   the metadata reduces runtime for future queries on the table.
 
-   If you insert new data into a Hive or MapR-DB binary table, use the
-   Impala shell to issue the REFRESH statement to refresh the data
+   If you insert new data into a Hive or MapR Database binary table, use
+   the Impala shell to issue the REFRESH statement to refresh the data
    location cache. The REFRESH command only applies to the node that the
    Impala shell is connected to. If you route all SQL statements to the
    same node, you do not have to issue regular REFRESH statements when
@@ -45,22 +45,22 @@ TBLPROPERTIES ('hbase.table.name'='/user/userA/students');
    If you create, drop, or alter any external tables or databases, use the
    Impala shell to issue the INVALIDATE METADATA statement to refresh
    table structure metadata.
-   To ensure Impala is quering MapR-DB binary tables and not HBase, add
-   the next property to $HBASE_HOME/conf/hbase-site.xml:
+   To ensure Impala is quering MapR Database binary tables and not HBase,
+   add the next property to $HBASE_HOME/conf/hbase-site.xml:
 <property>
   <name>mapr.hbase.default.db</name>
   <value>maprdb</value>
 </property>
 
-Example: Running an Impala Query on MapR-DB Binary Tables
+Example: Running an Impala Query on MapR Database Binary Tables
 
    In this example scenario, a professor wants to know how many times a
    student clicks on Google from his webpage. He wants to use Impala to
-   query the data in MapR-DB. One of his students offered to load the data
-   into MapR-DB so he can access it. In order to complete the professor’s
-   request, the student must use the HBase shell to create two MapR-DB
-   binary tables that contain the following schema and then put data in
-   the tables:
+   query the data in MapR Database. One of his students offered to load
+   the data into MapR Database so he can access it. In order to complete
+   the professor’s request, the student must use the HBase shell to create
+   two MapR Database binary tables that contain the following schema and
+   then put data in the tables:
      * student
           + account – id, name
           + address – street, zipcode, state
@@ -70,13 +70,14 @@ Example: Running an Impala Query on MapR-DB Binary Tables
 
    Each bullet corresponds to a column family with a list of columns. In
    order to access the tables using Impala, the student must create
-   external tables in Hive with mapped columns that match the MapR-DB
-   columns.
+   external tables in Hive with mapped columns that match the MapR
+   Database columns.
 
    If you would like to be the student, you can perform the following
    steps to help the professor:
-    1. Use the HBase shell to create two tables in MapR-DB: “student” and
-       “clicks”. To create the tables, issue the following commands:
+    1. Use the HBase shell to create two tables in MapR Database:
+       “student” and “clicks”. To create the tables, issue the following
+       commands:
 echo "create '/user/userA/students','account','address'" | hbase shell
 echo "create '/user/userA/clicks','clickinfo','iteminfo'" | hbase shell
     2. Issue the hadoop fs –ls command on the table location to verify
@@ -119,7 +120,7 @@ clickinfo:url, clickinfo:time, iteminfo:itemtype, iteminfo:quantity')
 TBLPROPERTIES
 ('hbase.table.name'='/user/userA/clicks');
     4. Create a testdata.txt file with the following content to add data
-       into the “students” and “clicks” MapR-DB binary tables.
+       into the “students” and “clicks” MapR Database binary tables.
 cat > testdata.txt
 put '/user/userA/students','student1','account:name','Alice'
 put '/user/userA/students','student1','address:street','123 Ballmer Av'

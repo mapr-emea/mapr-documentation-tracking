@@ -21,10 +21,55 @@ Before You Begin
        table srcTab that replicates to /replVol/replTab. If /vol fails,
        /vol.mirror/srcTab may lag /replVol/replTab when /vol.mirror is
        promoted.
+       To avoid this problem, starting with the 6.1 release, after MapR
+       Database promotes a mirror volume, replication terminates with
+       REPLICA_STATE_UNEXPECTED for any tables in that volume.
+       The following sample output shows this behavior:
+[mapr]# maprcli table replica list -path /vol.mirror/srcTab -refreshnow true -js
+on
+{
+  "timestamp":1534805233244,
+  "timeofday":"2018-08-20 03:47:13.244 GMT‌-0700 PM",
+  "status":"OK",
+  "total":1,
+  "data":[
+    {
+      "cluster":"mirrorSrc",
+      "table":"/replVol/replTab",
+      "type":"MapRDB",
+      "replicaPath":"/replVol/replTab",
+      "replicaState":"REPLICA_STATE_UNEXPECTED",
+      "paused":false,
+      "throttle":false,
+      "idx":1,
+      "networkencryption":false,
+      "synchronous":false,
+      "networkcompression":"lz4",
+      "propagateExistingData":false,
+      "isUptodate":true,
+      "minPendingTS":0,
+      "maxPendingTS":0,
+      "bytesPending":0,
+      "putsPending":0,
+      "bucketsPending":0,
+      "uuid":"8b4563e1-884d-7852-f257-078c397b5b00",
+      "copyTableCompletionPercentage":0,
+      "errors":{
+        "Code":"ErrReplicaTableUpstreamMismatch",
+        "Host":"10.10.104.35",
+        "Msg":"OpenStream: Upstream table does not match original Upstream clust
+er mirrorSrc table /replVol/replTab"
+      }
+    }
+    ]
+}
+       This change in behavior applies to only tables that have
+       replication enabled starting in 6.1. See [2]Table Replication
+       States for more details.
      * Ensure that your user ID has the readAce permission on the volume
        where the source tables are located and the writeAce permission on
        the volumes where the replicas are located. For information about
-       how to set permissions on volumes, see [2]Setting Whole Volume ACEs
+       how to set permissions on volumes, see [3]Setting Whole Volume ACEs
      * Ensure that you have administrative authority on the clusters that
        you plan to use.
      * If you upgraded your source cluster from a previous version of
@@ -32,7 +77,7 @@ Before You Begin
        maprcli cluster feature enable -name mfs.feature.db.repl.support
      * Depending on your use case, replication requires the installation
        of gateways and may also require the HBase client. For more
-       information about installation requirements, see [3]Service Layout
+       information about installation requirements, see [4]Service Layout
        Guidelines for Replication
 
 Setting Up Table Replication
@@ -43,19 +88,19 @@ Setting Up Table Replication
        cluster, add an entry that lists the CLDB nodes that are in the
        destination cluster. This step is required so that the source
        cluster can communicate directly with the destination cluster's
-       CLDB nodes. See the topic "[4]mapr-clusters.conf” for the format to
+       CLDB nodes. See the topic "[5]mapr-clusters.conf” for the format to
        use for the entries.
     2. On the destination cluster, configure gateways through which the
        source cluster will send updates to the destination cluster. See
-       [5]Configuring Gateways for Table and Stream Replication.
+       [6]Configuring Gateways for Table and Stream Replication.
     3. If your clusters are secure, configure each cluster so that you can
        access them all from one cluster. This way, you need not log into
        each secure cluster separately and run maprcli commands locally on
-       them. See [6]Configuring Secure Clusters for Running Commands
+       them. See [7]Configuring Secure Clusters for Running Commands
        Remotely for more information.
     4. If your clusters are secure, add a cross-cluster ticket to the
        source cluster, so that it can replicate data to the destination
-       cluster. See [7]Configuring Secure Clusters for Cross-Cluster
+       cluster. See [8]Configuring Secure Clusters for Cross-Cluster
        Mirroring and Replication.
     5. Optional: If your clusters are secure, configure your source
        cluster so that you can use the MapR Control System (MCS) to set up
@@ -99,7 +144,7 @@ maprlogin generateticket -type service -cluster <destination cluster>
             when you secured the source cluster:
 at <path and filename of the service ticket> >> /opt/mapr/conf/mapruserticket
          c. Restart the web server by running the maprcli node services
-            command. For the syntax of this command, see [8]node services.
+            command. For the syntax of this command, see [9]node services.
          d. Add the following two properties to the core-site.xml file.
             For Hadoop 2.7.0, edit the file
             /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/core-site.xml.
@@ -115,10 +160,11 @@ at <path and filename of the service ticket> >> /opt/mapr/conf/mapruserticket
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ReplicatingMapR-DBTables-topologies.html#ReplicatingMapR-DBTables-topologies
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/PlanningtheCluster-services-layout-replication.html#concept_qyc_mjk_yz
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr-clusters.conf.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html#task_clg_ywy_5t
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/RunningCommandsOnRemoteSecureClusters.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-services.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/replication-states.html#reference_dmn_rn2_d1b
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/PlanningtheCluster-services-layout-replication.html#concept_qyc_mjk_yz
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mapr-clusters.conf.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html#task_clg_ywy_5t
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/RunningCommandsOnRemoteSecureClusters.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-services.html

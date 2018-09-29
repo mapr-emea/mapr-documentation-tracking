@@ -1,34 +1,70 @@
 Encryption in MapR
 
-   Describes encryption types available on the MapR Converged Data
-   Platform.
+   Describes encryption types available on the MapR Data Platform.
 
    MapR encryption restricts an external party's ability to read or modify
    data.
 
+   MapR supports encryption of data on wire and data at rest for
+   preventing unauthorized access to sensitive data. These encryption
+   methods are in addition to authentication and authorization
+   protections. Encryption can be used to avoid exposure to breaches such
+   as packet sniffing and theft of storage devices.
+
    Data transmission between nodes in a secure MapR cluster is encrypted,
    preventing an attacker with access to that communication from gaining
-   information about the transmission's contents.
+   information about the contents of the transmission. Encryption of
+   data-at-rest prevents unauthorized users from accessing sensitive data
+   and protects against data theft through sector-level disk access.
 
-   MapR uses several technologies to protect network traffic:
+On-Wire Encryption
+
+   Data transmission between nodes in a secure MapR cluster over any
+   network connection supported by MapR is encrypted. When you run the
+   [1]configure.sh utility with the -secure option, you are enabling the
+   cluster for security, authentication, and wire-level encryption for the
+   platform and all ecosystem components. In secure mode, MapR
+   automatically encrypts all data traffic. Enabling encryption ensures
+   that data to and from the locations you specify is encrypted as it
+   travels over the network.
+
+   MapR uses the following technologies to protect network traffic:
      * The Secure Sockets Layer/Transport Layer Security (SSL/TLS)
-       protocol secures several channels of HTTP traffic.
-     * In compliance with the NIST standard, the Advanced Encryption
-       Standard in[1] Galois/Counter Mode (AES/GCM) secures several
-       communication channels between cluster components.
-     * Kerberos encryption secures several communication paths elsewhere
-       in the cluster.
+       protocol secures several channels of HTTP traffic supporting TLS
+       1.0, 1.1, which is the default, and 1.2.
+     * In compliance with the NIST standard, the 256-bit Advanced
+       Encryption Standard in [2]Galois/Counter Mode (AES256/GCM) secures
+       several communication channels between cluster components.
 
-   The [2]Security Protocols Used by MapR section includes details on the
-   specific technologies used by particular elements of a cluster.
+   The information in [3]Security Protocols Used by MapR includes details
+   on the specific technologies used by particular elements of a cluster.
 
    Nodes with CPUs that support AES encryption at the hardware level
    provide superior performance on encryption tasks. You can determine if
-   a node's CPU supports the AES instruction set by running the following
-   command:
+   the CPU of a node supports the AES instruction set by running the
+   following command:
 $ cat /proc/cpuinfo | grep flags | grep aes
+
+Data-at-Rest Encryption
+
+   Data on disk (or data-at-rest) in a secure MapR cluster can be
+   encrypted, enabling you to protect the data if a disk is compromised.
+   Encryption of data-at-rest not only prevents unauthorized users from
+   accessing sensitive data, but it also protects against data theft via
+   sector-level disk access. When you run the [4]configure.sh utility with
+   the -dare option, you are enabling data at rest encryption feature at
+   the cluster level. If encryption of data at rest is enabled, new
+   volumes are encrypted by default with the option to create a volume
+   without encryption. For example, if you have a volume that contains
+   data that is not at all sensitive, you might not want to encrypt it.
+   For encrypted volumes, MapR automatically encrypts data at rest and
+   manages the keys used to encrypt data seamlessly; you do not need
+   special utilities to encrypt or decrypt the data. MapR uses AES256/XTS
+   to protect data on the disk.
 
 References
 
-   1. http://en.wikipedia.org/wiki/Galois/Counter_Mode
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SecurityArchitecture-SecurityProtocols.html
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   2. https://en.wikipedia.org/wiki/Galois/Counter_Mode
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SecurityArchitecture-SecurityProtocols.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html

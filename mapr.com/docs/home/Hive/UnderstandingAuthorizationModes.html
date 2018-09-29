@@ -1,0 +1,84 @@
+Understanding Hive Authorization Modes
+
+   Dfferent modes of Hive authorization are available to satisfy different
+   use cases.
+
+Secure by Default Configuration (Storage Based Authorization in the Metastore
+Server)
+
+   Hive default security configuration is the storage based authorization
+   in the Metastore server. Managed by mapr-tiсkets and impersonation
+   level, Hive configurations control the data access and MapR file system
+   permissions act as one source of truth for the table storage access. By
+   enabling storage based authorization in the metastore server, you can
+   use this single source for truth and have a consistent data and
+   metadata authorization policy.
+
+   For use cases where the users have direct access to the data, Hive
+   configurations do not control the data access. The MapR file system
+   permissions act as the one source of truth for table storage access. To
+   control metadata access on the metadata objects such as databases,
+   tables, and partitions, MapR file system checks if you have permission
+   to access the corresponding directories on the file system.
+
+   You can also protect access through HiveServer2 ([1]use case 2.2) by
+   ensuring that the queries run as the end user. The
+   hive.server2.enable.doAs option should be true in the HiveServer2
+   configuration, this is a default value.
+
+   For more information, see [2]Hive Security Configuration Options.
+
+SQL Standards Based Authorization in HiveServer2
+
+   Although storage based authorization provides access control at the
+   level of databases, tables, and partitions, it can only control
+   authorization at finer levels such as columns and views for MapR
+   Database tables and not for files because the access control provided
+   by the file system is at the level of directory and files. SQL
+   standards authorization makes authorization possible for files BUT at
+   the expense of not being able to enforce that access from any other
+   tool.
+
+   For enabling SQL standards based authorization, refer to [3]SQL
+   Standards-Based Hive Authorization.
+
+Legacy Hive Authorization
+
+   Old default authorization is the authorization mode that has been
+   available in earlier versions of Hive. However, this mode does not have
+   a complete access control model, leaving many security gaps
+   unaddressed.
+
+   For example, the permissions needed to grant privileges for a user are
+   not defined, and any user can grant themselves access to a table or
+   database.
+
+   This model is similar to the SQL standards based authorization mode, in
+   that it provides grant or revoke statement-based access control.
+   However, the access control policy is different from SQL standards
+   based authorization, and they are not compatible. Use of this mode is
+   also supported for Hive command line users. However, for reasons
+   mentioned under the discussion of SQL standards based authorization, it
+   is not a secure mode of authorization for the Hive command line.
+
+Related Links
+
+   For information related to Hive authorization modes, see:
+     * [4]Storage Based Authorization in the Metastore Server
+     * [5]HCatalog Authorization
+     * [6]SQL Standard Based Hive Authorization
+     * [7]Hive deprecated authorization mode / Legacy Mode
+     * [8]Hive security design document
+     * [9]Hive security document
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/UnderstandingAuthorizationUseCases.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Config-HiveOptions.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Config_SQLStandardBasedHiveAuthorization.html
+   4. https://cwiki.apache.org/confluence/display/Hive/Storage+Based+Authorization+in+the+Metastore+Server
+   5. https://cwiki.apache.org/confluence/display/Hive/HCatalog+Authorization
+   6. https://cwiki.apache.org/confluence/display/Hive/SQL+Standard+Based+Hive+Authorization
+   7. https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=45876173
+   8. https://cwiki.apache.org/confluence/display/Hive/AuthDev
+   9. https://cwiki.apache.org/confluence/display/Hive/Security

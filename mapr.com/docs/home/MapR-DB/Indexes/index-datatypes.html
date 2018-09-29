@@ -6,41 +6,289 @@ Data Types and Secondary Index Fields
 
 Data Types of Indexed Fields
 
-   Indexed fields in a secondary index must contain scalar data.
-   Otherwise, if the field contains an array or nested document, MapR-DB
-   excludes the corresponding document from the index. The indexed field
-   can be a subfield of a nested document, provided the subfield is a
-   scalar type. The indexed field cannot be an array element, even if the
-   array element is scalar. See the table in the Scalar Data section of
-   [1]JSON Document Data Types for a list of scalar types.
+   Prior to MapR 6.1, the indexed fields in a secondary index had to
+   contain scalar data. For each scalar data value, MapR Database stored a
+   row in the index. See the table in the Scalar Data section of [1]JSON
+   Document Data Types for a list of scalar types.
 
-   The following table summarizes what MapR-DB supports, depending on the
-   characteristics of the indexed field:
-   Characteristics of Indexed Field Behavior
-   Field contains scalar data Supported
-   Field path is a nested document subfield that contains scalar data
-   Supported
-   Field contains nested document data Missing in index
-   Field contains array data Missing in index
-   Field is an individual array element Not supported
+   Beginning with MapR 6.1, indexed fields can also be [2]nested documents
+   or [3]arrays, but not array elements. As with scalar data values, MapR
+   Database stores a row in the index for each nested document and array.
+   The index improves equality filters on the entire nested document or
+   array.
+
+   MapR 6.1 also supports using container field paths as indexed fields.
+
+   The following table summarizes what MapR Database supports, depending
+   on the characteristics of the indexed field:
+   Characteristics of Indexed Field Pre-6.1 Behavior 6.1 Behavior
+   Field contains scalar data Supported Supported
+   Field contains nested document data Not supported Supported
+   Field contains array data Not supported Supported
+   Field path is a nested document subfield Supported only if the subfield
+   contains scalar data Supported for any data type
+   Field is an individual array element Not supported Not supported
+   Field uses a container field path Not applicable Supported
+
+   To understand what MapR Database stores for an indexed field defined on
+   different data types, consider an example in which you have the
+   following documents:
+{"_id":"0", "field":0}
+{"_id":"1", "field":[0,1,2]}
+{"_id":"2", "field":{"subField":1}}
+{"_id":"3", "field":{"subField":[1,2,3]}}
+{"_id":"4", "field":[{"subField":1},{"subField":2}]}
+{"_id":"5", "field":[{"subField":[1,2,3]},{"subField":[4, 5]}]}
+
+   The following table shows what an index defined on field stores and an
+   OJAI query condition that matches the value stored in the index:
+   Document ID Value Stored in Index Defined on field Matching OJAI Query
+   Condition
+   0
+0
+
+{"$lt":{"field":1}}
+
+   1
+[0,1,2]
+
+{"$eq":{"field":[0,1,2]}}
+
+   2
+{"subField":1}
+
+{"$eq":{"field":{"subField":1}}}
+
+   3
+{"subField":[1,2,3]}
+
+{"$eq":{"field":{"subField":[1,2,3]}}}
+
+   4
+[{"subField":1},{"subField":2}]
+
+{"$eq":{"field":[{"subField":1},{"subField":2}]}}
+
+   5
+[{"subField":[1,2,3]},{"subField":[4, 5]}]
+
+{"$eq":{"field":[{"subField":[1,2,3]},{"subField":[4,5]}]}}
+
+   The following table shows what an index defined on field.subField
+   stores and an OJAI query condition that matches the value stored in the
+   index:
+   Document ID Value Stored in Index Defined on field.subField Matching
+   OJAI Query Condition
+   0 Missing ^1 N/A
+   1 Missing ^1 N/A
+   2
+1
+
+{"$lt":{"field.subField":5}}
+
+   3
+[1,2,3]
+
+{"$eq":{"field.subField":[1,2,3]}}
+
+   4 Missing ^2 N/A
+   5 Missing ^2 N/A
+   Note:
+
+   ^1 The index entry for documents 0 and 1 are missing because field is
+   not a nested document in these documents.
+
+   ^2 The index entries for documents 3 and 4 are missing because field is
+   an array in those documents.
+
+   These indexes enable MapR Database to quickly look up values stored in
+   the index. As shown in the table, these values can be scalars, arrays,
+   or nested documents. In the case of the latter two types, MapR Database
+   can use the index for only equality conditions.
 
 Data Types of Included Fields
 
    There are no type restrictions on the included fields in an index.
+
+Using Container Field Paths as Indexed Fields
+
+   Starting in MapR 6.1, indexed fields in an index can be [4]Container
+   Field Paths. When you use a container field path as your indexed field
+   and the field contains an array, then the index contains one row per
+   array element. Therefore, the size of your index is proportional to the
+   number of elements in the array.
+   Important: Consider the storage implications of your index if you
+   decide to use a container field path as an indexed field. Also consider
+   the performance impact from index updates. Updating an indexed array
+   field in a single JSON document may require updating multiple index
+   rows.
+
+   When an indexed field is not a container field path, the index contains
+   one row per field value.
+
+   For example, suppose you have the same set of documents shown earlier:
+{"_id":"0", "field":0}
+{"_id":"1", "field":[0,1,2]}
+{"_id":"2", "field":{"subField":1}}
+{"_id":"3", "field":{"subField":[1,2,3]}}
+{"_id":"4", "field":[{"subField":1},{"subField":2}]}
+{"_id":"5", "field":[{"subField":[1,2,3]},{"subField":[4, 5]}]}
+
+   The following table shows what each index stores if you define the
+   index on the following container field paths:
+     * field[]
+     * field[].subField
+     * field.subField[]
+     * field[].subField[]
+
+   Each entry in the table represents a row in the index.
+Document ID                         Indexed Field Path
+               field[]     field[].subField  field.subField[] field[].subField[]
+0
+0
+
+Missing ^1  Missing ^1    Missing ^1
+1
+0
+
+            Missing ^1    Missing ^1         Missing ^1
+                                                              1
+
+2
+
+2
+{"subField":1}
+
+1
+
+1
+
+1
+
+3
+{"subField":[1,2,3]}
+
+                          [1,2,3]
+
+                                             1
+
+1
+
+2
+
+2
+
+3
+
+3
+
+4
+{"subField":1}
+
+            1
+
+Missing ^2
+1
+
+            {"subField":2}
+
+2
+
+2
+
+5
+{"subField":[1,2,3]}
+
+                          [1,2,3]
+
+            Missing ^2
+1
+
+                          2
+
+                          {"subField":[4, 5]}
+
+[4, 5]
+
+                                             3
+
+            4
+
+5
+
+   Note:
+
+   ^1 The index entries for documents 0 and 1 are missing in all indexes
+   except the index on field[] because field is not a nested document.
+
+   ^2 The index entries for documents 3 and 4 are missing in the index on
+   field.subField[] because field is an array in those documents.
+
+   To use these indexes, your query condition must use container field
+   paths that correspond to the indexed fields. The following are sample
+   OJAI query conditions that you might use with each index:
+   Indexed Field Path Sample OJAI Query Condition Matching Document(s)
+   field[]
+{"$eq":{"field[]":0}
+
+   0, 1
+{"$eq":{"field[]":{"subField":[1,2,3]}}}
+
+   3, 5
+   field[].subField
+{"$eq":{"field[].subField":1}}
+
+   2, 4
+   field.subField[]
+{"$gt":{"field.subField[]":2}}
+
+   3
+   field[].subField[]
+{"$eq":{"field[].subField[]":2}}
+
+   3, 4, 5
+
+   See [5]OJAI Query Conditions Using Container Field Paths for further
+   details about how these types of conditions behave.
+   Defining an Index With and Without a Container Field Path
+
+   As shown in these examples, defining an index on a container field path
+   is different from defining an index on an entire array field. For
+   example, an index on field[] can filter on individual array elements,
+   whereas the index on field can filter only the entire value. Similarly,
+   defining an index on field[].subField[] provides the most generality.
+   It allows you to filter on any elements in subField, regardless of the
+   data types in both field and subField. However, you also incur the
+   overhead of storing more data in your index and the performance impact
+   of updating the index.
+   Using Container Field Paths in Covering and Composite Indexes
+
+   With a container field path, you may need to add included fields in
+   your index to make the index covering. See [6]Covering Indexes and
+   Container Field Paths for details.
+
+   There are also limitations in the composite indexes you can define. See
+   [7]Composite Indexes and Container Field Paths for details.
 
 Comparisons and Sorts on Indexed Fields
 
    Comparisons and sorts across data types differ depending on whether the
    types are comparable or noncomparable. This is not specific to
    secondary indexes. But it impacts comparisons when using secondary
-   indexes and the order MapR-DB stores data in an index. See [2]Using
-   Comparable JSON Document Data Types in Comparisons and Sorts and
-   [3]Using Noncomparable JSON Document Data Types in Comparisons and
+   indexes and the order MapR Database stores data in an index. See
+   [8]Using Comparable JSON Document Data Types in Comparisons and Sorts
+   and [9]Using Noncomparable JSON Document Data Types in Comparisons and
    Sorts to learn which types fall into each category and to understand
    their behavior.
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/JSONDocumentDataTypes.html#JSONDocumentDataTypes__section_b5m_yl1_gdb
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/datatypes-comparable.html#datatypes-comparable
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/datatypes-nonComparable.html#datatypes-nonComparable
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/JSONDocumentDataTypes.html#JSONDocumentDataTypes__section_gvy_gm1_gdb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/JSONDocumentDataTypes.html#JSONDocumentDataTypes__section_ekf_mm1_gdb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/IdentifyingJSONFields.html#IdentifyingJSONFields__section_c5v_qmz_hdb
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ContainersOJAIQueryConditions.html#QueryingJSONDocumentFields
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html#concept_qdg_p5j_t1b__section_hk4_rcw_jdb
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz__section_yly_trq_jdb
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/datatypes-comparable.html#datatypes-comparable
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/datatypes-nonComparable.html#datatypes-nonComparable

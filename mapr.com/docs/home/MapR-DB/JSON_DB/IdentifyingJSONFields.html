@@ -129,12 +129,46 @@ Arrays
 
    The first element of the comments array, which is a nested document
 
+Container Field Paths
+
+   Starting in MapR 6.1, MapR Database introduces the notion of a
+   container field path. Using a container field path, you can access a
+   field that is either a single value or an arbitrary array element.
+
+   If you have a field that has a single value (rather than an array of
+   values), when using a container field path, MapR Database treats the
+   single value as an array with one element. This enables you to use a
+   container field path to access a field that has both array elements and
+   scalar values. The array elements and scalar values can be of any type.
+
+   To specify a container field path, place square brackets after the
+   field name:
+fieldName[]
+
+   A container field path is useful if you want to perform one of the
+   following scenarios:
+     * Perform comparisons on a field path that is either a single value
+       or an arbitrary array element
+     * Access subfields in a nested document, where the nested document is
+       either an arbitrary array element or a single nested document
+     * Access arbitrary elements in an array
+
+   See [1]OJAI Query Conditions Using Container Field Paths for more
+   details about the first scenario. The next two sections describes the
+   second and third scenarios.
+
 Nested Documents Within Arrays
 
-   Array elements can be nested documents. But, it is not possible to
-   reference individual subfields across all of these nested documents.
-   For example, suppose you have the following JSON documents in a MapR-DB
-   table where addresses has an array of nested documents:
+   Array elements can be nested documents. You can reference individual
+   subfields within these nested documents with container field paths,
+   starting in MapR 6.1. If you have a field that has a single value
+   (rather than an array of values), if you use a container field path,
+   MapR Database treats the single value as an array with one element.
+   This enables you to use a container field path to access a field that
+   has both array elements and scalar values.
+   For example, suppose you have the following two JSON documents in a
+   MapR Database table, and addresses has an array of nested documents in
+   the first document and a nested document in the second document:
 {
   "_id":"1",
   "addresses":[
@@ -143,58 +177,216 @@ Nested Documents Within Arrays
     {"state":"WA","street":"NE 39th"}
   ]
 }
+{
+  "_id":"2",
+  "addresses":{"state":"CA","city":"SJ"}
+}
 
-   You cannot reference only the nested document's state subfield across
-   all elements in the addresses array. To access all the state subfields,
-   you must reference the entire addresses field.
-
-   To access a nested document within an array, specify the array element
-   using its index, and then use the dot notation to specify the path to
-   the desired field.
+   You can use addresses[].state to reference the state subfield across
+   all nested documents in both documents.
 
    The following table describes the field paths supported and what each
    field path returns:
-                   Field Path                Value Returned
-   addresses
+   Field Path Value Returned
+
+   (Number in Description Corresponds to Document ID)
+addresses
 
 {
-  "addresses":[
+  "addresses": [
     {"city":"SJ","state":"CA"},
     {"city":"SC","state":"CA"},
-    {"state":"WA","street":"NE 39th"}
-]}
+    {"state":"WA","street":"NE 39th"}]
+}
+{
+  "addresses":{"city":"SJ","state":"CA"}
+}
+    1. The array containing three nested documents
+    2. The single nested document
 
-   The addresses array
-   addresses.city
+addresses.city
 
 {}
+{"addresses":{"city":"SJ"}}
+    1. Empty because addresses is not a nested document
+    2. The city subfield in the nested document
 
-   Empty because addresses is not a nested document
-   addresses[0]
+addresses[0]
 
 {
   "addresses":
     [{"city":"SJ","state":"CA"}]
 }
+{}
+    1. The first element in the addresses array
+    2. Empty because addresses is not an array
 
-   The first nested document in the addresses array
-   addresses[2].state
+addresses[2].state
 
 {
   "addresses":
     [null,null,{"state":"WA"}]
 }
+{}
+    1. The state subfield from the nested document in the third element of
+       the addresses array
+       Note: null is shown in the first two elements of the array to
+       signify that the element returned is the third entry from the array
+    2. Empty because addresses is not an array
 
-   The state subfield in the third nested document in the addresses array
-   Note: null is shown in the first two elements of the array to signify
-   that the element returned is the third entry from the array
 addresses[0].state,
 addresses[0].city
 
 {"addresses":[{"city":"SJ","state":"CA"}]}
+{}
+    1. The city and state subfields from the nested document
+    2. Empty because addresses is not an array
 
-   The city and state subfields in the first nested document in the
-   addresses array
+addresses[].city
+
+   Note: Supported starting in MapR 6.1
+{
+  "addresses":
+    [
+      {"city":"SJ"},
+      {"city":"SC"},
+      {}
+    ]
+}
+{
+  "addresses":
+    {"city":"SJ"}
+}
+    1. An array of nested documents with a city subfield; the third array
+       element is empty because the third nested document does not have a
+       city subfield
+    2. A single nested document with a city subfield
+
+addresses[].state,
+addresses[].city
+
+   Note: Supported starting in MapR 6.1
+{
+  "addresses":
+    [
+      {"city":"SJ","state":"CA"},
+      {"city":"SC","state":"CA"},
+      {"state":"WA"}
+    ]
+}
+{
+  "addresses":
+    {"city":"SJ","state":"CA"}
+}
+    1. An array of nested documents with city and state subfields; the
+       third array element has only a state subfield because the third
+       nested document does not have a city subfield
+    2. A single nested document with city and state subfields
+
+   Container Field Paths Across Multiple Levels of Nested Documents
+
+   You can use container field paths at any level of a nested document.
+
+   For example, suppose you have the following document:
+{
+   "_id": "account001",
+   "projects": [
+      {
+         "id": "proj001",
+         "manager": { "name": "Guy Bones", "email": "gbones@pro.com" },
+         "customer": {
+            "name": "My Company",
+            "contacts": [
+               {
+               "id": "user_jdoe",
+               "emails": [
+                  { "type": "work", "value": "jdoe@comp.com" },
+                  { "type": "personal", "value": "jdoe@gmail.com" }
+               ],
+               "addresses": [
+                  {
+                     "type": "work",
+                     "value": {"street":"21 King Av","city": "Redwood", "zip": 9
+4065, "state": "CA" }
+                  }
+               ],
+               "phones": [
+                  { "type": "cell", "value": "+16505556764" },
+                  { "type": "office", "value": "+14075556764" }],
+               "role": "CEO"
+               },
+               {
+               "id": "user_simsom",
+               "emails": [
+                  { "type": "work", "value": "simson@comp.com" },
+                  { "type": "personal", "value": "simson@gmail.com" }
+               ],
+               "addresses": [
+                  {
+                  "type": "work",
+                  "value": {"street":"21 King Av.","city":"Redwood","zip": 94065
+,"state": "CA" }
+                  }
+               ],
+               "phones": [
+                  { "type": "cell", "value": "+16505556777" },
+                  { "type": "office", "value": "+1407555444" }],
+               "role": "PM"
+               }
+            ]
+         }
+      },
+      {
+         "id": "proj002",
+         // ...
+      }
+   ]
+}
+
+   The following table shows field paths that use the container field
+   paths across multiple nested documents and the values returned:
+                    Field Path                  Value Returned
+   projects[].customer.contacts[].emails[].value
+
+{
+  "projects":[
+    {
+    "customer":{
+      "contacts":[
+        {
+          "emails":[
+            {"value":"jdoe@comp.com"},
+            {"value":"jdoe@gmail.com"}
+          ]
+        },
+        {
+          "emails":[
+            {"value":"simson@comp.com"},
+            {"value":"simson@gmail.com"}
+          ]
+        }
+      ]
+    },
+    { // data for proj002 }
+  ]
+}
+
+   projects[].customer.contacts[].role
+
+{
+  "projects":[
+    {
+      "customer":
+        {
+          "contacts":[
+            {"role":"CEO"},
+            {"role":"PM"}
+          ]
+        }
+    },
+    { // data for proj002 }
+  ]
+}
 
 Multidimensional Arrays
 
@@ -229,3 +421,61 @@ Multidimensional Arrays
    element
 
    There is no limit on the number of dimensions in an array.
+
+   Container Field Paths with Multidimensional Arrays
+
+   Starting in MapR 6.1, a container field path can refer to arbitrary
+   array elements across multiple array dimensions. To reference arbitrary
+   elements in the two-dimensional temps array shown earlier, you specify:
+temps[][]
+
+   Extending the convention by which a container field path with one set
+   of square brackets treats a scalar value as an array with one element,
+   a container field path with two square brackets treats a
+   one-dimensional array as a two-dimensional array with a single element,
+   where the element is that one-dimensional array.
+
+   For example, in the following document, although temps has only a
+   single array, you can use temps[][] to refer to either the high or low
+   temperature in the array:
+{
+   "_id" : "002",
+   "temps" : [81,60],
+   "weekOf" : "5/12/2018"
+}
+
+   The same convention applies across N dimensions. A container field path
+   with N square brackets treats an (N-1)-dimensional array as the only
+   element in an N-dimensional array.
+
+   You can also use the container field paths for a subset of dimensions,
+   provided a dimension that specifies container field path does not
+   precede a dimension that specifies an explicit element. The following
+   table illustrates this:
+   Field Path Value Returned
+temps[0][]
+
+{"temps":[[61,49]]}
+{"temps":[81,60]}
+
+   The temperatures on the first day of the week
+temps[2][]
+
+{"temps":[null,null,[75,51]]}
+{"temps":[]}
+
+   The temperatures on the third day of the week
+temps[]
+
+{"temps":[[61,49],[74,51],[75,51],[74,52],[78,54],[75,53],[75,54]]}
+{"temps":[81,60]}
+
+   The temperature pairs across all days
+temps[][0]
+
+   Disallowed because the container field path in the first dimension
+   precedes element 0 in the second dimension
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ContainersOJAIQueryConditions.html#QueryingJSONDocumentFields

@@ -1,16 +1,22 @@
-Connecting Using Hive MapR-DB JSON Connector
+Connecting Using Hive MapR Database JSON Connector
 
-   This section describes the Hive connector for MapR-DB JSON table.
+   This section describes the Hive connector for MapR Database JSON table.
 
-   The Hive connector supports the creation of MapR-DB based Hive tables.
-   You can create a JSON table on MapR-DB and load CSV data and/or JSON
-   files to MapR-DB using the connector. MapR-DB based Hive tables can be:
-     * Queried just like MapR-FS based Hive tables.
-     * Combined with MapR-FS based Hive tables in joins and sub-queries.
+   The Hive connector supports the creation of MapR Database based Hive
+   tables. You can create a JSON table on MapR Database and load CSV data
+   and/or JSON files to MapR Database using the connector. MapR Database
+   based Hive tables can be:
+     * Queried just like MapR Filesystem based Hive tables.
+     * Combined with MapR Filesystem based Hive tables in joins and
+       sub-queries.
+
+   Note: If you use Drill to query Hive tables based on MapR Database
+   tables, you can[1] enable the native Drill reader, which can improve
+   query performance.
 
    The following table lists the Hive data type and the corresponding
-   (supported) MapR-DB OJAI type:
-   Hive Type MapR-DB OJAI Type
+   (supported) MapR Database OJAI type:
+   Hive Type MapR Database OJAI Type
    BOOLEAN   BOOLEAN
    BINARY    BINARY
    TINYINT   BYTE
@@ -22,16 +28,16 @@ Connecting Using Hive MapR-DB JSON Connector
    SMALLINT  SHORT
    STRING    STRING
    TIMESTAMP TIMESTAMP
-   The Hive connector for MapR-DB JSON table also supports the use of the
-   following complex data types:
+   The Hive connector for MapR Database JSON table also supports the use
+   of the following complex data types:
      * map
      * array
      * struct
 
-   Note: The MapR-DB JSON tables do not support ACID transactions,
+   Note: The MapR Database JSON tables do not support ACID transactions,
    bucketing, and alteration.
 
-Creating a MapR-DB JSON Table and Hive Table Using Hive
+Creating a MapR Database JSON Table and Hive Table Using Hive
 
    To create a table, run the command similar to the following:
    Note: The required properties are shown in bold.
@@ -54,19 +60,19 @@ TBLPROPERTIES("maprdb.table.name" = "/tbl","maprdb.column.id" = "id");
      * The value for maprdb.column.id column should be of type string or
        binary.
 
-   To create a Hive table that exists on MapR-DB, specify EXTERNAL in the
-   table DDL. If the table created is EXTERNAL, when the table is dropped,
-   only its metadata is deleted; the underlying MapR-DB data remains
-   intact. On the other hand, if the table is not EXTERNAL, dropping the
-   table deletes both the metadata associated with the table and the
-   underlying MapR-DB data.
+   To create a Hive table that exists on MapR Database, specify EXTERNAL
+   in the table DDL. If the table created is EXTERNAL, when the table is
+   dropped, only its metadata is deleted; the underlying MapR Database
+   data remains intact. On the other hand, if the table is not EXTERNAL,
+   dropping the table deletes both the metadata associated with the table
+   and the underlying MapR Database data.
 
    For example, suppose a JSON table named /apps/my_users with the
    following values:
 {"_id":"001","first_name":"John","last_name":"Doe","age":34}
 {"_id":"002","first_name":"Jack","last_name":"Smith","age":26}
 
-   To create a Hive table over existing MapR-DB JSON table:
+   To create a Hive table over existing MapR Database JSON table:
 CREATE EXTERNAL TABLE primitive_types (
  user_id string,
  first_name string,
@@ -76,13 +82,13 @@ STORED BY 'org.apache.hadoop.hive.maprdb.json.MapRDBJsonStorageHandler'
 TBLPROPERTIES("maprdb.table.name" = "/apps/my_users","maprdb.column.id" = "user_
 id");
 
-   Now, because table primitive_types points to MapR-DB table, you can
-   perform ETL query similar to MapR-FS based Hive tables:
+   Now, because table primitive_types points to MapR Database table, you
+   can perform ETL query similar to MapR Filesystem based Hive tables:
 SELECT COUNT(*) FROM test_external;
 SELECT MAX(age) AS label FROM test_external;
 ...
 
-Loading CSV Data to MapR-DB JSON Table
+Loading CSV Data to MapR Database JSON Table
 
     1. Create intermediate table.
        For example:
@@ -91,7 +97,7 @@ TERMINATED BY ',';
     2. Load data to table.
        For example:
 LOAD DATA INPATH '/data' into table stage;
-    3. Create MapR-DB table in Hive.
+    3. Create MapR Database table in Hive.
        For example:
 CREATE TABLE users(id STRING, name STRING, age INT)
 STORED BY 'org.apache.hadoop.hive.maprdb.json.MapRDBJsonStorageHandler'
@@ -100,7 +106,7 @@ TBLPROPERTIES("maprdb.table.name" = "/users","maprdb.column.id" = "id");
        For example:
 INSERT INTO TABLE users select id, name, age from stage;
 
-Loading JSON Files to MapR-DB JSON Table
+Loading JSON Files to MapR Database JSON Table
 
     1. Add SerDe JAR for JSON.
        For example:
@@ -121,7 +127,7 @@ LOAD DATA INPATH '/data' into table stage;
        the query, use select `_id` from sometable;. Alternatively, you can
        use 'org.openx.data.jsonserde.JsonSerDe' and add WITH
        SERDEPROPERTIES ("mapping.id" = "_id" ) to your table definition.
-    4. Create MapR-DB table in Hive.
+    4. Create MapR Database table in Hive.
        For example:
 CREATE TABLE users(id STRING, name STRING, age INT)
 STORED BY 'org.apache.hadoop.hive.maprdb.json.MapRDBJsonStorageHandler'
@@ -137,3 +143,7 @@ INSERT INTO TABLE users select id, name, age from stage;
 select `_id`  from sometable;
        Alternatively, use org.openx.data.jsonserde.JsonSerDe and add WITH
        SERDEPROPERTIES ("mapping.id" = "_id" ) to your table definition.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/maprdb-format-set.html#maprdb-format-set

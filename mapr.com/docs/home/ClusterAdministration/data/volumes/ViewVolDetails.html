@@ -6,30 +6,90 @@ Viewing Volume Details in the MapR Control System
 
    Log in to MCS and go to the Summary tab in the [1]volume information
    page for the volume.
-   You can view the following in the Details pane on this page.
-     * [2]Standard Volume
-     * [3]Mirror Volume
+   You can view the following in the Detail pane:
+     * [2]Properties
+     * [3]Authorization
+     * [4]Usage
+     * [5]Schedule
 
-   Under this tab... This section... Displays...
-   Properties SETTINGS Volume creator username, accountable entity, name,
-   type, mount path, topology, access, whether volume is mounted, whether
-   volume is partially out of topology, date when volume was last
-   accessed, and whether wire-level encryption is enabled for the volume.
-   AUDITING Whether auditing is enabled for the volume and the coalesce
-   interval.
-   REPLICATION The type of replication, the desired and minimum number of
-   copies for the volume and the named container, and whether minimum
-   number of copies is enforced.
-   Authorization ADMINISTRATIVE CONTROLS The users and/or groups who:
+   CAPTION: Table 1. SETTINGS AND AUDITING
+
+   Created By Indicates the user who created the volume.
+   Volume Type Indicates the type of volume. Value can be one of the
+   following:
+     * Standard
+     * Mirror
+
+   Volume Name Indicates the name of the volume.
+   Accountable Entity Indicates the name of the accountable entity.
+   Volume Access Indicates the type of access allowed on the volume. Value
+   can be one of the following:
+     * Read/Write
+     * Read-only
+
+   Mounted Indicates whether or not volume is mounted.
+   Mount Path Indicates the mount path of the volume.
+   Data on Wire Encryption Indicates whether (Yes) or not (No) on-wire
+   encryption is enabled for the volume.
+   Data at Rest Encryption Indicates whether (Yes) or not (No)
+   data-at-rest encryption (DARE) is enabled for the volume.
+   Topology Indicates the rack path to the volume.
+   Partially out of Topology Indicates whether containers associated with
+   the volume are outside the volume's main topology.
+   Last accessed Indicates the date when the volume was last accessed.
+   Enable Auditing Indicates whether auditing is enabled at the volume
+   level.
+   Coalesce Interval Indicates the interval of time (in minutes) used for
+   logging multiple READ, WRITE, or GETATTR operations on one file from
+   one client IP address, if auditing is enabled.
+
+   CAPTION: Table 2. REPLICATION (HOT)
+
+   Replication Indicates the minimum (Min Target) and desired (Max Target)
+   number of copies for the volume data.
+   Name Container Replication Indicates the minimum (Min Target) and
+   desired (Max Target) number of copies for the name container.
+   Optimize Replication Indicates the basis for replication. Value can be
+   one of the following:
+     * High throughput, or cascading replication
+     * Low latency, or star replication
+
+   Guarantee Min Replication Indicates whether or not to enforce minimum
+   number of copies.
+   Note: The following is visible only if warm tiering is enabled for the
+   volume.
+
+   CAPTION: Table 3. ERASURE CODING (WARM)
+
+   Topology Indicates the topology of the erasure-coded volume.
+   Remote Target Indicates the name of the tier.
+   Storage Policy Name Indicates the name of the storage policy.
+   Policy Detail Indicates the rules in the policy for offloading data.
+   Retention Duration after Recall Indicates the period of time to keep
+   recalled data in the hot tier.
+   Erasure Coding Scheme Indicates the number of data and parity chunks.
+   Tier Purged Indicates the amount of offloaded data.
+   Note: The following is visible only if cold tiering is enabled for the
+   volume.
+
+   CAPTION: Table 4. REMOTE ARCHIVING (COLD)
+
+   Remote Target Indicates the name of the remote storage.
+   Storage Policy Name Indicates the name of the storage policy.
+   Policy Detail Indicates the rules in the policy for offloading data.
+   Retention Duration after Recall Indicates the number of days to keep
+   recalled data in the MapR cluster (hot tier).
+   Tier Purged Indicates the amount of offloaded data.
+   ADMINISTRATIVE CONTROLS Indicates the users and/or groups who:
      * Have admin access and/or full control on the volume.
      * Can perform one or more administrative operations such as create a
        dump file and backup the volume, restore and mirror the volume,
        edit the volume properties, and delete the volume.
 
-   USER ACCESS CONTROLS The type of users — public, user, group, and/or
-   role — that have and do not have access to volume data.
-   Usage Quota The amount of (advisory and hard) disk space allocated to
-   the volume.
+   USER ACCESS CONTROLS Indicates the type of users — public, user, group,
+   and/or role — that have and do not have access to volume data.
+   Quota Indicates the amount of (advisory and hard) disk space allocated
+   to the volume.
    Graph The graphs show:
      * DISKUSAGE: The total amount of disk space allocated for the volume
        and the amount of disk space used by the volume and associated
@@ -38,39 +98,15 @@ Viewing Volume Details in the MapR Control System
        the amount of disk space allocated and utilized by the volumes in
        the cluster, and the reserve limit.
 
-   Schedule Snapshot Schedule The schedule for creating a snapshot of the
-   volume for the purpose of preserving the state of the volume.
-   Under this tab... This section... Displays...
-   Properties SETTINGS User who created the volume and the accountable
-   entity responsible for this volume, volume name, names of source volume
-   and cluster, type, access type, mount path, and topology.
-   AUDITING Whether auditing is enabled for the volume and the coalesce
-   interval.
-   REPLICATION The type of replication and the desired and minimum number
-   of copies for the volume and the named container.
-   Authorization ADMINISTRATIVE CONTROLS The users and/or groups who:
-     * Have admin access and/or full control on the volume.
-     * Can perform one or more administrative operations such as create a
-       dump file and backup the volume, restore and mirror the volume,
-       edit the volume properties, and delete the volume.
-
-   USER ACCESS CONTROLS The type of users — public, user, group, and/or
-   role — that have and do not have access to volume data.
-   Usage Quota The amount of (advisory and hard) disk space allocated to
-   the volume.
-   Graph The graphs show:
-     * DISKUSAGE: The total amount of disk space allocated for the volume
-       and the amount of disk space used by the volume and associated
-       snapshots.
-     * CLUSTER DISKSPACE: The total amount of disk space on the cluster,
-       the amount of disk space allocated and utilized by the volumes in
-       the cluster, and the reserve limit.
-
-   Schedule Snapshot Schedule The schedule for creating a snapshot of the
-   volume for the purpose of preserving the state of the volume.
-   Mirror Schedule The schedule for copying data (that has changed at the
-   file-block level since the last data transfer) directly from the volume
-   to the mirror volume.
+   Snapshot Schedule Indicates the schedule for automatically creating a
+   snapshot of the volume for the purpose of preserving the state of the
+   volume.
+   Mirror Schedule (Available only for mirror volumes) Indicates the
+   schedule for automatically copying data (that has changed at the
+   file-block level since the last data transfer) directly from the source
+   volume to the mirror volume.
+   Offload Schedule Indicates the schedule for automatically offloading
+   data to the tier.
 
 Viewing Volume Information Using the CLI or the REST API
 
@@ -78,11 +114,13 @@ Viewing Volume Information Using the CLI or the REST API
 maprcli volume info (-name <volume_name> | -path <volume_path>)
 
    You must specify either name or path, but not both. For complete
-   reference for this command, see [4]volume info.
+   reference for this command, see [6]volume info.
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/ViewVolInfo.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/ViewVolDetails.html#div1entry1
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/ViewVolDetails.html#div1entry2
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-info.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/ViewVolDetails.html#div1entry3
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/ViewVolDetails.html#div1entry4
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-info.html

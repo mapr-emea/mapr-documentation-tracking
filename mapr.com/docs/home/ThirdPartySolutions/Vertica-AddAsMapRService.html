@@ -1,0 +1,79 @@
+Add Vertica as a MapR Service
+
+   Setting up Vertica as a MapR service reserves memory for Vertica that
+   would otherwise be available for Hadoop applications. It also starts
+   the Vertica daemon for use by MapR to reserve resources and to monitor
+   Vertica node status. Vertica uses admintools for database cluster
+   management and related tasks. The MapR MCS management are only
+   applicable to the local Vertica service.
+
+   As installed, the vertica_agent service is managed by the Linux init
+   mechanism. However, the MapR pluggable services framework provides a
+   mechanism for MapR to start the local verticad daemon instead of the
+   vertica_agent service.
+
+   On all nodes in the Vertica cluster, repeat the following steps:
+    1. As the root user, use chkconfig to prevent the Linux init process
+       from starting Vertica’s daemons:
+chkconfig vertica_agent off
+chkconfig verticad off
+    2. As the root user, copy the verticad init script link to the MapR
+       initscripts directory:
+cp -d /etc/init.d/verticad /opt/mapr/initscripts
+    3. Starting Vertica daemons requires root capability. Grant this
+       capability to the MapR administrative user with sudo. Using visudo,
+       add an entry to the sudoers file. If the MapR administrative user
+       is the default “mapr”, add the following entry to /etc/sudoers on
+       every node where Vertica will be installed. Alternatively, you can
+       add a file to the sudoers.d directory
+       (/etc/sudoers.d/maprvertica_conf):
+mapr ALL=(root)
+NOPASSWD:/opt/mapr/initscripts/vertica_wrapper,/opt/vertica/sbin/verticad
+Defaults!/opt/mapr/initscripts/vertica_wrapper !requiretty
+Defaults!/opt/vertica/sbin/verticad !requiretty
+    4. As the root user, you need to configure the kernel NFS client to
+       handle the correct throughput:
+echo 8 > /proc/sys/vm/dirty_ratio
+echo 4 > /proc/sys/vm/dirty_background_ratio
+echo vm.dirty_ratio=8 >> /etc/sysctl.conf
+echo vm.dirty_background_ratio=4 >> /etc/sysctl.conf
+modprobe sunrpc
+sysctl -w sunrpc.tcp_slot_table_entries=128
+sysctl -w sunrpc.tcp_max_slot_table_entries=128
+echo options sunrpc tcp_slot_table_entries=128 >> /etc/modprobe.d/sunrpc.conf
+echo options sunrpc tcp_max_slot_table_entries=128 >>
+/etc/modprobe.d/sunrpc.conf
+    5. As the root user, create a one-line script that MapR will use to
+       invoke the verticad script on every node where Vertica will run.
+       Use any editor to create the /opt/mapr/initscripts/vertica_wrapper,
+       as shown in the example below:
+#!/bin/bash
+/usr/bin/sudo /opt/mapr/initscripts/verticad $*
+exit $?
+       You must create this script because the MapR pluggable service
+       framework cannot invoke scripts with the sudo command. Make the
+       script executable:
+chmod +x /opt/mapr/initscripts/vertica_wrapper
+    6. As the MapR administrative user, create a MapR warden configuration
+       file for the Vertica service. Create the file
+       /opt/mapr/conf/conf.d/warden.Vertica.conf, creating the parent
+       directory if necessary. Include the following entries.
+       Warning: The value of the service.heapsize.percent property, which
+       allocates 65% of system memory to Vertica, is an example and
+       requires further assessment. This setting needs to be properly
+       sized based on both Vertica and MapR guidelines.
+services=Vertica:all:nfs
+service.displayname="Vertica"
+service.command.start=/opt/mapr/initscripts/vertica_wrapper start
+service.command.stop=/opt/mapr/initscripts/vertica_wrapper stop
+service.logs.location=/vertica/data/catalog service.command.type=BACKGROUND
+service.command.monitorcommand=/opt/mapr/initscripts/vertica_wrapper status
+service.depends.local=1 service.heapsize.percent=65
+service.heapsize.min=8000
+       Warning: This configuration uses a minimum of 8 GB (shown in MB
+       above) of RAM for Vertica (the service.heapsize.min setting). See
+       Vertica’s documentation for discussion on required minimum RAM
+       settings.
+       In MapR 3.0.2, the Dashboard view in the MapR Control System does
+       not display properly after creating a service. Contact MapR support
+       to get patch 3.0.2.22510.GA-23717 or later.

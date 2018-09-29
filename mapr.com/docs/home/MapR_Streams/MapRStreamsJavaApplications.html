@@ -1,9 +1,9 @@
-MapR-ES Java Applications
+MapR Event Store For Apache Kafka Java Applications
 
    This section contains information on developing client applications
-   with Java including information about the MapR-ES and Apache Kafka Java
-   APIs, configuration parameters, and compiling and running producers and
-   consumers.
+   with Java including information about the MapR Event Store For Apache
+   Kafka and Apache Kafka Java APIs, configuration parameters, and
+   compiling and running producers and consumers.
 
 Apache Kafka Support
 
@@ -12,19 +12,79 @@ Apache Kafka Support
    CAPTION: Table 1. Supported Apache Kafka APIs
 
      MapR version    Apache Kafka API
+   As of 6.1         1.1
    As of 6.0.1       1.0
    6.0.0 and earlier 0.9.0
+
+Log Compaction
+
+   As of MapR 6.1, log compaction is supported. Log compaction can be
+   enabled for streams created with MapR core 6.1 and later. In addition,
+   clients older than MapR 6.1 are prevented from consuming from streams
+   that have had log compaction enabled on them at least once in their
+   lifetime.
+   When a stream on a source cluster has both log compaction and
+   replication enabled, the replica cluster does not automatically have
+   log compaction enabled. You must explicitly enable log compaction on
+   the replica cluster.
+     * If a replica cluster has been upgraded and the stream data for a
+       source cluster is compacted (that is, one or more messages have
+       been deleted), then the source cluster replicates the compacted
+       data to the replica cluster.
+     * If a replica cluster has not been upgraded, then the source cluster
+       fails the replication and an error is generated that requests an
+       replica cluster upgrade.
+
+   In the context of a scan by an non-upgraded client, the (upgraded)
+   server inspects the row header to check if it is serving a compacted
+   row. If it is, then it will fail the consumer request. This behavior
+   applies both to a stream that is explicitly configured for compaction
+   and a replica that has received a compacted row.
+   Important: To perform log compaction on older streams, the -force
+   option can be used. The -force option should only be used when ALL
+   clients have been upgraded to MapR 6.1.
+
+Idempotent Producer
+
+   As of MapR 6.1, the idempotent producer (exactly once) feature is
+   supported. The idempotent producer can be implemented with MapR core
+   6.1 and later.
+   When creating a producer instance, use the following configuration:
+props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true)
+
+   The idempotent producer feature is supported by MEP 6.0 clients and
+   v6.1.0 servers.
+     * All servers must be upgraded to v6.1.0 with the v6.1.0 features are
+       enabled before the idempotent producer can be enabled.
+     * If you are using a pre-MapR 6.1 Client and a MapR 6.1 Server and if
+       a group of messages are atomically persisted without a valid
+       producer id, the server treats the request as a non-idempotent
+       producer.
+     * If a MapR 6.1 client and a pre-MapR 6.1 server are used, the
+       idempotent producer is not supported. In this case, the idempotent
+       producer fails to produce to the stream and the following excepton
+       is thrown:
+Exception in thread "main" java.util.concurrent.ExecutionException: org.apache.k
+afka.common.errors.UnknownTopicOrPartitionException: Operation not permitted (1)
+ null
+        at com.mapr.streams.impl.producer.MarlinFuture.valueOrError(MarlinFuture
+.java:46)
+        at com.mapr.streams.impl.producer.MarlinFuture.get(MarlinFuture.java:41)
+        at com.mapr.streams.impl.producer.MarlinFuture.get(MarlinFuture.java:17)
+        at com.mapr.qa.marlin.common.StandaloneProducer.main(StandaloneProducer.
+java:75)
+Caused by: org.apache.kafka.common.errors.UnknownTopicOrPartitionException: Oper
+ation not permitted (1) null
 
 TimestampType Permissions
 
    The following describes the ACE permissions are needed when using the
    timestamp type parameter. See [1]Stream Security for general
-   information about MapR-ES streams security.
-   Note: The TimestampType parameter is new as of 6.0.1.
+   information about MapR Event Store For Apache Kafka streams security.
 
-   A MapR-ES stream topic inherits the default timestamp type value from
-   its stream. To override the stream's default value, set the timestamp
-   type for the topic to a different value.
+   A MapR Event Store For Apache Kafka stream topic inherits the default
+   timestamp type value from its stream. To override the stream's default
+   value, set the timestamp type for the topic to a different value.
      * Setting the value at the stream-level requires adminperm
        permissions. The stream-level timestamp type parameter is
        defaulttimestamptype. See [2]stream create and [3]stream edit for
@@ -36,7 +96,8 @@ TimestampType Permissions
 
 User Impersonation
 
-   Note: As of MapR 6.0, user impersonation is supported for MapR-ES.
+   Note: As of MapR 6.0, user impersonation is supported for MapR Event
+   Store For Apache Kafka.
 
    You can set up user impersonation programmatically. To do so, use the
    UserGroupInformation.doAs() method in the Hadoop documentation. See
@@ -60,12 +121,12 @@ Backward Compatibility
 
    As of MapR 6.0.1, along with support of Apache Kafka the
    java.util.Collection interface is being used. This impacts applications
-   using certain APIs. See [11]MapR-ES Java API Library for detailed
-   information.
+   using certain APIs. See [11]MapR Event Store For Apache Kafka Java API
+   Library for detailed information.
 
 References
 
-     * [12]MapR-ES Sample Programs on GitHub.
+     * [12]MapR Event Store For Apache Kafka Sample Programs on GitHub.
      * [13]Getting Started with MapR Streams on the MapR blog site.
 
 References

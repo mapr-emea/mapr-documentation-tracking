@@ -4,10 +4,14 @@ Querying and Returning all Documents
    documents from a document store.
      * [1]Java - Example 1
      * [2]Java - Example 2
-     * [3]dbshell
+     * [3]Node.js - Example 1
+     * [4]Node.js - Example 2
+     * [5]Python - Example 1
+     * [6]Python - Example 2
+     * [7]dbshell
 
    The following example queries a document store and returns all
-   documents by using the [4]DocumentStore.find method.
+   documents by using the [8]DocumentStore.find method.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -65,8 +69,8 @@ n
 }
 
    The following example queries a document store and returns all
-   documents. It creates a [5]Query object and passes that to the
-   [6]DocumentStore.findQuery method.
+   documents. It creates a [9]Query object and passes that to the
+   [10]DocumentStore.findQuery method.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -127,8 +131,181 @@ n
 
 }
 
+   The following example queries a document store and returns all
+   documents by using the [11]DocumentStore.find method.
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((store) => {
+    // fetch all OJAI Documents from table
+    return store.find({});
+  })
+  .then((queryResult) => {
+    queryResult.on('data', (document) => console.log(document));
+    queryResult.on('end', () => {
+      // close the OJAI connection
+      connection.close();
+    });
+  });
+
+   The following example queries a document store and returns all
+   documents. It creates an empty query and passes that to the
+   [12]DocumentStore.find method.
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((store) => {
+    // options for find request
+    const options = {
+      'ojai.mapr.query.include-query-plan': true,
+      'ojai.mapr.query.timeout-milliseconds': 10000
+    }
+    // fetch all OJAI Documents from table
+    return store.find({}, options)
+  })
+  .then((queryResult) => {
+    // get query plan
+    console.log(queryResult.queryPlan);
+
+    queryResult.on('data', (document) => {
+      // Print OJAI Documents from document stream
+      console.log(document);
+    });
+    queryResult.on('end', () => {
+      // close the OJAI connection
+      connection.close();
+    });
+  });
+
+   The following example queries a document store and returns all
+   documents by using the [13]DocumentStore.find method.
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+# fetch all OJAI Documents from table
+query_result = store.find()
+
+# Print OJAI Documents from document stream
+for doc in query_result:
+    print(doc)
+
+# close the OJAI connection
+connection.close()
+
+   The following example queries a document store and returns all
+   documents. It creates a [14]Query object and passes that to the
+   [15]DocumentStore.find method.
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+# Build an OJAI query
+query = connection.new_query().build()
+
+# options for find request
+options = {
+    'ojai.mapr.query.include-query-plan': True,
+    'ojai.mapr.query.result-as-document': True,
+    'ojai.mapr.query.timeout-milliseconds': 10000
+}
+
+# fetch all OJAI Documents from table
+query_result = store.find(query, options=options)
+
+# get query plan
+print(query_result.get_query_plan())
+
+doc_stream = query_result
+# Print OJAI Documents from document stream
+for doc in doc_stream:
+    print(doc.as_dictionary())
+
+# close the OJAI connection
+connection.close()
+
    The following is the equivalent of the code examples using dbshell. See
-   [7]dbshell find or findbyid for more details about the syntax dbshell
+   [16]dbshell find or findbyid for more details about the syntax dbshell
    provides.
 # mapr dbshell
 maprdb root:> find /demo_table
@@ -137,7 +314,7 @@ Paginating Your Result
 
    An alternative to returning all documents from a store is to specify a
    limit in the query. Another alternative is to paginate the result using
-   offset and limit. [8]Querying with Order By contains an example that
+   offset and limit. [17]Querying with Order By contains an example that
    shows you how to use offset and limit. Although the example also uses
    order by, you can use offset and limit independent of order by.
 
@@ -146,8 +323,17 @@ References
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect1
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect2
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect3
-   4. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#find--
-   5. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html
-   6. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#findQuery-org.ojai.store.Query-
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect4
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect5
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect6
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect7
+   8. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#find-org.ojai.store.Query-
+   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html
+  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#findQuery-org.ojai.store.Query-
+  11. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#find
+  12. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#find
+  13. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aff397b232ff1595cdd2825803ee8f723
+  14. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html
+  15. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aff397b232ff1595cdd2825803ee8f723
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b

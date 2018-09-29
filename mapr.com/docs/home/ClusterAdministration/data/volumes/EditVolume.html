@@ -12,52 +12,98 @@ Modifying a Volume Using the MapR Control System
           + [2]Standard Volume
           + [3]Mirror Volume
 
-   SETTINGS Accountable Entity The entity accountable for the volume’s
-   usage.
-   Volume Access Indicates whether volume is a read-only or read/write
-   volume.
-   Topology The location of this volume in the cluster rack topology.
-   AUDITING Audit Indicates whether auditing of operations on directories,
-   files, and tables in the volumes is enabled.
+   SETTINGS AND AUDITING Accountable Entity The entity accountable for the
+   volume’s usage.
+   Collect Metrics Whether (Yes) or not (No) to enable metrics collection
+   for the volume.
+   Volume Access Whether volume is a read-only or read/write volume.
+   Enable Auditing Select one of the following:
+          + Disable auditing
+          + Enable auditing for volume so that auditing can be enabled by
+            directories, files, tables, and streams in the volume
+          + Enable auditing of operations on all files, tables, streams in
+            the volume whether or not auditing is enabled by files,
+            tables, and streams in the volume.
+
    Coalesce Interval Interval of time used when logging multiple instance
    of an operation on a node from a client IP, if auditing is enabled.
-   REPLICATION Replication Desired and minimum number of copies of the
-   volumes.
+   Data on Wire Encryption Whether (Yes) or not (No) to encrypt data in
+   the volume during transmission. This is not supported on unsecure
+   clusters.
+   HOT (REPLICATION) Topology The location of the volume in the cluster
+   rack topology.
+   Replication Desired and minimum number of copies of the volumes.
    Name Container Replication Desired and minimum number of copies of the
    name container associated with the volumes.
-   Guarantee Min Replication (Available from v6.0.1) Specifies whether
-   (true) or not (false) to enforce minimum number of copies for the
-   (read-write) volume. If this is enabled (Yes), writes succeed only when
-   the minimum number of copies exist.
 
-   Note: If this parameter was not already set on a volume or if you
-   modify the setting for this property from No to Yes, restart all the
-   nodes where the containers associated with the volume exist for the
-   changes to take effect.
-
-   SETTINGS Source Cluster Name The name of the cluster on which the
-   source volume exists.
+   SETTINGS AND AUDITING Source Cluster Name The name of the cluster on
+   which the source volume exists.
    Source Volume Name The name of the source volume to mirror.
-   Accountable Entity The entity accountable for this volume’s usage.
-   Topology The location of this volume in the cluster rack topology.
-   AUDITING Audit Specifies whether auditing of operations on directories,
-   files, and tables in the volumes is enabled.
-   Coalesce Interval Interval of time used when logging multiple instance
-   of an operation on a node from a client IP, if auditing is enabled.
-   REPLICATION Replication Desired and minimum number of copies of the
-   volumes.
-   Name Container Replication Desired and minimum number of copies of the
-   name container associated with the volumes.
-   Guarantee Min Replication (Available from v6.0.1) Specifies whether
-   (Yes) or not (No) to enforce minimum number of copies for the
-   (read-write) volume. If this is enabled (Yes), writes succeed only when
-   the minimum number of copies exist.
+   Accountable Entity The entity accountable for the volume’s usage.
+   Collect Metrics Whether (Yes) or not (No) to enable metrics collection
+   for the volume.
+   Enable Auditing Select one of the following:
+          + Disable auditing
+          + Enable auditing for volume so that auditing can be enabled by
+            directories, files, tables, and streams in the volume
+          + Enable auditing of operations on all files, tables, streams in
+            the volume whether or not auditing is enabled by files,
+            tables, and streams in the volume.
 
-   Note: If this parameter was not already set on a volume or if you
-   modify the setting for this property from No to Yes, restart all the
-   nodes where the containers associated with the volume exist for the
-   changes to take effect.
-    4. Make changes as needed to volume access.
+   Coalesce Interval The interval of time to use when logging multiple
+   instance of an operation on a node from a client IP, if auditing is
+   enabled.
+   Data on Wire Encryption Whether (Yes) or not (No) to encrypt data in
+   the volume during transmission. This is not supported on unsecure
+   clusters.
+   REPLICATION (HOT) Topology The location of this volume in the cluster
+   rack topology.
+   Replication Desired and minimum number of copies of the volume.
+   Name Container Replication Desired and minimum number of copies of the
+   name container associated with the volume.
+    4. Set new (if Data Tier was enabled (On) during volume creation) or
+       modify existing DATA TIERING settings.
+          + [4]Erasure Coding (Warm)
+          + [5]Remote Archiving (Cold)
+       For offloading data to a warm tier, set new or modify existing
+       values for the following properties.
+
+   Topology The topology of the erasure coded volume from the dropdown
+   list only if it is already not set.
+   Storage Policy The rule (or criteria) for automatically offloading data
+   in this volume. You can click:
+          + Browse to select an existing rule.
+          + Create to create a new rule for offloading data. See
+            [6]Creating a Storage Policy Using the MapR Control System for
+            more information.
+
+   Erasure Coding The erasure coding scheme, which is the number of data
+   chunks and number of parity chunks, only if it is already not set; you
+   cannot modify existing scheme. See [7]Selecting an Erasure Coding
+   Scheme for more information.
+       For offloading data to a low cost storage alternative on the cloud,
+       set new or modify existing values for the following properties.
+
+   Remote Target The location to offload data to only if it is already not
+   set; you cannot modify if it is already set. You can click:
+          + Browse to select an existing tier.
+          + Create to create a new tier. See [8]Creating a Cold Tier Using
+            the MapR Control System for more information.
+
+   Storage Policy The rule (or criteria) for offloading data in this
+   volume. You can click:
+          + Browse to select an existing rule.
+          + Create to create a new rule for offloading data. See
+            [9]Creating a Storage Policy Using the MapR Control System for
+            more information.
+
+   Retention Duration after Recall The number of days to retain data
+   recalled from the tier to the MapR cluster. Once the number of days is
+   reached, recalled data on the MapR cluster is purged (if there are no
+   changes) or offloaded (if there are changes).
+   Tier Encryption The setting to enable (Yes) or disable (No) encryption
+   of data on the tier only if it is already not set.
+    5. Make changes as needed to volume access.
 
    ADMINISTRATIVE CONTROLS Users and groups that have permissions to
    perform administrative operations on this volume. To:
@@ -93,29 +139,33 @@ Modifying a Volume Using the MapR Control System
             Alternatively, click [editPencil.png] associated with the type
             of access to use the Access Control Expression window to
             define access for public or users, group, and/or role. See
-            [4]Defining ACEs for more information.
+            [10]Defining ACEs for more information.
 
    Note: If you switch from Basic to Advanced, the basic settings, if any,
    will be carried over to the advanced settings. If you switch from
    Advanced to Basic, all the settings will be lost because the
    subexpressions and AND (&) and negation (!) operations that are
    supported by advanced settings are not supported in the basic settings.
-    5. (Optional) Modify volume quota as needed.
+    6. (Optional) Modify volume quota as needed.
 
    Volume Advisory Quota Allocated disk space, which when exceeded raises
    an alarm but does not prevent writes.
    Volume Hard Quota Allocated disk space, which when exceeded prevents
    further writes.
-    6. (Optional) Add or modify schedule(s) as needed.
-          + [5]Standard Volume
-          + [6]Mirror Volume
+    7. (Optional) Add or modify schedule(s) as needed.
+          + [11]Standard Volume
+          + [12]Mirror Volume
 
-       Snapshot Schedule Schedule for creating snapshots of the volume.
+   Snapshot Schedule Schedule for creating snapshots of the volume.
+   Tier Offload Schedule Schedule for offloading data to the storage tier.
+   This is available only if volume is enabled for storage tiering.
 
    Snapshot Schedule Schedule for creating snapshots of this volume.
    Mirror Schedule Schedule for automatically synchronizing (mirroring)
    this volume with the source volume.
-    7. Click Save Changes for the changes to take effect.
+   Tier Offload Schedule Schedule for offloading data to the storage tier.
+   This is available only if volume is enabled for storage tiering.
+    8. Click Save Changes for the changes to take effect.
 
 Modifying a Volume Using the CLI or REST API
 
@@ -123,14 +173,20 @@ Modifying a Volume Using the CLI or REST API
 maprcli volume modify -name <volume name>
 
    For complete reference information including supported options, see
-   [7]volume modify.
+   [13]volume modify.
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/ViewVolInfo.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html#div1entry1
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html#div1entry2
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/ACE-Builder.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html#div2entry1
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html#div2entry2
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html#div2entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html#div2entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/CreateStoragePolicy.html#mcs-create
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SelectECScheme.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/CreateTier.html#mcs-cold
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/CreateStoragePolicy.html#mcs-create
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/ACE-Builder.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html#div3entry1
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html#div3entry2
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#volumemodify

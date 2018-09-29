@@ -1,0 +1,108 @@
+Overview of Tiers
+
+   MapR considers data that is active and frequently accessed as "hot"
+   data and data that is rarely accessed as “warm” or “cold” data. The
+   mechanism used to store "hot" data is referred to as the hot-tier (or
+   MapR cluster), the mechanism used to store "warm" data is referred to
+   as the EC-tier (or low-cost storage alternative on the MapR cluster),
+   and the mechanism to store "cold" data is referred to as the cold tier
+   (or low-cost storage alternative on the cloud). Hot, warm, and cold
+   data is identified based on the rules and policies set by the
+   administrator.
+
+   Data starts off as hot when it is first written to local storage (on
+   the MapR cluster). It becomes warm or cold based on the rules and
+   policies the administrator configures. Then, data can be set up to be
+   automatically offloaded using the MapR automated storage tiering (MAST)
+   Gateway service to the erasure coded volume on the low-cost storage
+   alternative on the MapR cluster (warm tier) or to the low-cost storage
+   alternative on the 3rd party cloud object store (cold tier) like AWS
+   S3.
+     * [1]Warm Tier
+     * [2]Cold Tier
+
+   On the MapR cluster, every volume enabled for erasure coding (or warm
+   tiering) acts as a "front-end" volume and has a corresponding hidden
+   erasure coded (or EC) volume in the specified topology (of the low-cost
+   storage alternative). Erasure coding (EC) is a data protection
+   technique where data is broken into many fragments (or m pieces) and
+   encoded with some extra redundant fragments (or n pieces) to guard
+   against disk failures. That is, for volumes configured for erasure
+   coding, file data in the volume is broken into many fragments (or m
+   pieces) and encoded with pre-configured number of redundant fragments
+   (or n pieces). In the event of disk failure, any m piece can be used to
+   get back the original file. See [3]Selecting an Erasure Coding Scheme
+   for more information.
+
+   Although you write to and read from the front-end volumes, the
+   front-end volume is akin to a staging area, where volume’s data is held
+   on demand. Data written to a volume is periodically moved to the back
+   end erasure coded volume, releasing the disk space for the front-end
+   volume on the file system and providing the space savings of erasure
+   coded volumes. Data in the front-end volume is moved to the
+   corresponding erasure coded volume based on an offload schedule. The
+   front-end volume holds only small amount of required data, and data is
+   shuffled between the front-end volume and the corresponding erasure
+   coded volume as required. See [4]Data Reads, Writes, and Recalls for
+   more information.
+
+   There is also a visible tier-volume on the MapR cluster for storing the
+   metadata associated with the volume. When you create a warm tier, the
+   tier volume named mapr.internal.tier.<tiername> is by default created
+   in the /var/mapr/tier path. When you create a warm-tier volume using
+   the ecenable parameter or the MCS, a warm tier is automatically created
+   and the corresponding tier volume named
+   mapr.internal.tier.autoec.<volName>.<creationTime> is, by default,
+   created in the /var/mapr/autoectier path.
+
+   While three-way replicated regular volumes require 3 times the amount
+   of disk space of the regular volume, erasure coded volumes reduce the
+   storage overhead in the range of 1.2x-1.5x. On the MapR cluster, only
+   the metadata of the volume in the namespace container is 3-way
+   replicated.
+
+   You can create one warm tier per volume using the MapR Control System,
+   the CLI, and REST API or create and associate multiple volumes with
+   different erasure coding schemes with the same warm tier using the CLI
+   and REST API (only). You cannot associate the same warm tier with
+   multiple volumes using the MapR Control System.
+
+   On the MapR cluster, every cold tier (referred to as remote target in
+   MCS) has a bucket on the 3rd party cloud store where volume data is
+   offloaded based on the policy configured by the administrator. Volume
+   data in 64KB data chunks is packed into 8MB sized objects and offloaded
+   to the bucket on the tier and the corresponding volume metadata is
+   stored in a visible tier-volume as MapR Database tables on the MapR
+   cluster. During writes and reads, volume data is recalled to the MapR
+   cluster if necessary. Data written to the volume is periodically moved
+   to the remote target, releasing the disk space on the file system. See
+   [5]Data Reads, Writes, and Recalls for more information.
+
+   Data stored on the MapR cluster requires 3 times the amount of disk
+   space of the regular volume on premium hardware due to replication
+   (default being 3). After offloading to the cloud, the space used by
+   data (including data in the namespace container) in the volume on the
+   MapR cluster is freed and only the metadata of the volume in the
+   namespace container is 3-way replicated on the MapR cluster.
+
+   There is also a visible tier-volume on the MapR cluster for storing the
+   metadata associated with the volume. When you create a cold tier, the
+   tier volume named mapr.internal.tier.<tierName> is by default created
+   in the /var/mapr/tier path. A directory/folder for the volumes
+   associated with the tier, identifiable by volumeid, is created under
+   the path after the first offload of data from the volume to the tier.
+
+   You can create one tier per volume or create and associate multiple
+   volumes with the same tier using the MapR Control System, the CLI, and
+   REST API.
+
+   See also: [6]Managing Tiers
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataTiersOverview.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataTiersOverview.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SelectECScheme.html#SelectECScheme
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataReadwriteRecall.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataReadwriteRecall.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManageTiers.html

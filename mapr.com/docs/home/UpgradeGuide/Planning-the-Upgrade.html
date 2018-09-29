@@ -9,18 +9,21 @@ Planning the MapR Core Upgrade
 
 Choosing a Cluster Upgrade Method
 
-   Choose the upgrade method and form your upgrade plans based on this
-   choice. MapR provides an offline upgrade method, as well as a rolling
-   upgrade method for clusters that meet certain criteria. These methods
-   are defined later in this section. The method you choose affects the
-   flow of events while upgrading packages on nodes and the duration of
-   the maintenance window.
+   Supported upgrade methods are:
+     * Manual rolling upgrade
+     * Offline manual upgrade
+     * Offline upgrade using the MapR Installer
+
+   [1]Upgrade Workflows describes these methods in more detail. The method
+   you choose affects the flow of events while upgrading packages on nodes
+   and the duration of the maintenance window.
    The following table summarizes the MapR Core upgrade paths supported
    for each method:
-   Upgrade From   Upgrade To   Offline Rolling
-   3.x          6.0.0 or later Yes     No
-   4.x          6.0.0 or later Yes     No*
-   5.x          6.0.0 or later Yes     Yes**
+   Upgrade From Upgrade To Offline Rolling
+   3.x          6.1.0      Yes     No
+   4.x          6.1.0      Yes     No*
+   5.x          6.1.0      Yes     Yes**
+   6.x          6.1.0      Yes     Yes
 
    *Rolling upgrades from 4.x to 5.x are supported, after which you may do
    another rolling upgrade from 5.x to 6.x.
@@ -30,13 +33,29 @@ Choosing a Cluster Upgrade Method
    supported only from MapR 5.2.x and MEP 3.0.1 or later.
    The following table summarizes upgrade support for MapR Expansion Packs
    (MEPs):
-   Upgrade From     Upgrade To     Offline Rolling
-   Pre-MEP      MEP 4.0.0 or later Yes     No
-   MEP 1.1.x    MEP 4.0.0 or later Yes     No
-   MEP 2.x      MEP 4.0.0 or later Yes     No
-   MEP 3.0.1+   MEP 4.0.0 or later Yes     Yes*
+   Upgrade From Upgrade To Offline Rolling
+   Pre-MEP      MEP 6.0.0  Yes     No
+   MEP 1.1.x    MEP 6.0.0  Yes     No
+   MEP 2.x      MEP 6.0.0  Yes     No
+   MEP 3.0.1+   MEP 6.0.0  Yes     Yes*
+   MEP 4.x      MEP 6.0.0  Yes     Yes*
+   MEP 5.x      MEP 6.0.0  Yes     Yes*
 
    *Applicable for ecosystem components that support rolling upgrades.
+
+Transition MEPs
+
+   The following MEPs are considered transition MEPs because you can
+   upgrade these MEPs directly to MapR 6.1.0 using a rolling upgrade (for
+   components that support a rolling upgrade):
+     * MEP 3.0.1 and later 3.0.x
+     * MEP 4.x
+     * MEP 5.x
+
+   Transition MEPs can coexist with MapR 6.1.0 only during the course of
+   an upgrade. You must not enable MapR 6.1.0 new features while a
+   transition MEP is in use on MapR 6.1.0. You must upgrade to MEP 6.0.0
+   before enabling new features for MapR 6.1.0.
 
 Offline Upgrade
 
@@ -52,10 +71,11 @@ Offline Upgrade
      * 4.0.x
      * 4.1
      * 5.x
+     * 6.x
 
    Note: After upgrading MapR Core to MapR 6.0 or later, you must upgrade
    ecosystem components to a MEP that is compatible with your MapR 6.0 or
-   later release. To determine the compatible MEPs, see [1]MEP Support by
+   later release. To determine the compatible MEPs, see [2]MEP Support by
    MapR Core Version. This must be done before you enable MapR 6.0 or
    later features.
    During the maintenance window, the administrator:
@@ -71,6 +91,23 @@ Offline Upgrade
        to version 1.7 or later.
      * Upgrades using the MapR Installer are supported only from MapR
        5.2.x with MEP 3.0.1 or later.
+     * The following table summarizes how the MapR Installer handles
+       security during an upgrade to MapR 6.1.0:
+
+   Upgrading From Security Setting MapR Installer Behavior
+   MapR 5.2.x On This is a [3]custom security scenario. You cannot use the
+   MapR Installer or Stanzas to perform the upgrade. You must upgrade
+   manually.
+   MapR 5.2.x Off The MapR Installer does not add security by default
+   during an upgrade. After the upgrade to MapR 6.1.0, you can turn on
+   security by using the [4]incremental install function.
+   MapR 6.0 or 6.0.1 On The MapR Installer leaves the current security
+   settings intact, resulting in a secure MapR 6.1.0 cluster. This upgrade
+   assumes that no custom security settings are implemented. You must
+   upgrade manually if custom security settings are implemented.
+   MapR 6.0 or 6.0.1 Off The MapR Installer does not add security by
+   default during an upgrade. After the upgrade to MapR 6.1.0, you can
+   turn on security by using the [5]incremental install function.
 
    Note: When upgrading to MapR 6.0 or later using the MapR Installer or
    Stanzas, MEP 3.0.1 or later is upgraded automatically to MEP 4.0.0 or
@@ -100,17 +137,18 @@ Rolling Upgrade
    You can perform a manual rolling upgrade from only the following MapR
    versions:
      * 5.2.x with MEP 3.0.1 or later
+     * 6.x with MEP 4.0.0 or later
 
    Note: After upgrading MapR Core, you must upgrade ecosystem components
    to MEP 4.0.0 or later, and this must be done before you enable MapR 6.0
    or later features. To determine the MEP required by your MapR release,
-   see [2]MEP Support by MapR Core Version.
+   see [6]MEP Support by MapR Core Version.
 
 Updating the JDK
 
    Check the JDK Support Matrix to verify that your JDK version is
    supported by the MapR version to which you are upgrading. MapR 6.0 or
-   later requires JDK 8. See the [3]JDK Support Matrix for more
+   later requires JDK 8. See the [7]JDK Support Matrix for more
    information.
 
 Planning for Security
@@ -119,11 +157,11 @@ Planning for Security
    security attributes of your cluster are preserved unless you decide to
    change them. Note that if you have configured security on your cluster,
    you cannot use the MapR Installer or Stanzas to upgrade. You must
-   upgrade manually. For information about custom security, see [4]Custom
-   Security in MapR.
+   upgrade manually. For information about custom security, see
+   [8]Customizing Security in MapR.
 
    Before upgrading MapR software, make sure that you have reviewed the
-   list of known vulnerabilities in [5]Security Vulnerabilities. If a
+   list of known vulnerabilities in [9]Security Vulnerabilities. If a
    vulnerability applies to your release, contact your MapR support
    representative for a fix, and apply the fix immediately, if applicable.
 
@@ -179,8 +217,8 @@ Planning Upgrades to MapR Clients
    migrated to a FUSE-based POSIX Basic client. MapR POSIX loopback NFS
    clients can not be migrated to FUSE-based Platinum POSIX clients.
 
-   See [6]Upgrading the MapR POSIX loopbacknfs Client and [7]Migrating to
-   FUSE-based POSIX Clients for more information.
+   See [10]Upgrading the MapR POSIX loopbacknfs Client and [11]Migrating
+   to FUSE-based POSIX Clients for more information.
    Note: Basic and Platinum POSIX client packages are recommended for
    fresh installation and for all new clusters.
 
@@ -225,31 +263,35 @@ Determining Cross-Cluster Feature Support
 
    Table Replication
           Table replication works between clusters of different versions
-          as long as both versions support MapR-DB table replication. For
-          example, you can replicate MapR-DB binary tables from a MapR 5.1
-          cluster to a MapR 4.1 cluster.
+          as long as both versions support MapR Database table
+          replication. For example, you can replicate MapR Database binary
+          tables from a MapR 5.1 cluster to a MapR 4.1 cluster.
 
-          Note: As of MapR 5.2, MapR-DB JSON table replication is also
-          supported. You cannot replicate MapR-DB JSON tables to cluster
-          that runs a version prior to 5.2.
+          Note: As of MapR 5.2, MapR Database JSON table replication is
+          also supported. You cannot replicate MapR Database JSON tables
+          to cluster that runs a version prior to 5.2.
 
 Planning for the MapR Expansion Pack
 
-   To plan for the MapR Expansion Pack (MEP), see [8]Planning MapR
+   To plan for the MapR Expansion Pack (MEP), see [12]Planning MapR
    Expansion Pack Upgrades.
 
 What's Next
 
-   Go to [9]Preparing to Upgrade MapR Core
+   Go to [13]Preparing to Upgrade MapR Core
 
 References
 
-   1. https://maprdocs.mapr.com/home/InteropMatrix/r_mep_support_core_version.html
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/common_upgrade_workflows.html#concept_msn_yjw_x2b
    2. https://maprdocs.mapr.com/home/InteropMatrix/r_mep_support_core_version.html
-   3. http://maprdocs.mapr.com/home/InteropMatrix/r_jdk_matrix.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_security_vuln_intro.html#concept_n5n_pty_dv
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradeMaprPosixClient.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/MigrateToFuseBasedPosixClient.html
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Planning-MEP-Upgrades.html#concept_q3k_qkl_kx
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Preparing-to-Upgrade.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb
+   4. https://mapr.com/docs/home/AdvancedInstallation/Using_incremental_install_function.html
+   5. https://mapr.com/docs/home/AdvancedInstallation/Using_incremental_install_function.html
+   6. https://maprdocs.mapr.com/home/InteropMatrix/r_mep_support_core_version.html
+   7. http://maprdocs.mapr.com/home/InteropMatrix/r_jdk_matrix.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html#concept_cxh_gzp_sbb
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_security_vuln_intro.html#concept_n5n_pty_dv
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradeMaprPosixClient.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/MigrateToFuseBasedPosixClient.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Planning-MEP-Upgrades.html#concept_q3k_qkl_kx
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Preparing-to-Upgrade.html

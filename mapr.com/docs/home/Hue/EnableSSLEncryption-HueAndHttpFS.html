@@ -8,59 +8,71 @@ Enable SSL Encryption Between Hue and HttpFS
    authentication between Hue and HttpFS on a secure cluster:
     1. Configure HttpFS to use SSL or verify that HttpFS is configured to
        use SSL. For details, see [1]SSL Security for HttpFS.
-    2. Start Hue:
-maprcli node services -name hue -action start -nodes <node name>
-       When you start or restart Hue on a secure cluster, the secure.sh
-       script ($HUE_HOME/bin/secure.sh) generates the following files in
-       $HUE_HOME:
-          + hue_private_keystore.pem
-          + keystore.pem
-          + keystore.p12
-          + cert.pem
-       Note: $HUE_HOME should be replaced with the full path manually.
-       The secure.sh script runs with a set of default parameters, which
-       should not be changed. If generated keystore files already exist in
-       that location, the script does not regenerate the files.
-    3. Add the following configuration in the hue.ini file under the
-       [[hdfs_clusters]] [[[default]]] section. (Use the absolute paths
-       for ssl_cert and ssl_key.)
-          +
-security_enabled=${security_enabled}
-          +
-mechanism=${mechanism}
-          +
-ssl=True
+    2. Set the webhdfs_url property in the [hadoop] [[hdfs_clusters]]
+       [[[default]]] section of the hue.ini file to contain the correct
+       URL for HttpFS with the HTTPS schema and domain of the HttpFS
+       server:
+[hadoop]
+  [[hdfs_clusters]]
+    [[[default]]]
+      # Use WebHdfs/HttpFs as the communication mechanism.
+      # Domain should be the NameNode or HttpFs host.
+      # Default port is 14000 for HttpFs.
+      webhdfs_url=https://node1.cluster.com:14000/webhdfs/v1
+    3. You can enable or disable Hue verification of service certificates
+       by configuring ssl_cacerts and ssl_validate properties in the
+       [desktop] section of the hue.ini file.
+       Example for enabling certificate verification:
+[desktop]
+   ...
+
+  # Path to default Certificate Authority certificates. As example: /path/to/cac
+ert.pem
+  ssl_cacerts=/opt/mapr/conf/ssl_truststore.pem
+
+  # Choose whether Hue should validate certificates received from the server.
+  ssl_validate=true
+       Example for disabling certificate verification:
+[desktop]
+   ...
+
+  # Path to default Certificate Authority certificates. As example: /path/to/cac
+ert.pem
+  # ssl_cacerts=
+
+  # Choose whether Hue should validate certificates received from the server.
+  ssl_validate=false
+    4. [OPTIONAL] Configure mutual authentication between Hue and HttpFS.
+       Add the following configuration in the hue.ini file under the
+       [hadoop] [[hdfs_clusters]] [[[default]]] section.
           +
 mutual_ssl_auth=True
           +
-ssl_cert=/opt/mapr/hue/hue-version.no/cert.pem
+ssl_cert=/path/to/certificate.pem
           +
-ssl_key=opt/mapr/hue/hue-version.no/hue_private_keystore.pem
-          +
-ssl_cert_ca_verify=False
-       The changes are summarized in the following example hue.ini file,
-       which you can use as a template:
-[[hdfs_clusters]]
-# HA support by using HttpFs
-  [[[default]]]
-     ....
-      # Change this if your HDFS cluster is Kerberos-secured
-      security_enabled=True
-
-      # SSL certificate based authentication
-       ssl=True
-       ssl_cert=$HUE_HOME/cert.pem
-       ssl_key=$HUE_HOME/hue_private_keystore.pem
-
-      # If certificate verified against certificate authority
-      ssl_cert_ca_verify=False
-    4. Restart Hue.
+ssl_key=/path/to/private_key.pem
+       Use absolute paths for ssl_cert and ssl_key. Hue does not support
+       private keys with a passphrase in this step.
+       The changes are summarized in the following example in the hue.ini
+       file, which you can use as a template:
+[hadoop]
+ [[hdfs_clusters]]
+  # HA support by using HttpFs
+ [[[default]]]
+  # Use WebHdfs/HttpFs as the communication mechanism.
+  # Domain should be the NameNode or HttpFs host.
+  # Default port is 14000 for HttpFs.
+  webhdfs_url=https://node1.cluster.com:14000/webhdfs/v1
+      ....
+  # SSL certificate based authentication
+  ssl_cert=/path/to/certificate.pem
+  ssl_key=/path/to/private_key.pem
+    5. Restart Hue.
 maprcli node services -name hue -action start -nodes <ip_address>
-    5. To test that SSL encryption is enabled for HttpFS, run the
+    6. To test that SSL encryption is enabled for HttpFS, run the
        following command:
-curl k cert /opt/mapr/hue/hue<version.no>/cert.pem key /opt/mapr/hue/hue<version
-.no>/hue_private_keystore.pem
-"https://localhost:14000/webhdfs/v1?op=GETFILESTATUS&user.name=mapr"
+curl -k --cert /path/to/certificate.pem --key /path/to/private_key.pem
+"https://node1.cluster.com:14000/webhdfs/v1?op=GETFILESTATUS&user.name=mapr"
 
 References
 

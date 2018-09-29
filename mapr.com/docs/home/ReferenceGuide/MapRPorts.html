@@ -7,20 +7,51 @@ Services and Ports Quick Reference
    Service Source IP Destination IP Port Purpose Parameter and File where
    Port is Configured
    CLDB Nodes running any MapR services, clients interacting with MapRFS
-   Cluster nodes running CLDB services 7222 MapR-FS API calls
+   Cluster nodes running CLDB services 7222 MapR Filesystem API calls
    /opt/mapr/conf/cldb.conf, /opt/mapr/conf/warden.conf,
    /opt/mapr/conf/mapr-clusters.conf
    CLDB JMX monitor port Nodes running CLDB services CLDB JMX monitor port
    7220 The port on which Collectd gathers CLDB metrics via JMX. N/A
    CLDB web port Nodes/clients connecting to the CLDB GUI Cluster nodes
    running CLDB services 7221 CLDB GUI /opt/mapr/conf/cldb.conf
-   Data Access Gateway Clients using the MapR-DB JSON REST API with HTTPS
-   Cluster nodes running the Data Access Gateway service 8243 The port
-   used to connect to the Data Access Gateway using HTTPS rest.https.port
-   in /opt/mapr/data-access-gateway/conf/properties.cfg
+   Data Access Gateway Clients using the MapR Database JSON REST API with
+   HTTPS Cluster nodes running the Data Access Gateway service 8243 The
+   port used to connect to the Data Access Gateway using HTTPS
+   rest.https.port in /opt/mapr/data-access-gateway/conf/properties.cfg
+   Node.js OJAI client 5678 The port used to connect the OJAI client to
+   the Data Access Gateway grpc.service.port in
+   /opt/mapr/data-access-gateway/conf/properties.cfg
+   Python OJAI client
    DNS All cluster nodes Server running DNS 53 Domain Name Service N/A
    Drill JMX Port Nodes running the Drillbit Drill JMX Port 6090 The port
    on which Collectd gathers Drill metrics via JMX.
+   Drill Web UI Nodes running the Drillbit service Nodes running the
+   Drillbit service 8047 TCP port needed for the Drill Web UI and clients
+   using REST API and nodes running the Drillbit service.
+   drill.exec.http.port in
+   /opt/mapr/drill/drill-<version>/conf/drill-override.conf
+   Drill Nodes running the Drillbit service and clients using JDBC/ODBC
+   and nodes running the Drillbit service. Nodes running the Drillbit
+   service 31010 TCP user port address. Used between nodes in a Drill
+   cluster. Needed for an external client, such as Tableau, to connect
+   into the cluster nodes. Also needed for the Drill Web UI. You can also
+   use this port to connect directly to a Drillbit.
+   drill.exec.rpc.user.server.port in
+   /opt/mapr/drill/drill-<version>/conf/drill-override.conf
+   Drill Nodes running the Drillbit service Nodes running the Drillbit
+   service 31011 TCP port that controls the port address. Used between
+   nodes in a Drill cluster. Needed for multi-node installation of Drill.
+   drill.exec.rpc.bit.server.port in
+   /opt/mapr/drill/drill-<version>/conf/drill-override.conf
+   Drill Nodes running the Drillbit service Nodes running the Drillbit
+   service 31012 TCP data port address. Used between nodes in a Drill
+   cluster. Needed for multi-node installation of Drill.
+   drill.exec.rpc.bit.server.port + 1 in
+   /opt/mapr/drill/drill-<version>/conf/drill-override.conf
+   Drill Clients using JDBC/ODBC and nodes running ZooKeeper services.
+   Nodes running the Drillbit service 5181 ZooKeeper port used to connect
+   to Drill through the JDBC driver. See the ZooKeeper entry in this
+   table.
    Elasticsearch Non-Elasticsearch components, such a web browser, curl,
    and Kibana, that connect to Elasticsearch. Nodes running Elasticsearch
    for MapR Monitoring use cases 9200 Non-Elasticsearch components use
@@ -38,6 +69,7 @@ Services and Ports Quick Reference
    Grafana Web browsers Nodes running Grafana for MapR Monitoring use
    cases. 3000 Web browsers use this port when connecting to Grafana. N/A
    HBase Thrift Server   Nodes running HBase Thrift Server 9090
+   HBase REST Server   Nodes running HBase REST Server 8085
    HistoryServer RPC   Nodes running MapReduce JobHistory Server 10020
    HistoryServer Web UI and REST APIs Clients that access Job History
    Server UI in a non-secure cluster Secure nodes running MapReduce
@@ -72,6 +104,8 @@ Services and Ports Quick Reference
    Impala StateStoreDaemon Nodes running Impala Daemon Nodes running
    Impala StateStore Daemon 25010 StateStore web interface for monitoring
    and troubleshooting.
+   KSQL All cluster nodes Nodes running KSQL 8084 KSQL
+   $KSQL_INSTALL_DIR/etc/ksql/ksqlserver.properties
    Kafka Connect All cluster nodes Nodes running Kafka Connect 8083 Kafka
    Connect REST API calls
    /opt/mapr/kafka/kafka-<version>/config/connect-distributed.properties
@@ -86,21 +120,24 @@ Services and Ports Quick Reference
    running CLDB services 7443 When security is enabled for a cluster, the
    CLDB listens for connections on port 7443. If security is disabled, the
    maprlogin utility is unable to reach the CLDB.
-   MFS server Nodes running any MapR services, clients interacting with
-   MapRFS Nodes running FileServer services 5660, 5692, 5724, and 5756
+   MAST Gateway Nodes running MAST Gateway service Nodes running MAST
+   Gateway service 8660   /opt/mapr/conf/mastgateway.conf
+   MapR Filesystem server Nodes running any MapR services, clients
+   interacting with MapRFS Nodes running FileServer services 5660, 5692,
+   5724, and 5756
    Clients using maprcli commands or the MapR Control System UI Nodes
    running hoststats service 1111 Hoststats listening port for MapR
    Metrics RPC activity /opt/mapr/conf/warden.conf
-   Nodes running the gateway service Nodes running MapR-FS 6660 The port
-   on which gateway nodes send replicated operations to nodes in
+   Nodes running the gateway service Nodes running MapR Filesystem 6660
+   The port on which gateway nodes send replicated operations to nodes in
    destination clusters.
-   MFS server instances     See [4]Ports for Multi-MFS Multiple MFS
-   instances
+   MapR Filesystem server instances     See [4]Ports for Multiple
+   Instances of MapR Filesystem Multiple MapR Filesystem instances
    MySQL Nodes running the mapr-metrics package Nodes running the MySQL
    database for system metrics and jobs display 3306 Used for mySQL
    traffic between the web services client and its mySQL backend server
    NFS Nodes/clients accessing MapRFS via the NFS protocol Nodes running
-   MapR NFS Services 2049 NFSv3 access to MapR-FS
+   MapR NFS Services 2049 NFSv3 or NFSv4 access to MapR Filesystem
    Nodes running NFS services Nodes running NFS services 9997 NFS VIP
    Management /opt/mapr/conf/nfsserver.conf
    9998 /opt/mapr/conf/nfsserver.conf
@@ -137,7 +174,7 @@ Services and Ports Quick Reference
    parameter.
    Port mapper Nodes running MapR NFS Services Nodes/clients accessing
    MapRFS via the NFS protocol 111 RPC Portmap services used to connect to
-   MapR-FS via NFSv3
+   MapR Filesystem via NFSv3
    ResourceManager JMX Port Nodes running ResourceManager ResourceManager
    JMX port 8025 The port on which Collectd gathers metrics from the
    ResourceManager via JMX.

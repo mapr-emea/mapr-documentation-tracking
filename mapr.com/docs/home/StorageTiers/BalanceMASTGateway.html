@@ -1,0 +1,144 @@
+Balancing Gateway Load
+
+   CLDB assigns volumes to MAST Gateways so that any tiering-related
+   operation for a volume is performed by the MAST Gateway assigned to the
+   volume. This assignment is sticky and the volume remains assigned to
+   the same gateway across CLDB, MAST Gateway, and cluster restarts. When
+   a MAST Gateway goes down, volumes assigned to the MAST Gateway are not
+   re-assigned immediately. Instead, when a tiering operation needs to be
+   run and the assigned MAST Gateway is down, CLDB assigns a new MAST
+   Gateway to the volume, and the operation is performed using the newly
+   assigned MAST Gateway.
+
+   Volumes are assigned to gateways with the lowest load (or lowest number
+   of volumes currently assigned to it) to ensure equal distribution.
+   Whenever a volume is created or removed or whenever a MAST Gateway is
+   added or removed, the load on the gateways require rebalancing. MapR
+   automatically balances the load on the gateways after a certain
+   (configurable) amount of time since the occurrence of the event that
+   necessitates a rebalance. The delay after which MapR tries to rebalance
+   varies based on the type of event that necessitates a rebalance. See
+   [1]Configuring the Delay After Which Load Balancer runs for Events for
+   more information.
+
+   Each volume in the cluster is assigned a weight, which is 1 for all
+   volumes. The load on a gateway is the sum of weights of all the volumes
+   that are assigned to the gateway. Load balancer tries to ensure that
+   the load on a gateway is at least the average weight.
+avg weight = (sum(weight of all tiered vols) + num active gws - 1) / num active
+gws
+
+   When the balancer needs to pick volumes from a gateway for
+   reassignment, it first picks the volume with max weight and one that
+   currently has no activity (volume level offload, recall, or
+   compaction). To minimize the interruptions in gateway activity, the
+   balancer first considers idle volumes and picks volumes with active
+   tasks after. However, any balancing and/or reassignment is skipped if
+   there is already assignment related flux in the cluster (such as
+   volumes with gateway assignment currently in progress). If this
+   happens, load balancer runs again with a shorter time delay of 10
+   minutes.
+
+   MapR performs load balancing in batches of 5 volumes per run. That is,
+   it assigns 5 volumes to gateways and then after a delay of 10 minutes
+   by default, runs the load balancer again to distribute other volumes
+   (in batches of 5). MapR figures out the next batch of volumes by
+   re-evaluating the current assignment state. When the load on the
+   gateway is balanced, the balancer is disabled and the load balancer is
+   run again only by any of the 4 events.
+
+Configuring Interval Between Load Balancer Runs
+
+   MapR assigns 5 volumes to gateways and then after a delay of 10 minutes
+   by default, runs the load balancer again to distribute other volumes
+   (in batches of 5). Run the following command to configure the interval
+   between runs:
+maprcli config save -values {"cldb.tier.gw.balance.delay.recheck":"<mins-in-seco
+nds>"}
+
+Configuring the Delay After Which Load Balancer runs for Events
+
+   MapR runs the load balancer automatically for any of the following
+   events. You can configure the delay after which MapR runs the load
+   balancer.
+
+   Create Volume
+          When you create a tiering-enabled volume, it is assigned the
+          gateway with the lowest load. If gateways are not available for
+          the volume at the time of creation, the volume might stay
+          unassigned. To ensure that the volume has an associated gateway
+          for handling the tiering operations, MapR runs the gateway load
+          balancer after a delay of 2 hours (7200 seconds) by default for
+          this event.
+
+          To configure the delay, set the value for
+          cldb.tier.gw.balance.delay.vol.create property (in seconds)
+          using the [2]config save command. For example:
+
+maprcli config save -values {"cldb.tier.gw.balance.delay.vol.create":"<mins-in-s
+econds>"}
+
+   Remove Volume
+          When you remove a volume, the distribution of volumes across
+          gateways can become uneven, and the balancer must be run to
+          redistribute the volumes. For this event, MapR runs the load
+          balancer to redistribute the volumes and rebalance the gateways
+          after a delay of 2 hours (7200 seconds) by default for this
+          event.
+
+          To configure the delay, set the value for the
+          cldb.tier.gw.balance.delay.vol.delete property (in seconds)
+          using the [3]config save command. For example:
+
+maprcli config save -values {"cldb.tier.gw.balance.delay.vol.delete":"<mins-in-s
+econds>"}
+
+   Add Gateway
+          When you install a new gateway on a cluster, volumes are
+          assigned to the new gateway only if a new volume is created or
+          an existing volume has a pending task, but no active assigned
+          gateway. Volumes that have active gateways are not re-assigned
+          by default. For this event, MapR runs the load balancer to
+          re-distribute the volumes and rebalance the gateway load after a
+          delay of 2 hours (7200 seconds) by default.
+
+          To configure the delay, set the value for the
+          cldb.tier.gw.balance.delay.new.gw property (in seconds) using
+          the [4]config save command. For example:
+
+maprcli config save -values {"cldb.tier.gw.balance.delay.new.gw":"<mins-in-secon
+ds>"}
+
+   Remove Gateway
+          When you remove a gateway or when a gateway goes down, all the
+          volumes assigned to the gateway are not re-assigned by default;
+          only volumes with pending tasks are assigned to new gateways.
+          For this event, MapR runs the load balancer to re-distribute the
+          volumes after 6 hours (21600 seconds) by default.
+
+          To configure the delay, set the value for the
+          cldb.tier.gw.balance.delay.dead.gw property (in seconds) using
+          the [5]config save command. For example:
+
+maprcli config save -values {"cldb.tier.gw.balance.delay.dead.gw":"<mins-in-seco
+nds>"}
+
+Determining the Volumes Assigned to MAST Gateways
+
+   Run one of the following commands to determine the volumes that are
+   assigned to MAST Gateways:
+     *
+/opt/mapr/server/mrconfig info mastgateway
+     *
+/opt/mapr/server/mrconfig info volume mastgateway
+
+   For more information, see [6]mrconfig info.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/BalanceMASTGateway.html#events
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-save.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-save.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-save.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-save.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mrconfiginfo.html

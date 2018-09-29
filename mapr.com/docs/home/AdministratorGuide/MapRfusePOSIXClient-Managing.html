@@ -2,13 +2,6 @@ Managing the FUSE-Based POSIX Client
 
    This section describes how to start and manage the POSIX client.
 
-Verifying MapR POSIX Client Licenses
-
-   You can check how many MapR POSIX Client licenses are available in the
-   Licenses tab under Admin > Cluster Settings. Look under LICENSES to
-   find the number of POSIX Client nodes that can consume a MapR POSIX
-   Client license.
-
 Starting and Stopping the POSIX Client
 
    To ensure that the service can be started and stopped and to run the
@@ -51,10 +44,9 @@ Running the POSIX Client in Secure Mode
 
    The POSIX client reads the mapr-clusters.conf file to determine whether
    the process must start in secure or non-secure mode. If security is
-   configured, the mapr superuser's ticket file or the
-   servicewithimpersonation ticket file must be present in the default
-   /tmp directory. If the ticket file is not in the default /tmp
-   directory, specify the location of the ticket file using the
+   configured, the servicewithimpersonation ticket file must be present in
+   the default /tmp directory. If the ticket file is not in the default
+   /tmp directory, specify the location of the ticket file using the
    fuse.ticketfile.location configuration parameter in the fuse.conf file
    Tip: See also: [1]Enabling Impersonation for the MapR Superuser and
    [2]Enabling Impersonation for any User.
@@ -83,7 +75,13 @@ Setting up a Ticket for the POSIX Client
      * [3]Generating a MapR User Ticket
      * [4]Generating a Service Ticket
 
-Mounting the MapR-FS
+   Note: If the UID/GID in the ticket (without impersonation capability)
+   is different from the UID/GID of the logged-in user, all operations are
+   performed using the UID/GID of the ticket and not that of the logged-in
+   user. The FUSE-based POSIX client cannot use a ticket with
+   impersonation constraints.
+
+Mounting the MapR Filesystem
 
    To mount MapR file system at the mount point specified in the
    /opt/mapr/conf/fuse.conf file, create the mountpoint specified in the
@@ -143,28 +141,12 @@ Registering POSIX Client with Additional Clusters
    clusters will be visible after few minutes.
    Note: Each client supports up to 16 clusters.
 
-Setting the Log Level
-
-   The log level can be set in the
-   /opt/mapr/hadoop/hadoop-<version>/etc/hadoop/core-site.xml file. By
-   default, it is set to ERROR. If you want to change the log level to
-   another (such as FATAL, DEBUG, WARN, ERROR, CRITICAL, or OFF), open the
-   file, add the following, and save the file:
-<configuration>
-  <property>
-     <name>fs.mapr.trace</name>
-     <value>DEBUG | INFO | WARN | ERROR | CRITICAL | FATAL | OFF</value>
-  </property>
-</configuration>
-
-   Note: See [6]core-site.xml for more information.
-
 Configuring the Chunk Size
 
    By default, sharding takes effect only if chunk size is >0 and <=2MB.
    To increase the upper limit (up to 256MB) on the chunk size, set the
    value (in bytes) for the fs.mapr.fuseshard.chunksize configuration
-   field in the [7]core-site.xml file. For example:
+   field in the [6]core-site.xml file. For example:
 <property>
   <name>fs.mapr.fuseshard.chunksize</name>
   <value>2097152</value>
@@ -175,7 +157,7 @@ Configuring the Chunk Size
           Each directory in MapR storage contains a hidden file called
           .dfs_attributes that controls compression and chunk size. To
           change these attributes, change the corresponding values in the
-          file. For more information, see [8].dfs_attributes.
+          file. For more information, see [7].dfs_attributes.
 
 Unmounting the FUSE Mount
 
@@ -194,5 +176,4 @@ References
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingServiceTicket.html#TicketsandCertificates-Ge_26281159-d3e299
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/EnableSoftMountAndTimeout.html
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/core-site.xml.html#core-site.xml
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/core-site.xml.html#core-site.xml
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dfs_attributes.html#dfs_attributes
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dfs_attributes.html#dfs_attributes

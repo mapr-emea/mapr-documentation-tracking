@@ -1,0 +1,185 @@
+Enabling Encryption of Data at Rest
+
+   You can enable or disable data at rest encryption at the volume level
+   using the MapR Control System, CLI, and REST API if encryption of data
+   at rest is enabled at the cluster level. If you installed using the
+   [1]MapR Installer and selected the Enable MapR DARE option, the cluster
+   is automatically enabled for data at rest encryption during
+   installation. If you are upgrading or if you did not enable data at
+   rest encryption at the time of installation, you can enable encryption
+   of data at rest at the cluster level if the cluster is a secure
+   cluster. See [2]Enabling Data at Rest Encryption at the Cluster Level
+   from the Command-Line below for more information.
+
+   If encryption is enabled at the cluster level, data at rest encryption
+   is also enabled at the volume level by default through the
+   mapr.volume.dare.default configuration parameter. If you do not wish to
+   encrypt data at rest in a volume, you can disable encryption when you
+   create a volume; you cannot modify data at rest encryption setting on a
+   volume after the volume is created. See [3]Enabling or Disabling Data
+   at Rest Encryption at the Volume Level Using the MapR Control System or
+   [4]Enabling or Disabling Data at Rest Encryption at the Volume Level
+   Using the CLI and REST API below for more information.
+
+   Standard volumes inherit the data at rest encryption setting from a
+   volume by default if the inherit property is specified. If you create a
+   mirror volume for a (source) volume enabled for data at rest
+   encryption, the mirror volume:
+     * Inherits the data at rest encryption setting from the source volume
+       if the mirror volume is in the same cluster as the source volume or
+       if the mirror volume is on a remote cluster enabled for encryption
+       of data at rest.
+     * Does not inherit the data at rest encryption setting from the
+       source volume if the mirror volume is on an unsecure cluster or if
+       the mirror volume is on secure cluster that is not enabled for
+       encryption of data at rest.
+
+   Note: If you want to create a mirror volume enabled for data at rest
+   encryption for a source volume not enabled for data at rest encryption,
+   set the value to true for dare property when creating the mirror
+   volume.
+
+   This section describes how to enable data at rest encryption at the
+   cluster and volume levels.
+
+Enabling Data at Rest Encryption at the Cluster Level from the Command-Line
+
+   To enable encryption at the cluster level:
+    1. Run [5]configure.sh with the -dare and -genkeys option on a CLDB
+       node.
+       For example:
+/opt/mapr/server/configure.sh -N <cluster-name> -secure -dare -genkeys -C <CLDB-
+node-list> -Z <ZK-node-list>
+       The Master Key is generated and stored in a master key file at
+       /opt/mapr/conf/dare.master.key. When CLDB comes up, it creates all
+       the tables and sets the value for the following CLDB configuration
+       properties to 1 to allow encryption of data at the volume level:
+          + mfs.enable.dare
+          + mapr.volume.dare.default
+       You can verify that these parameter values are correctly set by
+       running the [6]config load command. For example:
+# maprcli config load -json
+{
+        "timestamp":1524669009979,
+        "timeofday":"2018-04-25 08:10:09.979 GMT-0700 AM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "bulk.container.create.support":"1",
+                        "cldb.accept.unknown.replica.delay.mins":"5",
+                        ...,
+                        "mapr.volume.dare.default":"1",
+                        ...,
+                        "mfs.enforce.dare":"1",
+                        ....,
+                        "pernode.numcntrs.alarm.thr":"50000"
+                }
+        ]
+}
+       Note: An informational alarm, reminding you to create a copy of the
+       master key, is raised on the CLDB node. This is because, the loss
+       of the master key can be catastrophic and irreversible. Loss of
+       this key might result in loss of data. Before clearing the alarm,
+       MapR strongly recommends creating a copy of this file in other
+       location(s) for backup purposes.
+    2. Copy the master key file (generated in step 1 above) to
+       /opt/mapr/conf directory on all the other CLDB nodes in the
+       cluster.
+    3. Run [7]configure.sh on all the nodes, except the node on which the
+       command was run to generate the master key (in step 1), with the
+       -dare option.
+       For example:
+/opt/mapr/server/configure.sh -N <cluster-name> -secure -dare -C <CLDB-node-list
+> -Z <ZK-node-list>
+
+   If this is a new installation, no additional steps are needed. You have
+   enabled data at rest encryption at the cluster level and, by default,
+   all new volumes are enabled for data at rest encryption. You can,
+   however, still create volumes that are not enabled for encryption of
+   data at rest. See [8]Enabling or Disabling Data at Rest Encryption at
+   the Volume Level Using the MapR Control System or [9]Enabling or
+   Disabling Data at Rest Encryption at the Volume Level Using the CLI and
+   REST API for more information.
+
+Enabling or Disabling Data at Rest Encryption at the Volume Level Using the
+MapR Control System
+
+   You can enable data at rest encryption at the volume level only if data
+   at rest encryption is enabled at the cluster level. If necessary, refer
+   to [10]Determining if a Secure Cluster is Enabled for Encryption Using
+   the MapR Control System to determine if the cluster is enabled for
+   encryption of data at rest before enabling data at rest encryption on a
+   volume.
+   Note: If you do not wish to encrypt data-at-rest in a volume, you can
+   disable encryption when you create a volume; you cannot modify
+   data-at-rest encryption setting on a volume after the volume is
+   created.
+
+   To enable or disable data-at-rest encryption for a new volume using
+   MCS:
+    1. Log in to MCS and click Data > Volumes.
+    2. Click Create Volume to display the Create New Volume page.
+    3. Select volume type, specify values for required and optional
+       properties, and set the value for the Data at Rest Encryption
+       property to Yes (to enable) or No (to disable).
+       See [11]Creating a Volume for more information.
+    4. Click Create Volume to create a volume enabled for encryption of
+       data at rest.
+
+Enabling or Disabling Data at Rest Encryption at the Volume Level Using the
+CLI and REST API
+
+   You can enable DARE at the volume level only if data at rest encryption
+   is enabled at the cluster level. If necessary, refer to [12]Determining
+   if a Secure Cluster is Enabled for Encryption of Data at Rest Using the
+   CLI and REST API to determine if the cluster is enabled for encryption
+   of data at rest before enabling a volume for data at rest encryption.
+   Note: If you do not wish to encrypt data-at-rest in a volume, you can
+   disable encryption when you create a volume; you cannot modify
+   data-at-rest encryption setting on a volume after the volume is
+   created.
+     * [13]CLI
+     * [14]REST
+
+   Set the value for the dare parameter to one of the following when you
+   create the volume:
+     * true to enable data-at-rest encryption.
+       Note: This is the default value.
+       For example:
+maprcli volume create -name <volName> -path <volMountPath> [-dare true]
+     * false to disable data-at-rest encryption.
+       For example:
+maprcli volume create -name <volName> -path <volMountPath> -dare false
+
+   Send a request of type POST and set the value for the dare parameter to
+   one of the following when you create the volume:
+     * true to enable data-at-rest encryption.
+       Note: This is the default value.
+       For example:
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=<volName>&path=<
+volMountPath>[&dare=true]' --user mapr:mapr
+     * false to disable data-at-rest encryption.
+       For example:
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=<volName>&path=<
+volMountPath>&dare=false' --user mapr:mapr
+
+   See [15]volume create for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapRInstaller.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-DARE.html#cluster-level
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-DARE.html#mcs-vol-level
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-DARE.html#cli-vol-level
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-load.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-DARE.html#mcs-vol-level
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-DARE.html#cli-vol-level
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DetermineClusterSecurity.html#mcs-encryption
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DetermineClusterSecurity.html#cli-rest-encryption
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-DARE.html#div1entry1
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-DARE.html#div1entry2
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html

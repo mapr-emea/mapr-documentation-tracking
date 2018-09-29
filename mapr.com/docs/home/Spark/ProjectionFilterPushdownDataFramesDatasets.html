@@ -2,14 +2,14 @@ Projection and Filter Pushdown with Apache Spark DataFrames and Datasets
 
    Projection and filter pushdown improve query performance. When you
    apply the select and filter methods on DataFrames and Datasets, the
-   MapR-DB OJAI Connector for Apache Spark pushes these elements to
-   MapR-DB where possible.
+   MapR Database OJAI Connector for Apache Spark pushes these elements to
+   MapR Database where possible.
 
 Projection Pushdown
 
-   Projection pushdown minimizes data transfer between MapR-DB and the
-   Apache Spark engine by omitting unnecessary fields from table scans. It
-   is especially beneficial when a table contains many columns.
+   Projection pushdown minimizes data transfer between MapR Database and
+   the Apache Spark engine by omitting unnecessary fields from table
+   scans. It is especially beneficial when a table contains many columns.
 
    When you invoke the following select method on a DataFrame, the
    connector pushes the projection:
@@ -54,7 +54,8 @@ ds.select("_id", "first_name", "last_name");
 Filter Pushdown
 
    Filter pushdown improves performance by reducing the amount of data
-   passed between MapR-DB and the Apache Spark engine when filtering data.
+   passed between MapR Database and the Apache Spark engine when filtering
+   data.
 
    Consider the following example:
      * [6]Scala
@@ -78,8 +79,8 @@ from pyspark.sql import SparkSession
 df = spark_session.loadFromMapRDB("/tmp/user_profiles")
 df.filter("first_name = 'Bill'")
 
-   The MapR-DB OJAI Connector for Apache Spark pushes the filter firstName
-   = 'Bill' down to MapR-DB.
+   The MapR Database OJAI Connector for Apache Spark pushes the filter
+   firstName = 'Bill' down to MapR Database.
 
    The equivalent example using Datasets is as follows:
      * [9]Scala
@@ -136,9 +137,9 @@ ter"))))
 
 df.filter(~((col("first_name") == "David") | (col("last_name") == "Peter")))
 
-   The MapR-DB OJAI Connector pushes down all of the filters shown in the
-   earlier examples. It can push down the following types of filters,
-   provided that the field is not an Array or Map:
+   The MapR Database OJAI Connector pushes down all of the filters shown
+   in the earlier examples. It can push down the following types of
+   filters, provided that the field is not an Array or Map:
      * Equal To (=)
      * Not Equal To (!=)
      * Less Than (<)
@@ -178,8 +179,9 @@ df.select(col("hobbies").getItem(0))
    These limitations do not apply to pushdowns on RDDs. An alternative is
    to apply the [26]pushdown using an RDD, and then [27]convert the RDD to
    a DataFrame.
-   Note: MapR-DB 6.0 introduces support for [28]Secondary Indexes, but the
-   MapR-DB OJAI Connector for Spark does not currently leverage them.
+   Note: MapR Database 6.0 introduces support for [28]Secondary Indexes,
+   but the MapR Database OJAI Connector for Spark does not currently
+   leverage them.
 
 References
 

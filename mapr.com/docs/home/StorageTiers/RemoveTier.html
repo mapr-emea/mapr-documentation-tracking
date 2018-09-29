@@ -1,0 +1,60 @@
+Removing a Tier
+
+   You can remove a tier that is not associated with a volume using the
+   MapR Control System, the CLI, and REST API. In the MCS, a cold tier is
+   referred to as remote target and you can only remove remote targets (or
+   cold tiers) using MCS. Use the CLI or REST API to remove cold and warm
+   tiers.
+
+Removing a Remote Target Using the MapR Control System
+
+    1. Log in to MCS and click Data > Volumes > Remote Targets to display
+       the list of remote targets.
+    2. Select the checkbox associated with the tier to delete.
+       Selecting the checkbox associated with a tier makes the Remove
+       Target button available.
+    3. Click Remote Target to display the Remove Remote Target
+       confirmation dialog.
+    4. Verify the list of remote targets to remove and click Remove.
+
+Removing a Tier Using the CLI and REST API
+
+     * [1]CLI
+     * [2]REST API
+
+   Run the following command to remove a tier:
+/opt/mapr/bin/maprcli tier remove -name <tier-name>
+
+   You cannot remove a tier associated with a volume. If you run the
+   command to remove a tier that is associated with a volume, the command
+   returns an error (shown in bold) similar to the following:
+{
+   "timestamp":1516771078126,
+   "timeofday":"2018-01-23 09:17:58.126 GMT-0800",
+   "status":"ERROR",
+   "errors":[{
+       "id":10003,
+        "desc":"Cannot remove tier, as some volumes are still using it."
+   }]
+}
+
+   Send a request of type POST to remove a tier. For example:
+curl -k -X POST 'https://abc.sj.us:8443/rest/tier/remove?name=ksTestTier' --user
+ mapr:mapr
+
+   You cannot remove a tier associated with a volume. If you send a
+   request to remove a tier that is associated with a volume, an error
+   (shown in bold) similar to the following is returned:
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/remove?name=ksTestTier' --us
+er mapr:mapr
+{"timestamp":1524675381333,"timeofday":"2018-04-25 09:56:21.333 GMT-0700 AM","st
+atus":"ERROR","errors":[{"id":10003,"desc":"Can not remove tier, as some volumes
+ are still using it."}]}
+
+   For more information, see [3]tier remove.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RemoveTier.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RemoveTier.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-remove.html

@@ -1,0 +1,206 @@
+OJAI Query Conditions Using Container Field Paths
+
+   Starting in MapR 6.1, MapR Database supports the notion of a container
+   field path. A container field path enables you to perform comparisons
+   on a field path that is either a single value or an arbitrary array
+   element. You can use container field paths with arrays and nested
+   documents, including nested documents with multiple levels of nesting
+   and multidimensional arrays.
+
+Conditions with Container Field Paths on Arrays
+
+   If you have a field that has a single value rather than an array of
+   values, when using the container notation, MapR Database treats the
+   single value as an array with one element. This enables you to use a
+   container field path to access a field that has both array elements and
+   scalar values. The array elements and scalar values can be of any type.
+
+   Suppose you have the following set of documents:
+{ "_id" : "001", "name" : "Ipod 001", "tags" : [ "electronics", "ipod", "apple"
+] }
+{ "_id" : "002", "name" : "Ipod 002", "tags" : "ipod" }
+{ "_id" : "003", "name" : "Ipod 003", "tags" : 10 }
+{ "_id" : "004", "name" : "Ipod 004", "tags" : [ 10, "ipod", { "t" : "ipod" } ]
+}
+{ "_id" : "005", "name" : "Ipod 005", "tags" : { "t" : "ipod" } }
+{ "_id" : "006", "name" : "Ipod 006", "tags" : [ { "t" : "ipod" }, { "t" : "appl
+e" } ] }
+{ "_id" : "007", "name" : "Ipod 007", "tags" : [ { "t" : "ipod", "v" : 10 }, { "
+t" : "apple", "v" : 9 } ] }
+{ "_id" : "008", "name" : "Ipod 008", "tags" : { "t" : "ipod", "v" : 10 } }
+
+   To find all documents that contain the tag named "ipod", you can use
+   the following OJAI query condition, where you reference tags using a
+   container field path:
+{"$eq":{"tags[]":"ipod"}}
+
+   The expression matches the following documents, with the matching
+   condition highlighted in bold:
+{ "_id" : "001", "name" : "Ipod 001", "tags" : [ "electronics", "ipod", "apple"
+] }
+{ "_id" : "002", "name" : "Ipod 002", "tags" : "ipod" }
+{ "_id" : "004", "name" : "Ipod 004", "tags" : [ 10, "ipod", { "t" : "ipod" } ]
+}
+
+   Note that the matching documents have the following characteristics:
+     * In 001 and 004, tags are array fields.
+     * In 002, tags is a scalar value.
+     * In 001 and 004, the tags arrays have elements in addition to
+       "ipod".
+
+   You can also use the AND operator to match multiple container field
+   path conditions.
+
+   For example, the following condition finds all documents that have both
+   "ipod" and "apple" tags:
+{
+    "$and":[
+        {"$eq":{"tags[]":"ipod"}},
+        {"$eq":{"tags[]":"apple"}}
+    ]
+}
+
+   The expression matches the following document, with the matching
+   conditions highlighted in bold:
+{ "_id" : "001", "name" : "Ipod 001", "tags" : [ "electronics", "ipod", "apple"
+]
+
+Conditions with Container Field Paths on Nested Documents
+
+   You can also use the container field path in combination with a nested
+   document subfield reference.
+
+   For example, using the same set of documents shown earlier, the
+   following OJAI query condition finds all documents in which "ipod" is
+   specified in the subfield named t within the tags nested document:
+{"$eq":{"tags[].t":"ipod"}}
+
+   This expression returns the following documents, with the matching
+   condition highlighted in bold:
+{ "_id" : "004", "name" : "Ipod 004", "tags" : [ 10, "ipod", { "t" : "ipod" } ]
+}
+{ "_id" : "005", "name" : "Ipod 005", "tags" : { "t" : "ipod" } }
+{ "_id" : "006", "name" : "Ipod 006", "tags" : [ { "t" : "ipod" }, { "t" : "appl
+e" } ] }
+{ "_id" : "007", "name" : "Ipod 007", "tags" : [ { "t" : "ipod", "v" : 10 }, { "
+t" : "apple", "v" : 9 } ] }
+{ "_id" : "008", "name" : "Ipod 008", "tags" : { "t" : "ipod", "v" : 10 } }
+
+   Note that the matching documents have the following characteristics:
+     * In 005 and 008, tags is a single nested document.
+     * In 006 and 007, tags is an array of nested documents.
+     * In 004, the tags array has both scalar data and a nested document.
+     * In 004 and 006, the tags array have other array elements that do
+       not match the nested document subfield t.
+
+Existence Conditions with Container Field Paths
+
+   [1]Existence Operators check for the existence and non-existence of a
+   specified field path. When you use $exists with a container field path,
+   the specified field path can be any element in an array.
+
+   Using the same set of documents shown earlier, the following OJAI query
+   condition finds all documents where the tags array has a nested
+   document with a subfield t:
+{"$exists":"tags[].t"}
+
+   The expression matches the following documents with the matching
+   condition highlighted in bold:
+{"_id":"004","name":"Ipod 004","tags":[10,"ipod",{"t":"ipod"}]}
+{"_id":"005","name":"Ipod 005","tags":{"t":"ipod"}}
+{"_id":"006","name":"Ipod 006","tags":[{"t":"ipod"},{"t":"apple"}]}
+{"_id":"007","name":"Ipod 007","tags":[{"t":"ipod","v":10},{"t":"apple","v":9}]}
+
+   When you use $notexists with a container field path, it matches any
+   element in the array that does not meet the existence condition:
+{"$notexists":"tags[].t"}
+
+   The expression returns the following documents with the matching
+   condition highlighted in bold:
+{"_id":"001","name":"Ipod 001","tags":["electronics","ipod","apple"]}
+{"_id":"002","name":"Ipod 002","tags":"ipod"}
+{"_id":"003","name":"Ipod 003","tags":10}
+{"_id":"004","name":"Ipod 004","tags":[10,"ipod",{"t":"ipod"}]}
+
+   Even document 004 has a tags[].t element, the other elements in that
+   document's tags array do not; therefore, the document qualifies the
+   condition.
+
+Conditions with Container Field Paths Across Multiple Levels of Nested
+Documents
+
+   The following are examples of query conditions that match the sample
+   document shown at [2]Container Field Paths Across Multiple Levels of
+   Nested Documents:
+{"$eq":{"projects[].customer.contacts[].emails[].value":"jdoe@gmail.com"}}
+{"$eq":{"projects[].customer.contacts[].role":"CEO"}}
+
+Conditions with Container Field Paths on Multidimensional Arrays
+
+   The following examples reference documents that store the high and low
+   temperatures for each day in a week. They use a two-dimensional array
+   to store this data. The first element of each nested array element is
+   the high temperature for a day, and the second element is the low.
+   Typically, the two-dimensional array has seven array pairs, one for
+   each day of the week. But in cases where data is unavailable, the
+   document has only the days available.
+
+   For example, document 002 has a single dimensional array because it has
+   data for only one day that week.
+{
+   "_id" : "001",
+   "temps" : [[61,49],[74,51],[75,51],[74,52],[78,54],[75,53],[75,54]],
+   "weekOf" : "4/29/2018"
+}
+{
+   "_id" : "002",
+   "temps" : [81,60],
+   "weekOf" : "5/12/2018"
+}
+{
+   "_id" : "003",
+   "temps" : [[80,55],[78,54],[79,54],[77,53],[79,54],[77,54],[78,54]],
+   "weekOf" : "5/13/2018"
+}
+
+   As described at [3]Container Field Paths with Multidimensional Arrays,
+   you can specify a container field path in a dimension only if it does
+   not precede a dimension that specifies an explicit element. For
+   example, the following condition is not allowed because the first
+   dimension specifies a container field path and precedes element 1 in
+   the second dimension:
+// Invalid condition
+{"$ge":{"temps[][1]":60}}
+
+   The following table shows examples of conditions on multidimensional
+   arrays that MapR Database supports:
+             Example          Documents Returned
+{"$ge":{"temps[][]":60}}
+
+   Matches documents that have any temperature greater than 60.
+     * Documents 001 and 003 match because all days have high temperatures
+       above 60.
+     * Document 002 matches because day 1 has a low temperature of 60.
+
+   Although temps in this document is a one-dimensional array, the
+   container notation treats it as a two-dimensional array.
+   001, 002, 003
+{"$ge":{"temps[1][]":75}}
+
+   Matches documents that have any temperature greater than 75 on the
+   second day of the week
+   003
+{"$eq":{"temps[]":[78,54]}}
+
+   Matches documents that have a high and low temperature of 78 and 54 on
+   the same day.
+     * Day 5 from document 001 matches this condition.
+     * Days 2 and 7 from document 003 match this condition.
+
+   001, 003
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionOperators.html#QueryingJSONDocumentFields__section_dnv_jhd_kdb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/IdentifyingJSONFields.html#IdentifyingJSONFields__sectiondiv_k2z_gvl_rdb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/IdentifyingJSONFields.html#IdentifyingJSONFields__sectiondiv_hfp_nvl_y2b

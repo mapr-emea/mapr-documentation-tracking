@@ -1,0 +1,125 @@
+Data Offload and Purge
+
+   Offload is driven by the MAST Gateway service. For the volumes
+   configured for warm or cold tiering, CLDB, based on the schedule set at
+   the volume level for offload or based on the request triggered by the
+   client (via MCS, the CLI, or REST API), notifies the MAST Gateway
+   service to start the offload. The MAST Gateway service then scans the
+   files in the volume and starts the offload by picking the files that
+   meet the criteria in the rule associated with the volume.
+     * [1]Offloading Data to the Warm Tier
+     * [2]Offloading Data to Cold Tier
+
+   For volumes configured for warm tiering, the MAST Gateway service
+   detects the files that meet the criteria in the configured rules,
+   collects data to offload from the read-write containers of the
+   front-end volume on MapR file system, and:
+    1. Creates objects based on the erasure coding scheme.
+       For example, for an erasure coding scheme of 4+2 (6) and stripe
+       depth of 4MB, which is the default, the object size is 4x4MB=16MB
+       and the stripe length is 6x4MB=24MB. The object must contain data
+       exceeding 90% of the object payload to qualify for offload; objects
+       that fall below the threshold are not offloaded.
+       Note: Data is broken into many fragments (or m pieces) and encoded
+       with some extra redundant fragments (or n pieces) to guard against
+       disk failures.
+    2. Prepares a corresponding metadata on the MapR cluster for the data.
+       The MAST Gateway stores the metadata in MapR Database tables in a
+       separate volume associated with the tier.
+    3. Offloads the objects to the tier.
+       Note: If an object contains less than 90% of the object payload,
+       object is not offloaded and the metadata table is not updated; the
+       volume might have local data. However, the MAST Gateway will report
+       successful job completion.
+       Data is offloaded to the tier in the same state, compressed or
+       uncompressed, as was stored in the front-end volume. If data
+       encryption is enabled on the front-end volume (using dare
+       parameter), data is encrypted during and after offload to the
+       erasure-coded volume.
+
+   The following illustration shows the CLDB notifying the MAST Gateway
+   service to start the offload (#1) and the MAST Gateway fetching data
+   from the front-end volume (#2), offloading the data to the associated
+   erasure-coded volume (#3), and then writing metadata to the tier volume
+   associated with the front-end volume (#4).
+   [WarmTierOffload.png]
+   When doing file-level offloads, small files may not always qualify for
+   offload because objects that contain less than 90% of the object
+   payload do not qualify for an offload. For example, suppose the files
+   in a volume enabled for warm-tier erasure coding scheme 4+2 are 2 MB
+   each. The object size for the volume is (4x4MB) 16MB and the individual
+   file of size 2MB is less than 90% of the object payload; so, the file
+   does not qualify for offload by itself. Similarly, portions of a large
+   file might not qualify for offload. For example, suppose the files in
+   the volume enabled for warm-tier erasure coding scheme 4+2 are 20 MB
+   each. The object size for the volume is (4x4MB) 16MB and the individual
+   file of 20MB exceeds the upper limit of the object payload. Portions of
+   data in the file is offloaded and up to 4MB of file data might still be
+   on the cluster.
+
+   For volumes configured for cold tiering, the MAST Gateway service
+   detects the files that meet the criteria in the configured rules,
+   collects data to offload from the read-write containers and snapshots
+   for the volume on MapR file system, and:
+    1. Packs 64k data chunks into 8MB sized objects.
+    2. Creates the bucket on the tier (or remote target) if the specified
+       bucket is already not present on the tier.
+    3. Prepares a corresponding metadata on the MapR cluster for the data
+       and creates the objects in the tier.
+       The MAST Gateway stores the metadata in MapR Database tables in a
+       separate volume associated with the tier.
+    4. Offloads the data to the tier using libcurl.
+       Note: Data is offloaded to the tier in the same state, compressed
+       or uncompressed, it was stored on MapR Filesystem. If data
+       encryption is enabled at the volume level (using the tierencryption
+       parameter), data is encrypted during and after offload. See volume
+       create or volume modify for more information on the parameter.
+       For the offloaded data, the unique object IDs are generated using a
+       combination of cluster ID, volume ID, and a unique sequence of
+       numbers. For example, the names of the objects in S3 may look
+       similar to the following:
+0.b258a07.86e.1
+0.b258a07.86a.1
+0.b258a07.86c.1
+
+   The following illustration shows the CLDB notifying the MAST Gateway
+   service to start the offload (#1) and the MAST Gateway fetching data
+   from the volume (#2), offloading the data to the third-party storage
+   alternative (#3), and then writing metadata to the tier volume
+   associated with the volume (#4).
+   [ColdTierOffload.png]
+
+   The MAST Gateway service notifies CLDB when the offload operation
+   completes successfully. Entire volumes can be moved from "hot" to
+   "warm" tier or "hot" to "cold" tier and vice-versa on demand using
+   CLIs. For each offloaded volume, MapR Filesystem stores only the
+   metadata for the offloaded data in a volume on the hot tier.
+   Note: If the offload fails, an alarm, VOLUME_ALARM_OFFLOAD_FAILURE, is
+   raised. Check the log file for more information on the error. For more
+   information on logs, see [3]Enabling Debug Logging for MAST Gateway.
+   For some errors, CLDB tries to offload the data again after a brief
+   wait. For more information, see [4]Retrying Failed Operation.
+
+   See also: [5]Offloading a Volume to a Tier and [6]Offloading a File to
+   a Tier Using the CLI and REST API
+
+Purging Data on MapR Filesystem
+
+   While offloading, metadata is written to the MapR Database table in a
+   separate volume associated with the tier and the data blocks are
+   removed from the storage pool in the hot-tier. An offload is considered
+   successful only when data on all active replicas have been purged (or
+   removed from the storage pool to release the disk space on the MapR
+   file system) in the hot-tier. When you offload data at the file-level,
+   all data, including recalled data, is immediately purged from the
+   hot-tier. For more information, see [7]Data Compaction.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataOffloadPurge.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataOffloadPurge.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/EnableDebugLogging.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RetryJob.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadFileData.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataCompaction.html

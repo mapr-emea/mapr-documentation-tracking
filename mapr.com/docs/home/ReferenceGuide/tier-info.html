@@ -1,0 +1,92 @@
+tier info
+
+   Retrieves information about a tier.
+
+Syntax
+
+   CLI
+
+$ maprcli tier info
+    -name <tier_name>
+    [ -cluster <cluster_name> ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host:port>/rest/tier/info?<parameters>
+
+Parameters
+
+   Parameter                     Description
+   cluster   The name of the cluster on which to run the command.
+   name      The name of the tier.
+
+Output
+
+   The command returns the following:
+   volume The name of the volume associated with the tier.
+   tiertype The type of tier. Value can be one of the following:
+     * cold
+     * ectier
+
+   tierid The ID of the tier.
+   dbtopology The topology of the volume associated with the tier.
+   dbvolumeid The ID of the volume associated with the tier.
+   tiername The name of the tier.
+   bucketname The name of the bucket. The value is displayed for cold
+   tiers only.
+   region The region. The value is displayed for cold tiers only.
+   objectstoretype The type of object store (for cold tiers only). Value
+   can be one of the following:
+     * S3-GCS
+     * S3-HDS
+     * S3-IBM
+     * S3-Others
+     * Azure-Blobs
+
+   url The tier URL. The value is displayed for cold tiers only.
+
+Examples
+
+   Retrieve information about a warm tier:
+     * [1]CLI
+     * [2]REST
+
+# maprcli tier info -name testWarm
+volume                       tiertype  dbtopology  dbvolumeid  tierid    tiernam
+e
+mapr.internal.tier.testWarm  ectier    /data       201186661   74117928  testWar
+m
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/tier/info?name=testWarm' --user ma
+pr:mapr
+{"timestamp":1530987914127,"timeofday":"2018-07-07 11:25:14.127 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"tierid":"74117928","tiername":"testWarm","tiertyp
+e":"ectier","volume":"mapr.internal.tier.testWarm","dbtopology":"/data","dbvolum
+eid":201186661}]}
+
+   Retrieve information about a cold tier:
+     * [3]CLI
+     * [4]REST
+
+# maprcli tier info -name testCold
+volume                       tiertype  dbtopology  dbvolumeid  tierid    tiernam
+e  bucketname  region     objectstoretype  url
+mapr.internal.tier.testCold  cold      /data       13372843    49971858  testCol
+d  testbucket  us-east-1  S3-AWS           http://s3.amazon.com
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/tier/info?name=testCold' --user ma
+pr:mapr
+{"timestamp":1530987683808,"timeofday":"2018-07-07 11:21:23.808 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"tierid":"49971858","tiername":"testCold","tiertyp
+e":"cold","url":"http://s3.amazon.com","bucketname":"testbucket","region":"us-ea
+st-1","volume":"mapr.internal.tier.testCold","dbtopology":"/data","dbvolumeid":1
+3372843,"objectstoretype":"S3-AWS"}]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-info.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-info.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-info.html#div2entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-info.html#div2entry2

@@ -42,3 +42,31 @@ Reducing Failure Detection Time for File Clients
    Note: MapR file system does not use this property internally; it is
    used by hadoop and FUSE-based POSIX clients only. This setting is not
    applicable to NFS gateway and loopbacknfs POSIX clients.
+
+Detecting CLDB failures
+
+   When a connection with CLDB is established, CLDB returns the list of
+   reachable and unreachable CLDB nodes on the cluster.
+
+   Populating the cache
+          The client stores information about the unreachable CLDB nodes
+          in /tmp/cldbinfo/unreachableCldbs file on the client host. The
+          format of this file is the same as the mapr-clusters.conf file
+          (i.e., "clustername ip:port"). For example:
+
+# cat /tmp/cldbinfo/unreachableCldbs
+object_pools 10.10.104.33:7222 10.10.104.34:7222
+
+          The client reads the mapr-clusters.conf file and the
+          unreachableCldbs file to determine the CLDB to connect to. It
+          then tries to reach the available CLDB nodes first; it tries the
+          unreachable CLDB nodes only if the available CLDB is unable to
+          service its request.
+
+   Invalidating the cache
+          If the available CLDB is unable to service the client request,
+          the client tries the unreachable CLDB. If an unreachable CLDB
+          becomes reachable again, it is removed from the
+          /tmp/cldbinfo/unreachableCldbs file, making it reachable for all
+          subsequent IOs and if a reachable CLDB becomes unreachable, it
+          is added to the /tmp/cldbinfo/unreachableCldbs file.

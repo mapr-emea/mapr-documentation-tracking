@@ -1,0 +1,36 @@
+Using Azure Data Lake Store
+
+   You can use Azure Data Lake Store (ADLS) as an input or output for your
+   applications.
+   Azure Data Lake Storage access path syntax is:
+adl://<Account Name>.azuredatalakestore.net/
+
+   You can use ADLS the same way as MapR Filesystem, just use an adl
+   scheme instead of maprfs, hdfs, webhdfs, and so on.
+    1. Create a directory and read data:
+[mapr@node4 ~]$ hadoop fs -mkdir adl://<username>.azuredatalakestore.net/testdir
+
+[mapr@node4 ~]$ hadoop fs -ls adl://<username>.azuredatalakestore.net/
+
+Found 1 items
+drwxr-xr-x - 9d3f4f74-8337-4dae-ad77-f63459438553 331c9f66-6875-4e13-a74f-458dd2
+3e4bde 0 2018-04-16 09:09
+adl://<username>.azuredatalakestore.net/testdir
+    2. Put data into ADLS from your local MapR Filesystem:
+[mapr@node4 ~]$ hadoop fs -put testfile adl://<username>.azuredatalakestore.net/
+testdir
+
+[mapr@node4 ~]$ hadoop fs -ls adl://<username>.azuredatalakestore.net/testdir
+
+Found 1 itemsrw-rr- 1 9d3f4f74-8337-4dae-ad77-f63459438553 331c9f66-6875-4e13-a7
+4f-458dd23e4bde 0 2018-04-16 09:10
+adl://<username>.azuredatalakestore.net/testdir/testfile
+    3. Delete data from ADLS:
+[mapr@node4 ~]$ hadoop fs -rm -r adl://<username>.azuredatalakestore.net/testdir
+
+[mapr@node4 ~]$ hadoop fs -ls adl://<username>.azuredatalakestore.net/
+    4. Run YARN jobs with your input and output stored in ADLS:
+yarn jar /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/mapreduce/hadoop-mapreduce-e
+xamples-2.7.0-mapr-1710-SNAPSHOT.jar wordcount
+adl://<username>.azuredatalakestore.net/testdir/testfile adl://<username>.azured
+atalakestore.net/wordcountout

@@ -1,12 +1,13 @@
 Creating an OJAI QueryCondition Object
 
-   The Java OJAI client supports a QueryCondition interface. After you
-   create a QueryCondition object, call methods in the class to construct
-   your query condition.
+   The Java and Python OJAI clients support a QueryCondition interface.
+   After you create a QueryCondition object, call methods in the class to
+   construct your query condition.
 
 Creating a QueryCondition Object
 
      * [1]Java
+     * [2]Python
 
    Java OJAI provides a QueryCondition.is() method for specifying query
    conditions. The method takes three arguments:
@@ -15,7 +16,9 @@ Creating a QueryCondition Object
      * The value to compare the field path against
 
    The field path is either a field in a JSON document, a subfield within
-   a nested document, or an array element.
+   a nested document, or an array element. Starting in MapR 6.1, you can
+   also specify a container field path. See [3]OJAI Query Conditions Using
+   Container Field Paths for details.
 
    Depending on the type of the field path, you specify the comparison
    value as follows:
@@ -59,16 +62,90 @@ Creating a QueryCondition Object
 
    You can use regular expressions that compose the Perl-Compatible
    Regular Expressions (PCRE) library as well as a subset of the regular
-   expressions that are supported in java.util.regex.pattern. See [2]HBase
+   expressions that are supported in java.util.regex.pattern. See [4]HBase
    Java Regular Expressions Support for a list of supported regular
    expressions.
    and() Begins a new AND condition block
    or() Begins a new OR condition block
+   elementAnd() Begins a new elementAnd block. See [5]OJAI Query Condition
+   Operators for a detailed description of this operator.
    close() Closes a compound condition block
    build() Builds the condition
    Note: The material described in this section is a subset of the
    QueryCondition API. It introduces you to the basics of the API. For the
-   complete API, see the [3]QueryCondition interface.
+   complete API, see the [6]QueryCondition interface.
+
+   Python OJAI provides a QueryCondition.is_() method for specifying query
+   conditions. The method takes three arguments:
+     * The field path to apply the condition to
+     * The condition operator, represented as a QueryConditionOp
+     * The value to compare the field path against
+
+   The field path is either a field in a JSON document, a sub-field within
+   a nested document, or an array element. Starting in MapR 6.1, you can
+   also specify a container field path. See [7]OJAI Query Conditions Using
+   Container Field Paths for details.
+
+   Depending on the type of the field path, you specify the comparison
+   value as follows:
+
+   Scalar Data
+          You can specify the value using either a Python scalar value
+          (for example, int, float, or str) or a Python OJAI object. The
+          API supports the following OJAI types:
+
+          + ODate
+          + OInterval
+          + OTime
+          + OTimestamp
+
+   Nested Documents
+          You can specify only equality and non-equality conditions on
+          nested documents. You specify the nested document using a Python
+          dictionary object. In the case of equality, all of the fields in
+          the nested document must match. The order of the fields is not
+          relevant.
+
+   Arrays
+          You can specify only equality and non-equality conditions on
+          arrays. You specify an array using a Python list object. In the
+          case of equality, the order of the elements and the element
+          values must match.
+
+   In addition to QueryCondition.is_(), QueryCondition also supports the
+   following methods:
+   QueryCondition Method Description
+   equals_()
+
+   not_equals_()
+   Match for equality or non-equality on nested documents and arrays
+   in_() Search for individual elements in an array
+   like_() Search for string values using SQL LIKE expressions
+
+   matches_()
+
+   Search for string values using regular expressions.
+
+   You can use regular expressions that comprise the Perl-Compatible
+   Regular Expressions (PCRE) library as well as a subset of the regular
+   expressions that are supported in java.util.regex.pattern. See [8]HBase
+   Java Regular Expressions Support for a list of supported regular
+   expressions.
+   and_() Begins a new AND condition block
+   or_() Begins a new OR condition block
+   element_and()
+
+   Begins a new elementAnd block. See [9]OJAI Query Condition Operators
+   for a detailed description of this operator.
+   close() Closes a compound condition block
+   build() Builds the condition
+   Note:
+     * The material described in this section is a subset of the
+       QueryCondition API. It introduces you to the basics of the API. For
+       the complete API, see the [10]QueryCondition interface.
+     * The preferred approach for creating query conditions in Python is
+       to create the condition in a JSON format. See [11]Creating an OJAI
+       Query Condition Using a JSON String
 
 Example: Creating a QueryCondition Object
 
@@ -76,7 +153,8 @@ Example: Creating a QueryCondition Object
    this query condition:
 (a.b.[0].boolean == false && (a.c.d != 5 || a.b[1].decimal > 1 || a.b[1].decimal
  < 10))
-     * [4]Java
+     * [12]Java
+     * [13]Python
 
 QueryCondition qc = connection.newCondition()
     .and()
@@ -89,15 +167,87 @@ QueryCondition qc = connection.newCondition()
     .close()
     .build();
 
-   Pass the QueryCondition object to the [5]Query.where method. See the
-   Java - OJAI QueryCondition Object example at [6]Querying with
+   Pass the QueryCondition object to the [14]Query.where method. See the
+   Java - OJAI QueryCondition Object example at [15]Querying with
    Conditions for a complete Java code example.
+qc = connection.new_condition()
+    .and_()
+        .is_('a.b[0].boolean', QueryConditionOp.EQUAL, False)
+        .or_()
+            .is_('a.c.d', QueryConditionOp.NOT_EQUAL, 5)
+            .is_('a.b[1].decimal', QueryConditionOp.GREATER, 1)
+            .is_('a.b[1].decimal', QueryConditionOp.LESS, 10)
+            .close()
+    .close()
+    .build()
+
+   Pass the QueryCondition object to the [16]Query.where method. See the
+   Python - OJAI QueryCondition Object example at [17]Querying with
+   Conditions for a complete Python code example.
+
+Examples: Using the QueryCondition.elementAnd Method
+
+   The following example shows how to write the elementAnd condition
+   described at [18]Using elementAnd with Nested Documents, using a
+   QueryCondition object:
+     * [19]Java
+     * [20]Python
+
+QueryCondition qc = connection.newCondition()
+    .elementAnd("grades[]")
+        .is("course", QueryConditionOp.EQUALS, "history")
+        .is("score", QueryConditionOp.EQUALS, 12)
+        .close()
+    .build();
+
+qc = connection.new_condition()
+    .element_and("grades[]")
+        .is_("course", QueryConditionOp.EQUALS, "history")
+        .is_("score", QueryConditionOp.EQUALS, 12)
+        .close()
+    .build()
+
+   The following code corresponds to the example described at [21]Using
+   elementAnd with Scalar Values using a QueryCondition object:
+     * [22]Java
+     * [23]Python
+
+QueryCondition qc = connection.newCondition()
+    .elementAnd("values[]")
+        .is("$", QueryConditionOp.GREATER, 7)
+        .is("$", QueryConditionOp.LESS, 14)
+        .close()
+    .build();
+
+qc = connection.new_condition()
+    .element_and("values[]")
+        .is_("$", QueryConditionOp.GREATER, 7)
+        .is_("$", QueryConditionOp.LESS, 14)
+        .close()
+    .build()
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionObject.html#div1entry1
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Supported-Regular-Expressions.html
-   3. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/QueryCondition.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionObject.html#div2entry1
-   5. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionObject.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ContainersOJAIQueryConditions.html#QueryingJSONDocumentFields
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Supported-Regular-Expressions.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionOperators.html#QueryingJSONDocumentFields
+   6. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/QueryCondition.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ContainersOJAIQueryConditions.html#QueryingJSONDocumentFields
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Supported-Regular-Expressions.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionOperators.html#QueryingJSONDocumentFields
+  10. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_condition_1_1_query_condition.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionJSONString.html#OJAIQueryConditions
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionObject.html#div2entry1
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionObject.html#div2entry2
+  14. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+  16. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#aa1aacf4f5d425ac82b6a5371a95b2277
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIElementAnd.html#QueryingJSONDocumentFields__section_qjk_hkx_jdb
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionObject.html#div3entry1
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionObject.html#div3entry2
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIElementAnd.html#QueryingJSONDocumentFields__sectiondiv_wky_xby_jdb
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionObject.html#div4entry1
+  23. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionObject.html#div4entry2

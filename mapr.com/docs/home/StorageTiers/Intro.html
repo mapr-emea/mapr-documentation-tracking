@@ -1,0 +1,138 @@
+Data Tiering
+
+   MapR provides rule-based automated tiering functionality that allows
+   you to seamlessly integrate with:
+     * Low-cost storage as an additional storage tier in the MapR cluster
+       for storing file data that is less frequently accessed ("warm"
+       data) in erasure-coded volume.
+     * 3rd party cloud object storage as an additional storage tier in the
+       MapR cluster to store file data that is rarely accessed or archived
+       ("cold" data).
+
+   In this way, valuable on-premise storage resources can be used for more
+   active or "hot" file data and applications, while "warm" and/or "cold"
+   file data can be retained at minimum cost for compliance, historical,
+   or other business reasons. MapR provides consistent and simplified
+   access to and management of the data.
+
+   See also: [1]Working with Tiered Volumes
+
+Where is data tiered?
+
+   For "warm" data, MapR allows you to offload data to specific nodes or
+   low-cost hardware in a topology. MapR uses erasure coding to protect
+   data on the low-cost hardware. Erasure coding also reduces the storage
+   overhead in the range of 1.2x-1.5x. See [2]Overview of Tiers for more
+   information on erasure coding.
+
+   For "cold" data, MapR allows you to easily offload your cluster data to
+   public, private, and hybrid clouds. You can offload data to remote
+   cloud from vendors such as Amazon AWS, Google Cloud Platform, Microsoft
+   Azure, IBM Cleversafe, Hitachi HCP, and Minio. This allows you to tap
+   into cloud-scale capacity.
+   Note: MapR supports tiering for only file data; tiering of tables and
+   streams is not supported.
+
+   MapR allows you to configure a volume at the time of volume creation
+   for either warm or cold tier, but not both. If you do not know the type
+   of tier to associate with the volume, you can still create a volume
+   that is tiering-enabled and associate a specific tier later with the
+   volume. However, volumes not enabled for tiering at the time of volume
+   creation cannot be enabled for tiering after the volume is created. You
+   cannot modify the type of tier associated with the volume after the
+   volume is created.
+
+   When you create a volume and configure it for warm or cold tiering —
+   associating a warm or cold tier, a storage policy (referred to as rule
+   in the CLI), and an offload schedule — MapR automatically moves the
+   data out of the volume and into the tier and purges the data in the
+   volume on the MapR cluster to release the disk space on the MapR
+   cluster. However, for tiering-enabled volumes, the amount of hard quota
+   you set is the total space allocated for the volume irrespective of the
+   location (cluster or tier) of the volume data. Writes fail when volume
+   disk space usage reaches the quota assigned for the volume whether or
+   not volume data is local (on the cluster) or remote (on the tier).
+   Also, if you want to recall volume data back to the MapR cluster, you
+   must have the disk space in the volume equivalent to the amount of data
+   being recalled from the tier. You can retrieve and view the disk space
+   usage metric, including the amount of data offloaded to the tier, for a
+   tiering-enabled volume using the MapR Control System, the CLI, and REST
+   API.
+
+How frequently is data offloaded?
+
+   MapR automatically offloads data based on the criteria that you define
+   in the storage policy for offloading data and at the frequency you
+   specify in the schedule. MapR automatically offloads data in the volume
+   at the frequency in the schedule only if data in the volume meets the
+   criteria in the associated storage policy. If you do not specify a
+   criteria, for volumes configured for:
+     * Erasure coding (warm tier), MapR applies a default criteria, which
+       is a modification timestamp of 1 day, for offloading data.
+     * Remote archiving (cold tier), MapR does not associate a default
+       criteria. You can use the MapR Control System, CLI, and REST API to
+       manually trigger an offload of volume data.
+
+   For more information, see [3]Data Storage Policy. If you do not
+   associate a schedule for offloading data, for volumes configured for:
+     * Erasure coding (warm tier), MapR automatically uses the default
+       Automatic Tiering Scheduler, which uses internal policies to decide
+       when to schedule the offload operation.
+     * Remote archiving (cold tier), MapR does not associate a default
+       schedule. You can use the MapR Control System, CLI, and REST API to
+       manually trigger an offload of volume data.
+
+   Even when you manually trigger an offload, MapR offloads data only if
+   the data meets the criteria defined in the storage policy. In addition,
+   for warm-tier volumes, MapR offloads data only if the object (stripe)
+   has data exceeding 90% of the object payload; if an object has data
+   less than 90% of the object payload, the object is not offloaded and
+   the metadata tables are not updated. For more information, see [4]Data
+   Offload and Purge.
+
+What is the MAST Gateway?
+
+   The MapR automated storage tiering (MAST) Gateway acts as the
+   centralized entry point for all the tiering operations. CLDB assigns
+   tiering-enabled volumes to MAST Gateways for processing all tiering
+   operations for the volume. For more information, see [5]Overview of
+   MAST Gateway.
+
+How is compressed and encrypted data transferred and stored?
+
+   Data is encrypted during transfer to ensure security of data if the
+   cluster is a secure cluster and if wire-level security is enabled for
+   the volume. In addition, stored data is encrypted if:
+     * The warm-tier volume is enabled for data-at-rest encryption (dare).
+     * The cold-tier volume is enabled for tier encryption
+       (tierencryption).
+
+   Data in the volume is transferred and stored as-is, compressed or
+   uncompressed, on the tier. You can set up replication, snapshots, and
+   mirror volumes for tiering-enabled volumes. See [6]Data Replication,
+   Snapshots, Mirroring, Auditing, and Metrics Collection for more
+   information.
+
+How are reads, writes, and deletes handled?
+
+   When a client tries to read offloaded data, MapR processes the read
+   request of the warm-tiered and cold-tiered standard and mirror volume
+   data differently. Similarly, when a client writes to a tiered volume,
+   MapR processes appends and overwrites differently. See [7]Data Reads,
+   Writes, and Recalls for more information.
+
+   Data, once offloaded, is purged on the MapR cluster to release the disk
+   space. When you delete an entire file, part of a file, or a snapshot,
+   corresponding objects are removed from the tier also. See [8]Data
+   Compaction for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManageData.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataTiersOverview.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataLifecyclePolicy.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataOffloadPurge.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/MASTGatewayOverview.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataReplicationSnapshotMirrorAudit.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataReadwriteRecall.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataCompaction.html

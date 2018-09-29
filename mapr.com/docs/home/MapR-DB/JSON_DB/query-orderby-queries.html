@@ -13,9 +13,9 @@ Using Indexes to Optimize ORDER BY Queries
 
 Index Key List Order and Sort Order Examples
 
-   The following table provides examples of when MapR-DB can and cannot
-   use an index for ordering, based on the index key list ordering and
-   sort ordering specified. Assume that you have a table that has a
+   The following table provides examples of when MapR Database can and
+   cannot use an index for ordering, based on the index key list ordering
+   and sort ordering specified. Assume that you have a table that has a
    [1]composite index on fields Address.State and FullName.LastName. You
    have defined both keys in ascending order. Further assume that the
    query has an ORDER BY on the fields Address.State and
@@ -104,16 +104,34 @@ FullName.LastName:ASC
    Only ordering, because FullName.LastName is not a prefix in the filter
    lookup
 
+Index Sort Order for Complex Types
+
+   Although you can define indexes on complex data types, there are
+   limitations in the behavior.
+
+   Arrays and Nested Documents
+          Indexes defined on arrays and nested documents do not have a
+          meaningful ordering because these types do not have a defined
+          ordering.
+
+   Container Field Paths
+          You cannot order on a [3]container field path.
+
+          For example, you can define an index on the field a[].b, but you
+          cannot order on it.
+
 Partial Sorts with Non-Covering Indexes
 
-   MapR-DB updates secondary indexes asynchronously, which can result in
-   updates to the index lagging the parent JSON table. You can avoid this
-   behavior in your Java OJAI application by setting a query option in
-   your application. See [3]Avoiding Partial Sorts with Secondary Indexes
-   in Java OJAI for details on how to do this.
+   MapR Database updates secondary indexes asynchronously, which can
+   result in updates to the index lagging the parent JSON table. You can
+   avoid this behavior in your Java OJAI application by setting a query
+   option in your application. See [4]Avoiding Partial Sorts with
+   Secondary Indexes in Java OJAI for details on how to do this.
+   Note: This query option is not available in the Node.js and Python OJAI
+   clients.
 
    One consequence of this index update lag is the impact on queries that
-   use [4]non-covering indexes to provide the ordering of a query. Because
+   use [5]non-covering indexes to provide the ordering of a query. Because
    the index is not fully synchronized with its parent JSON data, data
    read through the index might be out of date.
 
@@ -126,14 +144,14 @@ Partial Sorts with Non-Covering Indexes
        optimizes both the filter condition and order by clause. The query
        also selects other fields, so the index is a non-covering index for
        the query.
-     * When reading through the index, MapR-DB reads a document in which
-       the docField value is 9. The data for that field in the JSON table
-       is also 9. The data is consistent.
+     * When reading through the index, MapR Database reads a document in
+       which the docField value is 9. The data for that field in the JSON
+       table is also 9. The data is consistent.
      * The next entry in the index has docField set to 10. This value is
        in the proper sort order relative to the previous value of 9, but
        the data in the JSON table has changed from 10 to 6. The update is
        not yet reflected in the index.
-     * MapR-DB returns the value 6 (not 10), which is out of order,
+     * MapR Database returns the value 6 (not 10), which is out of order,
        relative to data previously read from the index.
 
    The following table and diagram illustrates this example:
@@ -142,17 +160,18 @@ Partial Sorts with Non-Covering Indexes
    JSON table updated, but not index 5, …, 9, 6
    Index updated                     5, 6, …, 9
    [PartialSorts.png]
-   Note: This behavior does not occur with covering indexes. MapR-DB only
-   reads from a single data source, the index, when using covering
+   Note: This behavior does not occur with covering indexes. MapR Database
+   only reads from a single data source, the index, when using covering
    indexes.
 
-   See [5]Asynchronous Secondary Index Updates for a more detailed
+   See [6]Asynchronous Secondary Index Updates for a more detailed
    discussion of asynchronous index updates.
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-composite-index.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-composite-index.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/SettingQueryOptions.html#SettingQueryOptions__section_b5q_dbs_y1b
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html#concept_qdg_p5j_t1b
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-consistency.html#indexes-consistency
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/IdentifyingJSONFields.html#IdentifyingJSONFields__section_c5v_qmz_hdb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/SettingQueryOptions.html#SettingQueryOptions__section_b5q_dbs_y1b
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html#concept_qdg_p5j_t1b
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-consistency.html#indexes-consistency

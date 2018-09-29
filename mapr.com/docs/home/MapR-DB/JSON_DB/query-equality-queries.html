@@ -2,16 +2,17 @@ Using Indexes to Optimize Equality Conditions
 
    Using indexes can help you improve the performance of queries that have
    equality conditions. You can define indexes that optimize equality
-   conditions on scalar data fields.
+   conditions on scalar data fields, nested document and array fields, and
+   container field paths.
 
    If the index has a single key, the condition limits the index search to
    only the keys matching the scalar value. If the index has more than one
    key and there are equality conditions on all keys, the conditions limit
    the search to the combined matching values. If there are conditions on
    a subset of fields and the most significant keys have equality
-   conditions, MapR-DB limits the search to those scalar values.
+   conditions, MapR Database limits the search to those scalar values.
 
-   Assume that you have a MapR-DB JSON table with documents in the
+   Assume that you have a MapR Database JSON table with documents in the
    following format:
 {
    "_id": "10000",
@@ -42,13 +43,13 @@ Using Indexes to Optimize Equality Conditions
 
 Indexes on Scalar Data Fields in Equality Conditions
 
-   The following table provides examples where MapR-DB can and cannot use
-   the index with equality conditions on scalar data. The last entry in
-   the table illustrates the case where you can use index to optimize an
-   equality condition in combination with a range condition.
+   The following table provides examples where MapR Database can and
+   cannot use the index with equality conditions on scalar data. The last
+   entry in the table illustrates the case where you can use index to
+   optimize an equality condition in combination with a range condition.
    Note: This example assumes that a [1]composite index exists on fields
    Address.State and Address.City.
-   Query Condition How MapR-DB Uses the Index
+   Query Condition How MapR Database Uses the Index
 {
   "$and":[
     {"$eq":{"Address.State":"CA"}},
@@ -77,9 +78,9 @@ Indexes on Scalar Data Fields in Equality Conditions
 
 {"$eq":{"Address.City":"Oakland"}}
 
-   Even if the query references the field Address.State, MapR-DB cannot
-   use the index unless there is also an equality condition on the leading
-   key of the index, Address.State.
+   Even if the query references the field Address.State, MapR Database
+   cannot use the index unless there is also an equality condition on the
+   leading key of the index, Address.State.
 {"$in":{"Address.State":["CA","NY","MA"]}}
 
    Performs three prefix lookups, one for each of the values in the IN
@@ -94,6 +95,164 @@ Indexes on Scalar Data Fields in Equality Conditions
    Reads from the index starting at the condition Address.State = "CA" and
    Address.City = "Oak". Continues reading the index until the condition
    Address.State = "CA" no longer qualifies.
+
+Indexes on Nested Document Fields in Equality Conditions
+
+   Starting in MapR 6.1, you can define an index on fields that contain
+   nested documents. These indexes benefit only equality conditions. The
+   query condition must specify all subfields from the nested document.
+   They must match the subfields of nested documents stored in your MapR
+   Database JSON table. The order of the subfields is not relevant.
+
+   For example, if you define an index on the Addresses field, and specify
+   the following query condition:
+{
+  "$eq":{
+    "Addresses":{
+      "Street":"123 SE 22nd St.",
+      "City":"Oakland",
+      "State":"CA",
+      "Zipcode":"94601-1001"
+    }
+  }
+}
+
+   MapR Database can use the index to locate the sample document shown
+   earlier.
+
+   On the other hand, if you specify the following condition instead:
+{
+  "$eq":{
+    "Addresses":{
+      "City": "Oakland",
+      "State": "CA"
+    }
+  }
+}
+
+   When MapR Database reads using the index and applies this query
+   condition, it does not match the sample document. The condition is
+   missing the Street and Zipcode subfields. If you want to match on only
+   the City and State subfields, you can define a composite index on those
+   subfields as described in the previous section.
+
+Indexes on Array Fields in Equality Conditions
+
+   Starting in MapR 6.1, you can define an index on fields that contain
+   array data. These indexes benefit only equality conditions. The array
+   elements and their order specified in your query condition must match
+   the content and order stored in your MapR Database JSON table.
+
+   For example, if you define an index on the Hobbies field, and specify
+   the following query condition:
+{"$eq":{"Hobbies":["Baseball", "Cooking", "Reading"]}}
+
+   MapR Database can use the index to locate the sample document shown
+   earlier.
+
+   On the other hand, if you specify the following condition instead:
+{"$eq":{"Hobbies":["Cooking", "Baseball", "Reading"]}}
+
+   When MapR Database reads using the index and applies this query
+   condition, it does not match the sample document. Although the
+   individual array elements match, the order does not.
+
+   If Hobbies also has scalar data, MapR Database can use the index to
+   locate documents with the following condition:
+{"$eq":{"Hobbies":"Baseball"}}
+
+   If your MapR Database JSON table has a document where the Hobbies field
+   has a single value "Baseball", MapR Database can use the index to
+   locate the matching document.
+
+Indexes on Container Field Paths in Equality Conditions
+
+   Starting in MapR 6.1, you can define an index using a container field
+   path as the indexed field.
+
+   For example, suppose you want to search for individual hobbies within
+   the Hobbies array field, rather than matching the entire array field.
+   You can define an index on the following field:
+Hobbies[]
+
+   The following examples show equality conditions that benefit from this
+   index:
+                            Query Condition                          Description
+   {"$eq":{"Hobbies[]":"Baseball"}}
+
+   Finds documents that contain Baseball as a hobby
+   {"$in":{"Hobbies[]":["Baseball","Cooking"]}}
+
+   Finds documents that contain either Baseball or Cooking as a hobby
+{
+    "$and":[
+        {"$eq":{"Hobbies[]":"Baseball"}},
+        {"$eq":{"Hobbies[]":"Cooking"}}
+    ]
+}
+
+   Finds documents that contain both Baseball and Cooking as hobbies
+
+   When using the Hobbies[] container field path in the query condition,
+   the condition matches both array elements and individual scalar values.
+
+   For another example, suppose you want to filter on phone types. You can
+   define an index on the following field:
+Phones[].Type
+
+   The following examples show equality conditions that benefit from this
+   index:
+                            Query Condition                         Description
+   {"$eq":{"Phones[].Type":"Mobile"}}
+
+   Finds documents that have a mobile phone number
+   {"$in":{"Phones[].Type":["Mobile","Work"]}}
+
+   Finds documents that contain either a mobile or work phone number
+{
+    "$and":[
+        {"$eq":{"Phones[].Type":"Mobile"}},
+        {"$eq":{"Phones[].Type":"Work"}}
+    ]
+}
+
+   Finds documents that contain both mobile and work phone numbers
+
+   When using the Phones[].Type container field path in the query
+   condition, the condition matches instances where Phones is an array of
+   nested documents as well as a single nested document.
+   Important: To use an index defined on a container field path, the
+   container field paths in the query condition and indexed fields must
+   match.
+
+   The following table shows examples of conditions that do not benefit
+   from the index shown:
+   Indexed Field Query Conditions that do not Benefit
+   Hobbies
+{"$eq":{"Hobbies[]":"Baseball"}}
+
+   This condition requires an index defined on Hobbies[].
+   Hobbies[]
+{"$eq":{"Hobbies":["Baseball", "Cooking"]}}
+
+   This condition requires an index defined on Hobbies.
+   Phones[].Type
+{"$eq":{"Phones[0].Type":"Mobile"}}
+
+   This condition cannot be used with indexes because you cannot define an
+   index on array elements.
+   temps[][]
+{"$ge":{"temps[][1]":60}}
+
+   This condition cannot be used with indexes because you cannot define an
+   index on array elements..
+{"$eq":{"temps[]":[78,54]}}
+
+   This condition requires an index defined on temps[].
+   temps[]
+{"$ge":{"temps[][]":60}}
+
+   This condition requires an index defined on temps[][].
 
 References
 

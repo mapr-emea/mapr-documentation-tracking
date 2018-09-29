@@ -1,70 +1,282 @@
-What's New in Version 6.0.1
+What's New in Version 6.1.0
 
-   The 6.0.1 MapR release provides new functionality in addition to being
-   a maintenance release. The new features of the platform are described
-   briefly here. See these links for new features released separately from
-   MapR 6.0.1.
+   The 6.1.0 MapR release supplies substantial new features for the
+   components of the data platform.
 
-   See [1]MapR Installer Updates for what is new for the MapR Installer.
+   To see new features delivered as part of the MapR Ecosystem Pack, see
+   [1]What's New in MEP 6.0.0 There are multiple new features for
+   MapR-Drill. See the [2]Drill release notesfor details.
 
-   See [2]What's New in MEP 5.0.0
+MapR 6.1.0 Is "Secure by Default"
 
-   See [3]What's New in MapR Data Science Refinery 1.2
+   Because MapR 6.1.0 in its default configuration is more secure than
+   MapR 6.0.1, documentation references to "built-in security" have been
+   changed to "secure by default." See [3]Security for Ecosystem
+   Components.
 
-REST API to access MapR-DB JSON Tables using the MapR Data Access Gateway
+Streaming Security and Critical Data Asset Protection
 
-   Starting with this release, you can use a REST API to access MapR-DB
-   JSON tables. The REST API provides an alternative to writing a Java
-   OJAI application, allowing you to make HTTP calls in any programming
-   language. The MapR Data Access Gateway is the service that supports
-   this web API.
+   ZooKeeper Upgraded
+          MapR 6.1.0 includes ZooKeeper 3.4.11 (upgraded from Zookeeper
+          3.4.5 in MapR 6.0.1) to support ZooKeeper server-to-server
+          authentication.
 
-   For more information, see:
-     * [4]Using the MapR-DB JSON REST API
-     * [5]Understanding the MapR Data Access Gateway
-     * [6]MapR Data Access Gateway 1.0 Release Notes
+   Zookeeper Supports Server-to-Server Authentication
+          As of MapR 6.1.0, ZooKeeper is automatically configured for
+          server-to-server authentication with new installations of MapR
+          Core. The following ZooKeeper security parameters are set to
+          "true" whenever you use configure.sh to perform a new
+          installation (including when configure.sh is invoked by the MapR
+          Installer or MapR Installer Stanzas).
 
-Support for Event-time Timestamp for Stream Processing
+          + quorum.auth.enableSasl
+          + quorum.auth.learnerRequireSasl
+          + quorum.auth.serverRequireSasl
 
-   Starting with the release, MapR-ES supports an event-time timestamp.
-   Because each message is automatically produced into a topic-partition
-   with an event-time timestamp as part of the message record, this allows
-   the Consumer to seek based on a time. See [7]Topic Messages for more
-   information about event time timestamps and time-based consumption of
-   topic messages.
+          These parameters enable secure communication between peer
+          servers in the ZooKeeper quorum using SASL.
 
-   Additional enhancements to MapR-ES include event-time timestamps,
-   time-indexing of events, event headers, and event interceptors. Event
-   headers and interceptors give applications more flexibility in how they
-   exchange messages. See [8]MapR-ES Java API Library for more
-   information.
-   For IoT applications, this ensures that data across a globally
-   distributed network of devices and sensors can be properly aggregated
-   for real-time analytics and applications.
+Simplified Development and Deployment of AI and Analytics Applications
 
-Streaming Audit Logs
+   Lightweight Client Architecture
+          MEP 6.0.0 introduces Node.js and Python OJAI clients that enable
+          you to write MapR Database JSON applications using a language
+          other than Java. These clients use the MapR Data Access Gateway
+          to access your MapR cluster. The Data Access Gateway performs
+          some data processing that otherwise runs in the client. This
+          keeps the clients lightweight and simplifies their installation
+          and use.
 
-   You can now capture Map-XD audit logs as streams. You can build
-   real-time processing applications to consume this day and therefore
-   simplify monitoring audit data that is critical to your enterprise.
+          See [4]Understanding the MapR Data Access Gateway for more
+          details about the Data Access Gateway. See [5]What's New in MEP
+          6.0.0 for more details about the new clients.
 
-   See [9]Streaming Audit Logs for more information.
+New Features in MapR Filesystem
 
-Limiting the size of the name container
+   Storage Tiers Support for Files
+          MapR Filesystem v6.1.0 includes rule-based automated tiering
+          functionality for businesses looking to leverage low-cost
+          storage solutions either on low-cost hardware or on the cloud to
+          gain limitless storage capacity. MapR's tiering functionality
+          can seamlessly integrate with the following:
 
-   When you create or modify a volume, you can specify the size for the
-   name container using the namecontainerdatathreshold parameter. See
-   [10]volume modify for information.
+          + Low-cost hardware to store data that is less frequently
+            accessed, which is referred to as "warm" data
+          + Cloud resources to store data that is rarely accessed or
+            archived, which is referred to as "cold" data
+
+          Enabling warm or cold tiering allows you to use valuable
+          on-premise storage resources for more active or "hot" file data
+          and applications. You can use "warm" or "cold" tiering for file
+          data retained for compliance, historical, or other business
+          reasons.
+
+          See [6]Data Tiering for more information.
+
+   NFSv4 Protocol Support
+          As of MapR v6.1, the MapR Filesystem includes support for NFSv4
+          protocol. NFSv4 provides end-to-end secure filesystem access and
+          a much higher throughput compared to NFSv3, improving
+          performance. MapR uses NFS Ganesha, which is an Open Source
+          userspace implementation of the NFS server, for supporting NFSv4
+          features. See [7]Accessing Data with NFSv4 for more information.
+
+          Also supported are mixed-mode NFS configurations in which some
+          nodes of a cluster use NFSv3 and other nodes use NFSv4. See
+          [8]Installing MapR NFS.
+
+          When installed through the MapR Installer, there is no security
+          between the client and the NFS gateway whether or not the
+          cluster is secure. On a secure cluster, the connection between
+          NFSv4 server and MapR Filesystem is secure. The following
+          options are supported for configuring Kerberos security for
+          NFSv4:
+
+          + Kerberos only (users are in the local node database)
+          + LDAP and Kerberos (users are in LDAP)
+          + Active Directory and Kerberos (users are in the Active
+            Directory)
+            For more information, see [9]Configuring NFSv4 Server for
+            Kerberos.
+
+          When configuing NFSv4 for security, make a note of the
+          following:
+
+          + If NFSv4 is installed on (existing or new) edge nodes, the
+            edge nodes must be part of the Kerberos setup.
+          + If NFSv4 is installed on cluster nodes, then all the cluster
+            nodes must be part of the Kerberos setup.
+
+          For more information, see [10]Accessing Data with NFSv4.
+
+   Secure by Default
+          The MapR Data Platform v6.1 and MEP v6.0 components are secure
+          out-of-the-box on all new installations, ensuring all network
+          connections require authentication and all data in motion is
+          protected with wire-level encryption. Without requiring an
+          external security manager server or a particular security
+          plug-in for each ecosystem component, MapR provides the ability
+          to apply security protection directly for data as it comes into
+          and moves out of the platform. The security semantics are
+          applied automatically on data being retrieved or stored by any
+          ecosystem component, application, or users. See [11]Security for
+          more information.
+
+          Because MapR 6.1.0 in its default configuration is more secure
+          than MapR 6.0.1, documentation references to "built-in security"
+          have been changed to "secure by default." See [12]Security for
+          Ecosystem Components.
+
+   Encryption of Data at Rest
+          MapR v6.1 includes support for encryption of data at rest. Data
+          on disk (or data-at-rest) in a secure MapR cluster can be
+          encrypted, enabling you to protect the data if a disk is
+          compromised. Encryption of data-at-rest not only prevents
+          unauthorized users from accessing sensitive data, but it also
+          protects against data theft via sector-level disk access.
+
+          See [13]Security for more information.
+
+   Client-side Port Binding
+          MapR now requires only a single source port on the client side.
+          MapR will bind multiple sockets to the same port for
+          establishing connections to all the nodes on the MapR cluster.
+
+Core Data Services Innovations to Speed AI and Analytics and Lower TCO
+
+   Complex Types Support in MapR Database JSON
+          In MapR Database 6.1.0, you can write more expressive queries on
+          complex types, which includes arrays of scalar types and arrays
+          of nested documents. MapR Database JSON introduces the notion of
+          a container field path. Using a container field path, you can
+          access a field that is either a single value or an arbitrary
+          array element. This is useful if you want to perform one of the
+          following operations:
+
+          + Perform comparisons on a field path that is either a single
+            value or an arbitrary array element
+          + Access subfields in a nested document, where the nested
+            document is either an arbitrary array element or a single
+            nested document
+          + Access arbitrary elements in an array
+
+          For example, suppose your JSON document contains an addresses
+          field that is an array of nested documents with address details
+          like street, city, and state. You can use a container field path
+          to write a query that filters on any element in the addresses
+          array that matches a specific city and state.
+
+          You can also create secondary indexes using container field
+          paths, improving the performance of these more expressive
+          queries.
+
+          See the following topics for more details about the feature:
+
+          + [14]Container Field Paths
+          + [15]OJAI Query Conditions Using Container Field Paths
+          + [16]Using Container Field Paths as Indexed Fields
+
+          In MapR Database 6.1.0, you also are no longer restricted to
+          creating secondary indexes on scalar data fields. You can now
+          create indexes on fields with arrays and nested documents. See
+          [17]Data Types and Secondary Index Fields for more information.
+
+          To understand how indexes behave, depending on the version you
+          are using, see [18]Secondary Indexes and Upgrades.
+
+   Complex Type Support in Drill
+          The query planner in Drill can leverage indexes created on MapR
+          Database JSON document fields with complex data types. You must
+          [19]write queries using specific SQL syntax for the query
+          planner in Drill to leverage indexes on complex fields.
+
+New Features in MapR Event Store For Apache Kafka
+
+   Idempotent (Exactly-Once) Producer
+          An "exactly-once" message delivery semantic produces messages
+          without duplication. Each message is delivered once and only
+          once. Exactly-once is insured by uniquely identifying a group of
+          messages that are atomically persisted. Exactly-once message
+          delivery is set with the producer idempotence option. See
+          [20]Enabling an Idempotent Producer for more information.
+
+   Log Compaction
+          Log compaction purges previous, older messages that were
+          published to a topic-partition and retains the latest version of
+          the record. See [21]Log Compaction for more information.
+
+   Apache Kafka 1.1 Support
+          MapR 6.1.0 introduces support for the Apache Kafka 1.1 API.
+
+Other Enhancements
+
+   MapR Database Enhancements
+
+        MapR Database Table Metrics
+                MapR Database 6.1.0 supports table metrics and enhanced
+                node metrics. Table metrics provide more granular metrics.
+                They enable you to detect and diagnose bottlenecks and
+                performance issues that are specific to individual tables.
+
+                MapR enables table metrics by default. You cannot disable
+                metrics on individual tables. During installation, you can
+                disable table metrics across your entire cluster by
+                selecting a minimal configuration for metrics collection.
+
+                See [22]MapR Database Metrics for more details. For
+                details about table metrics, including how to disable
+                them, see [23]MapR Database Table Metrics. To learn about
+                how to view these metrics in the MapR Control System
+                (MCS), see [24]Visualizing Table Metrics in the MapR
+                Control System.
+
+        OJAI 3.0 Support
+                MapR 6.1.0 introduces support for the OJAI 3.0 API. This
+                version includes extensions for new complex types support
+                in MapR Database JSON. See [25]Complex Types Support in
+                MapR Database JSON for an overview of this feature.
+
+   Documentation Enhancements
+
+        New Component Versions Matrix
+                A new matrix has been added to the list of
+                [26]Interoperability Matrices. The [27]Component Versions
+                for Released MEPs matrix lets you compare the versions of
+                ecosystem and MapR Monitoring components across different
+                MEPs.
+
+        Revised Product Naming
+                Some components of the MapR Data Platform have been
+                changed. MapR-Streams is now called MapR Event Store For
+                Apache Kafka. MapR-DB is now MapR Database. MapR-FS is now
+                MapR Filesystem.
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapRInstallerReleaseNotes/maprinstallerupdates.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MEPs/whats_new_MEP_5.0.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/DataScienceRefinery/whats_new_DSR_1.2.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/UsingMapRDBJSONRESTAPI.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/MapRDataAccessGateway.html#MapRDataAccessGateway
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/MapR_Data_Access_Gateway_1.0_release_notes.html#concept_t33_4ll_fbb
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/messages.html
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/streams-java-api.html
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/StreamingAuditLogs.html
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MEPs/whats_new_MEP_6.0.html#concept_l3w_l2f_p1b
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/drill-1.14.0-1808-release-notes.html#drill-1.13.0-1803-release-notes
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Secure_by_Default.html#BuiltIn
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/MapRDataAccessGateway.html#MapRDataAccessGateway
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MEPs/whats_new_MEP_6.0.html#concept_l3w_l2f_p1b
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/Intro.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AccessDataWithNFSv4.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallNFS.html#InstallNFS
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/NFSv4KerberosConfig.html#NFSv4KerberosConfig
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AccessDataWithNFSv4.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/c_security_latest.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Secure_by_Default.html#BuiltIn
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/c_security_latest.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/IdentifyingJSONFields.html#IdentifyingJSONFields__section_c5v_qmz_hdb
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ContainersOJAIQueryConditions.html#QueryingJSONDocumentFields
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes__section_lt4_q5r_fdb
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_operational_changes.html#concept_wdg_2y2_55__dlentry_i4j_l54_52b
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/leverage-si-array-field.html#leverage-si-array-field
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/idempotent-producer.html
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/log-compaction.html
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MetricsMapRDB61.html#reference_ehb_cdl_wv
+  23. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MetricsMapRDBTable.html#reference_ehb_cdl_wv
+  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/overview/MonitorTables.html#metrics
+  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/whatsnew.html#concept_h35_p1b_tt__dlentry_b3n_kwq_q2b
+  26. https://maprdocs.mapr.com/home/InteropMatrix/c_matrix_intro.html
+  27. https://maprdocs.mapr.com/61/InteropMatrix/Component_versions_all_MEPs.html

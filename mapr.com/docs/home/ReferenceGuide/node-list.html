@@ -20,6 +20,7 @@ Syntax
 maprcli node list
     [ -alarmednodes 0|1 ]
     [ -cluster <cluster> ]
+    [ -clientsonly true|false ]
     [ -columns <columns>]
     [ -filter <filter> ]
     [ -limit <limit> ]
@@ -43,13 +44,21 @@ Parameters
    alarmednodes If set to 1, displays only nodes with raised alarms.
    Cannot be used if nfsnodes is set.
    cluster The cluster on which to run the command.
+   clientsonly A filter for retrieving the list of nodes running unique
+   platinum FUSE-based POSIX, NFSv3, NFSv4 and loopbacknfs POSIX clients
+   if value is set to true. The command returns the following fields:
+   clienttype, clienthealth, hostname, ip, lasthb, id. For more
+   information, see the [4]Fields table on the [5]node command page.
+
+   If false, which is the default value, returns per node-level
+   information for all the services running on the node and other stats.
    columns A comma-separated list of fields to return in the query,
    specified by the short names.
    Note: When specifying this option, the ip and hostname columns are
    always returned in the query.
    filter A filter specifying nodes on which to start or stop services.
-   See the Fields table on the [4]node page for the fields available to
-   filter. See the [5]maprcli and REST API Syntax page for information on
+   See the Fields table on the [6]node page for the fields available to
+   filter. See the [7]maprcli and REST API Syntax page for information on
    filters.
    limit The number of rows to return, beginning at start. Default: 0
    nfsnodes If set to 1, displays only nodes running NFS. Cannot be used
@@ -68,11 +77,11 @@ Parameters
    nodenuminstances, nodenumspsperinstance, nodenfsstate,
    nodeisposixclient, nodeisloopbacknfs, nodeisloopbacknfsrunning
    start The offset from the starting row according to sort. Default: 0
-   zkconnect [6]ZooKeeper Connect String
+   zkconnect [8]ZooKeeper Connect String
 
 Output
 
-   Information about the nodes. See the [7]Fields table on the [8]node
+   Information about the nodes. See the [9]Fields table on the [10]node
    command page.
 
    Sample Output
@@ -186,7 +195,7 @@ emanager,hoststats,apiserver",
 Fields
 
    For definitions of the output fields, and short names for use with
-   filters, see the [9]Fields table on the [10]node command page.
+   filters, see the [11]Fields table on the [12]node command page.
 
 Examples
 
@@ -194,8 +203,8 @@ Examples
 
    For best results, use the -json option when listing all nodes or a
    large subset of node information.
-     * [11]CLI
-     * [12]REST
+     * [13]CLI
+     * [14]REST
 
 maprcli node list -json
 
@@ -205,8 +214,8 @@ https://r1n1.sj.us:8443/rest/node/list
 
    The following examples also show the use of short forms for the column
    parameter.
-     * [13]CLI
-     * [14]REST
+     * [15]CLI
+     * [16]REST
 
 maprcli node list -columns service,health,configuredservice
 maprcli node list -columns svc,h,csvc
@@ -215,8 +224,8 @@ https://10.10.82.23:8443/rest/node/list?columns=service,health,configuredservice
 https://10.10.82.23:8443/rest/node/list?columns=svc,h,csvs
 
    List the number of slots on all nodes:
-     * [15]CLI
-     * [16]REST
+     * [17]CLI
+     * [18]REST
 
 maprcli node list -columns ip,ttmapSlots,ttmapUsed,ttReduceSlots,ttReduceUsed
 
@@ -224,30 +233,71 @@ https://abc.sj.us:8443/rest/node/list?columns=ip,ttmapSlots,ttmapUsed,ttReduceSl
 ots,ttReduceUsed
 
    List nodes on a particular subnet:
-     * [17]CLI
-     * [18]REST
+     * [19]CLI
+     * [20]REST
 
 maprcli node list -filter [ip==192.168.10.*]
 
 https://abc.sj.us:8443/rest/node/list?filter=%5Bip%3D%3D192.168.10.*%5D
+
+   List the nodes running the clients:
+     * [21]CLI
+     * [22]REST
+
+# maprcli node list -clientsonly true
+clienttype           clienthealth  hostname           ip                       l
+asthb  id
+posixclientgold      Active        atsqa4-119.qa.lab  10.10.88.119,172.17.0.1  2
+8      5412384279424088014
+NFS_V3               Active        qa108-181.qa.lab   10.10.108.181            1
+       711699521447755347
+posixclientbasic     Active        qa108-182.qa.lab   10.10.108.182            5
+       5689202715616988402
+posixclientplatinum  Active        qa108-183.qa.lab   10.10.108.183            1
+5      5679519305469912939
+LOOPBACK_NFS         Active        qa108-184.qa.lab   10.10.108.184            1
+       723686691202793155
+NFS_V4               Active        qa108-185.qa.lab   10.10.108.185            1
+       7808496860582738296
+posixclientbasic     Active        qa108-186.qa.lab   10.10.108.186            2
+5      2792316733179447508
+posixclientplatinum  Active        qa108-187.qa.lab   10.10.108.187            1
+1      5678398615695393161
+LOOPBACK_NFS         Active        qa108-188.qa.lab   10.10.108.188            1
+       5524477677754836725
+NFS_V3               Active        qa108-189.qa.lab   10.10.108.189            1
+       3396225116726542411
+NFS_V4               Active        qa108-190.qa.lab   10.10.108.190            2
+       1203052391917747224
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/node/list?clientsonly=true' --use
+r mapr:mapr
+{"timestamp":1531171868890,"timeofday":"2018-07-09 02:31:08.890 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"id":"5412384279424088014","hostname":"atsqa4-119.
+qa.lab","ip":"10.10.88.119,172.17.0.1","clienttype":"posixclientgold","clienthea
+lth":"Active","lasthb":28}]}
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html#concept_znz_qxz_5t
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html#concept_znz_qxz_5t
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-CommonParameters.html#concept_ymb_yxz_5t
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html#concept_znz_qxz_5t
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-CommonParameters.html#concept_ymb_yxz_5t
    9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
   10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
-  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div1entry1
-  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div1entry2
-  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div2entry1
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div2entry2
-  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div3entry1
-  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div3entry2
-  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div4entry1
-  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div4entry2
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div1entry1
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div1entry2
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div2entry1
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div2entry2
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div3entry1
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div3entry2
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div4entry1
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div4entry2
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div5entry1
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div5entry2

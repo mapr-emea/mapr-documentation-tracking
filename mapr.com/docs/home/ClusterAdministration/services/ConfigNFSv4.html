@@ -1,0 +1,187 @@
+Configuring NFSv4 Server
+
+   You can configure NFSv4 server by setting the values for the parameters
+   in the /opt/mapr/conf/nfs4server.conf file. The configuration
+   parameters are defined within blocks in the file. The following
+   sections describe the blocks and required parameters (within each
+   block) for the MapR NFSv4 server.
+
+   NFS_CORE_PARAM
+          Contains the general settings for the daemon. The parameters in
+          this block should not be modified.
+
+   Clustered The value is false. Do not modify this parameter.
+   Plugins_Dir The directory for the FSAL libraries. The value is
+   /opt/mapr/lib. Do not modify this parameter.
+   DRC_TCP_Size The maximum number of results stored in the DRC. The
+   default value is 16.
+   DRC_TCP_Recycle_Expire_S The amount of time after which to expire
+   results stored in DRC. The default value is 60 seconds.
+   Dirent_Entries_Track Specifies whether (true) or not (false) to monitor
+   dirent entries. If true, the process restarts if the number of dirent
+   entries exceeds limit.
+   Num_Log_Files The maximum number of log files. The default value is 1.
+   Max_Logfile_Size The maximum amount of space for each log file. The
+   default value is 1073741824. The total amount of disk space for log
+   files is calculated using the following:
+Num_Log_Files * Max_LogFile_Size
+
+   For example, suppose Num_Log_Files = 32 and Max_LogFile_Size = 1GB.
+   Then, the total disk space for log files is 32GB.
+   Enable_RQUOTA Specifies whether (true) or not (false) to enable support
+   for remote quotas. The default value is false.
+   NFS_Protocols The supported NFS protocols. The only supported value is
+   4.
+
+   NFSV4
+          Contains settings for NFSv4 protocol. The following parameter
+          should not be modified.
+
+   Delegations boolean Specifies whether delegation is supported. The
+   default value is false and should not be modified (cannot be set to
+   true) as delegation is not supported.
+   Dirent_Cache_Threshold 128 The threshold for caching directory entries.
+   If directory entries exceed threshold, the entries are not cached;
+   caching is enabled only if entries are below this threshold.
+
+   Note: This should be used only if readdirplus is true.
+
+   EXPORT_DEFAULTS
+          Contains default values for all subsequent EXPORT blocks. The
+          settings in subsequent EXPORT blocks can override these default
+          values on a per export basis.
+
+   Anonymous_Uid The anonymous UID. The default value is -2, which is
+   converted to a 32 bit unsigned integer (4294967294) when root squash is
+   enabled.
+   Anonymous_Gid The anonymous GID. The default value is -2, which is
+   converted to a 32 bit unsigned integer (4294967294) when root squash is
+   enabled.
+   Protocols The supported NFS protocols. The default value is 4. This
+   cannot be changed.
+
+   EXPORT
+          Contains settings for exporting a filesystem.
+
+   SecType The comma-separated list of supported authentication flavors
+   for the export or the type of security. Value can be comma-separated
+   list of:
+          + krb5 — authentication
+          + krb5i — integrity
+          + krb5p — privacy
+
+   Note: This must be specified if you want the clients to use kerberos
+   ticket for secure access.
+   Path (Required) The (cluster) path to export via NFS. The path should
+   have a leading slash. If just /mapr is specified as the path, all the
+   clusters (listed in the mapr-clusters.conf file) will be visible. To
+   export only a specific cluster, specify the complete path to the
+   cluster to export.
+
+   Note: Exporting will not be successful if extra forward slash (/)
+   characters are in the path. For example, the following path will not be
+   exported because of the extra slash (shown in bold) in the path:
+   /mapr/Test3//ATS-VOLUME
+   Pseudo (Required for NFSv4 protocol for every directory or volume to
+   export) The pseudo path, which when specified, masks the mount path
+   from the NFS client, for the NFSv4 exports. MapR’s NFSv4 server
+   provides a pseudo-file system where only the exported volumes are
+   visible. This is especially useful in scenarios where one or more
+   volumes in the hierarchy should be hidden and not be visible. When
+   mounting with NFSv4, use the pseudo path. Value can be the volume or
+   directory path.
+   Export_Id (Required) The tag used to set the ID for the export or the
+   unique ID to associate with each export. Value should not be 0.
+
+   Note: The export ID associated with each export must be the same across
+   all NFSv4 servers on the cluster.
+   Squash Specifies whether to enable or disable root squashing. By
+   default, root squashing is disabled. If root squash is enabled, the
+   values substituted for the root user will be anonymous user
+   (Anonymous_Uid and Anonymouos_Gid); that is, the UID and GID of a file
+   created will not be nfsnobody because the default value of -2 is
+   converted to a 32 bit unsigned integer (4294967294) instead of the 16
+   bit equivalent (65534), which is the value of nfsnobody.
+   Access_Type (Required) The type of access on the mount point. Valid
+   values include:
+          + RO — for read-only mount point
+          + RW — for read/write mount point
+          + MDONLY — for read/write access to metadata only
+          + MDONLY_RO — for read-only access to metadata only
+
+   FSAL (Required) The file system to use. Value must be MAPR to use the
+   MapR Filesystem libfsalmapr.so library, which contains the shared
+   library (libMapRClient) and the callbacks.
+
+   LOG
+          Contains configuration for logging. The default log level is
+          INFO. Value can be one of the following:
+
+          + FATAL
+          + MAJ
+          + CRIT
+          + WARN
+          + EVENT
+          + INFO
+          + DEBUG
+          + MID_DEBUG
+          + FULL_DEBUG
+
+   MAPRFS
+          Contains configurations for NFS gateway access to MapR file
+          system.
+
+   Parameter Default Value Description
+   log_path /opt/mapr/logs/nfs4 Path for the log files.
+   ra_sessions 5 Number of parallel read ahead sessions per client library
+   (libMapRClient.so). Each open file acts as one read ahead session. For
+   example, if value is set to 5, up to 5 files can have read ahead
+   sessions per client library (libMapRClient.so). To disable read ahead
+   sessions, set value to 0.
+
+   Note: The number of client libraries is 3 by default and cannot be
+   configured.
+   flush_inline true Specifies whether or not to flush all writes inline.
+   Value can be:
+          + true — flush all writes inline
+          + false — disable inline flushing
+
+   If enabled (default), writes are sent to server directly. If disabled,
+   for all open files, the buffer is flushed automatically every 3 seconds
+   or when it reaches 64KB.
+   fast_local_directio false Specifies whether to optimize or disable NFS
+   client for local direct IO. Value can be:
+          + true — optimize
+          + false — disable
+
+   nfs_track_memory false Specifies whether to enable (true) or disable
+   (false) memory tracking for NFS.
+   hb_interval 5 The interval (in seconds) for sending heartbeat to CLDB
+   to allow CLDB to determine whether server is running. The CLDB will
+   declare the NFS gateway dead when it loses about 8 heartbeats in a row
+   and will trigger a failover.
+   req_threshold 5 The amount of time (in seconds) for processing
+   requests. If the threshold is exceeded, warnings will be logged.
+   client_lib_path /tmp/nfs4 The location for the client library
+   (libMapRClient).
+
+   Note: To install and use NFSv4 and FUSE-based POSIX client on the same
+   node, ensure that the path for the client library for the NFSv4 and
+   FUSE-based POSIX client is not /tmp. Specify a different location for
+   the client libraries. For example, /tmp/nfs4lib.
+   readdirplus true Specifies whether (true) or not (false) to enable
+   extended read from the directory. If enabled (true), each entry returns
+   the name, the file ID, attributes (including the field), and file
+   handle.
+
+   Note:
+     * The libnfsidmap must be configured to use nsswitch, a translation
+       mechanism for mapping names to IDs, in the /etc/idmapd.conf file.
+     * The NFSv3 (mapr-nfsserver) nodes cannot failover to NFSv4 server
+       nodes and vice versa. Ensure that different set of VIPs are
+       assigned for NFSv3 and NFSv4 server nodes. When running the maprcli
+       virtualip add command to set up VIPs, list the MACs of the
+       respective nodes so that the failover works properly (this is
+       necessary if both NFSv3 and NFSv4 are going to be set up for same
+       cluster). The MACs should be mutually exclusive as both NFSv4 and
+       NFSv3 servers cannot run on the same node.

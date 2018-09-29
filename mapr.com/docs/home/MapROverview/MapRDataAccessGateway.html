@@ -3,10 +3,21 @@ Understanding the MapR Data Access Gateway
    The MapR Data Access Gateway is a service that acts as a proxy and
    gateway for translating requests between lightweight client
    applications and the MapR cluster. For the MEP 5.0 release, the service
-   is used by the MapR-DB JSON REST API.
+   is used by the MapR Database JSON REST API. Starting in the MEP 6.0
+   release, the service is also used by the Node.js and Python OJAI
+   clients.
+
+   For the OJAI clients that connect to the Data Access Gateway, MapR uses
+   [1]gRPC, an open-source RPC framework, to expose the MapR Database OJAI
+   API to the client. RPC message headers for individual messages are
+   encoded using [2]Protocol Buffers. The message payload is encoded using
+   an OJAI JSON encoding. Depending on whether your MapR cluster has
+   security enabled, TLS is either enabled or disabled, by default, for
+   the gRPC service. When TLS is enabled, the SSL provider is OpenSSL.
+   [DataAccessGateway.png]
 
    The service runs on nodes in your MapR cluster. You can install the
-   service [1]manually or using the [2]MapR Installer. Both installation
+   service [3]manually or using the [4]MapR Installer. Both installation
    methods also support upgrades of existing MapR clusters. When
    installing the service, you can decide the number of nodes to install
    the service on. The number you need depends on your scalability
@@ -21,15 +32,17 @@ Understanding the MapR Data Access Gateway
    the authorization of john, not mapr.
 
    All traffic between the Data Access Gateway and other MapR services is
-   encrypted. This is done regardless of whether the underlying MapR-FS
-   volume has encryption enabled.
+   encrypted. This is done regardless of whether the underlying MapR file
+   system volume has encryption enabled.
 
-   [3]Warden manages the MapR Data Access Gateway. It handles stopping and
+   [5]Warden manages the MapR Data Access Gateway. It handles stopping and
    starting of the service during node failovers and also controls the
    amount of memory assigned to the service.
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingDataAccessGateway.html#InstallHue-ToinstallHue
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapRInstaller.html#untitled3
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/c_warden.html#concept_efn_ryv_xt
+   1. https://grpc.io/
+   2. https://developers.google.com/protocol-buffers/
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingDataAccessGateway.html#InstallHue-ToinstallHue
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapRInstaller.html#untitled3
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/c_warden.html#concept_efn_ryv_xt

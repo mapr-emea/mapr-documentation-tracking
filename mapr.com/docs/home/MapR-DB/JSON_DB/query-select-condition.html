@@ -9,11 +9,13 @@ Querying with Select and Conditions
    using secondary indexes. See [2]Queries that Benefit from Secondary
    Indexes for more details.
      * [3]Java
-     * [4]dbshell
+     * [4]Node.js
+     * [5]Python
+     * [6]dbshell
 
    The following example shows how to return the name, address.zipCode,
    age, and phoneNumber fields from documents that have address.zipCode
-   equal to 95196. It uses the [5]Query.select and [6]Query.where methods,
+   equal to 95196. It uses the [7]Query.select and [8]Query.where methods,
    specifying the query condition as a JSON string.
 /**
  * Copyright (c) 2017 MapR, Inc.
@@ -79,8 +81,105 @@ n
 
 }
 
-   The following two dbshell commands are equivalent to the code example.
-   See [7]dbshell find or findbyid for more details about the syntax
+   The following example shows how to return the name, address.zipCode,
+   age, and phoneNumber fields from documents that have address.zipCode
+   equal to 95196. It uses an OJAI query and condition.
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((store) => {
+    // Create an OJAI query
+    const query = {"$select": ["name",
+        "adress.zipCode",
+        "age",
+        "phoneNumbers[0]"],
+      "$where": {"$eq": {"address.zipCode": 95196}}};
+    // fetch OJAI Documents by query
+    return store.find(query);
+  })
+  .then((queryResult) => {
+    queryResult.on('data', (document) => {
+      // Print OJAI Documents from document stream
+      console.log(document);
+    });
+    queryResult.on('end', () => {
+      // close the OJAI connection
+      connection.close();
+    });
+  });
+
+   The following example shows how to return the name, address.zipCode,
+   age, and phoneNumber fields from documents that have address.zipCode
+   equal to 95196. It uses an OJAI query and condition.
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+# Create an OJAI query
+query = {"$select": ["name",
+                     "adress.zipCode",
+                     "age",
+                     "phoneNumbers[0]"],
+         "$where": {"$eq": {"address.zipCode": 95196}}}
+
+# options for find request
+options = {
+    'ojai.mapr.query.result-as-document': True
+    }
+
+# fetch OJAI Documents by query
+query_result = store.find(query,
+                          options=options)
+
+# Print OJAI Documents from document stream
+for doc in query_result:
+    print(doc.as_dictionary())
+
+# close the OJAI connection
+connection.close()
+
+   The following two dbshell commands are equivalent to the code examples.
+   See [9]dbshell find or findbyid for more details about the syntax
    dbshell provides.
 find /demo_table --query {
    "$select":["name","address.zipCode","age","phoneNumber[0]"],
@@ -100,6 +199,8 @@ References
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-types.html#concept_u1y_r3n_p1b
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect1
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect2
-   5. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-   6. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect3
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect4
+   7. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+   8. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html

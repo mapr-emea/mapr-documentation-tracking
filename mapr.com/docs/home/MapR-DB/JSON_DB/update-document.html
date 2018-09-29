@@ -1,19 +1,23 @@
 Examples: Updating JSON Documents
 
    This section contains sample code that updates a JSON document in a
-   MapR-DB JSON table using an OJAI mutation. It also shows the MapR-DB
-   Shell syntax for updating documents.
+   MapR Database JSON table using an OJAI mutation. It also shows the MapR
+   Database Shell syntax for updating documents.
 
    See [1]Using OJAI Mutation Syntax for more details about OJAI
    mutations.
      * [2]Java
-     * [3]dbshell
+     * [3]Node.js - Update
+     * [4]Node.js - Check and Update
+     * [5]Python - Update
+     * [6]Python - Check and Update
+     * [7]dbshell
 
-   The following code is available at [4]OJAI_012_UpdateDocument.java. It
+   The following code is available at [8]OJAI_012_UpdateDocument.java. It
    does the following:
-     * Finds a document using the [5]DocumentStore.find method
-     * Creates a [6]DocumentMutation that updates a field
-     * Updates the document by calling the [7]DocumentStore.update method
+     * Finds a document using the [9]DocumentStore.findById method
+     * Creates a [10]DocumentMutation that updates a field
+     * Updates the document by calling the [11]DocumentStore.update method
 
 /**
  * Copyright (c) 2017 MapR, Inc.
@@ -85,8 +89,226 @@ n
 
 }
 
-   The following dbshell command is equivalent to the code example. See
-   [8]dbshell update for more information and examples.
+   The following code is available at [12]OJAI_011_UpdateDocument.js. It
+   does the following:
+     * Finds a document using the [13]DocumentStore.findById method
+     * Creates an OJAI mutation that updates a field
+     * Updates the document by calling the [14]DocumentStore.update method
+
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+let store;
+const docId = 'user0002';
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((newStore) => {
+    // Get a store and assign it as a DocumentStore object
+    store = newStore;
+    // Find the document before update
+    return store.findById(docId);
+  })
+  .then((docBeforeUpdate) => {
+    // Print the document before update
+    console.log(`Document with id ${docId} before update`)
+    console.log(docBeforeUpdate);
+
+    const mutation = {'$put': {'address.zipCode': 95196}};
+    return store.update(docId, mutation);
+  })
+  .then(() => {
+    // Find the document after update
+    return store.findById(docId);
+  })
+  .then((docAfterUpdate) => {
+    // Print the document after update
+    console.log(`Document with id ${docId} before update`)
+    console.log(docAfterUpdate);
+  });
+
+   The following code is available at
+   [15]OJAI_012_CheckAndUpdateDocument.js. It does the following:
+     * Finds a document using the [16]DocumentStore.findById method
+     * Creates an OJAI mutation that updates a field
+     * Creates an OJAI condition to apply in the check and update
+     * Performs the check and update on the document by calling the
+       [17]DocumentStore.checkAndUpdate method
+
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+let store;
+const docId = 'user0002';
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((newStore) => {
+    // Get a store and assign it as a DocumentStore object
+    store = newStore;
+    // Find the document before update
+    return store.findById(docId);
+  })
+  .then((docBeforeUpdate) => {
+    // Print the document before update
+    console.log(`Document with id ${docId} before update`)
+    console.log(docBeforeUpdate);
+
+    const mutation = {'$put': {'address.zipCode': 95196}};
+    const condition = {'$eq': {'address.street': '320 Blossom Hill Road'}}
+    return store.checkAndUpdate(docId, mutation, condition);
+  })
+  .then((updateResult) => {
+    console.log(updateResult);
+    // Find the document after update
+    return store.findById(docId);
+  })
+  .then((docAfterUpdate) => {
+    // Print the document after update
+    console.log(`Document with id ${docId} before update`)
+    console.log(docAfterUpdate);
+  });
+
+   The following code is available at [18]012_update_document.py. It does
+   the following:
+     * Finds a document using the [19]DocumentStore.find_by_id method
+     * Creates an OJAI mutation that updates a field
+     * Updates the document by calling the [20]DocumentStore.update method
+
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+doc_id = 'user0002'
+
+# Print the document before update
+document_before_update = store.find_by_id(doc_id)
+print("Document with id {0} before update".format(doc_id))
+print(document_before_update)
+
+# Create mutation to update the zipCode field
+mutation = {'$put': {'address.zipCode': 95196}}
+
+# Execute update
+store.update(id=doc_id, mutation=mutation)
+
+document_after_update = store.find_by_id(doc_id)
+print('Document with id {0} after update'.format(doc_id))
+print(document_after_update)
+
+   The following code is available at
+   [21]013_check_and_update_document.py. It does the following:
+     * Finds a document using the [22]DocumentStore.find_by_id method
+     * Creates an OJAI mutation that updates a field
+     * Creates an OJAI condition to apply in the check and update
+     * Performs the check and update on the document by calling the
+       [23]DocumentStore.check_and_update method
+
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+                 "ssl=true;" \
+                 "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+                 "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+doc_id = 'user0001'
+
+# Print the document before update
+document_before_update = store.find_by_id(doc_id)
+print("Document with id {0} before update".format(doc_id))
+print(document_before_update)
+
+# Create mutation to update the zipCode field
+mutation = {'$put': {'address.zipCode': 99999}}
+
+# Create condition
+condition = {'$eq': {'address.street': '320 Blossom Hill Road'}}
+
+# Execute check_and_update.
+# Returns True if condition True and document was updated.
+update_result = store.check_and_update(id=doc_id,
+                                       mutation=mutation,
+                                       query_condition=condition)
+
+print(update_result)
+
+document_after_update = store.find_by_id(doc_id)
+print('Document with id {0} after update'.format(doc_id))
+print(document_after_update)
+
+   The following dbshell command is equivalent to the code examples. See
+   [24]dbshell update for more information and examples.
 # mapr dbshell
 maprdb root:> update /demo_table --id user002 --m {"$set":{"address.zipCode":951
 96}}
@@ -96,8 +318,24 @@ References
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIDocumentMutationSyntax.html#OJAIDocumentMutationSyntax
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect1
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect2
-   4. https://github.com/mapr-demos/ojai-2-examples/tree/master/src/main/java/com/mapr/ojai/examples/OJAI_012_UpdateDocument.java
-   5. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#findById-java.lang.String-
-   6. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/DocumentMutation.html
-   7. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#update-java.lang.String-org.ojai.store.DocumentMutation-
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-update.html#dbshell-update
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect3
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect4
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect5
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect6
+   8. https://github.com/mapr-demos/ojai-2-examples/tree/master/src/main/java/com/mapr/ojai/examples/OJAI_012_UpdateDocument.java
+   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#findById-java.lang.String-
+  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentMutation.html
+  11. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#update-java.lang.String-org.ojai.store.DocumentMutation-
+  12. https://github.com/mapr-demos/private-ojai-2-examples/blob/master/nodejs/OJAI_011_UpdateDocument.js
+  13. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#findbyid
+  14. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#update
+  15. https://github.com/mapr-demos/private-ojai-2-examples/blob/master/nodejs/OJAI_012_CheckAndUpdateDocument.js
+  16. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#findbyid
+  17. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#checkandupdate
+  18. https://github.com/mapr-demos/private-ojai-2-examples/tree/master/python/012_update_document.py
+  19. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#ac9e4fce8f702565c259b61d8d5b93f63
+  20. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aeee152bc51514a553c4048b37bced64c
+  21. https://github.com/mapr-demos/private-ojai-2-examples/tree/master/python/013_check_and_update_document.py
+  22. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#ac9e4fce8f702565c259b61d8d5b93f63
+  23. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aa8a0c09444966ded966943cd90980444
+  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-update.html#dbshell-update

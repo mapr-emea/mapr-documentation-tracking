@@ -33,8 +33,8 @@ Parameters
    Parameter Description
    cluster The cluster on which to run the command.
    columns A comma-separated list of fields to return in the query. See
-   the Fields table below. Default: none
-   filter A filter specifying snapshots to list. See [1]Filters for more
+   the [1]Fields table below. Default: none
+   filter A filter specifying snapshots to list. See [2]Filters for more
    information.
    limit The number of rows to return, beginning at start. Default:
    2147483647
@@ -65,7 +65,7 @@ Fields
    expirytime et Snapshot expiration time. Date time string (verbose
    output), or milliseconds since 1970 (terse output); 0 = never expires.
    volumeSnapshotAces N/A ACE Permissions for read and write on the volume
-   snapshot.
+   snapshot. Use -json to view the ACE permissions.
 
 Output
 
@@ -75,26 +75,115 @@ maprcli volume snapshot create -snapshotname uservolsnap -volume users
 
    Sample Output
 # maprcli volume snapshot list
-cumulativeReclaimSizeMB  creationtime                  ownername  snapshotid  vo
-lumeSnapshotAces  snapshotname  volumeid  volumename  ownertype  volumepath
-0                        Wed Nov 02 14:43:11 PDT 2016  mapr       256000049   ..
-.                 uservolsnap   7598647   users       1          /user
-
-   Note: Only the cumulative snapshot size is available. Individual
-   snapshot sizes are not available.
+snapshotid  ownedsize  sharedSize  volumename  ownername  ownertype  cumulativeR
+eclaimSizeMB  volumeid   snapshotname    creationtime                  volumepat
+h  volumeSnapshotAces
+256000051   0          0           users       mapr       1          0
+              212450174  uservolsnap     Wed Sep 26 10:45:27 PDT 2018  /user
+   ...
 
 Examples
 
    List all snapshots:
-     * [2]CLI
-     * [3]REST
+     * [3]CLI
+     * [4]REST
 
-maprcli volume snapshot list
+# maprcli volume snapshot list
+snapshotid  ownedsize  sharedSize  volumename  ownername  ownertype  cumulativeR
+eclaimSizeMB  volumeid   snapshotname    creationtime                  volumepat
+h  volumeSnapshotAces
+256000049   0          0           egVol       mapr       1          0
+              29379677   egVol-snapshot  Wed Sep 26 10:42:52 PDT 2018  /egVol
+   ...
+256000051   0          0           users       mapr       1          0
+              212450174  uservolsnap     Wed Sep 26 10:45:27 PDT 2018  /user
+   ...
+256000050   0          0           egVol       mapr       1          0
+              29379677   egVolSnapshot   Wed Sep 26 10:43:12 PDT 2018  /egVol
+   ...
 
-https://abc.sj.us:8443/rest/volume/snapshot/list
+curl -k -X GET 'https://abc.sj.us:8443/rest/volume/snapshot/list' --user mapr:ma
+pr
+{"timestamp":1537984492448,"timeofday":"2018-09-26 10:54:52.448 GMT-0700 AM","st
+atus":"OK","total":3,"data":[{"ownername":"mapr","ownertype":"1","volumeid":"293
+79677","volumename":"egVol","volumepath":"/egVol","snapshotid":"256000049","snap
+shotname":"egVol-snapshot","creationtime":"Wed Sep 26 10:42:52 PDT 2018","cumula
+tiveReclaimSizeMB":"0","ownedsize":"0","sharedSize":"0","volumeSnapshotAces":{"r
+eadAce":"p","writeAce":"p"}},{"ownername":"mapr","ownertype":"1","volumeid":"212
+450174","volumename":"users","volumepath":"/user","snapshotid":"256000051","snap
+shotname":"uservolsnap","creationtime":"Wed Sep 26 10:45:27 PDT 2018","cumulativ
+eReclaimSizeMB":"0","ownedsize":"0","sharedSize":"0","volumeSnapshotAces":{"read
+Ace":"p","writeAce":"p"}},{"ownername":"mapr","ownertype":"1","volumeid":"293796
+77","volumename":"egVol","volumepath":"/egVol","snapshotid":"256000050","snapsho
+tname":"egVolSnapshot","creationtime":"Wed Sep 26 10:43:12 PDT 2018","cumulative
+ReclaimSizeMB":"0","ownedsize":"0","sharedSize":"0","volumeSnapshotAces":{"readA
+ce":"p","writeAce":"p"}}]}
+
+   List all snapshots and format the output:
+# maprcli volume snapshot list -json
+{
+        "timestamp":1537984231452,
+        "timeofday":"2018-09-26 10:50:31.452 GMT-0700 AM",
+        "status":"OK",
+        "total":3,
+        "data":[
+                {
+                        "ownername":"mapr",
+                        "ownertype":"1",
+                        "volumeid":"29379677",
+                        "volumename":"egVol",
+                        "volumepath":"/egVol",
+                        "snapshotid":"256000049",
+                        "snapshotname":"egVol-snapshot",
+                        "creationtime":"Wed Sep 26 10:42:52 PDT 2018",
+                        "cumulativeReclaimSizeMB":"0",
+                        "ownedsize":"0",
+                        "sharedSize":"0",
+                        "volumeSnapshotAces":{
+                                "readAce":"p",
+                                "writeAce":"p"
+                        }
+                },
+                {
+                        "ownername":"mapr",
+                        "ownertype":"1",
+                        "volumeid":"212450174",
+                        "volumename":"users",
+                        "volumepath":"/user",
+                        "snapshotid":"256000051",
+                        "snapshotname":"uservolsnap",
+                        "creationtime":"Wed Sep 26 10:45:27 PDT 2018",
+                        "cumulativeReclaimSizeMB":"0",
+                        "ownedsize":"0",
+                        "sharedSize":"0",
+                        "volumeSnapshotAces":{
+                                "readAce":"p",
+                                "writeAce":"p"
+                        }
+                },
+                {
+                        "ownername":"mapr",
+                        "ownertype":"1",
+                        "volumeid":"29379677",
+                        "volumename":"egVol",
+                        "volumepath":"/egVol",
+                        "snapshotid":"256000050",
+                        "snapshotname":"egVolSnapshot",
+                        "creationtime":"Wed Sep 26 10:43:12 PDT 2018",
+                        "cumulativeReclaimSizeMB":"0",
+                        "ownedsize":"0",
+                        "sharedSize":"0",
+                        "volumeSnapshotAces":{
+                                "readAce":"p",
+                                "writeAce":"p"
+                        }
+                }
+        ]
+}
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-snapshot-list.html#div1entry1
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-snapshot-list.html#div1entry2
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-snapshot-list.html#volumesnapshotlist__Fields
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-snapshot-list.html#div1entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-snapshot-list.html#div1entry2

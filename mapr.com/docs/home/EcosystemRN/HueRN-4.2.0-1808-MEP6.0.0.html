@@ -1,0 +1,210 @@
+Hue 4.2.0-1808 (MEP 6.0.0) Release Notes
+
+   This section provides reference information, including new features,
+   patches, known issues, and limitations for Hue 4.2.0-1808.
+   The notes below relate specifically to the MapR Distribution for Apache
+   Hadoop. You can find additional information on:
+     * [1]changelog for Hue 4.0
+     * [2]changelog for Hue 4.1
+     * [3]changelog for Hue 4.2
+
+   or the [4]Hue homepage.
+   Version Hue: 4.2.0
+
+   Livy: 0.5.0
+   Release Date September 2018
+   MapR Version Interoperability See [5]MEP Components and OS Support
+   Source on GitHub Hue: [6]https://github.com/mapr/hue.git
+
+   Livy: [7]https://github.com/mapr/livy.git
+   GitHub Release Tag Hue: 4.2.0-mapr-1808
+
+   Livy: 0.5.0-mapr-1808
+   Package Names
+
+   Navigate to [8]https://package.mapr.com/releases/MEP/ and select your
+   MEP and OS to view the list of package names
+
+New in This Release
+
+     * Improved Drill integration, see [9]Integrate Hue with Drill.
+     * Improvements in scripts used to manage the Hue Database.
+     * Hue uses /opt/mapr/ssl_truststore.pem file to verify SSL
+       connections with other services on MapR cluster and
+       /opt/mapr/ssl_keystore.pem as its certificate.
+     * For Livy upgrades, from Livy 0.3 and above, user configuration
+       files are saved during upgrade.
+     * Starting with MEP 6.0, MapR SASL authentication, encryption, and
+       impersonation for Livy is enabled by default on secure clusters.
+       For more information, see [10]Configure Livy with Security.
+     * Support for integrating Hue with ADLS. For more information, see
+       [11]Browsing ADLS data, querying it with SQL and exporting the
+       results back in Hue 4.2.
+
+Known Issues and Limitations
+
+     * MapR does not support the integration between Hue 4.2.0 and the
+       following components:
+          + Solr Search
+          + ZooKeeper
+     * Integration between Hue 4.2.0 and Sentry 1.7 is supported on secure
+       clusters that use Kerberos authentication, but it is not supported
+       on secure clusters that use MapR-SASL authentication.
+     * MAPR-2561: DB Query in Hue cannot execute more than one query.
+     * MAPR-28087: Livy cannot use the Hive Interpreter. To work around
+       this issue, use the cluster mode. Set livy.spark.deployMode=cluster
+       in the {LIVY_CONF}/livy.conf file. This issue is caused by Spark
+       11851: "Unable to start spark thrift server against secured hive
+       metastore(GSS initiate failed)".
+     * MHUE-141 Example maprdb tables are not downloaded on MAPR-SASL
+       cluster.
+     * MHUE-158 Error when change timezone in oozie coordinator.
+     * HUE-7712 Livy-batch not available in HUE 4.1.
+     * MHUE-187 R session for R Editor in Hue cannot start.
+     * MHUE-192 Error, when create Impala table via Table Browser.
+     * MHUE-206 ERROR "Failed to extract json message" when try to export
+       Hive query result to ADLS.
+     * MHUE-209 Hue cannot create a table from *.csv file via importer
+       from ADLS.
+
+   Note: Hue uses [12]python parquet lib to read parquet files. This
+   library does not support all possible parquet formats.
+     * LIVY-42: Livy UI is not accessible on Kerberos.
+
+Resolved Issues
+
+     * HUE-6074: [notebook] Execute snippets as Oozie batch.
+
+Patches
+
+   This MapR release includes the following patches on the base release:
+
+   Hue Patches
+   GitHub Commit Number Date (YYYY-MM-DD) MapR Patch Number and
+   Description
+   212fe65 2018-05-01 MHUE-103 Hue querying Drill: Support for Outbound
+   Impersonation
+   896aa92 2018-05-04 MHUE-119 Error when try to move/copy large file via
+   file browser
+   458a760 2018-05-08 MHUE-97 Hue-Livy secured by default
+   87f3d09 2018-05-16 MHUE-128 Error "Unable to authenticate" when open
+   Job Browser page
+   0986577 2018-05-18 MHUE-139 Determine spark_historyserver_url from
+   maprcli call
+   0c51b1d 2018-05-19 MHUE-142 Authenticate to Spark HistoryServer API
+   with PAM credentials on secure cluster
+   7396e0b 2018-05-22 MHUE-140 Error while writing the path to the file in
+   the field to load the request for hive
+   ba32f2a 2018-05-22 MHUE-131 Sample data is missing in database
+   assistant
+   3c3e9dd 2018-05-22 MHUE-133 Error in sample pig script
+   47af5fb 2018-05-23 MHUE-135 Error - Could not resolve
+   org.apache.pig.piggybank.evaluation.string.UPPER using imports
+   6824e44 2018-05-29 MHUE-152 Authenticate to Spark HistoryServer API
+   with MapR-Security credentials on secure cluster
+   24fc2e6 2018-05-29 MHUE-153 Failed to determine active YARN HS after
+   restart of Warden
+   f9155e0 2018-05-30 MD-2382 Drill Hue Integration
+   8e5f098 2018-05-31 MHUE-144 Errors in Hue on Kerberos cluster
+   8bade2e 2018-06-01 MHUE-161 Use core ssl_truststore.pem to certificate
+   verification
+   7bd6b79 2018-06-01 MHUE-162 Resolving of Spark Job tracking url is
+   broken after porting
+   42864e0 2018-06-01 HUE-132 Hue is trying to check certificates even if
+   the verification is turned off
+   ec9db82 2018-06-04 MHUE-151 Error when starting query in oozie
+   1bc593a 2018-06-05 MHUE-117 Error while open maprdb table via File
+   Browser
+   135bba2 2018-06-07 MHUE-157 Error when save bundle in Oozie editor
+   ea73663 2018-06-07 MHUE-170 Error, timer does not count execution time
+   of the request
+   063b232 2018-06-08 MHUE-172 Prevent from too big size of hue.out log
+   bce0069 2018-06-08 MHUE-171 Add full path to ZK Сluster ID in JDBC
+   connection url
+   3b5a1c2 2018-06-08 MHUE-164 Error when click on the link 'Explain' in
+   rdbms
+   0d210ee 2018-06-08 MHUE-164 [drill] Implement explain method for Drill
+   API
+   35b1035 2018-06-15 MHUE-175 Remove ZK Cluster ID in JDBC URL when
+   connecting directly to DrillBit
+   e8b5610 2018-07-03 MHUE-126 Enabling and Disabling tables does not work
+   for MapR Database tables
+   e2d7c57 2018-07-03 MHUE-113 Remove links to the functional that is not
+   used on the mapr
+   e173afd 2018-07-10 MHUE-132 Hue is trying to check certificates for
+   HBase even if the verification is turned off
+   3da7775 2018-07-10 MHUE-188 "Session '-1' not found." for Spark Sample
+   Notebook in Hue
+   dc4c6f0 2018-07-12 MHUE-188 Prevent from starting all sessions on
+   opening of Sample Notebook
+   0e1bd1a 2018-07-13 MHUE-159 Port memory issue fix from Hue 3.12 to Hue
+   4.2
+   edd5d40 2018-07-16 MHUE-186 MaprFS jar should not be part of hue
+   package - it should be taken from /opt/mapr/lib
+   39e7f1d 2018-07-17 MHUE-159 Include tools/ops/ into Hue distribution
+   e5e68b1 2018-07-18 MHUE-159 Add execution permission for scripts in
+   tools/ops/
+   b860f7c 2018-07-25 MHUE-189 Use ssl_keystore.pem from core instead of
+   certificates extracted from ssl_keystore JKS
+   1cd6581 2018-07-25 MHUE-181 Turn off debug logging at Hue
+   4962115 2018-07-25 MHUE-200 Could not update job in sqoop2
+   7feb4b4 2018-07-31 MHUE-205 Exception 'WebHdfs object has no attribute
+   _mechanism' when try to create file in ADLS
+   ee07d1a 2018-07-31 MHUE-204 Error in Hue integration with Drill on
+   Kerberos
+   4359222 2018-08-02 MHUE-207 Correct the comment for 'drill options' in
+   hue.ini
+   308de58 2018-08-02 MLIVY-51 Hue service are not started after
+   Incremental Install
+   264e8be 2018-08-07 MHUE-205 Exception 'WebHdfs object has no attribute
+   _mutual_ssl_auth' when try to create file in ADLS
+   5028ed6 2018-08-07 MHUE-181 Turn off debug logging at Hue in log.conf
+
+   Livy Patches
+   GitHub Commit Number Date (YYYY-MM-DD) MapR Patch Number and
+   Description
+   4fb484e 2018-08-07 MLIVY-51 Fix misconfiguration issue in livy.conf
+   4f09642 2018-08-02 MLIVY-51 Livy service are not started after
+   Incremental Install
+   d4c1423 2018-07-20 MZEP-109 Move DSR startup scripts out of Livy
+   45e074f 2018-07-18 MLIVY-37 Set hadoop.scope to provided in pom.xml
+   f468f04 2018-07-17 MLIVY-37 The key store and trust store password for
+   livy should be taken from ssl-server.xml
+   acb639f 2018-07-16 MLIVY-50 MaprFS jar should not be part of livy
+   package - it should be taken from /opt/mapr/lib
+   e450053 2018-07-10 MLIVY-49 Add to livy conf
+   livy.repl.enable-hive-context to true if Spark is configured on Hive
+   a51286e 2018-07-09 [LIVY-466][RSC] Fix RSCDriver exception during RPC
+   shutdown
+   f949020 2018-07-09 MLIVY-47 Errors in SparkR with Spark 2.3
+   0325f78 2018-07-05 MLIVY-46 Livy session is dead due to old hadoop jar
+   in livy
+   b4d413f 2018-06-08
+
+   MLIVY-36 Configure.sh fails during the first running
+   e5808a0 2018-06-06 MLIVY-35 Warning with message from Spark job that
+   jpam was added multiple times
+   2a151d1 2018-05-30 MLIVY-30 Need to secure all the passwords in
+   livy.conf using Hadoop CredentialProvider
+   97e17c0 2018-05-29 MLIVY-33 Enable SASL for Remote Spark Client
+   c54b292 2018-05-23 MLIVY-27 Livy service cannot start on 6.1.0 cluster
+   b3d1b41 2018-05-03 MLIVY-25 security-by-default changes for
+   configure.sh
+   13cb262 2018-05-02
+
+   MLIVY-25 Add multiauth authentication
+
+References
+
+   1. https://cloudera.github.io/hue/docs-4.0.0/release-notes/release-notes-4.0.0
+   2. https://cloudera.github.io/hue/docs-4.1.0/release-notes/release-notes-4.1.0
+   3. https://cloudera.github.io/hue/docs-4.2.0/release-notes/release-notes-4.2.0
+   4. http://gethue.com/
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_MEP_components.html#reference_pk5_5xb_tw
+   6. https://github.com/mapr/hue.git
+   7. https://github.com/mapr/livy.git
+   8. https://package.mapr.com/releases/MEP/
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/ConfigureHuewithDrill.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/Configure_Livy_Security.html
+  11. http://gethue.com/browsing-adls-data-querying-it-with-sql-and-exporting-the-results-back-in-hue-4-2/
+  12. https://pypi.python.org/pypi/parquet/1.1

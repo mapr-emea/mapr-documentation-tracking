@@ -1,0 +1,66 @@
+tier rule list
+
+   Retrieves the list of rules for offloading data.
+
+Syntax
+
+   CLI
+
+$ maprcli tier rule list
+        [ -output terse|verbose ]
+        [ -cluster cluster_name ]
+        [ -sortby <attribute> ]
+        [ -sortorder <asc|desc> ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host:port>/rest/tier/rule/list?<parameters>
+
+Parameters
+
+   Parameter Description
+   cluster The name of the cluster on which to run the command.
+   output Specifies whether the output should be terse or verbose.
+   Default: verbose.
+   sortby The attributes by which to sort the list of tiers. Value can be
+   one of the following: ruleid, rulename, expression
+   sortorder The order to sort the results by. Value can be:
+     * asc - for ascending order
+     * desc - for descending order
+
+Output
+
+   The command returns the following:
+   expression The rules defined using a combination of expressions.
+   rulename   The name of the rule.
+   ruleid     The ID of the rule.
+
+Example
+
+   Retrieve the list of tier rules:
+     * [1]CLI
+     * [2]REST
+
+# /opt/mapr/bin/maprcli tier rule list
+expression                              rulename  ruleid
+m:365d                                  rule1     1
+s:5g                                    rule2     2
+u:m7user1                               rule3     3
+p                                       rule4     4
+                                        rule5     5
+u:m7user1 | (u:mapr & (s:5g | m:365d))  testRule  6
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/tier/rule/list' --user mapr:mapr
+{"timestamp":1519840839491,"timeofday":"2018-02-28 10:00:39.491 GMT-0800 AM","st
+atus":"OK","total":6,"data":[{"ruleid":"1","rulename":"rule1","expression":"m:36
+5d"},{"ruleid":"2","rulename":"rule2","expression":"s:5g"},{"ruleid":"3","rulena
+me":"rule3","expression":"u:m7user1"},{"ruleid":"4","rulename":"rule4","expressi
+on":"p"},{"ruleid":"5","rulename":"rule5","expression":""},{"ruleid":"6","rulena
+me":"testRule","expression":"u:m7user1 | (u:mapr & (s:5g | m:365d))"}]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-list.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-list.html#div1entry2

@@ -1,0 +1,110 @@
+Converting to Cluster Enabled for Data at Rest Encryption
+
+   MapR's [1]data-at-rest encryption allows you to protect the data in the
+   event a disk is compromised. Using the [2]MapR Installer, you can
+   select the Enable MapR DARE option during an incremental install after
+   upgrading. You can also convert a cluster not enabled for encryption at
+   rest to a cluster enabled for encryption at rest from the command-line
+   during a [3]Manual Rolling Upgrade Description or after an [4]Offline
+   and Manual Upgrade Procedure.
+   Note: Encryption of data at rest can only be enabled on a secure
+   cluster.
+
+   To convert:
+    1. Perform the following steps on a CLDB node to generate the master
+       key for encryption of data at rest:
+         a. Stop Warden on a CLDB node by running the following command:
+/bin/systemctl stop mapr-warden
+         b. Install MapR v6.1 packages if this is a rolling upgrade.
+            See [5]Upgrading MapR Core Without the MapR Installer. You can
+            skip this step if you have already installed the MapR v6.1
+            packages.
+         c. Run the [6]configure.sh command as shown below:
+/opt/mapr/server/configure.sh -genkeys -nocerts -dare  -R
+            When you run the [7]configure.sh command with the genkeys and
+            dare options, a MasterKey file is generated and stored in
+            /opt/mapr/conf/dare.master.key.
+            Important: You must create a copy of this file in other
+            location(s) for backup purposes. Loss of this key will result
+            in loss of cluster.
+         d. Start Warden by running the following command:
+/bin/systemctl start mapr-warden
+    2. Copy the data at rest encryption master key file (generated above)
+       to the /opt/mapr/conf directory on all the other CLDB nodes on the
+       cluster.
+    3. Perform the following steps on all the nodes, one node at a time if
+       you are doing a rolling upgrade, in the cluster:
+         a. Stop Warden by running the following command:
+/bin/systemctl stop mapr-warden
+         b. Install MapR v6.1 packages if this is a rolling upgrade.
+            See [8]Upgrading MapR Core Without the MapR Installer. You can
+            skip this step if you have already installed the MapR v6.1
+            packages.
+         c. Run the [9]configure.sh command as shown below:
+/opt/mapr/server/configure.sh -dare -R
+         d. Start Warden by running the following command:
+/bin/systemctl start mapr-warden
+    4. Enable encryption of data at rest through the mfs.feature.dare
+       property and optionally other features, if they are not yet
+       enabled.
+       See [10]Step 4: Enable New Features.
+    5. Specify whether (1) or not (0) to convert all existing volumes not
+       enabled for encryption of data at rest to volumes enabled for
+       encryption of data at rest by setting the value for the
+       cldb.enforce.old.volumes.dare property using the [11]config save
+       command.
+       By default, all existing volumes are converted to volumes enabled
+       for data at rest encryption because the default value for
+       cldb.enforce.old.volumes.dare property is 1. To not convert all
+       existing volumes to volumes enabled for data at rest encryption,
+       run the following command:
+maprcli config save -values '{"cldb.enforce.old.volumes.dare":"0"}
+    6. Format the storage pools (SPs) on the nodes for data at rest
+       encryption, one node and one SP at a time. That is:
+         a. Decommission the node.
+            See [12]Decommissioning a Node for Enabling Encryption of Data
+            at Rest for more information.
+         b. Format the SPs on the node.
+            See [13]Formatting a Storage Pool for Encryption of Data at
+            Rest for more information.
+         c. Move the node back to the original topology.
+            See [14]Changing the Topology of one or more Nodes for more
+            information.
+    7. Enable encryption of data at rest at the cluster-level by running
+       the following command:
+maprcli config save -values '{"mfs.enforce.dare":"1"}'
+    8. Verify that encryption of data at rest is enabled at the
+       cluster-level by running the following command:
+maprcli config load -json | grep dare
+       Your output should look similar to the following:
+"cldb.enforce.old.volumes.dare":"1",
+"mapr.default.dare.alarm.pending":"0",
+"mapr.volume.dare.default":"1",
+"mfs.enforce.dare":"1",
+"mfs.feature.dare":"1",
+
+   Encryption of data at rest is enabled by default for all new volumes on
+   the cluster. You can disable data at rest encryption for volumes that
+   do not require encryption of data at rest. See [15]Enabling or
+   Disabling Data at Rest Encryption at the Volume Level Using the MapR
+   Control System or [16]Enabling or Disabling Data at Rest Encryption at
+   the Volume Level Using the CLI and REST API.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Encryption.html#concept_f4z_n2m_xt__dare
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapRInstaller.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Manual-Rolling-Upgrade.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Manual-Offline-Upgrade.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingWithoutInstaller.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingWithoutInstaller.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Configuring-the-New-Version.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-save.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DecommissionNode.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/FormatSP.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/nodes/AllNodes-ChangeTopology.html
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-DARE.html#mcs-vol-level
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-DARE.html#cli-vol-level

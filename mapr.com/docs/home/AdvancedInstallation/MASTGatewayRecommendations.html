@@ -1,0 +1,59 @@
+Pre-Installation Considerations
+
+   Before installing the MAST Gateway, review the following
+   recommendations.
+
+   By default, the MAST Gateway uses 16 threads for volume and file
+   offload and recall operations and another 16 threads for handling
+   internal operations and other operations such as reads (which triggers
+   automatic recall requests), writes, etc. Each thread processes offload
+   or recall of a container (associated with a volume). Each MAST Gateway
+   can process one or more volumes (and associated containers)
+   simultaneously depending on the number of threads available for
+   processing the containers associated with the volumes. Each volume is
+   assigned to a MAST Gateway for a tiering operation irrespective of the
+   number of containers associated with the volume.
+
+   For example, suppose a volume has 5 containers. The MAST Gateway
+   allocates 5 threads, one per container, to process the offload of that
+   volume’s data; the other 11 threads are available for other
+   tiering-related operations on other tiering-enabled volumes. Suppose a
+   volume has 20 containers. The MAST Gateway allocates all 16 threads to
+   process the offload of that volume’s data and as threads are freed,
+   other unprocessed containers associated with the volume are processed.
+   If there are multiple large volumes with multiple containers, more than
+   one MAST Gateway is recommended to process all the containers
+   associated with all the volumes.
+
+   If there are limited number of nodes that can access the cold tier
+   (because of controlled access to WAN, proxy setup, etc.), install and
+   run MAST Gateway on only those nodes and set up proxy server parameters
+   in the mastgateway.conf file. See step 5 in [1]Configuring the MAST
+   Gateway Service for more information on the configuration parameters to
+   set for using a proxy server. On the other hand, if all the cluster
+   nodes can access the tier, then consider the following before deploying
+   the MAST Gateway:
+    1. A single MAST Gateway can offload at around 300 MB/sec at full
+       throttle. So, compute the minimum number of MAST Gateways based on
+       network capacity of the connection to the tier.
+    2. If you expect many volume offloads and recall operations to get
+       triggered at the same time, consider installing mastgateway on a
+       few more nodes or adding more MAST Gateways at a later time. See
+       [2]Installing Additional MAST Gateways from the Command-line for
+       information.
+
+   In general, allocate at least 2GB of memory for the MAST Gateway
+   operations. The memory consumption can increase during heavy load. See
+   settings for configuring memory for MAST Gateway in Step 7 for
+   [3]Configuring the MAST Gateway Service.
+   Note: Before installing, ensure that the system time on all the cluster
+   nodes is the same. If the system time on CLDB and file server nodes are
+   different, the mtime rule for migrating data might not work as
+   intended. If you see a time skew alarm in the cluster, resolve the
+   alarm immediately to prevent catastropic failures.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ConfigMASTGateway.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallMASTGateway.html#cli-install-additional
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ConfigMASTGateway.html

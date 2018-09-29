@@ -27,6 +27,7 @@ OJAI Query Condition Operators
      * [18]Not In
      * [19]And
      * [20]Or
+     * [21]Element And
 
 Comparison Operators
 
@@ -89,6 +90,10 @@ Existence Operators
         Description
                 Checks for non-existence of fieldpath.
 
+   See [22]Existence Conditions with Container Field Paths for details
+   about how these operators behave when you use them with container field
+   paths.
+
 Between
 
    Syntax
@@ -117,7 +122,7 @@ Matches Operators
           You can use regular expressions that compose the Perl-Compatible
           Regular Expressions (PCRE) library as well as a subset of the
           regular expressions that are supported in
-          java.util.regex.pattern. See [21]HBase Java Regular Expressions
+          java.util.regex.pattern. See [23]HBase Java Regular Expressions
           Support for a list of supported regular expressions.
 
 Like Operators
@@ -227,6 +232,40 @@ Logical Operators
                 OJAIQueryConditions is a comma-separated list of OJAI
                 query conditions.
 
+   Element And
+
+        Syntax
+
+{
+    "$elementAnd":{
+        "containerFieldPath":
+           [OJAIQueryConditions]
+    }
+}
+
+                Note: Supported starting in MapR 6.1.
+
+        Description
+                Applies multiple conditions as part of a group. All
+                conditions must be true for a common array element.
+
+                OJAIQueryConditions is the comma-separated list of the
+                OJAI query conditions.
+
+                containerFieldPath exhibits the following behaviors:
+
+               o containerFieldPath specifies the container path prefix of
+                 the common container element.
+               o If containerFieldPath refers to a container of nested
+                 documents, then you must use field paths relative to the
+                 common prefix in your OJAIQueryConditions .
+               o If the containerFieldPath refers to a container of scalar
+                 values, then you use the $ symbol to refer to individual
+                 elements in your OJAIQueryConditions.
+
+                Note: There is no elementOr operator because it is
+                semantically equivalent to an OR operator.
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionOperators.html#QueryingJSONDocumentFields__section_pfv_mfd_kdb
@@ -249,4 +288,6 @@ References
   18. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionOperators.html#QueryingJSONDocumentFields__section_zpt_gld_kdb
   19. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionOperators.html#QueryingJSONDocumentFields__section_swy_rld_kdb
   20. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionOperators.html#QueryingJSONDocumentFields__section_swy_rld_kdb
-  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Supported-Regular-Expressions.html
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionOperators.html#QueryingJSONDocumentFields__section_swy_rld_kdb
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ContainersOJAIQueryConditions.html#QueryingJSONDocumentFields__section_jmr_nct_y2b
+  23. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Supported-Regular-Expressions.html

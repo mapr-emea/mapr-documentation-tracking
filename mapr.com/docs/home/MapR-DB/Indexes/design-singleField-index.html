@@ -8,17 +8,17 @@ Simple Indexes
 
 Sort Order
 
-   MapR-DB sorts simple indexes on the single indexed field. MapR-DB sorts
-   the indexed field values in ascending order by default, although you
-   can specify a descending order when you create the index. Sorting
-   indexes benefits your ORDER BY queries because the index eliminates the
-   need for a SORT operator in the query plan.
+   MapR Database sorts simple indexes on the single indexed field. MapR
+   Database sorts the indexed field values in ascending order by default,
+   although you can specify a descending order when you create the index.
+   Sorting indexes benefits your ORDER BY queries because the index
+   eliminates the need for a SORT operator in the query plan.
 
 Simple Index Examples
 
    The following demonstrate the [1]CLI commands you can use to create
    various types of simple indexes. For these examples, assume that you
-   have a MapR-DB JSON table with the following sample data:
+   have a MapR Database JSON table with the following sample data:
 {
    "_id": "10000",
    "FullName": {
@@ -58,10 +58,6 @@ maprcli table index add -path /people \
 
      * Creates a simple index, with an included field
      * Enables you to filter on DateOfBirth and project on FullName
-       Note: You cannot use FullName as an indexed field because it
-       contains nested documents. Doing so results in encoding errors when
-       inserting documents into the index. See [2]Secondary Index Encoding
-       Error for more information.
 
 maprcli table index add -path /people \
    -index LastNameIdx \
@@ -72,7 +68,36 @@ maprcli table index add -path /people \
      * Allows you to filter on FullName.LastName and sort on the subfield
        in descending order
 
+maprcli table index add -path /people \
+   -index fullNameIdx \
+   -indexedfields FullName
+
+     * Creates a simple index on the nested document field FullName
+     * Allows you to perform equality lookups on both the LastName and
+       FirstName subfields of FullName
+
+maprcli table index add -path /people \
+   -index hobbiesIdx \
+   -indexedfields Hobbies
+
+     * Creates a simple index on the Hobbies array field
+     * Allows you to filter for a specific list of hobbies
+
+maprcli table index add -path /people \
+   -index hobbyIdx \
+   -indexedfields Hobbies[]
+
+     * Creates a simple index using the container field path Hobbies[]
+     * Allows you to filter for a specific hobby
+
+maprcli table index add -path /people \
+   -index phoneNumberIdx \
+   -indexedfields Phones[].Number
+
+     * Creates a simple index on the container field path Phones[].Number
+     * Allows you to filter for a phone number, regardless of whether it
+       is a home, work, or cell phone
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-index-add.html#table-index-create
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/Index-Alarms.html#reference_lt2_zj4_gbb__section_afr_1m4_gbb

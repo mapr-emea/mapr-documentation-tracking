@@ -9,14 +9,52 @@ Composite Indexes
 
 Sort Order
 
-   MapR-DB sorts the composite index in the order in which you have
+   MapR Database sorts the composite index in the order in which you have
    defined the indexed fields. For example, if you have an index on Field1
-   and Field2, MapR-DB sorts on Field1 as the primary sort key and Field2
-   as the secondary.
+   and Field2, MapR Database sorts on Field1 as the primary sort key and
+   Field2 as the secondary.
 
    Each component in a composite index can have its own ordering. For
    example, you can specify an ascending sort order for one field and a
    descending sort order for another.
+
+Composite Indexes and Container Field Paths
+
+   The indexed fields in a composite index can be [1]Container Field
+   Paths. However, if you specify more than one container field path in
+   your indexed fields, the prefixes of the container field paths must be
+   the same. This allows MapR Database to store index values that
+   originate from the same array element in a single index row.
+   Examples of Supported Composite Indexes
+   Indexed Fields Allowed for Composite Index Why Allowed?
+   a[].b, x.z The indexed fields have only one container field path.
+   a[].b, a[].c The indexed fields have a common container prefix, a[].
+   a[].b, a[].c[] The indexed fields have a common container prefix, a[].
+   a[].b[].c, a[].b[].d The indexed fields have a common container prefix,
+   a[].b[].
+   Examples of Unsupported Composite Indexes
+
+   If a composite index includes the same subfield in multiple indexed
+   fields, the implied types of the subfields must also be consistent. The
+   third and fourth rows in the table below show examples of this
+   restriction:
+   Indexed Fields Disallowed for Composite Index Why Disallowed?
+   a[].b, x[].y a[] and x[] are different container prefixes.
+   a[].b[], a[].c[] Although both indexed fields have a common container
+   prefix of a[], b[] and c[] are different container field paths.
+   a.b[].c, a.b.d In the first indexed field, subfield b is an array of
+   nested documents. In the second, b is a single nested document. This
+   results in a type conflict.
+   a, a[] The first indexed field a is a scalar type while the second is
+   an array. This also results in a type conflict.
+   Query Conditions Using Composite Indexes and Container Field Paths
+
+   When you have a composite index defined on container field paths, your
+   query condition must use the [2]elementAnd operator to use all keys of
+   the index. With the and operator, the conditions do not have to match
+   the same array element; as a result, the matching indexed field values
+   might span different index rows, preventing use of the composite index.
+   See [3]OJAI Query Conditions Using elementAnd for more details.
 
 Composite Index Example
 
@@ -24,16 +62,22 @@ Composite Index Example
    order in a composite index:
    [CompositeField.png]
 
-   In the index on the left, the prefix key is Field1. MapR-DB sorts the
-   index first on Field1, and then on Field2. This aligns with the
-   equality condition, Field1 = 3. MapR-DB reads the least number of
+   In the index on the left, the prefix key is Field1. MapR Database sorts
+   the index first on Field1, and then on Field2. This aligns with the
+   equality condition, Field1 = 3. MapR Database reads the least number of
    entries from the index on the left, due to this equality condition and
    the range condition on Field2.
 
-   In the index on the right, MapR-DB sorts the index on Field2, followed
-   by Field1. In this case, the matching key values are not contiguous in
-   the index, as highlighted by the entries in a lighter shade of yellow.
-   MapR-DB uses the filter conditions on Field2 to start the search in the
-   index. It applies the filter condition on Field1 while reading the
-   index. This is less efficient because MapR-DB must read those extra
-   nonmatching key values.
+   In the index on the right, MapR Database sorts the index on Field2,
+   followed by Field1. In this case, the matching key values are not
+   contiguous in the index, as highlighted by the entries in a lighter
+   shade of yellow. MapR Database uses the filter conditions on Field2 to
+   start the search in the index. It applies the filter condition on
+   Field1 while reading the index. This is less efficient because MapR
+   Database must read those extra nonmatching key values.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/IdentifyingJSONFields.html#IdentifyingJSONFields__section_c5v_qmz_hdb
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionOperators.html#QueryingJSONDocumentFields__section_swy_rld_kdb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIElementAnd.html#QueryingJSONDocumentFields

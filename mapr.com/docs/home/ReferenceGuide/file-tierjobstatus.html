@@ -1,0 +1,449 @@
+file tierjobstatus
+
+   Checks the status of an earlier offload or recall operation.
+
+Permissions Required
+
+   The user running the command must have (mode bit or [1]ACE) permissions
+   to write to the file.
+
+Syntax
+
+   CLI
+
+maprcli file tierjobstatus
+            -name <file_name>
+            [ -job <jobID> ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host:port>/rest/file/tierjobstatus?<parameters>
+
+Parameters
+
+   Parameter                           Description
+   name      The name (including the path) of the file.
+   job       The ID of the job specified with the offload or recall command.
+
+Output
+
+   The command returns one of the following:
+   ID Message Description
+   0 FTOS_SUCCESS Indicates file tiering operation was successful. For
+   example:
+     * [2]CLI
+     * [3]REST
+
+# maprcli file tierjobstatus  -name /v5/nfile2 -json
+{
+  "timestamp":1533555093521,
+  "timeofday":"2018-08-06 04:31:33.521 GMT-0700 AM",
+  "status":"OK",
+  "total":1,
+  "data":[
+           {
+              "status":0,
+              "message":"File offload completed.",
+              "gateway":"10.10.104.21:8660",
+              "op":"Offload",
+              "completedFids":2,
+              "failedFids":0,
+              "totalFids":2
+           }
+  ]
+}
+
+# curl -k -X GET 'https://abc.sj.us/rest/file/tierjobstatus?name=/v5/nfile2' --
+user mapr:mapr
+{"timestamp":1533555093521,"timeofday":"2018-08-06 04:31:33.521 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"status":0,"message":"File offload completed.","ga
+teway":"10.10.104.21:8660","op":"Offload","completedFids":2,"failedFids":0,"tota
+lFids":2}]}
+
+   1 NO_LOCAL_DATA Indicates data was successfully offloaded. For example:
+     * [4]CLI
+     * [5]REST
+
+# maprcli file tierjobstatus -name /v5/newDir/file1 -json
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/v5/newDir
+/file1' --user mapr:mapr
+
+   2 OP_FAIL Indicates that the operation failed. For example:
+     * [6]CLI
+     * [7]REST
+
+# maprcli file tierjobstatus -name /volume_cold_aws/sampleFile2 -json
+{
+    "timestamp":1533937284242,
+    "timeofday":"2018-08-10 02:41:24.242 GMT-0700 PM",
+    "status":"ERROR",
+    "errors":[
+        {
+            "id":2,
+            "desc":"File offload failed."
+        }
+    ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/volume_co
+ld_aws/sampleFile2' --user mapr:mapr
+{"timestamp":1533937284242,"timeofday":"2018-08-10 02:41:24.242 GMT-0700 PM","st
+atus":"ERROR","errors":[{"id":2,"desc":"File offload failed."}]}
+
+   3 INVALID_FILE Indicates that the specified file does not exist. For
+   example:
+     * [8]CLI
+     * [9]REST
+
+# maprcli file tierjobstatus -name /ecvol1/file3_24 -json
+{
+       "timestamp":1534188250720,
+       "timeofday":"2018-08-13 12:24:10.720 GMT-0700 PM",
+       "status":"ERROR",
+       "errors":[
+               {
+                       "id":3,
+                       "desc":"Tierfile transfer failed, Could not open file /ec
+vol1/file3_24"
+               }
+       ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/ecvol1/fi
+le3_24' --user mapr:mapr
+{"timestamp":1534188250720,"timeofday":"2018-08-13 12:24:10.720 GMT-0700 PM","st
+atus":"ERROR","errors":[{"id":3,"desc":"Tierfile transfer failed, Could not open
+ file /ecvol1/file3_24"}]}
+
+   4 FILE_NOT_TIERED Indicates that the file is not configured for
+   tiering. For example:
+     * [10]CLI
+     * [11]REST
+
+# maprcli file offload -name /testvol2/mfs -json
+{
+        "timestamp":1534141146244,
+        "timeofday":"2018-08-12 11:19:06.244 GMT-0700 PM",
+        "status":"ERROR",
+        "errors":[
+                {
+                        "id":4,
+                        "desc":"Volume is not a tiered volume."
+                }
+        ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/testvol2/
+mfs' --user mapr:mapr
+{
+        "timestamp":1534141146244,
+        "timeofday":"2018-08-12 11:19:06.244 GMT-0700 PM",
+        "status":"ERROR",
+        "errors":[
+                {
+                        "id":6,
+                        "desc":"Volume is not a tiered volume."
+                }
+        ]
+}
+
+   5 FILE_EMPTY Indicates that the file contains no data and is empty. For
+   example:
+     * [12]CLI
+     * [13]REST
+
+# maprcli file tierjobstatus -name /vol1/test1 -json
+{
+        "timestamp":1534141220360,
+        "timeofday":"2018-08-12 11:20:20.360 GMT-0700 PM",
+        "status":"ERROR",
+        "errors":[
+                {
+                        "id":5,
+                        "desc":"File empty."
+                }
+        ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/vol1/test
+1' --user mapr:mapr
+{"timestamp":1534142083085,"timeofday":"2018-08-12 11:34:43.085 GMT-0700 PM","st
+atus":"ERROR","errors":[{"id":5,"desc":"File empty."}]}
+
+   6 NO_GATEWAY Indicates that there is no MAST Gateway available. For
+   example:
+     * [14]CLI
+     * [15]REST
+
+# maprcli file tierjobstatus -name /ecvol1/file2 -json
+{
+       "timestamp":1534185984585,
+       "timeofday":"2018-08-13 11:46:24.585 GMT-0700 AM",
+       "status":"ERROR",
+       "errors":[
+               {
+                       "id":6,
+                       "desc":"Lost connection to gateway."
+               }
+       ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/ecvol1/fi
+le2' --user mapr:mapr
+{"timestamp":1534185984585,"timeofday":"2018-08-13 11:46:24.585 GMT-0700 AM","st
+atus":"ERROR","errors":[{"id":6,"desc":"Lost connection to gateway."}]}
+
+   7 OP_TIMEOUT Indicates that the operation timed out. For example:
+     * [16]CLI
+     * [17]REST
+
+# maprcli file offload -name /vol1/mfs -json
+{
+        "timestamp":1534141379576,
+        "timeofday":"2018-08-12 11:22:59.576 GMT-0700 PM",
+        "status":"ERROR",
+        "errors":[
+                {
+                        "id":6,
+                        "desc":"Lost connection to gateway."
+                }
+        ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/vol1/mfs'
+ --user mapr:mapr
+{"timestamp":1534141379576,"timeofday":"2018-08-12 11:22:59.576 GMT-0700 PM","st
+atus":"ERROR","errors":[{"id":6,"desc":"Lost connection to gateway."}]}
+
+   8 HAS_LOCAL_DATA Indicates data is still on the cluster. For example:
+     * [18]CLI
+     * [19]REST
+
+# maprcli file tierjobstatus -name /vol1/mfs1 -json
+File has local data.
+{
+        "timestamp":1534141820011,
+        "timeofday":"2018-08-12 11:30:20.011 GMT-0700 PM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "status":8,
+                        "message":"File has local data."
+                }
+        ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/vol1/mfs1
+' --user mapr:mapr
+{"timestamp":1534141975490,"timeofday":"2018-08-12 11:32:55.490 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"status":8,"message":"File has local data."}]}
+
+   9 FTOS_ABORTED Indicates file tiering operation was aborted. For
+   example:
+     * [20]CLI
+     * [21]REST
+
+# maprcli file tierjobstatus -name /v3/dataVol/file5 -json
+{
+  "timestamp":1533845080525,
+  "timeofday":"2018-08-09 01:04:40.525 GMT-0700 PM",
+  "status":"OK",
+  "total":1,
+  "data":[
+            {
+                "status":9,
+                "message":"Transfer aborted.",
+                "gateway":"10.10.25.22:8660",
+                "op":"Offload",
+                "completedFids":9,
+                "failedFids":0,
+                "totalFids":9
+            }
+  ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/v3/dataVo
+l/file5' --user mapr:mapr
+{"timestamp":1533845080525,"timeofday":"2018-08-09 01:04:40.525 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"status":9,"message":"Transfer aborted.","gateway"
+:"10.10.25.22:8660","op":"Offload","completedFids":9,"failedFids":0,"totalFids":
+9}]}
+
+   10 FTOS_ABORT_IN_PROGRESS Indicates abort of file tiering operation is
+   in progress. For example:
+     * [22]CLI
+     * [23]REST
+
+# maprcli file tierjobstatus -name /v3/dataVol/file5 -json
+{
+  "timestamp":1533845004549,
+  "timeofday":"2018-08-09 01:03:24.549 GMT-0700 PM",
+  "status":"OK",
+  "total":1,
+  "data":[
+            {
+                "status":10,
+                "message":"File transfer being aborted.",
+                "gateway":"10.10.25.22:8660",
+                "op":"Offload",
+                "completedFids":5,
+                "failedFids":0,
+                "totalFids":9
+            }
+  ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/v3/dataVo
+l/file5' --user mapr:mapr
+{"timestamp":1533845004549,"timeofday":"2018-08-09 01:03:24.549 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"status":10,"message":"File transfer being aborted
+.","gateway":"10.10.25.22:8660","op":"Offload","completedFids":5,"failedFids":0,
+"totalFids":9}]}
+
+   11 FTOS_TRANSFER_IN_PROGRESS Indicates offload or recall of file data
+   is currently in progress. For example:
+     * [24]CLI
+     * [25]REST
+
+# maprcli file tierjobstatus -name /v3/dataVol/file5 -json
+{
+  "timestamp":1533844965363,
+  "timeofday":"2018-08-09 01:02:45.363 GMT-0700 PM",
+  "status":"OK",
+  "total":1,
+  "data":[
+            {
+                "status":11,
+                "message":"File transfer in progress.",
+                "gateway":"10.10.25.22:8660",
+                "op":"Offload",
+                "completedFids":2,
+                "failedFids":0,
+                "totalFids":9
+            }
+  ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/v3/dataVo
+l/file5' --user mapr:mapr
+{"timestamp":1533844965363,"timeofday":"2018-08-09 01:02:45.363 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"status":11,"message":"File transfer in progress."
+,"gateway":"10.10.25.22:8660","op":"Offload","completedFids":2,"failedFids":0,"t
+otalFids":9}]}
+
+   12 FTOS_REQ_QUEUED Indicates that the file is queued for offload. For
+   example:
+     * [26]CLI
+     * [27]REST
+
+# maprcli file tierjobstatus -name /v5/egFile2 -json
+{
+       "timestamp":1534187988469,
+       "timeofday":"2018-08-13 12:19:48.469 GMT-0700 PM",
+       "status":"OK",
+       "total":1,
+       "data":[
+               {
+                       "status":12,
+                       "message":"File transfer request queued.",
+                       "gateway":"10.10.25.29:8660",
+                       "op":"Offload",
+                       "completedFids":0,
+                       "failedFids":0,
+                       "totalFids":0
+               }
+       ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/v5/egFile
+2' --uesr mapr:mapr
+{"timestamp":1534187988469,"timeofday":"2018-08-13 12:19:48.469 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"status":12,"message":"File transfer request queue
+d.","gateway":"10.10.25.29:8660","op":"Offload","completedFids":0,"failedFids":0
+,"totalFids":0}]}
+
+   13 FTOS_JOB_NOT_AVAILABLE Indicates that the specified file tiering
+   operation related job ID is not available or is invalid. For example:
+     * [28]CLI
+     * [29]REST
+
+# maprcli file tierjobstatus -name /v5/nfile2 -json
+{
+  "timestamp":1533841993320,
+  "timeofday":"2018-08-09 12:13:13.320 GMT-0700 PM",
+  "status":"ERROR",
+  "errors":[
+             {
+                  "id":13,
+                  "desc":"File has no active transfer in progress."
+              }
+  ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/v5/nfile2
+' --user mapr:mapr
+{"timestamp":1533841993320,"timeofday":"2018-08-09 12:13:13.320 GMT-0700 PM","st
+atus":"ERROR","errors":[{"id":13,"desc":"File has no active transfer in progress
+."}]}
+
+   14 FTOS_EPERM Indicates that the user cannot perform the tiering
+   operation. For example:
+     * [30]CLI
+     * [31]REST
+
+# maprcli file tierjobstatus -name /ecvol1/file3_1 -json
+{
+       "timestamp":1534188598543,
+       "timeofday":"2018-08-13 12:29:58.543 GMT-0700 PM",
+       "status":"ERROR",
+       "errors":[
+               {
+                       "id":14,
+                       "desc":"File transfer request permission denied."
+               }
+       ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierjobstatus?name=/ecvol1/fi
+le3_1' --user mapr:mapr
+{"timestamp":1534188598543,"timeofday":"2018-08-13 12:29:58.543 GMT-0700 PM","st
+atus":"ERROR","errors":[{"id":14,"desc":"File transfer request permission denied
+."}]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ACEs.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div1entry2
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div2entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div2entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div3entry1
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div3entry2
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div4entry1
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div4entry2
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div5entry1
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div5entry2
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div6entry1
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div6entry2
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div7entry1
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div7entry2
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div8entry1
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div8entry2
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div9entry1
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div9entry2
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div10entry1
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div10entry2
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div11entry1
+  23. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div11entry2
+  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div12entry1
+  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div12entry2
+  26. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div13entry1
+  27. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div13entry2
+  28. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div14entry1
+  29. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div14entry2
+  30. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div15entry1
+  31. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierjobstatus.html#div15entry2

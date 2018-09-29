@@ -1,0 +1,94 @@
+file tierstatus
+
+   Checks the status of the file offload operation and returns information
+   on whether or not the file has any local data.
+
+   This command does not require a MAST Gateway.
+
+Syntax
+
+   CLI
+
+maprcli file tierstatus
+         -name <file_name>
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host:port>/rest/file/tierstatus?<parameters>
+
+Parameters
+
+   Parameter                Description
+   name      The name (including the path) of the file.
+
+Output
+
+   The output of this command varies based on whether or not data is
+   local, was offloaded, or was recalled. The output message looks similar
+   to the following if:
+     * Data was completely offloaded:
+File does not have local data
+     * Data could not be completely offloaded or data was recalled:
+File has local data
+
+Examples
+
+   Retrieve the status of file named new2test4 in volume name testvol2:
+     * [1]CLI
+     * [2]REST
+
+# maprcli file tierstatus -name /testvol2/new2test4 -json
+File does not have local data.
+{
+        "timestamp":1514877988773,
+        "timeofday":"2018-01-01 11:26:28.773 GMT-0800",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                    "status":1,
+                    "message":"File does not have local data."
+                }
+        ]
+}
+
+   Send a request of type GET. For example:
+curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierstatus?name=/testvol2/new2t
+est4' --user mapr:mapr
+{"timestamp":1514877988773,"timeofday":"2018-01-01 11:26:28.773 GMT-0800","statu
+s":"OK","total":1,"data":[{"status":1,"message":"File does not have local data."
+}]}
+
+   Retrieve the status of file named new2test3 in volume named testvol2:
+     * [3]CLI
+     * [4]REST
+
+# maprcli file tierstatus -name /testvol2/new2test3 -json
+File has local data.
+{
+        "timestamp":1514878021374,
+        "timeofday":"2018-01-01 11:27:01.374 GMT-0800",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                    "status":0,
+                    "message":"File has local data."
+                }
+        ]
+}
+
+   Send a request of type GET. For example:
+curl -k -X GET 'https://abc.sj.us:8443/rest/file/tierstatus?name=/testvol2/new2t
+est3' --user mapr:mapr
+{"timestamp":1514878021374,"timeofday":"2018-01-01 11:27:01.374 GMT-0800","statu
+s":"OK","total":1,"data":[{"status":0,"message":"File has local data."}]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierstatus.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierstatus.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierstatus.html#div2entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierstatus.html#div2entry2

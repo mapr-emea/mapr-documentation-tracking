@@ -18,6 +18,7 @@ maprdb root:> indexscan
         --mode
         --where
         --fields
+        --decodeindexedfields
 
 Parameters
 
@@ -55,8 +56,6 @@ Parameters
    not have errors.
    The following lists the types of errors:
      * KEY_TOO_LONG
-     * ARRAYS_ARE_NOT_SUPPORTED
-     * MAPS_ARE_NOT_SUPPORTED
      * INVALID_CAST
 
    --c, --where
@@ -70,6 +69,14 @@ Parameters
 
    See [2]JSON Document Field Paths for details about how to specify field
    paths.
+   --decodeindexedfields
+
+   Enables display of values for indexed fields that are nested documents
+   or arrays
+
+   Value: true
+   Note: This parameter ignores all other values, including specifying no
+   value.
 
 Example: Simple Index
 
@@ -89,20 +96,20 @@ maprdb root:> indexscan /table1 --indexname index1
 1 document(s) found.
 
 // Insert another document with _id value as 2 with field a as a map
-// An error occurs because maps are not allowed on indexed fields
 maprdb root:> insert /table1 --id 2 --value '{"a":[1,2,3]}'
 
 // Perform a normal indexscan; the document that does not have the error is disp
 layed
 maprdb root:> indexscan /table1 --indexname index1
+{"_id":"2","a":[1,2,3]}
 {"_id":"1","a":7}
-1 document(s) found.
+2 document(s) found.
 
-// Perform an indexscan with error mode; the document with the error is displaye
-d
+// Perform an indexscan with error mode; no errors are displayed because MapR-DB
+ 6.1 allows
+// you to create indexes on array fields
 maprdb root:> indexscan /table1 --indexname index1 --mode err
-{"_id":"2","$ERROR":"Index field 2: ARRAYS_ARE_NOT_SUPPORTED"}
-1 document(s) found.
+0 document(s) found.
 
 Example: Composite Index
 
@@ -122,21 +129,74 @@ maprdb root:> indexscan /table1 --indexname index2
 {"_id":"2","c":"db","a":7,"b":"mapr"}
 1 document(s) found.
 
-// Insert a document that has field a as a map (which causes an error because ma
-ps are not allowed on an indexed field)
+// Insert a document that has field a as a map
 maprdb root:> insert /table1 --id 1 --value '{"a":{"m":4},"b":"mapr","c":"db"}'
 Document with id: "1" inserted.
 
-// Perform a normal indexscan; the same results shown earlier are displayed
+// Perform a normal indexscan
 maprdb root:> indexscan /table1 --indexname index2
+{"_id":"1","c":"db","a":{"m":4},"b":"mapr"}
 {"_id":"2","c":"db","a":7,"b":"mapr"}
-1 document(s) found.
+2 document(s) found.
 
-// Perform an indexscan with error mode; the document with the error is displaye
-d
+// Perform an indexscan with error mode; no errors are displayed because MapR-DB
+ 6.1 allows
+// you to create indexes on array fields
 maprdb root:> indexscan /table1 --indexname index2 --mode err
-{"_id":"1","c":"db","$ERROR":"Index field 3: MAPS_ARE_NOT_SUPPORTED"}
-1 document(s) found.
+0 document(s) found.
+
+Example: Index on Container Field Paths
+
+   Assume you have a table in the path /apps/indexExample with the
+   following document:
+{
+   "_id": "10000",
+   "FullName": {
+      "LastName": "Smith",
+      "FirstName": "John"
+   },
+   "Address": {
+      "Street": "123 SE 22nd St.",
+      "City": "Oakland",
+      "State": "CA",
+      "Zipcode": "94601-1001"
+   },
+   "Gender": "M",
+   "AccountBalance": 999.99,
+   "Email": "john.smith@company.com",
+   "Phones": [
+      {"Type": "Home", "Number": "555-555-1234"},
+      {"Type": "Mobile", "Number": "555-555-5678"},
+      {"Type": "Work", "Number": "555-555-9012"}
+   ],
+   "Hobbies": ["Baseball", "Cooking", "Reading"],
+   "DateOfBirth": "10/1/1985"
+}
+
+   The following example creates a composite index on the Type and Number
+   subfields in the nested documents in the Phones array:
+// Create idx3 on the table with indexed fields Phones[].Type and Phones[].Numbe
+r
+# maprcli table index add -path /apps/indexExample -index idx3 \
+    -indexedfields Phones[].Type,Phones[].Number
+
+// Perform an indexscan WITHOUT the decodeindexedfields parameter.
+// Three rows are returned, one for each element in the Phones[] array.
+// The output contains no values for the indexed fields.
+maprdb root:> indexscan /apps/indexExample --indexname idx3
+{"_id":"10000"}
+{"_id":"10000"}
+{"_id":"10000"}
+3 document(s) found
+
+// Perform an indexscan WITH the decodeindexedfields parameter set to true.
+// The output includes the values in the indexed fields.
+maprdb mapr:> indexscan /apps/indexExample --indexname idx3 --decodeindexedfield
+s true
+{"_id":"10000","$idx":["Home","555-555-1234"]}
+{"_id":"10000","$idx":["Mobile","555-555-5678"]}
+{"_id":"10000","$idx":["Work","555-555-9012"]}
+3 document(s) found.
 
 Troubleshooting Use Cases
 

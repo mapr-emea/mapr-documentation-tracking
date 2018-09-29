@@ -1,0 +1,264 @@
+Configuring NFSv4 Server for Kerberos
+
+   You can configure MapR NFSv4 server to use Kerberos-based
+   authentication. MapR supports configuration of [1]NFSv4 server for
+   Kerberos with Active Directory server and Kerberos with LDAP. You can
+   also configure MapR NFSv4 server to work with [2]other Kerberos
+   installations. Before configuring MapR NFSv4 server for Kerberos, you
+   must have performed the following:
+     * Installed packages for Kerberos server.
+     * Installed NFSv4 server. See [3]Installing MapR NFS for more
+       information.
+     * Installed packages for Kerberos client.
+
+   Note: The steps in this section assume a Linux-based Kerberos
+   environment, and the specific commands for your environment may vary.
+   Please consult with your Kerberos administrator for assistance.
+
+Configure NFSv4 Server for Kerberos with Active Directory Server
+
+   The following procedure describes how to configure MapR NFSv4 server to
+   work with the Kerberos available with Active Directory server. Before
+   configuring MapR NFSv4 server, ensure that Active Directory server is
+   installed and all the nodes on the cluster have joined that Active
+   Directory server. The following procedure requires the NFSv4 server to
+   run under user mapr and group maprgrp.
+    1. In an Active Directory server environment, join the cluster nodes
+       to the Active Directoy server.
+       Follow the sample procedure here or consult with your system
+       administrator for assistance with installing and joining the nodes
+       to Active Directoy server.
+    2. Check if Kerberos tickets for host and NFS service principal are
+       present by running the following command:
+# klist
+klist: No credentials cache found (filename: /tmp/krb5cc_0)
+    3. Ensure host principal is available by checking to see if existing
+       keys are present on the node.
+       For example, when you run the following command, the output should
+       look similar to the following output for nfs4ad.com domain:
+# klist -kt
+Keytab name: FILE:/etc/krb5.keytab
+KVNO Timestamp           Principal
+---- ------------------- ------------------------------------------------------
+   2 04/10/2018 23:51:24 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   2 04/10/2018 23:51:24 host/ATSQA4-161@NFS4AD.COM
+   2 04/10/2018 23:51:24 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   2 04/10/2018 23:51:24 host/ATSQA4-161@NFS4AD.COM
+   2 04/10/2018 23:51:24 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   2 04/10/2018 23:51:24 host/ATSQA4-161@NFS4AD.COM
+   2 04/10/2018 23:51:25 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   2 04/10/2018 23:51:25 host/ATSQA4-161@NFS4AD.COM
+   2 04/10/2018 23:51:25 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   2 04/10/2018 23:51:25 host/ATSQA4-161@NFS4AD.COM
+   2 04/10/2018 23:51:25 ATSQA4-161$@NFS4AD.COM
+   2 04/10/2018 23:51:25 ATSQA4-161$@NFS4AD.COM
+   2 04/10/2018 23:51:25 ATSQA4-161$@NFS4AD.COM
+   2 04/10/2018 23:51:25 ATSQA4-161$@NFS4AD.COM
+   2 04/10/2018 23:51:25 ATSQA4-161$@NFS4AD.COM
+    4. Generate the host ticket by running the kinit command.
+       For example:
+[root@atsqa4-161 ~]# kinit -k ATSQA4-161$
+[root@atsqa4-161 ~]# klist
+Ticket cache: FILE:/tmp/krb5cc_0
+Default principal: ATSQA4-161$@NFS4AD.COM
+Valid starting       Expires              Service principal
+04/11/2018 03:04:38  04/11/2018 13:04:38  krbtgt/NFS4AD.COM@NFS4AD.COM
+        renew until 04/18/2018 03:04:38
+    5. Add NFS service principal entry for the host in the AD server by
+       running the setspn command.
+       For example, for nfs4ad.com domain, run the following command:
+C:\Users\Administrator>setspn -A nfs/atsqa4-161.nfs4ad.com mapr
+Checking domain DC=nfs4ad,DC=com
+Registering ServicePrincipalNames for CN=mapr,CN=Users,DC=nfs4ad,DC=com
+        nfs/atsqa4-164.nfs4ad.com
+Updated object
+    6. Get the latest service ticket for the host from the AD server by
+       running the kvno command.
+       For example:
+# kvno nfs/atsqa4-164.nfs4ad.com@NFS4AD.COM
+nfs/atsqa4-164.nfs4ad.com@NFS4AD.COM: kvno = 46
+kvno nfs/qa108-43.nfs4ad.com@NFS4AD.COM
+    7. Add entry for NFS service principal key in the Kerberos keytab
+       file, /etc/krb5.keytab:
+# ktutil
+ktutil:  addent -password -p nfs/atsqa4-164.nfs4ad.com@NFS4AD.COM -k 46 -e RC4-H
+MAC
+Ex: addent -password -p nfs/qa108-43.nfs4ad.com@NFS4AD.COM -k 46 -e RC4-HMAC
+Password for nfs/atsqa4-164.nfs4ad.com@NFS4AD.COM:
+( Give mapr user password i.e nfs4AD123 )
+ktutil:  l
+slot KVNO Principal
+---- ---- ---------------------------------------------------------------------
+   1   46      nfs/atsqa4-164.nfs4ad.com@NFS4AD.COM
+ktutil:  wkt /etc/krb5.keytab
+ktutil:  q
+    8. Verify that NFS service principal and host principal are in the
+       /etc/krb5.keytab file by running the klist command.
+       For example, for domain nfs4ad.com, run the following command and
+       verify the entries in the file:
+# klist -kt /etc/krb5.keytab
+Keytab name: FILE:/etc/krb5.keytab
+KVNO Timestamp           Principal
+---- ------------------- ------------------------------------------------------
+   4 08/01/2018 00:29:21 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   4 08/01/2018 00:29:21 host/ATSQA4-161@NFS4AD.COM
+   4 08/01/2018 00:29:21 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   4 08/01/2018 00:29:21 host/ATSQA4-161@NFS4AD.COM
+   4 08/01/2018 00:29:21 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   4 08/01/2018 00:29:21 host/ATSQA4-161@NFS4AD.COM
+   4 08/01/2018 00:29:21 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   4 08/01/2018 00:29:21 host/ATSQA4-161@NFS4AD.COM
+   4 08/01/2018 00:29:21 host/atsqa4-161.nfs4ad.com@NFS4AD.COM
+   4 08/01/2018 00:29:21 host/ATSQA4-161@NFS4AD.COM
+   4 08/01/2018 00:29:21 ATSQA4-161$@NFS4AD.COM
+   4 08/01/2018 00:29:21 ATSQA4-161$@NFS4AD.COM
+   4 08/01/2018 00:29:22 ATSQA4-161$@NFS4AD.COM
+   4 08/01/2018 00:29:22 ATSQA4-161$@NFS4AD.COM
+   4 08/01/2018 00:29:22 ATSQA4-161$@NFS4AD.COM
+  46 08/01/2018 02:58:01 nfs/atsqa4-161.nfs4ad.com@NFS4AD.COM
+    9. Ensure that /etc/krb5.keytab file is owned by user mapr and if
+       necessary, change ownership to user mapr.
+       For example:
+[root@qa108-41 ~]# chown mapr:root /etc/krb5.keytab
+[root@qa108-41 ~]# ls -l /etc/krb5.keytab
+-rw------- 1 mapr root 4175 Jul 22 23:53 /etc/krb5.keytab
+   10. Retart the gssd service on the host to establish GSS security
+       contexts.
+          + [4]CentOS
+          + [5]Ubuntu
+service rpcgssd start
+service gssd restart
+   11. Enable security variable, SecType, in the NFSv4 server
+       configuration file at /opt/mapr/conf/nfs4server.conf.
+       For example:
+  # Security type (krb5,krb5i,krb5p)
+  SecType = krb5;
+   12. Start the NFSv4 server.
+       For more information, see [6]Starting, Stopping, and Restarting
+       MapR NFSv4.
+   13. List the shares exported on the server by running showmount -e
+       command.
+       If the protocol is v4 only, the showmount command will not return
+       the list of exported NFS shares. Instead, to view the export list,
+       run the following command:
+/opt/mapr/server/nfs4mgr list-exports
+   14. Ensure that the list-exports command runs successfuly.
+       For example:
+#  maprcli nfs4mgmt list-exports
+Export Id     Path
+30            /mapr
+0             /
+   15. (Troubleshooting) Run the following command to restart the services
+       if you see security-related issues.
+          + [7]CentOS
+          + [8]Ubuntu
+maprcli node services -nfs4 stop -nodes `hostname` ; service rpcgssd restart; sl
+eep 1; service rpcbind  restart ; sleep 1; service nfs restart ; service nfs sto
+p ; sleep 2; maprcli node services -nfs4 start -nodes `hostname`
+maprcli node services -nfs4 stop -nodes `hostname` ; service gssd restart; sleep
+ 1; service rpcbind  restart ; sleep 1; service nfs-kernel-server restart ; serv
+ice nfs-kernel-server stop ; sleep 2; maprcli node services -nfs4 start -nodes `
+hostname`
+   16. Set up VIPs for the NFSv4 servers:
+         a. Add entries for IPs and names of VIPs in the /etc/hosts file
+            on the NFSv4 server host first and then on the AD server host.
+            For example:
+10.10.88.14 nfsvirtualip1
+10.10.88.15 nfsvirtualip2
+         b. Add NFS service principal for the virtual IP by running the
+            setspn command.
+            For example:
+C:\Users\Administrator>setspn -A host/nfsvirtualip1 nfsserver
+C:\Users\Administrator>setspn -A nfs/nfsvirtualip1 nfsserver
+
+C:\Users\Administrator>setspn -A host/nfsvirtualip2 nfsserver
+C:\Users\Administrator>setspn -A nfs/nfsvirtualip2 nfsserver
+         c. Restart the gssd service on the host to re-establish GSS
+            security contexts.
+            For example:
+service rpcgssd restart
+
+Configuring NFSv4 Server for Other Kerberos Installations
+
+    1. Configure NFS server for Kerberos.
+       Consult with your system administrator for assistance with the
+       commands for configuring the NFS server for Kerberos-based
+       authentication. For example, you must do the following:
+          + Create a service principal with nfs as the service name.
+            For example: nfs/host.domain.com@REALM
+          + Generate a keytab for the NFS service principal, store it in
+            the /etc/krb5.keytab file, and set correct permissions on the
+            file.
+    2. Enable the security variable, SecType, in the NFSv4 server
+       configuration file at /opt/mapr/conf/nfs4server.conf.
+       For example:
+  # Security type (krb5,krb5i,krb5p)
+  SecType = krb5;
+    3. Start the NFSv4 server.
+       For more information, see [9]Starting, Stopping, and Restarting
+       MapR NFSv4.
+    4. List the shares exported on the server by running showmount -e
+       command.
+       If the protocol is v4 only, the showmount command will not return
+       the list of exported NFS shares. Instead, to view the export list,
+       run the following command:
+/opt/mapr/server/nfs4mgr list-exports
+    5. Ensure that the list-exports command runs successfuly.
+       For example:
+#  maprcli nfs4mgmt list-exports
+Export Id     Path
+30            /mapr
+0             /
+
+Configuring NFSv4 Client
+
+    1. Ensure that NFS client has a /etc/krb5.keytab file with a valid
+       principal similar to one of the following:
+       nfs/<client_fqdn>@<domain>@<REALM>,
+       host/<client_fqdn>@<domain>@<REALM>, or <HOSTNAME>$@<REALM>.
+       If the principal is not present, create the keytab file with the
+       principal, which will be used to mount the share, for the OS (as
+       mentioned in the OS vendor documentation).
+    2. Mount the cluster by running the mount command.
+       For example:
+mount -t nfs4 -o sec=<security-type> <nfs4-server-hostname>:/<pseudo-path> <moun
+t-point>
+       For example:
+# mount -t nfs4 -o sec=krb5 <FQDN>:/mapr /mnt/nfs4mnt
+       For more information, see [10]Mounting MapR Filesystem Using NFS4.
+    3. Generate user ticket for the user to access the mount path.
+       For example, for user mapr on domain nfs4ad.com, run one of the
+       following commands to generate the ticket:
+          +
+kinit mapr@NFS4AD.COM
+<Enter password>
+          +
+echo usr2AD123 | kinit user2@NFS4AD.COM
+       Note: You must renew the user ticket before it expires; otherwise,
+       the mount path returns permissions denied error after the ticket
+       expires.
+    4. (Troubleshooting) Restart the services and mount again to avoid
+       security-related issues.
+
+        CentOS
+
+service rpcgssd restart; sleep 1; service rpcbind  restart ; sleep 1; service nf
+s stop
+
+        Ubuntu
+
+service rpcgssd restart; sleep 1; service rpcbind  restart ; sleep 1; service nf
+s stop
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/NFSv4KerberosConfig.html#krbwithAD
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/NFSv4KerberosConfig.html#nfsv4foranykerberos
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallNFS.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/NFSv4KerberosConfig.html#div1entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/NFSv4KerberosConfig.html#div1entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/StartStopRestartNFSv4.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/NFSv4KerberosConfig.html#div2entry1
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/NFSv4KerberosConfig.html#div2entry2
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/StartStopRestartNFSv4.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/MountNFSv4ToMFS.html

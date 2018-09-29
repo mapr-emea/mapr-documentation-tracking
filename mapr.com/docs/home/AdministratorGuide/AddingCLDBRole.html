@@ -2,15 +2,76 @@ Adding a CLDB Role Using the CLI
 
    Complete the following steps to add the CLDB role to a node in the
    cluster:
-    1. Install the CLDB package.
-    2. Run configure.sh -C on the node where you added the new CLDB role.
-       Using the -C option provides the list of CLDB nodes. If Warden is
+
+Adding a CLDB Role to a Node on an Unsecure Cluster
+
+    1. Install the CLDB package, mapr-cldb, on the node with the apt-get,
+       yum, or zypper commands, depending on your operating system.
+    2. Run [1]configure.sh with the -C and -R options on the node where
+       you added the new CLDB role.
+       Use the -C option to provide the list of CLDB nodes. If Warden is
        running, the CLDB service starts automatically.
-    3. Run configure.sh on all other nodes in the cluster.
-       Use the -C option and provide the list of CLDB nodes that includes
-       the new node.
-    4. Start or restart Warden on the node where you added the CLDB role.
-    5. Perform a rolling restart of Warden on all other nodes. Warden
-       picks up the new CLDB node. Issue the following command to restart
-       Warden on the node where you installed the role:
-% service mapr-warden restart
+    3. Run [2]configure.sh with the -R options on all other nodes in the
+       cluster.
+       Use the -C option and provide the list of CLDB nodes, including the
+       new node.
+    4. Verify that the node has a CLDB role by running the following
+       command:
+maprcli node listcldbs
+       The output should show all the CLDB nodes including the node where
+       the role was added.
+
+Adding a CLDB Role to a Node on a Secure Cluster
+
+    1. Install the CLDB package, mapr-cldb, on the node with the apt-get,
+       yum, or zypper commands, depending on your operating system.
+    2. Copy the following files from the /opt/mapr/conf directory on any
+       existing CLDB node on the cluster to the /opt/mapr/conf directory
+       on this node.
+          + cldb.key
+          + dare.master.key
+          + maprserverticket
+          + ssl_keystore
+          + ssl_keystore.p12
+          + ssl_keystore.pem
+          + ssl_truststore
+          + ssl_truststore.p12
+          + ssl_truststore.pem
+       Note: This dare.master.key will be present only if the cluster is
+       enabled for encryption of data at rest.
+    3. Run [3]configure.sh with the following options on the node where
+       you added the new CLDB role.
+          + -secure: Use this option to enable the node for security.
+          + -C: Use this option to include this node in the list of CLDB
+            nodes. If Warden is running, the CLDB service starts
+            automatically.
+          + -dare: Use this option only if the cluster is enabled for data
+            at rest encryption. Do not specify this if the cluster is not
+            enabled for data at rest encryption.
+          + Use one of the following to configure the list of ZooKeeper
+            nodes:
+               o -R: Use this option if the node is an existing cluster
+                 node. This option uses the previously configured list of
+                 ZooKeeper nodes. When -R is specified, the ZooKeeper
+                 credentials are read from warden.conf file.
+               o -Z: Use this option if the node is a new node on the
+                 cluster. This option specifies the list of ZooKeeper
+                 nodes.
+    4. Run [4]configure.sh with the following options on all other nodes
+       in the cluster.
+          + -C: Use this option to include the new CLDB node in the list
+            of CLDB nodes.
+          + -R: Use this option to use the previously configured list of
+            ZooKeeper nodes.
+    5. Verify that the node has a CLDB role by running the following
+       command:
+maprcli node listcldbs
+       The output should show all the CLDB nodes including the node where
+       the role was added.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html

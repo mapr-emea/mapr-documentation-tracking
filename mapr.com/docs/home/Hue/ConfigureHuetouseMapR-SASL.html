@@ -4,101 +4,47 @@ Configure Hue to use MapR-SASL
    various components on a secure MapR cluster. Hue automatically detects
    and sets the security configuration of the cluster and its components.
    Therefore, in some cases, minimal configuration is required.
-   This topic includes instructions to complete the MapR-SASL
-   configuration for:
-     * Hive
-     * Sqoop2
+   The following components are supported by Hue with MapR-SASL:
      * HttpFS
+     * YARN and Spark History Server
+     * Hive
+     * Livy
+     * Sqoop2
+     * HBase Thrift
      * Oozie
-     * YARN
+     * Drill
+
+   Note: For secure clusters, Hue automatically sets security_enabled to
+   true and mechanism to MAPR-SECURITY for these components. However, you
+   can manually override these properties.
+   An example of a default configuration with automatically defined
+   security_enabled and mechanism properties for HttpFS is as follows:
+[hadoop]
+ [[hdfs_clusters]]
+   # HA support by using HttpFs
+   [[[default]]]
+        ...
+   # Change this if your HDFS cluster is secured
+   security_enabled=${security_enabled}
+
+   # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+   mechanism=${mechanism}
+        ...
+
+   An example of a manual configuration of security_enabled and mechanism
+   properties for HttpFS is as follows:
+[hadoop]
+ [[hdfs_clusters]]
+   # HA support by using HttpFs
+   [[[default]]]
+        ...
+   # Change this if your HDFS cluster is secured
+   security_enabled=true
+
+   # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+   mechanism=MAPR-SECURITY
+        ...
 
    Note: After you configure the hue.ini, you must restart Hue. However,
    if you configure multiple sections of the same file, you can restart
    Hue one time after your updates are complete.
-
-Configure Hue to use MapR-SASL for Hive
-
-   Hue can use MapR-SASL to communicate with Hive on a secure MapR
-   cluster.
-
-   When Hive is configured to use MapR-SASL and the cluster is secure, Hue
-   automatically uses MapR-SASL with Hive.
-
-Configure Hue to use MapR-SASL for Sqoop2
-
-   Hue can use MapR-SASL to communicate with Sqoop2 on a secure MapR
-   cluster.
-
-   When Sqoop2 is configured to use MapR-SASL and the cluster is secure,
-   Hue automatically uses MapR-SASL with Sqoop2.
-
-Configure Hue to use MapR-SASL for HttpFS
-
-   Hue uses MapR-SASL to communicate with HttpFS 1.0 on a secure MapR
-   cluster.
-
-   The default hui.ini file that is installed with Hue includes the
-   following configurations that allow Hue to automatically detect and set
-   the security configuration:
- [[hdfs_clusters]]
-        # HA support by using HttpFs
-        [[[default]]]
-        ...
-        # Change this if your HDFS cluster is secured
-        security_enabled=${security_enabled}
-
-        # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
-        mechanism=${mechanism}
-        ...
-
-   Note: If you set security_enabled=True and mechanism=MAPR-SECURITY, Hue
-   will use MapR-SASL but you will not take advantage of the automatic
-   detection feature.
-
-Configure Hue to use MapR-SASL for Oozie
-
-   Hue can use MapR-SASL to communicate with Oozie on a secure MapR
-   cluster.
-
-   The default hui.ini file that is installed with Hue includes the
-   following configurations that allow Hue to automatically detect and set
-   the security configuration:
-[liboozie]
-        ...
-        # Requires FQDN in oozie_url if enabled
-        security_enabled=${security_enabled}
-        ...
-        # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
-        mechanism=${mechanism}
-
-   Note: If you set security_enabled=True and mechanism=MAPR-SECURITY, Hue
-   will use MapR-SASL but you will not take advantage of the automatic
-   detection feature.
-
-Configure Hue to use MapR-SASL for YARN
-
-   Hue can use MapR-SASL to communicate with YARN on a secure MapR
-   cluster.
-
-   To configure Hue to use MapR-SASL for YARN, complete the following
-   steps to in the [[yarn_clusters]] [[[default]]] section of the hue.ini:
-    1. Verify that security_enabled=true or
-       security_enabled=${security_enabled}.
-    2. Verify that mechanism=MAPR-SECURITY or mechanism=${mechanism}.
-    3. Set ssl_cert_ca_verify=False.
-       Note: The changes are summarized in the following hue.ini file:
-[[yarn_clusters]] [[[default]]]
-            ...
-            # Change this if your YARN cluster is secured
-            security_enabled=${security_enabled}
-            ...
-            # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
-            mechanism=${mechanism}
-
-            # In secure mode (HTTPS), if SSL certificates from Resource Manager'
-s
-            # Rest Server have to be verified against certificate
-            authority ssl_cert_ca_verify=False
-       Note: If you set security_enabled=True and mechanism=MAPR-SECURITY,
-       Hue will use MapR-SASL but you will not take advantage of the
-       automatic detection feature.

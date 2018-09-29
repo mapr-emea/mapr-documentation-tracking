@@ -1,17 +1,19 @@
 Examples: Inserting JSON Documents
 
    This section contains sample code that inserts a JSON document into a
-   MapR-DB JSON table. It also shows the MapR-DB Shell syntax for
-   inserting documents.
+   MapR Database JSON table. It also shows the MapR Database Shell syntax
+   for inserting documents.
      * [1]Java
-     * [2]dbshell
+     * [2]Node.js
+     * [3]Python
+     * [4]dbshell
 
    The following code is available at
-   [3]OJAI_002_GetStoreAndInsertDocuments.java.
+   [5]OJAI_002_GetStoreAndInsertDocuments.java.
 
    After you create the JSON document from a JavaBean, call the
-   [4]DocumentStore.insertOrReplace method to insert the document into
-   MapR-DB.
+   [6]DocumentStore.insertOrReplace method to insert the document into
+   MapR Database.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -71,8 +73,180 @@ n
 
 }
 
-   The following shows the syntax to insert a document with MapR-DB Shell.
-   See [5]dbshell insert for more information and examples.
+   The following code is available at
+   [7]OJAI_002_GetStoreAndInsertDocuments.js.
+
+   The following code creates a list of JSON objects and then calls the
+   [8]DocumentStore.insertOrReplace method to insert the document into
+   MapR Database.
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((store) => {
+    const documentList = [{'_id': 'user0000',
+      'age': 35,
+      'firstName': 'John',
+      'lastName': 'Doe',
+      'address': {
+        'street': '350 Hoger Way',
+        'city': 'San Jose',
+        'state': 'CA',
+        'zipCode': 95134
+      },
+      'phoneNumbers': [
+        {'areaCode': 555, 'number': 5555555},
+        {'areaCode': '555', 'number': '555-5556'}]
+    },
+      {'_id': 'user0001',
+        'age': 26,
+        'firstName': 'Jane',
+        'lastName': 'Dupont',
+        'address': {
+          'street': '320 Blossom Hill Road',
+          'city': 'San Jose',
+          'state': 'CA',
+          'zipCode': 95196
+        },
+        'phoneNumbers': [
+          {'areaCode': 555, 'number': 5553827},
+          {'areaCode': '555', 'number': '555-6289'}]
+      },
+      {'_id': 'user0002',
+        'age': 45,
+        'firstName': 'Simon',
+        'lastName': 'Davis',
+        'address': {
+          'street': '38 De Mattei Court',
+          'city': 'San Jose',
+          'state': 'CA',
+          'zipCode': 95142
+        },
+        'phoneNumbers': [
+          {'areaCode': 555, 'number': 5425639},
+          {'areaCode': '555', 'number': '542-5656'}]
+      }
+    ];
+    const promiseList = documentList.map((doc) => {
+      // Print the OJAI Document
+      console.log(JSON.stringify(doc));
+      // Insert the OJAI Document into the DocumentStore
+      return store.insertOrReplace(doc);
+    });
+    return Promise.all(promiseList);
+  })
+  .then(() => {
+    // close the OJAI connection
+    connection.close();
+  });
+
+   The following code is available at
+   [9]002_get_store_and_insert_documents.py.
+
+   The following code creates a list of JSON dictionary objects, creates
+   [10]Document objects, and calls the [11]DocumentStore.insert_or_replace
+   method to insert the documents into MapR Database.
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+document_list = [{'_id': 'user0000',
+                  'age': 35,
+                  'firstName': 'John',
+                  'lastName': 'Doe',
+                  'address': {
+                      'street': '350 Hoger Way',
+                      'city': 'San Jose',
+                      'state': 'CA',
+                      'zipCode': 95134
+                  },
+                  'phoneNumbers': [
+                      {'areaCode': 555, 'number': 5555555},
+                      {'areaCode': '555', 'number': '555-5556'}]
+                  },
+                 {'_id': 'user0001',
+                  'age': 26,
+                  'firstName': 'Jane',
+                  'lastName': 'Dupont',
+                  'address': {
+                      'street': '320 Blossom Hill Road',
+                      'city': 'San Jose',
+                      'state': 'CA',
+                      'zipCode': 95196
+                  },
+                  'phoneNumbers': [
+                      {'areaCode': 555, 'number': 5553827},
+                      {'areaCode': '555', 'number': '555-6289'}]
+                  },
+                 {'_id': 'user0002',
+                  'age': 45,
+                  'firstName': 'Simon',
+                  'lastName': 'Davis',
+                  'address': {
+                      'street': '38 De Mattei Court',
+                      'city': 'San Jose',
+                      'state': 'CA',
+                      'zipCode': 95142
+                  },
+                  'phoneNumbers': [
+                      {'areaCode': 555, 'number': 5425639},
+                      {'areaCode': '555', 'number': '542-5656'}]
+                  }
+                 ]
+
+for doc_dict in document_list:
+    # Create new document from json_document
+    new_document = connection.new_document(dictionary=doc_dict)
+    # Print the OJAI Document
+    print(new_document.as_json_str())
+
+    # Insert the OJAI Document into the DocumentStore
+    store.insert_or_replace(new_document)
+
+# close the OJAI connection
+connection.close()
+
+   The following shows the syntax to insert a document with MapR Database
+   Shell. See [12]dbshell insert for more information and examples.
 # mapr dbshell
 maprdb root:>
 
@@ -87,6 +261,13 @@ References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect1
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect2
-   3. https://github.com/mapr-demos/ojai-2-examples/tree/master/src/main/java/com/mapr/ojai/examples/OJAI_002_GetStoreAndInsertDocuments.java
-   4. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/DocumentStore.html#insertOrReplace-org.ojai.Document-
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-insert.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect3
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect4
+   5. https://github.com/mapr-demos/ojai-2-examples/tree/master/src/main/java/com/mapr/ojai/examples/OJAI_002_GetStoreAndInsertDocuments.java
+   6. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#insertOrReplace-org.ojai.Document-
+   7. https://github.com/mapr-demos/private-ojai-2-examples/blob/master/nodejs/OJAI_002_GetStoreAndInsertDocuments.js
+   8. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#insertorreplace
+   9. https://github.com/mapr-demos/private-ojai-2-examples/tree/master/python/002_get_store_and_insert_documents.py
+  10. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1_document_1_1_document.html
+  11. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#a581680ef41e95e166c58fec952bf5578
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-insert.html

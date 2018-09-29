@@ -31,6 +31,10 @@ md64/server/:/opt/mapr/lib
    must be stored.
    fuse.client.lib.path /tmp Specifies the path to where the client
    libraries must be stored.
+   Note: To install and use FUSE-based POSIX client and NFSv4 on the same
+   node, ensure that the path for the client library for the FUSE-based
+   POSIX client and NFSv4 is not /tmp, which is the default. Specify a
+   different location for the client libraries. For example, /tmp/fuselib.
    fuse.allow.other 1 Allow other users to access the mountpoint. Value
    can be:
      * 0 - to not allow other users
@@ -82,6 +86,8 @@ md64/server/:/opt/mapr/lib
    sessions, which is useful if more number of files need to be opened
    simultaneously. However, note that each additional read ahead session
    will consume more memory (512K per read ahead session) and threads.
+   fuse.track.memory false Specifies whether to enable (true) or disable
+   (false) memory tracking for FUSE.
    fuse.num.threads 64 Specifies the number of FUSE threads in userspace
    per mountpoint. A higher number allows parallel processing of multiple
    operations. Recommended value is only up to 64.
@@ -117,6 +123,13 @@ md64/server/:/opt/mapr/lib
      * 0 - disable
      * 1 - optimize
 
+   fuse.evenly.spread.data 0 Specifies whether (1) or not (0) to evenly
+   spread writes across the nodes on the cluster. If set to 0, which is
+   the default, writes are always sent to the local master node, from
+   where data is replicated on all the other nodes, and if set to 1,
+   writes are distributed across different nodes. Set the value to 1 in
+   case of reduced performance resulting from a large number of writes on
+   the local master node.
    fuse.disable.shardcache 0 Specifies whether to disable shard cache,
    which is a cache of lookups. Value can be:
      * 0 - false
@@ -136,7 +149,10 @@ md64/server/:/opt/mapr/lib
    location or the user’s servicewithimpersonation ticket file location.
    You can use the mapr user ticket on the server node and service with
    impersonation ticket on client node. The FUSE service must be started
-   by the root user if servicewithimpersonation ticket is specified.
+   by the root user if servicewithimpersonation ticket is specified. In
+   case of non-impersonated ticket, the ticket credentials becomes the
+   identity for all the requests, no matter which user is accessing the
+   fuse mount point.
    See also: [3]Setting up Ticket for POSIX Client.
    fuse.nonempty 0 Specifies whether FUSE can be mounted at a non-empty
    mountpoint (1) or at an empty mountpoint (0). Value can be:
@@ -235,6 +251,25 @@ md64/server/:/opt/mapr/lib
    cache to allow the kernel to perform a write through.
    fuse.cluster.conf.location /opt/mapr/conf/mapr-clusters.conf The path
    to the configuration file to use.
+   fuse.log.debug_level error The FUSE-based posix client log level. Value
+   can be one of the following:
+     * fatal
+     * error
+     * warn
+     * info
+     * debug
+
+   The default value is error.
+   fuse.use.compressed.inode.format 0 Specifies whether or not to use
+   compressed inode format. When enabled, a 16 bit uniquifier is used to
+   avoid inode cache collisions when multiple clients are modifying
+   (creating, deleting, etc.) the same directories/files.. Value can be
+   one of the following:
+     * 0 — (default) do not use compressed inode format
+     * 1 — use compressed inode format including uniquifier
+
+   Note: Even when set to 1, EBUSY errors are returned if client accesses
+   more than 32k volumes at the same time.
 
    You must start/restart the FUSE-based POSIX client for the changes to
    take effect. See [4]Starting and Stopping the POSIX Client for more
@@ -244,23 +279,24 @@ md64/server/:/opt/mapr/lib
    When you install a patch, a new and backup copy of the fuse.conf file,
    fuse.conf.new and fuse.conf.old, are available in the /opt/mapr/conf
    directory. You can find the new parameters in the fuse.conf.new file;
-   if needed, you can copy the new parameters to your existing fuse.conf
-   file and restart FUSE for the settings to take effect.
+   if needed, you can copy the new parameters (with default values) to
+   your existing fuse.conf file and restart FUSE for the settings to take
+   effect.
 
    When you upgrade from a prior release, on all supported OS other than
    Ubuntu, the new fuse.conf file and a backup copy of the fuse.conf file
    from prior version named fuse.conf.backup are available in the
    /opt/mapr/conf directory. You can find the new parameters with default
-   values in the new fuse.conf file and your custom settings from the
-   prior version in the fuse.conf.backup file. On Ubuntu, you can find the
-   new fuse.conf file in the /opt/mapr/conf directory and by default, no
-   backup copy of the fuse.conf file from prior version is available
-   unless you created one before upgrade. To continue using FUSE with your
-   custom settings and to avail of the new settings, manually copy your
-   custom settings in the fuse.conf.backup file to the new fuse.conf file,
-   set custom values for the new parameters in the new fuse.conf file
-   where necessary, and restart FUSE-based POSIX client for the settings
-   to take effect.
+   values in the new fuse.conf file under /opt/mapr/conf.new folder and
+   your custom settings from the prior version in the fuse.conf.backup
+   file. On Ubuntu, you can find the new fuse.conf file in the
+   /opt/mapr/conf directory and by default, no backup copy of the
+   fuse.conf file from prior version is available unless you created one
+   before upgrade. To continue using FUSE with your custom settings and to
+   avail of the new settings, manually copy your custom settings in the
+   fuse.conf.backup file to the new fuse.conf file, set custom values for
+   the new parameters in the new fuse.conf file where necessary, and
+   restart FUSE-based POSIX client for the settings to take effect.
 
 References
 

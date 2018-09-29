@@ -65,8 +65,8 @@ Guidelines for Using Casts in Indexes
           + Date
           + Time
           + Timestamp
-       Note: MapR-DB does not support casting from any data type to byte,
-       short, decimal, binary, or interval.
+       Note: MapR Database does not support casting from any data type to
+       byte, short, decimal, binary, or interval.
        Note: Queries that use the CAST function on fields with timestamp
        and binary data types are not supported.
      * When casting to a string type, you can optionally specify a length.
@@ -75,11 +75,11 @@ Guidelines for Using Casts in Indexes
      * When casting a float or double type to a string type, you cannot
        control the precision of the digits in the resulting string value.
        Float and double are approximate representations of decimal values.
-     * When casting from a binary type, MapR-DB assumes that the binary
-       value is a UTF-8 formatted string representation of the resulting
-       data type.
-     * If MapR-DB cannot cast a value, MapR-DB indexes the row with an
-       encoding error that specifies a CAST issue.
+     * When casting from a binary type, MapR Database assumes that the
+       binary value is a UTF-8 formatted string representation of the
+       resulting data type.
+     * If MapR Database cannot cast a value, MapR Database indexes the row
+       with an encoding error that specifies a CAST issue.
      * You cannot cast all data types to the supported data types. See the
        Casting Matrix below for supported and unsupported combinations.
 
@@ -90,19 +90,21 @@ Casting Matrix
    indicates a supported casting; N indicates an unsupported casting.
    Hyphen (-) indicates that casting is unnecessary, because the data
    types are comparable.
-             int long float double string boolean date time timestamp
-   byte      Y   Y    Y     Y      Y      Y       N    N    N
-   short     Y   Y    Y     Y      Y      Y       N    N    N
-   int       -   Y    Y     Y      Y      Y       Y^1  Y^2  Y
-   long      Y   -    Y     Y      Y      Y       Y    Y    Y
-   float     Y   Y    -     Y      Y      Y       N    N    N
-   double    Y   Y    Y     -      Y      Y       N    N    N
-   string    Y   Y    Y     Y      -      Y^3     Y    Y    Y
-   boolean   Y   Y    N     N      Y      -       N    N    N
-   date      N   N    N     N      Y      N       -    Y    Y
-   time      N   N    N     N      Y      N       N    -    N
-   timestamp N   N    N     N      Y^4    N       Y    Y    -
-   binary    Y   Y    Y     Y      Y      N       N    N    N
+                   int long float double string boolean date time timestamp
+   byte            Y   Y    Y     Y      Y      Y       N    N    N
+   short           Y   Y    Y     Y      Y      Y       N    N    N
+   int             -   Y    Y     Y      Y      Y       Y^1  Y^2  Y
+   long            Y   -    Y     Y      Y      Y       Y    Y    Y
+   float           Y   Y    -     Y      Y      Y       N    N    N
+   double          Y   Y    Y     -      Y      Y       N    N    N
+   string          Y   Y    Y     Y      -      Y^3     Y    Y    Y
+   boolean         Y   Y    N     N      Y      -       N    N    N
+   date            N   N    N     N      Y      N       -    Y    Y
+   time            N   N    N     N      Y      N       N    -    N
+   timestamp       N   N    N     N      Y^4    N       Y    Y    -
+   binary          Y   Y    Y     Y      Y      N       N    N    N
+   array           N   N    N     N      N      N       N    N    N
+   nested document N   N    N     N      N      N       N    N    N
 
    ^1 When casting int/long to a date type, the date value is constructed
    based on the int/long value being the number of milliseconds since
@@ -111,9 +113,9 @@ Casting Matrix
    ^2 When casting int/long to a time type, the time value is constructed
    based on the int/long value being the time of day in milliseconds.
 
-   ^3 MapR-DB casts the strings true, yes, on, y, t, and 1 to boolean
-   true. MapR-DB casts the strings false, no, off, n, f, and 0 to boolean
-   false.
+   ^3 MapR Database casts the strings true, yes, on, y, t, and 1 to
+   boolean true. MapR Database casts the strings false, no, off, n, f, and
+   0 to boolean false.
 
    ^4 The string represents the time in UTC timezone.
 
@@ -134,10 +136,10 @@ maprcli table index add -path /drill/testdata/qa/sf1/maprdb/json/lineitem -index
    -includedfields L_LINESTATUS,L_QUANTITY
 
    The index stores the values of the L_LINENUMBER and L_ORDERKEY fields
-   as the int data type. MapR-DB can use the index for any subsequent
-   queries that use the CAST function to retrieve these fields as the int
-   type, instead of accessing data in the primary table and converting the
-   values to int.
+   as the int data type. MapR Database can use the index for any
+   subsequent queries that use the CAST function to retrieve these fields
+   as the int type, instead of accessing data in the primary table and
+   converting the values to int.
    Note: If you created an index on the L_LINENUMBER and L_ORDERKEY fields
    without the CAST function, the query used in this example would not
    benefit from the index.

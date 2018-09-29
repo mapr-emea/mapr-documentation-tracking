@@ -6,7 +6,48 @@ Pre-Upgrade Steps for MapR Monitoring
    However, it is a best practice to backup the files manually in case an
    error occurs or if the specific file you customized is not
    automatically backed up by the script.
-    1. Before you upgrade metric monitoring components, create a backup of
+   Note: This upgrade sequence does not implement security in the MapR
+   Monitoring components. If security needs to be configured, you must
+   generate certain files and copy them to the appropriate nodes after
+   upgrading. The [1]Post-Upgrade Steps for MapR Monitoring provide links
+   to the installation procedures that provide this information.
+    1. Before backing up configuration files, ensure that your
+       Elasticsearch and Kibana indexes are not affected by the upgrade:
+       Note: This step assumes that log monitoring is configured. You can
+       skip this step if your cluster is not configured for log
+       monitoring.
+         a. If you are using Elasticsearch version 2.x, upgrade your
+            Elasticsearch index to version 6. For upgrade information,
+            see:
+            [2]https://www.elastic.co/guide/en/elasticsearch/reference/cur
+            rent/reindex-upgrade.html
+            You need to upgrade your Elasticsearch index if your cluster
+            is running a MEP in the range 1.1 through 3.0.2. See the
+            following table. MEPs 1.1 through 3.0.2 use Elasticsearch
+            version 2.3.3. If your cluster is running a MEP in the range
+            3.0.3 through 5.0.1, you are using Elasticsearch 5.4.1, and
+            you do NOT need to upgrade the index..
+
+                   MEP        Elasticsearch Version
+            6.1.0             6.2.3
+            5.0.1             5.4.1
+            5.0.0             5.4.1
+            4.1.2             5.4.1
+            4.1.1             5.4.1
+            4.1.0             5.4.1
+            4.0.0             5.4.1
+            3.0.4             5.4.1
+            3.0.3             5.4.1
+            3.0.2 and earlier 2.3.3
+            For more information about the MapR Monitoring component
+            versions included in each MEP, see [3]Component Versions for
+            Released MEPs.
+         b. Create a snapshot of the Kibana index to capture index
+            information before the upgrade. This information will be
+            restored after the upgrade. For snapshot information, see
+            [4]https://www.elastic.co/guide/en/elasticsearch/reference/5.6
+            /modules-snapshots.html.
+    2. Before you upgrade metric monitoring components, create a backup of
        the configuration files to a location outside your MapR
        installation directory. The following configuration file lists
        include files that are commonly used for configuration and may not
@@ -48,7 +89,7 @@ Pre-Upgrade Steps for MapR Monitoring
                  k.xml
                o opt/mapr/opentsdb/opentsdb-<version>/bin/tsdb_cluster_mgm
                  t.sh (This file is not automatically backed up.)
-    2. Before you upgrade log monitoring components, create a backup of
+    3. Before you upgrade log monitoring components, create a backup of
        the following files to a location outside your MapR installation
        directory. The following configuration file lists include files
        that are commonly used for configuration and may not include every
@@ -78,7 +119,7 @@ Pre-Upgrade Steps for MapR Monitoring
                o /opt/mapr/elasticsearch/elasticsearch-<version>/etc/elast
                  icsearch/curator_actions/delete_indices.yml (This file is
                  not automatically backed up.)
-    3. Stop all MapR Monitoring Services on the cluster.
+    4. Stop all MapR Monitoring Services on the cluster.
          a. To stop collectd, run the following command:
 maprcli node services -name collectd -nodes <space separated list of hostname/IP
 addresses> -action stop
@@ -98,3 +139,10 @@ ddresses> -action stop
          f. To stop Elasticsearch, run the following command:
 maprcli node services -name elasticsearch -nodes <space separated list of hostna
 me/IPaddresses> -action stop
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PostUpgradeStepsMapRMonitoring.html#task_nqx_pyr_mz
+   2. https://www.elastic.co/guide/en/elasticsearch/reference/current/reindex-upgrade.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/Component_versions_all_MEPs.html#reference_d1t_x3v_32b
+   4. https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html

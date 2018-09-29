@@ -1,0 +1,35 @@
+Mounting MapR Filesystem Using NFS4
+
+   For exporting and mounting the MapR cluster, the parameters within the
+   EXPORT block must be set in /opt/mapr/conf/nfs4server.conf file. After
+   setting up the block and starting the service, you can mount the
+   cluster on a Linux or Mac client. Before you begin:
+     * Make sure you know the hostname and directory of the NFS share you
+       plan to mount.
+     * Make sure that the mount export path is already not mounted.
+     * Use the whitelisted IP addresses for mounting.
+
+   You can mount NFS on a Linux client when your system starts up. Use
+   this procedure to mount NFS to MapR file system on the cluster
+   my.cluster.com at the /mapr mount point.
+    1. To mount the cluster, run the mount command with the following
+       syntax:
+mount -t nfs4 [-o sec=<security-type>] <hostname|nfs-server-ip>:/<pseudo-path> <
+mountpath>
+    2. To require the clients to use Kerberos ticket, export the path with
+       the security type set to krb5, krb5i, or krb5p.
+       For example:
+mount -t nfs4 -o sec=krb5 <hostname|nfs-server-ip>:/<pseudo-path> <mount-point>
+    3. To create a persistent mount, add the following in the
+       /opt/mapr/conf/mapr_fstab file:
+localhost:/mapr /mapr soft,intr,nolock
+       When you run the command to list all mounted filesystems to verify
+       that the cluster is mounted, your output should look similar to the
+       following:
+#  mount -v|grep /mapr
+localhost:/mapr on /mapr type nfs4
+(rw,relatime,vers=4.1,rsize=131072,wsize=131072,namlen=255,soft,proto=tcp6,port=
+0,timeo=600,retrans=2,sec=sys,clientaddr=::1,local_lock=none,addr=::1)
+
+   When you mount manually from the command line, the mount point does not
+   persist after a reboot.

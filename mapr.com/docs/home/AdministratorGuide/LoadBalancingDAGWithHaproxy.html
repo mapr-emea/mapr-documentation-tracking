@@ -1,0 +1,69 @@
+L3/L4 Load Balancing with the MapR Data Access Gateway
+
+   You can use haproxy for L3/L4 load balancing of clients that use the
+   MapR Data Access Gateway. This topic describes how to install,
+   configure, and run haproxy, and how to set your client connection
+   string to connect to the load balancing service.
+   Determine the server where you want to run the load balancing service.
+   The server must be reachable by the clients using the Data Access
+   Gateway. It also must be able to connect to the Data Access Gateway.
+    1. Install the haproxy service on the server you have identified:
+          + [1]CentOS
+          + [2]Ubuntu
+          + [3]SUSE
+sudo yum install haproxy
+sudo add-apt-repository ppa:vbernat/haproxy-1.7
+sudo apt update
+sudo apt install haproxy
+sudo zypper install haproxy
+    2. Configure the haproxy service by setting the following parameters
+       in the configuration file at /etc/haproxy/haproxy.cfg:
+         a. Create a frontend section with the following parameters:
+frontend <section_name>
+   mode tcp
+   bind *:<port_to_use_in_the_client_connection_string>
+   default_backend <backend_section_name>
+         b. Create a backend section with one server entry for each Data
+            Access Gateway server:
+backend <backend_section_name>
+   mode tcp
+   server <DAG_server_name1> <DAG_server_host1>:<DAG_server_port1>
+   server <DAG_server_name2> <DAG_server_host2>:<DAG_server_port2>
+   ...
+   server <DAG_server_nameN> <DAG_server_hostN>:<DAG_server_portN>
+            The <backend_section_name> is the parameter you specified in
+            Step 2a.
+    3. Restart the haproxy service:
+sudo service haproxy restart
+
+   Setting Your Client Connection String
+
+   Assume you have the following haproxy configuration settings and you
+   have installed haproxy on node1.cluster.com:
+frontend connection_input
+  mode tcp
+  bind *:8553
+  default_backend maprdb_servers
+
+backend maprdb_servers
+  mode tcp
+  server srv01 node1.cluster.com:5678
+  server srv02 node2.cluster.com:5678
+
+   You can use the following client connection string with this sample
+   configuration:
+     * [4]Secure MapR Cluster
+     * [5]Nonsecure MapR Cluster
+
+node1.cluster.com:8553?auth=basic;user=mapr;password=mapr;ssl=true;sslCA=/opt/ma
+pr/conf/ssl_truststore.pem;sslTargetNameOverride=node1.cluster.com
+
+node1.cluster.com:8553?auth=basic;user=mapr;password=mapr;ssl=false
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithHaproxy.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithHaproxy.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithHaproxy.html#div1entry3
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithHaproxy.html#div2entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithHaproxy.html#div2entry2

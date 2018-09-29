@@ -1,14 +1,14 @@
 Covering Indexes
 
-   A covering index is an index that allows MapR-DB to process a query
-   using secondary indexes without reading the JSON table. Using it makes
-   a query more efficient by avoiding the I/O overhead of fetching data
-   from the JSON table.
+   A covering index is an index that allows MapR Database to process a
+   query using secondary indexes without reading the JSON table. Using it
+   makes a query more efficient by avoiding the I/O overhead of fetching
+   data from the JSON table.
 
    If all fields referenced in a query are either indexed or included
    fields in a secondary index, then the secondary index is a covering
-   index for that query. MapR-DB determines whether an index is covering
-   for a query.
+   index for that query. MapR Database determines whether an index is
+   covering for a query.
 
    A query that uses a covering index can reference only indexed fields
    from the index or a combination of indexed and included fields. While
@@ -30,6 +30,36 @@ Covering Indexes
    selects the Gender field, zipCodeIdx is no longer a covering index for
    the query, but it still optimizes the filter condition.
 
+Covering Indexes and Container Field Paths
+
+   When a query uses an index in which the indexed fields are container
+   field paths, MapR Database cannot rely on only the indexed fields to
+   treat the index as covering. This is due to the way MapR Database
+   stores data in an index for container field paths. As described in
+   [2]Using Container Field Paths as Indexed Fields, MapR Database stores
+   one row in the index for each array element. Thus, reading only the
+   rows corresponding to matching array elements might not retrieve the
+   other elements of the array.
+
+   To allow an index to be covering in this scenario, the referenced field
+   must be an included field in the index.
+
+   For example, using the example at [3]Types of Secondary Indexes,
+   suppose you want to run the following query:
+     * Filter where Hobbies[] contains "Baseball"
+     * Select the FullName and all Hobbies
+
+   For an index to be covering for this query, you must define the index
+   with following fields:
+     * Indexed Fields: Hobbies[]
+     * Included Fields: Hobbies, FullName
+
+   Note: MapR Database disallows you from specifying the same field as
+   both an indexed and included field, unless the indexed field is a
+   container field path.
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#indexes-types
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes__section_lt4_q5r_fdb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-types.html#indexes-types

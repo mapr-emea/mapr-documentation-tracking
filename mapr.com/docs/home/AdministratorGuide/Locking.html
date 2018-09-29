@@ -1,0 +1,35 @@
+Locking Support in MapR
+
+   MapR Filesystem does not support server-side locking. This means that
+   locks are held by components outside of the file system layer and hence
+   not shared or enforced globally. As a result, when locking is
+   available, you will need to carefully understand exactly where this
+   enforcement occurs and ensure that all programs using the same locks
+   access them through the same enforcement point. Also, locks, when
+   supported in MapR, are always whole file locks and advisory, not
+   mandatory. The following table describes the locking support in MapR
+   for the clients.
+   Client Type Locking Support Default Value Notes
+   Hadoop No N/A Hadoop does not support locking APIs.
+   FUSE-based POSIX Yes Lock MapR supports advisory locking using kernel
+   locking. This lock is locally enforced on that single Linux host and
+   not shared with other hosts. The lock is only meaningful if all users
+   accessing the file are using FUSE and are on the same host.
+   Loopback NFS POSIX No N/A No support in MapR for locking. However, you
+   can use Network Lock Manager to lock with the nolock option on the
+   mount command. This lock is locally enforced on that single Linux host
+   and not shared with other hosts. The lock is only meaningful if all
+   lock users are using loopbacknfs and are on the same host.
+   NFSv3 No N/A No support for locking in MapR. However, you can use
+   Network Lock Manager to lock with the nolock option on the mount
+   command. This lock is locally enforced on that single Linux host and
+   not shared with other hosts. The lock is only meaningful if all lock
+   users are using NFSv3 and are on the same host.
+   NFSv4 Yes NoLock MapR supports advisory locking for NFSv4 server. This
+   is locally enforced on NFSv4 server, which means the lock is only
+   meaningful if all lock users are using the same NFSv4 server. See
+   [1]Advisory Locking in NFSv4 for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/AdvisoryLocking.html

@@ -1,0 +1,100 @@
+Retrieving Stats Using guts
+
+   You can run the /opt/mapr/bin/guts utility to get granular information
+   on ongoing offloads and recalls including:
+     * The number of objects that are offloaded to and recalled from the
+       tier
+     * The number of reads and writes on MapR Database
+     * The number of reads and writes on MapR Filesystem
+
+Syntax
+
+/opt/mapr/bin/guts <argument>:<options>
+
+Arguments
+
+   Argument Description
+   mastgateway Refers to operations on MAST Gateway node. See [1]Usage for
+   information on the syntax for running the guts command with this
+   argument.
+   fstier Refers to operations on MapR Filesystem node. See [2]Usage for
+   information on the syntax for running the guts command with this
+   argument.
+
+Options
+
+   Option Description
+   all Stats for all operations.
+   db Stats for MAST Gateway operations currently running on MapR
+   Database.
+   mfsops Stats for MAST Gateway operations on MapR Filesystem.
+   none Specifies the column(s) to exclude from the output.
+   tier Stats for MAST Gateway operations on the storage tier.
+
+Usage
+
+   MAST Gateway Node
+
+/opt/mapr/bin/guts mastgateway:all
+/opt/mapr/bin/guts mastgateway:db
+/opt/mapr/bin/guts mastgateway:tier
+/opt/mapr/bin/guts mastgateway:mfsops
+/opt/mapr/bin/guts mastgateway:none
+
+   MapR Filesystem Node
+
+/opt/mapr/bin/guts fstier:all
+/opt/mapr/bin/guts fstier:none
+
+   Note: These commands might show stats for several other fields. To
+   skip, use none with the components whose fields you do not wish to
+   retrieve. For example, to retrieve stats for only mastgateway tier, run
+   the following command:
+/opt/mapr/bin/guts allocator:none btree:none cache:none cleaner:none client:none
+ cpu:none db:none dbrepl:none disk:none fs:none fstier:none gateway:none io:none
+ kv:none log:none mastgateway:tier net:none nfs:none rpc:none ssd:none streams:n
+one time:none vcd:none
+
+Output
+
+   mastgateway:tier
+
+   objP Number of objects (whose max size is 8MB for cold-tier or whose
+   size is computed based on the erasure coding scheme for warm-tier) that
+   were offloaded to the storage tier.
+   objG Number of objects (whose size is up to 1 MB for cold-tier and
+   whose size is computed based on the erasure coding scheme for
+   warm-tier) that were recalled from the storage tier.
+   objD Number of deletions on the tier.
+   objPM Amount of data (in MB) offloaded per second to the storage tier.
+   objGM Amount of data (in MB) recalled per second from the storage tier.
+
+   mastgateway:db
+
+          tdbP Number of puts on MapR Database tables.
+          tdbG Number of gets on MapR Database tables.
+          tdbD Number of deletes on MapR Database tables.
+
+   mastgateway:mfsops
+
+   moR Number of read requests from client to the MAST Gateway service to
+   read from cache volumes.
+   mp Number of MapR Filesystem purge requests sent by the MAST Gateway
+   service.
+   mrw Number of MapR Filesystem reads from the MAST Gateway service to
+   perform modify/write operation.
+   moRM Amount of MapR Filesystem reads (in MB) sent by the MAST Gateway
+   service to read offloaded data.
+   mrwM Amount of recall writes (in MB) sent by the MAST Gateway service.
+
+   fstier:all
+
+         tp  Number of blocks (of 64KB) purged during an offload operation.
+         trw Number of blocks (of 64KB) written during recall of offloaded data.
+         trr Number of blocks (of 64KB) read during read of offloaded data.
+         twr Number of blocks (of 64KB) recalled for partial overwrites.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RetrieveStats.html#RetrieveStats__usage
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RetrieveStats.html#RetrieveStats__usage

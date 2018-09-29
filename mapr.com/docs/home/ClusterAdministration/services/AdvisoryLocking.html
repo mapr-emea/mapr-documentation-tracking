@@ -1,0 +1,83 @@
+Advisory Locking in NFSv4
+
+   MapR NFSv4 service includes support for (advisory) file locking. MapR
+   keeps track of the locks on a file in the NFS gateway, but does not
+   prevent a client process from writing to a file that is locked by
+   another process. The locks are not shared with other NFS gateways.
+   Because the locks are enforced locally, it is the responsibility of the
+   client process to check for write locks on a file before attempting to
+   perform write operations on the file.
+
+   To ensure that a file is locked and not available for changes by other
+   processes and to ensure that the lock on a file by a process is honored
+   by other processes, add a program similar to the following for the
+   process.
+     * [1]Sample Program Description
+     * [2]Sample Program Code
+
+   The following program demonstrates how to open a file, check if the
+   file has a write lock, and wait if another process currently has locked
+   the file.
+
+   Before running this application, ensure that you have access to a
+   cluster running MapR Filesystem.
+
+   Opens a file
+
+  if (argc > 1) {
+    int fd = open(argv[1], O_WRONLY);
+    if(fd == -1) {
+      printf("Unable to open the file\n");
+      exit(1);
+    }
+
+   Checks if the file is locked for a write operation
+
+    lock.l_type = F_WRLCK;
+    lock.l_start = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_len = 0;
+    lock.l_pid = getpid();
+
+   Gets lock, else waits
+
+    int ret = fcntl(fd, F_SETLKW, &amp;lock);
+    printf("Return value of fcntl:%d\n",ret);
+    if(ret==0) {
+      while (1) {
+        scanf("%c", NULL);
+      }
+    }
+
+#include <stdio.h>
+#include <fcntl.h>
+
+int main(int argc, char **argv) {
+  if (argc > 1) {
+    int fd = open(argv[1], O_WRONLY);
+    if(fd == -1) {
+      printf("Unable to open the file\n");
+      exit(1);
+    }
+    static struct flock lock;
+
+    lock.l_type = F_WRLCK;
+    lock.l_start = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_len = 0;
+    lock.l_pid = getpid();
+
+    int ret = fcntl(fd, F_SETLKW, &lock);
+    printf("Return value of fcntl:%d\n",ret);
+    if(ret==0) {
+      while (1) {
+        scanf("%c", NULL);
+      }
+    }
+  }
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/AdvisoryLocking.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/AdvisoryLocking.html#div1entry2

@@ -1,0 +1,191 @@
+Getting Started with the Python OJAI Client
+
+   This section describes the software required to run the Python OJAI
+   client, client/server security, and how to specify your connection
+   string. It also provides links to documentation that shows you how to
+   write Python OJAI applications.
+
+   The Python OJAI client is available starting in the MEP 6.0 release.
+
+Software Requirements
+
+   You must have the following software installed to run the client:
+   Client Software Installation Notes
+   Python 2.7 (or later) Python 3 is not supported.
+   pip See [1]https://pip.pypa.io/en/stable/installing/ for instructions
+   specific to your environment.
+   Python OJAI client Install the client by using the following command:
+pip install maprdb-python-client
+
+   You also must have access to the following software:
+     * MapR cluster 6.1 or later
+     * [2]MapR Data Access Gateway 2.0 or later
+
+   To run a Python OJAI application, you simply need to install and
+   configure the MapR Data Access Gateway:
+     * [3]Installing the Data Access Gateway Service
+     * [4]Modifying Configuration Settings for the Data Access Gateway
+       Service
+
+Python OJAI Client Security
+
+   The client supports username/password authentication. The initial
+   connection (and token renewal) use these credentials. Subsequent
+   communication uses JWT.
+
+   When connecting to a secure MapR cluster, the client uses:
+     * X.509 certificates to authenticate with the MapR Data Access
+       Gateway
+     * TLS v1.2 to encrypt communication between the client and the Data
+       Access Gateway
+
+Python OJAI Client Connection String
+
+   The string you use to connect your OJAI client to a MapR cluster must
+   have the following format:
+"[ojai:mapr:thin:v1@]<hostname>[:<port>][?<option_name>=<option_value>;...]"
+
+   The prefix ojai:mapr:thin:v1@ is optional.
+
+   <hostname>
+          Name of the MapR Data Access Gateway host
+
+   <port>
+          Port number to connect to the MapR Data Access Gateway
+
+          Default: 5678
+
+   auth=<scheme_name>
+          The authentication scheme for the current connection; currently,
+          only basic
+
+   user=<username>
+          The user name for basic authentication
+
+   password=<password>
+          The password for basic authentication
+
+   ssl=true|false
+          Whether to establish a secure connection using SSL/TLS
+
+          An error is returned if there is a mismatch between your client
+          and cluster security settings. The default for this option is
+          true, which is the required setting if connecting to a secure
+          MapR cluster. If connecting to a nonsecure MapR cluster, set it
+          to false.
+
+          If set to false, the other SSL parameters are ignored.
+
+   sslCA=<path to PEM file containing CA certificate>
+          Path to a local file containing Certificate Authority (CA)
+          signed certificates in PEM format.
+
+          Must be set if the ssl option is true.
+
+   sslTargetNameOverride=<CA certificate common name>
+          Fully qualified domain name specified in the CA certificate,
+          which is different from the <hostname> in the connection string.
+
+          For example, imagine that you are using the following:
+
+          + Public network host name is
+            ec2-203-0-113-25.compute-1.amazonaws.com.
+          + Internal DNS is node1.mydomain.com.
+          + CA signed certificate is issued to node1.mydomain.com.
+
+          Using these names, you must specify the following connection
+          string:
+
+"ec2-203-0-113-25.compute-1.amazonaws.com:5678?ssl=true;sslCA=/opt/app/conf/root
+ca.pem;sslTargetNameOverride=node1.mydomain.com"
+
+   Other examples of connection strings are the following:
+"ojai:mapr:thin:v1@localhost:5768?auth=basic;user=fred;password=george"
+"localhost:5768?ssl=false;auth=basic;user=fred;password=george"
+
+Python OJAI Connection Retry Options
+
+   If your OJAI client cannot connect to your MapR cluster, it waits 10
+   ms. After 10 ms, it makes a second connection attempt. If that fails,
+   it continues the attempts up to a configurable number of retries. The
+   following parameters control the number of retries and the wait time
+   between attempts:
+   Connection Option Parameter Description Default Value
+   ojai.mapr.rpc.wait-multiplier Multiplier that determines the wait time
+   for subsequent attempts after the initial 10 ms wait. The previous wait
+   time is multiplied by this parameter. 1000
+   ojai.mapr.rpc.wait-max-attempt Maximum wait time between attempts
+   regardless of the multiplier parameter 18000 ms
+   ojai.mapr.rpc.max-retries Maximum number of retry attempts 7
+
+   The following examples demonstrate how these parameters work, including
+   the default case:
+   Attempt # Wait Time (in ms) for each Retry Attempt
+
+   Default Parameters:
+{
+    'ojai.mapr.rpc.wait-multiplier': 1000,
+    'ojai.mapr.rpc.wait-max-attempt': 18000,
+    'ojai.mapr.rpc.max-retries': 7
+}
+
+{
+    'ojai.mapr.rpc.wait-multiplier': 2,
+    'ojai.mapr.rpc.wait-max-attempt': 90,
+    'ojai.mapr.rpc.max-retries': 5
+}
+
+   1 10 10
+   2 10*1000 = 10000 10*2 = 20
+   3 18000
+
+   10000*1000 = 10,000,000, which exceeds 18000 20*2 = 40
+   4 18000 40*2 = 80
+   5 18000 90
+
+   80*2 = 160, which exceeds 90
+   6 18000 Error
+   7 18000 N/A
+   8 Error N/A
+
+   To set these retry options, you must pass them in the
+   ConnectionFactory.get_connection call:
+connection_str = 'localhost:5678?auth=basic;user=mapr;password=mapr;' \
+    'ssl=true;' \
+    'sslCA=/opt/mapr/conf/ssl_truststore.pem;' \
+    'sslTargetNameOverride=node1.mapr.com'
+options = {
+    'ojai.mapr.rpc.wait-multiplier': 5,
+    'ojai.mapr.rpc.wait-max-attempt': 50,
+    'ojai.mapr.rpc.max-retries': 3
+}
+connection = ConnectionFactory.get_connection(connection_str=connection_str,opti
+ons=options)
+
+Writing a Python OJAI Application
+
+   For information about writing a Python OJAI application, see the Python
+   sections in the following topics:
+
+   [5]Querying in OJAI Applications
+          Provides an introduction to the basic flow of an OJAI
+          application that queries a MapR Database JSON table
+
+   [6]Examples: Querying JSON Documents
+          Contains code samples of OJAI applications that query MapR
+          Database JSON tables
+
+   [7]Managing JSON Documents
+          Describes how to perform CRUD (create, query, update, and
+          delete) operations on JSON documents in MapR Database JSON
+          tables
+
+References
+
+   1. https://pip.pypa.io/en/stable/installing/
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/MapRDataAccessGateway.html#MapRDataAccessGateway
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__section_vsn_2wj_fdb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__section_d3j_tnw_zcb
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#querying_documents_with_maprdb_ojai_java_api_
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/APIexamples-querying-docs.html#APIexamples-querying-docs-withIndexes
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/crud-ojai-documents.html#crud-ojai-documents

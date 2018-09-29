@@ -1,0 +1,363 @@
+volume tierjobstatus
+
+   Retrieves the status of the currently running operation (such as
+   offload, recall, or abort) for a volume.
+
+Permissions Required
+
+   The user running the command must have one of the following:
+     * Full control (fc) on the cluster or volume
+     * Volume edit permissions
+
+Syntax
+
+   CLI
+
+maprcli volume tierjobstatus
+     [ -cluster <cluster_name> ]
+     -name <volume_name>
+     [ -verbose true|false ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host>:<port>/rest/volume/tierjobstatus?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster The name of the cluster on which to run the command.
+   name The name of the volume.
+   verbose Specifies whether the command output should be verbose. The
+   value for this must be true to retrieve the status of a compaction
+   operation. The default value is false.
+
+Output
+
+   The command returns the following:
+   state The status of the offload, recall, or abort operation. See
+   [1]Statuses below for more information.
+   offloadedDataSize The amount of data offloaded. This is returned only
+   when returning the status of an offload operation.
+   progress The percentage of containers that have been processed so far.
+   recalledDataSize The amount of data recalled. This is returned only
+   when returning the status of a recall operation.
+   reclaimedDataSize The amount of data purged. This is returned only when
+   returning the status of a compaction job.
+   startTime The date and timestamp for when the offload operation
+   started.
+   endTime The date and timestamp for when the offload operation
+   completed.
+   gateway The IP address of the MAST Gateway used for the tiering
+   operation.
+
+Statuses
+
+   The value for the state field (statuses) can be one of the following:
+   State Description
+   Scheduled Indicates the job request has reached CLDB, but has not yet
+   been forwarded to any MAST Gateway service. For example:
+     * [2]CLI
+     * [3]REST
+
+{
+   "timestamp":1532093619983,
+   "timeofday":"2018-07-20 06:33:39.983 GMT-0700 AM",
+   "status":"OK",
+   "total":1,
+   "data":[
+        {
+           "compaction":{
+                "state":"Scheduled",
+                "scheduleTime":"2018-07-20 06:33:38.953 GMT-0700",
+                "gateway":"10.10.108.116:8660"
+           }
+        }
+   ]
+}
+
+{"timestamp":1532093619983,"timeofday":"2018-07-20 06:33:39.983 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"compaction":{"state":"Scheduled","scheduleTime":"
+2018-07-20 06:33:38.953 GMT-0700","gateway":"10.10.108.116:8660"}}]}
+
+   Running Indicates the offload or recall job has been forwarded to MAST
+   Gateway service. The MAST Gateway service can either still be waiting
+   for resources to run the job or is actually performing the requested
+   job. For example:
+     * [4]CLI
+     * [5]REST
+
+{
+   "timestamp":1532095481297,
+   "timeofday":"2018-07-20 07:04:41.297 GMT-0700 AM",
+   "status":"OK",
+   "total":1,
+   "data":[
+        {
+           "offload":{
+                "state":"Running",
+                "progress":"61%",
+                "startTime":"2018-07-20 07:00:02.277 GMT-0700",
+                "gateway":"10.10.108.115:8660"
+        },
+           "compaction":{
+                "state":"Success",
+                "progress":"100%",
+                "startTime":"2018-07-20 06:34:06.628 GMT-0700",
+                "endTime":"2018-07-20 06:40:25.334 GMT-0700",
+                "reclaimedDataSize":"0 MB",
+                "gateway":"10.10.108.115:8660"
+           }
+        }
+   ]
+}
+
+{"timestamp":1532095481297,"timeofday":"2018-07-20 07:04:41.297 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"offload":{"state":"Running","progress":"61%","sta
+rtTime":"2018-07-20 07:00:02.277 GMT-0700","gateway":"10.10.108.115:8660"},"comp
+action":{"state":"Success","progress":"100%","startTime":"2018-07-20 06:34:06.62
+8 GMT-0700","endTime":"2018-07-20 06:40:25.334 GMT-0700","reclaimedDataSize":"0
+MB","gateway":"10.10.108.115:8660"}}]}
+
+   FailureFatal Indicates the job has failed with non-retriable error. You
+   must resolve the issue and retry the operation. For example:
+     * [6]CLI
+     * [7]REST
+
+{
+   "timestamp":1531778057385,
+   "timeofday":"2018-07-16 09:54:17.385 GMT+0000 PM",
+   "status":"OK",
+   "total":1,
+   "data":[
+        {
+           "offload":{
+                "state":"FailureFatal",
+                "progress":"50%",
+                "startTime":"2018-07-16 21:54:01.779 GMT+0000",
+                "endTime":"2018-07-16 21:54:05.339 GMT+0000",
+                "offloadedDataSize":"0 MB",
+                "gateway":"10.10.88.198:8660"
+           }
+        }
+   ]
+}
+
+{"timestamp":1531778057385,"timeofday":"2018-07-16 09:54:17.385 GMT+0000 PM","st
+atus":"OK","total":1,"data":[{"offload":{"state":"FailureFatal","progress":"50%"
+,"startTime":"2018-07-16 21:54:01.779 GMT+0000","endTime":"2018-07-16 21:54:05.3
+39 GMT+0000","offloadedDataSize":"0 MB","gateway":"10.10.88.198:8660"}}]}
+
+   FailureRetriable Indicates the job has failed with an error for which
+   CLDB will retry the job based on the configuration parameters,
+   cldb.gateway.retry.count and cldb.gateway.retry.waittime. But if the
+   job is restarted manually or aborted, CLDB will not retry. For example:
+     * [8]CLI
+     * [9]REST
+
+{
+   "timestamp":1532624516372,
+   "timeofday":"2018-07-26 10:01:56.372 GMT-0700 AM",
+   "status":"OK",
+   "total":1,
+   "data":[
+        {
+           "offload":{
+               "state":"FailureRetry, RetryCount: 5",
+               "progress":"50%",
+                "startTime":"2018-07-25 17:43:27.924 GMT-0700",
+                "endTime":"2018-07-25 17:43:59.108 GMT-0700",
+                "offloadedDataSize":"0 MB",
+                "gateway":"10.10.25.29:8660"
+           }
+        }
+   ]
+}
+
+{"timestamp":1532624656640,"timeofday":"2018-07-26 10:04:16.640 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"offload":{"state":"FailureRetry, RetryCount: 5","
+progress":"50%","startTime":"2018-07-25 17:43:27.924 GMT-0700","endTime":"2018-0
+7-25 17:43:59.108 GMT-0700","offloadedDataSize":"0 MB","gateway":"10.10.25.29:86
+60"}}]}
+
+   Success Indicates the job has been successfully completed. For example:
+     * [10]CLI
+     * [11]REST
+
+{
+   "timestamp":1531311128469,
+   "timeofday":"2018-07-11 12:12:08.469 GMT+0000 PM",
+   "status":"OK",
+   "total":1,
+   "data":[
+        {
+           "offload":{
+              "state":"Success",
+              "progress":"100%",
+              "startTime":"2018-07-11 12:10:26.290 GMT+0000",
+              "endTime":"2018-07-11 12:10:35.521 GMT+0000",
+              "offloadedDataSize":"353.16 MB",
+              "gateway":"10.10.20.12:8660"
+           },
+           "compaction":{
+              "state":"Success",
+              "progress":"100%",
+              "startTime":"2018-07-11 12:12:01.335 GMT+0000",
+              "endTime":"2018-07-11 12:12:02.264 GMT+0000",
+              "reclaimedDataSize":"353.097 MB",
+              "gateway":"10.10.20.12:8660"
+           }
+        }
+   ]
+}
+
+{"timestamp":1531311128469,"timeofday":"2018-07-11 12:12:08.469 GMT+0000 PM","st
+atus":"OK","total":1,"data":[{"offload":{"state":"Success","progress":"100%","st
+artTime":"2018-07-11 12:10:26.290 GMT+0000","endTime":"2018-07-11 12:10:35.521 G
+MT+0000","offloadedDataSize":"353.16 MB","gateway":"10.10.20.12:8660"},"compacti
+on":{"state":"Success","progress":"100%","startTime":"2018-07-11 12:12:01.335 GM
+T+0000","endTime":"2018-07-11 12:12:02.264 GMT+0000","reclaimedDataSize":"353.09
+7 MB","gateway":"10.10.20.12:8660"}}]}
+
+   Aborted Indicates the job has been aborted. For example:
+     * [12]CLI
+     * [13]REST
+
+{
+  "timestamp":1503504464179,
+  "timeofday":"2017-08-23 04:07:44.179 GMT+0000",
+  "status":"OK",
+  "total":1,
+  "data":[{
+      "offload":{
+          "state":"Aborted",
+          "startTime":"2017-08-23 04:06:06.867 GMT+0000",
+          "endTime":"2017-08-23 04:06:38.910 GMT+0000",
+          "gateway":"10.10.88.199:8660"
+      }
+  }]
+}
+
+{"timestamp":1503504464179,"timeofday":"2017-08-23 04:07:44.179 GMT+0000","statu
+s":"OK","total":1,"data":[{"offload":{"state":"Aborted","startTime":"2017-08-23
+04:06:06.867 GMT+0000","endTime":"2017-08-23 04:06:38.910 GMT+0000","gateway":"1
+0.10.88.199:8660"}}]}
+
+   AbortInProgress Indicates the abort operation is in progress. For
+   example:
+     * [14]CLI
+     * [15]REST
+
+{
+   "timestamp":1533005375001,
+   "timeofday":"2018-07-30 07:49:35.001 GMT-0700 PM",
+   "status":"OK",
+   "total":1,
+   "data":[
+        {
+          "offload":{
+              "state":"AbortInProgress",
+              "progress":"98%",
+              "startTime":"2018-07-30 19:02:37.108 GMT-0700",
+              "gateway":"10.10.101.121:8660"
+          }
+        }
+   ]
+}
+
+{"timestamp":1533005375001,"timeofday":"2018-07-30 07:49:35.001 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"offload":{"state":"AbortInProgress","progress":"9
+8%","startTime":"2018-07-30 19:02:37.108 GMT-0700","gateway":"10.10.101.121:8660
+"}}]}
+
+   AbortedInternal Indicates the offload operation was aborted by another
+   internal process, such as when promoting a mirror volume to a
+   read-write volume when offload is in progress. For example:
+     * [16]CLI
+     * [17]REST
+
+{
+  "timestamp":1515488569411,
+  "timeofday":"2018-01-09 01:02:49.411 GMT-0800",
+  "status":"OK",
+  "total":1,
+  "data":[{
+    "recall":{
+      "state":"AbortedInternal",
+      "progress":"36%",
+      "startTime":"2018-01-09 01:01:57.824 GMT-0800",
+      "endTime":"2018-01-09 01:02:43.329 GMT-0800",
+      "gateway":"10.10.108.150:8660"
+    }
+  }]
+}
+
+{"timestamp":1515488569411,"timeofday":"2018-01-09 01:02:49.411 GMT-0800","statu
+s":"OK","total":1,"data":[{"recall":{"state":"AbortedInternal","progress":"36%",
+"startTime":"2018-01-09 01:01:57.824 GMT-0800","endTime":"2018-01-09 01:02:43.32
+9 GMT-0800","gateway":"10.10.108.150:8660"}}]}
+
+Example
+
+     * [18]CLI
+     * [19]REST
+
+# maprcli volume tierjobstatus -name testVol -json -verbose true
+{
+   "timestamp":1533005419522,
+   "timeofday":"2018-07-30 07:50:19.522 GMT-0700 PM",
+   "status":"OK",
+   "total":1,
+   "data":[
+        {
+          "offload":{
+              "state":"Success",
+              "progress":"100%",
+              "startTime":"2018-07-30 19:00:06.185 GMT-0700",
+              "endTime":"2018-07-30 19:19:58.303 GMT-0700",
+              "offloadedDataSize":"2487.911 MB",
+              "gateway":"10.10.108.117:8660"
+          },
+          "compaction":{
+              "state":"AbortInProgress",
+              "progress":"45%",
+              "startTime":"2018-07-30 19:23:33.504 GMT-0700",
+              "gateway":"10.10.101.121:8660"
+          }
+        }
+   ]
+}
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/tierjobstatus?name=testVol&verbose
+=true' --user mapr:mapr
+{"timestamp":1533005419522,"timeofday":"2018-07-30 07:50:19.522 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"offload":{"state":"Success","progress":"100%","st
+artTime":"2018-07-30 19:00:06.185 GMT-0700","endTime":"2018-07-30 19:19:58.303 G
+MT-0700","offloadedDataSize":"2487.911 MB","gateway":"10.10.108.117:8660"},"comp
+action":{"state":"AbortInProgress","progress":"45%","startTime":"2018-07-30 19:2
+3:33.504 GMT-0700","gateway":"10.10.101.121:8660"}}]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#volume-tierjobstatus__statuses
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div1entry2
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div2entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div2entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div3entry1
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div3entry2
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div4entry1
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div4entry2
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div5entry1
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div5entry2
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div6entry1
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div6entry2
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div7entry1
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div7entry2
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div8entry1
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div8entry2
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div9entry1
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html#div9entry2

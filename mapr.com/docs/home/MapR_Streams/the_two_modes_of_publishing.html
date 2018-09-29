@@ -4,19 +4,67 @@ Modes of Publishing
 
    When publishing a message, a producer sends a record to the producer
    client library. The producer client library batches messages into
-   multiple publish requests which are sent to the MapR-ES server.
+   multiple publish requests which are sent to the MapR Event Store For
+   Apache Kafka server.
 
 At Least Once
 
    The default message delivery semantics is "at-least-one". At-least-once
    means that the message delivery guarantees that a message is published
-   at least once to the MapR-ES server. Messages are never lost but may be
-   re-delivered.
+   at least once to the MapR Event Store For Apache Kafka server. Messages
+   are never lost but may be re-delivered.
+
+Exactly Once
+
+   An "exactly once" message delivery semantics produces messages without
+   duplication. Each message is delivered once and only once. Exactly once
+   is insured by uniquely identifying a group of messages that are
+   atomically persisted. Exactly once message delivery is set with the
+   producer idempotence option.
+   Note: Exactly-once message deliver semantics is enabled by setting the
+   producer configurable option, enable.idempotence to true. By supporting
+   an idempotent producer, retries no longer introduce duplicates. See
+   [1]Enabling an Idempotent Producer for more information.
+   The following unique identifiers are associated with each message:
+     * Producer ID - A unique identifier is generated internally for each
+       client and group of messages that are atomically persisted.
+       As a minimum, the ID is a unique ID for a given
+       stream-topic-partition. Producer IDs expire if a producer ID is
+       inactive for a period of time. The default Producer ID expiration
+       is 7 days. At that point, a new Producer Id is requested once the
+       Producer ID is expired. To change the expiration date, see the
+       pidexpirysecs parameter in maprcli [2]stream create and [3]stream
+       edit for more information.
+     * Sequence Number - A number that is monotonically incremented on
+       every produced group of messages for the given Producer ID,
+       assigned when received, and generated internally.
+
+   Note: If the producer idempotence option, is not set to true, then "at
+   least once" message delivery semantics applies.
+
+   If the client resends a message after the producer ID has expired, then
+   UnknownProducerIdException is thrown.
+   For example:
+     * If message1 from clientA is sent to a stream-topic-partition0 and 7
+       days go by, the Producer ID expires.
+     * Then, if clientA sends another message that has the exact same data
+       to the same stream-topic-partition (stream-topic-partition0), then
+       UnknownProducerIdException is thrown because the Producer ID has
+       expired..
+
+   Note: With the alternative "at least once" message delivery, in some
+   failure scenarios, a message can be produced more than once for a
+   single send call. Common reasons for message duplication include
+   network error or server failure. For example, if a network error occurs
+   and the message has been processed and persisted by the server, if the
+   client re-tries sending a message to a server node, then the result
+   could be duplicate messages in the system.
 
 Server Acknowledgements
 
    By default, publishing requests for messages are sent without waiting
-   for acknowledgement (ack) from the MapR-ES server.
+   for acknowledgement (ack) from the MapR Event Store For Apache Kafka
+   server.
 
    The acknowledgement behavior is determined by the producer
    configuration parameter streams.parallel.flushers.per.partition, which
@@ -41,13 +89,19 @@ Server Acknowledgements
           Meanwhile, the producer keeps sending messages for Partition 1
           and the client continues to buffer them. The next time the
           producer client library has enough messages for Partition 1, the
-          client sends another batch, whether or not the MapR-ES server
-          has acknowledged the previous batch.
+          client sends another batch, whether or not the MapR Event Store
+          For Apache Kafka server has acknowledged the previous batch.
 
    Publishing with Ack
           If you always want messages to arrive to partitions in the order
           in which they were sent, set the configuration parameter
           streams.parallel.flushers.per.partition to false. This causes
           the producer client library to wait for ack (acknowledgements)
-          from the MapR-ES server before sending subsequent publish
-          requests.
+          from the MapR Event Store For Apache Kafka server before sending
+          subsequent publish requests.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/idempotent-producer.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_edit.html

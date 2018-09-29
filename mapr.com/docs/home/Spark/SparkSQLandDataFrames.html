@@ -1,33 +1,35 @@
 SparkSQL and DataFrames
 
-   The MapR-DB Binary Connector for Apache Spark leverages [1]DataSource
-   API ([2]SPARK-3247) introduced in Spark-1.2.0. The connector bridges
-   the gap between simple HBase KV store and complex relational SQL
-   queries and enables users to perform complex data analytical work on
-   top of MapR-DB binary tables using Spark. HBase Dataframe is a standard
-   Spark Dataframe, and is able to interact with any other data sources,
-   such as Hive, Orc, Parquet, JSON, and others. The MapR-DB Binary
-   Connector for Apache Spark applies critical techniques such as
-   partition pruning, column pruning, predicate pushdown and data
-   locality.
+   The MapR Database Binary Connector for Apache Spark leverages
+   [1]DataSource API ([2]SPARK-3247) introduced in Spark-1.2.0. The
+   connector bridges the gap between simple HBase KV store and complex
+   relational SQL queries and enables users to perform complex data
+   analytical work on top of MapR Database binary tables using Spark.
+   HBase Dataframe is a standard Spark Dataframe, and is able to interact
+   with any other data sources, such as Hive, Orc, Parquet, JSON, and
+   others. The MapR Database Binary Connector for Apache Spark applies
+   critical techniques such as partition pruning, column pruning,
+   predicate pushdown and data locality.
 
-   To use the MapR-DB Binary Connector for Apache Spark, you need to
-   define the Catalog for the schema mapping between MapR-DB binary tables
-   and Spark tables, prepare the data and populate the MapR-DB binary
-   table, then load the HBase DataFrame. After that, users can do
-   integrated query and access records in a MapR-DB binary table with SQL
-   query. The following examples illustrate the basic procedure.
+   To use the MapR Database Binary Connector for Apache Spark, you need to
+   define the Catalog for the schema mapping between MapR Database binary
+   tables and Spark tables, prepare the data and populate the MapR
+   Database binary table, then load the HBase DataFrame. After that, users
+   can do integrated query and access records in a MapR Database binary
+   table with SQL query. The following examples illustrate the basic
+   procedure.
 
 Define Catalog Example
 
-   The catalog defines a mapping between MapR-DB binary tables and Spark
-   tables. There are two critical parts of this catalog. One is the rowkey
-   definition. The other is the mapping between the table column in Spark
-   and the column family and column qualifier in MapR-DB binary table. The
-   following example defines a schema for a MapR-DB binary table with name
-   as my_table, row key as key and a number of columns (col1 - col8). Note
-   that the rowkey also has to be defined in details as a column (col0),
-   which has a specific cf (rowkey).
+   The catalog defines a mapping between MapR Database binary tables and
+   Spark tables. There are two critical parts of this catalog. One is the
+   rowkey definition. The other is the mapping between the table column in
+   Spark and the column family and column qualifier in MapR Database
+   binary table. The following example defines a schema for a MapR
+   Database binary table with name as my_table, row key as key and a
+   number of columns (col1 - col8). Note that the rowkey also has to be
+   defined in details as a column (col0), which has a specific cf
+   (rowkey).
 def catalog = s"""{
        |"table":{"namespace":"default", "name":"/path_to/my_table"},
        |"rowkey":"key",
@@ -50,9 +52,9 @@ Save the DataFrame Example
    HBaseRecord objects. The sc.parallelize(data) function distributes data
    to form an RDD. toDF returns a DataFrame. writefunction returns a
    DataFrameWriter used to write the DataFrame to external storage systems
-   (e.g. MapR-DB here). Given a DataFrame with a specified schema catalog,
-   the save function creates a MapR-DB binary table with five (5) regions
-   and saves the DataFrame inside.
+   (e.g. MapR Database here). Given a DataFrame with a specified schema
+   catalog, the save function creates a MapR Database binary table with
+   five (5) regions and saves the DataFrame inside.
 case class HBaseRecord(
    col0: String,
    col1: Boolean,
@@ -98,8 +100,8 @@ Load the DataFrame Example
    the underlying data source to the DataFrameReader. The format function
    specifies the input data source format for the DataFrameReader. The
    load() function loads input as a DataFrame. The data frame df returned
-   by the withCatalog function can be used to access the MapR-DB binary
-   table, as shown in the Language Integrated Query and SQL Query
+   by the withCatalog function can be used to access the MapR Database
+   binary table, as shown in the Language Integrated Query and SQL Query
    examples.
 def withCatalog(cat: String): DataFrame = {
   sqlContext

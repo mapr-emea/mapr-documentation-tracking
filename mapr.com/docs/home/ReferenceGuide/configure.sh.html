@@ -128,10 +128,15 @@ Parameters
    the -D option.
    -d The host and port of the MySQL database to use for storing MapR
    Metrics data.
-   -defaultdb Sets the default database (HBase or MapR-DB) that HBase
-   clients connect to. Since Apache HBase is deprecated, there will be no
-   HBase services (mapr-hbase-regionserver, mapr-hbase-master) installed
-   on the cluster; therefore, this parameter will default to MapR-DB.
+   -dare Enables on-disk encryption at the cluster-level. When run on the
+   first CLDB node with the -genkeys option, the utility generates the
+   data-at-rest encryption master key file at
+   /opt/mapr/conf/dare.master.key.
+   -defaultdb Sets the default database (HBase or MapR Database) that
+   HBase clients connect to. Since Apache HBase is deprecated, there will
+   be no HBase services (mapr-hbase-regionserver, mapr-hbase-master)
+   installed on the cluster; therefore, this parameter will default to
+   MapR Database.
    -disk-opts Enables you to specify a series of [7]disksetup formatting
    options. Do not include spaces or commas between the disksetup options.
    For example, you can specify -disk-opts FW5 to format the disks (F) and
@@ -143,6 +148,16 @@ Parameters
    metrics.
    -du Specifies the username for logging into the MySQL database used for
    storing MapR Metrics data.
+   -EC Specifies a host or hosts that contain the Hive Metastore. Use this
+   parameter and the ‑hiveMetastoreHost argument to configure an ecosystem
+   component, such as Drill, to communicate with the Hive Metastore. You
+   can specify a single host or a comma-separated list of hosts. The list
+   of hosts should use the following format:
+hostname[:port_no][,hostname[:port_no]...]
+
+   See the -EC parameter example later on this page. If you do not specify
+   a host port number, Drill uses the default Hive Metastore port number
+   (9083) for every host.
    -EP Specifies an option that is passed directly to an ecosystem
    configure.sh script. These commands follow the form ‑EP<ecosystem
    component name> <option>. In general, ‑EP options are not documented
@@ -196,7 +211,7 @@ hostname/IPaddress[:port_no][,hostname/IPaddress[:port_no]...]
 /opt/mapr/server/configure.sh -forceSecurityDefaults [ -unsecure | -secure ] -C
 <CLDB_node> -Z <ZK_node>
 
-   For more information, see [10]Custom Security in MapR.
+   For more information, see [10]Customizing Security in MapR.
    Important: It is possible that the -forceSecurityDefaults operation
    might not undo all custom security settings since configure.sh cannot
    know all of the custom settings that were implemented. Therefore, some
@@ -207,7 +222,10 @@ hostname/IPaddress[:port_no][,hostname/IPaddress[:port_no]...]
    command in Linux.
    -g The group name under which MapR services will run.
    -genkeys Generates needed keys and certificates for the initial CLDB
-   node in a secure cluster.
+   node in a secure cluster. If specified with the -dare option, on the
+   first CLDB node, generates a master key at
+   /opt/mapr/conf/dare.master.key. Without the master key, the cluster
+   cannot be started and data cannot be accessed.
    -H Specifies the HTTPS port number for connecting to the CLDB. The
    default port is 7443.
    -HS Specifies the IP or hostname of the node in the cluster that has
@@ -260,7 +278,7 @@ hostname/IPaddress[:port_no][,hostname/IPaddress[:port_no]...]
    silently altering permissions in /etc/shadow.
    -nocerts When specified, the configure.sh script does not generate SSL
    certificates even when the -genkeys option is specified.
-   -noDB Specifies that MapR-DB is not in use.
+   -noDB Specifies that MapR Database is not in use.
    -noRecalcMem Skip recalculating memory settings when refreshing roles.
    Can be used only with the -R option.
    -OT Specifies a comma-separated list of host names or IP addresses that
@@ -371,6 +389,12 @@ configure.sh -C nodeZ -N your.cluster.com -Z <zkNodeA,zkNodeB,zkNodeC>
 
    configure.sh –N mycluster.com –C nodeA,nodeB –Z nodeC –secure –F
    <disklist file>
+   Configure the Drill storage plugin to communicate with a Hive
+   Metastore:
+
+   This example uses the -EC parameter to configure the Drill storage
+   plugin to communicate with a Hive Metastore located on nodeA:
+/opt/mapr/server/configure.sh -EC '-hiveMetastoreHost nodeA'
 
 References
 

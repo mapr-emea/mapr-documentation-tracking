@@ -1,0 +1,101 @@
+Overview of MAST Gateway
+
+   The MAST Gateway can be installed on specific hosts on the MapR cluster
+   with access to the the tier. The MAST Gateway acts as the centralized
+   entry point for all the operations that need to be performed on the
+   tiered storage including the following:
+     * [1]Warm Tier
+     * [2]Cold Tier
+
+   For volumes configured for warm tiering, the MAST Gateway:
+     * Identifies files in the volume that are ready to be offloaded,
+       fetches data corresponding to these files from MapR Filesystem, and
+       packs this data for offload. It:
+          + Identifies and fetches the data to offload.
+            It handles both compressed and uncompressed data. Compressed
+            data from the file server is transferred and stored as-is on
+            the warm tier.
+          + Creates stripes based on the erasure coding scheme.
+            For example, for an erasure coding scheme of 4+2, the stripe
+            depth would be 6x4MB=24MB.
+          + Manages statistics on the amount of data offloaded.
+          + Prepares a corresponding metadata on the MapR cluster for the
+            data.
+            The MAST Gateway stores the metadata in MapR Database tables
+            in a separate volume associated with the tier.
+     * Tracks invalid data and deletes stripelets that are completely
+       invalid.
+     * Fetches data from the tier.
+     * Recalls whole volume from the tier to the MapR cluster.
+
+   For volumes configured for cold tiering, the MAST Gateway:
+     * Identifies files in the volume that are ready to be offloaded,
+       fetches data corresponding to these files from MapR Filesystem, and
+       packs this data for offload. It:
+          + Identifies and fetches the data to offload and creates objects
+            (including creating new buckets) in the storage tier for the
+            data.
+          + Manages statistics on the amount of data offloaded.
+          + Updates metadata references for remote access.
+     * Tracks invalid data and deletes objects that are completely
+       invalid.
+     * Fetches data from the tier. It:
+          + Handles both compressed and uncompressed data. If data on file
+            server is compressed, the compressed data is not
+            uncompressed/re-compressed during offload or recall.
+            Compressed data from the file server is transferred and stored
+            as-is on the cold tier.
+          + Ensures that data is decrypted, if it is encrypted, before
+            forwarding it to MapR Filesystem.
+     * Recalls whole volume from the tier to the MapR cluster.
+
+   The MAST Gateway sends heartbeat messages to CLDB every 5 seconds. CLDB
+   manages the discovery and a minimal global state of the MAST Gateway
+   service. CLDB also manages the volumes and any policy configurations on
+   the volumes. When a volume is assigned to a gateway, the volume remains
+   assigned to the gateway across CLDB, Gateway, and cluster restarts.
+   Volumes are assigned evenly to gateways and CLDB balances the gateway
+   load. For more information, see [3]Balancing Gateway Load.
+
+   By default, the MAST Gateway uses 16 threads for volume and file
+   offload and recall operations and another 16 threads for handling
+   internal operations and other operations such as reads (which triggers
+   automatic recall requests), writes, etc. Each thread processes offload
+   or recall of a container (associated with a volume). Each MAST Gateway
+   can process one or more volumes (and associated containers)
+   simultaneously depending on the number of threads available for
+   processing the containers associated with the volumes. Each volume is
+   assigned to a MAST Gateway for a tiering operation irrespective of the
+   number of containers associated with the volume.
+
+   When a MAST Gateway goes down during a volume-level offload, CLDB does
+   not immediately reassign all the volumes assigned to that MAST Gateway
+   to other gateways. CLDB waits for some time to allow the MAST Gateway
+   to come back up and send heartbeat again; it re-assigns volumes with
+   pending tasks to other gateways if the MAST Gateway does not come back
+   up again. All other volumes are redistributed when the gateway balancer
+   runs again. On the other hand, if the MAST Gateway comes back up again,
+   the volumes remain assigned to the MAST Gateway. The load on the MAST
+   Gateways is rebalanced when the balancer runs again. See [4]Balancing
+   Gateway Load for more information.
+
+   If a MAST Gateway goes down during a file-level offload and if the
+   offload was triggered using:
+     * The [5]hadoop command, CLDB reassigns the volume to another MAST
+       Gateway.
+     * The [6]MapR CLI, [7]REST API, or [8]dot interface, CLDB does not
+       reassign to another MAST Gateway.
+
+   See also: [9]Managing the MAST Gateway
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/MASTGatewayOverview.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/MASTGatewayOverview.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/BalanceMASTGateway.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/BalanceMASTGateway.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-offload.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-offload.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RunTierCommands-POSIXandNFSclients.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManageMASTGateway.html

@@ -9,9 +9,10 @@ Permissions Required
      * [3]lookupdir on directories in the path
      * adminperm permission on the stream
 
-   Note: The mapr user is not treated as a superuser. MapR-ES does not
-   allow the mapr user to run this command unless that user is given the
-   relevant permission or permissions with access-control expressions.
+   Note: The mapr user is not treated as a superuser. MapR Event Store For
+   Apache Kafka does not allow the mapr user to run this command unless
+   that user is given the relevant permission or permissions with
+   access-control expressions.
 
 Syntax
 
@@ -30,11 +31,16 @@ maprcli stream edit
 :creator ]
        [ -defaulttimestamptype timestamp type: createtime | logappendtime. defau
 lt: createtime ]
-
-
-
-
-
+       [ -compact <Sets log compaction for a stream. Value: true | false default
+: false> ]
+       [ -pidexpirysecs <Producer ID expiry time in seconds. Default: 604800> ]
+       [ -mincompactionlag <Sets time in melliseconds for which a message remain
+s uncompacted. default: 0> ]
+       [ -deleteretention <Sets the time in milliseconds for which delete record
+s are retained.
+                    Default: 86400000> ]
+       [ -force <When used with -compact, forces enabling log compaction on a st
+ream. Parameter takes no value.> ]
 
 
    REST http[s]://<host>:<port>/rest/stream/edit?path=<path>
@@ -99,6 +105,26 @@ Parameters
 
    A logappendtime value is the time when the message (log) was appended
    to the server.
+   pidexpirysecs Specifies the expiration time for the Producer ID. This
+   parameter fixes the lifetime for the Producer ID. Default: 604800
+   compact Sets log compaction for stream. When set to true, enables log
+   compaction. When set to false, disables log compaction.
+
+   Value: true|false Default: false
+   mincompactionlag Sets the minimum delay (in milliseconds) before which
+   messages are not compacted. It is the minimum time that the messages
+   are available for consumption. Beyond this time period, the messages
+   may be compacted. Default: 0
+
+   The lag is calculated from the time that a message was produced to the
+   stream topic-partition.
+   deleteretention Sets the minimum time (in milliseconds) before which
+   deleted records are removed. It is the minimum time that the deleted
+   records are still available. Beyone this time period, the deleted
+   messages may be removed. Default: 86400000
+   force Used with the -compact parameter to force log compaction on a
+   stream parameter. No values are passed. Used for backward
+   compatibility.
 
 References
 

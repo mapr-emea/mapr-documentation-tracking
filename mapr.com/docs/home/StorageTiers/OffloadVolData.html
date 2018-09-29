@@ -1,0 +1,152 @@
+Offloading a Volume to a Tier
+
+   At the volume level, data can be offloaded automatically by creating
+   and associating a schedule with the tiering enabled volume or manually
+   by triggering the offload operation. See [1]Data Offload and Purge for
+   more information. The following sections describe how to set up an
+   automatic offload of data and how to trigger a one-time manual offload
+   data at the volume level using the MapR Control System, the CLI, and
+   the REST API.
+   Note: For a tiered volume, there can be only one running job at any
+   given time. For example, suppose another job is running on the tiered
+   volume, if you trigger an offload operation, the offload operation will
+   fail.
+   To offload volume data, you must have one of the following permissions:
+     * Cluster level fc permissions
+     * Volume level fc permissions
+     * Volume modify permissions
+
+   Note: You can also offload individual files in a tiering-enabled volume
+   to the associated tier. See [2]Offloading a File to a Tier Using the
+   CLI and REST API for more information.
+
+Setting up Automatic Offload of Data Using the MapR Control System
+
+    1. Create a tier.
+       See [3]Creating a Cold Tier Using the MapR Control System or
+       [4]Creating a Warm Tier Using the MapR Control System for more
+       information.
+    2. Create a storage policy to associate with the volume.
+       See [5]Creating a Storage Policy Using the MapR Control System for
+       more information.
+    3. Create an offload schedule.
+       See [6]Specifying a Schedule for Offloading Data for more
+       information.
+    4. Create a tiering enabled volume and associate the tier, the storage
+       policy, and schedule with the volume.
+       See [7]Creating a Tiering-Enabled Volume Using the MapR Control
+       System for more information.
+
+Triggering an Offload of all Data in a Volume to a Tier Using the MapR
+Control System
+
+    1. Log in to MCS and click Data > Volumes.
+    2. Select the tiered volumes to offload from the list of volumes in
+       the Volumes pane.
+       Selecting a volume makes the Actions drop-down menu available.
+    3. Click Offload Data from the Actions drop-down menu to display the
+       Offload Volume Data confirmation window.
+    4. Review the list of volumes to offload and click Offload.
+
+   If the offload fails, CLDB retries the operation after some time. See
+   [8]Retrying Failed Operation for more information.
+
+Setting up Automatic Offload of Data Using the CLI and REST API
+
+   To automatically offload data:
+    1. Create a tier, a rule that contains the criteria for offloading
+       data to the tier, and a schedule to automatically offload data to
+       the tier.
+       For example:
+          + [9]CLI
+          + [10]REST
+/opt/mapr/bin/maprcli tier create -name <tier_name> -type ectier
+/opt/mapr/bin/maprcli tier create -name <tier_name> -type cold -url <tier_url> -
+credential <credentials>.txt -json
+/opt/mapr/bin/maprcli tier rule create -name <rule_name> -expr <expressions>
+/opt/mapr/bin/maprcli schedule create -schedule <JSON>
+curl -k -X POST 'https://abc.sj.us:8443/rest/tier/create?name=<tier_name>&type=e
+ctier' --user mapr:mapr
+curl -k -X POST 'https://abc.sj.us:8443/rest/tier/create?name=<tier_name>&type=c
+old&url=<tier_url>&credential=<credential_str>' --user mapr:mapr
+curl -k -X POST 'https://abc.sj.us:8443/rest/tier/rule/create?name=<rule_name>&e
+xpr=<expressions>' --user mapr:mapr
+curl -k -X POST 'https://abc.sj.us:8443/rest/schedule/create?schedule=<JSON>' --
+user mapr:mapr
+       For more information, see [11]Managing Tiers and [12]Managing
+       Storage Policies.
+    2. Create a tiering-enabled volume and associate the tier, rule, and
+       schedule (that you created in step 1) with the volume.
+       For example, to create a volume and enable it for:
+          + Warm tier:
+               o [13]CLI
+               o [14]REST
+/opt/mapr/bin/maprcli volume create -name <vol_name> -path <vol_mount_path> -tie
+ringenable true -tiername <tier_name> -ecscheme <coding_scheme> -ectopology <ec_
+vol_topo> -tieringrule <rule_name> -offloadschedule <schedule_ID>
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=<vol_name>&path=
+<vol_mount_path>&tieringenable=true&tiername=<tier_name>&ecscheme=<coding_scheme
+>&ectopology=<ec_vol_topo>&tieringrule=<rule_name>&offloadschedule=<schedule_ID>
+' --user mapr:mapr
+          + Cold tier:
+               o [15]CLI
+               o [16]REST
+/opt/mapr/bin/maprcli volume create -name <vol_name> -path <vol_mount_path> -tie
+ringenable true -tiername <tier_name> -tieringrule <rule_name> -offloadschedule
+<schedule_ID> -recallexpirytime 2 -json
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=<vol_name>&path=
+<vol_mount_path>&tieringenable=true&tiername=<tier_name>&tieringrule=<rule_name>
+&offloadschedule=<schedule_ID>&recallexpirytime=2' --user mapr:mapr
+       You can also specify the maximum amount of data (in GB) to offload
+       automatically for warm-tier volumes using the
+       autooffloadthresholdgb parameter. For more information, see
+       [17]Working with Tiered Volumes.
+
+Triggering an Offload of all Data in a Volume to a Tier Using the CLI and
+REST API
+
+     * [18]CLI
+     * [19]REST
+
+   Run the following command to manually trigger an offload of all data in
+   the volume:
+maprcli volume offload -name <volume-name>
+
+   If you run the command with the ignorerule option value set to true,
+   rules for the volume where the data resides is ignored and data is
+   offloaded immediately. If the ignorerule option value is not specified
+   or is set to false (default), data is offloaded based on the rules
+   associated with the volume where the data resides.
+   Submit a request of type POST. For example:
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/offload?name=sampleVol' --
+user mapr:mapr
+{"timestamp":1519947659597,"timeofday":"2018-03-01 03:40:59.597 GMT-0800 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully started offload."]}
+
+   For more information, see [20]volume offload. If the offload fails,
+   CLDB retries the operation after some time. See [21]Retrying Failed
+   Operation for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataOffloadPurge.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadFileData.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/CreateTier.html#mcs-cold
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/CreateTier.html#mcs-warm
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/CreateStoragePolicy.html#mcs-create
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DefineSchedule.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/CreateVol.html#mcs
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RetryJob.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html#div1entry1
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html#div1entry2
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManageTiers.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManagePolicy.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html#div2entry1
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html#div2entry2
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html#div3entry1
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html#div3entry2
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManageData.html
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html#div4entry1
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html#div4entry2
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-offload.html
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RetryJob.html

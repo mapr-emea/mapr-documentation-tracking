@@ -1,0 +1,84 @@
+KSQL
+
+   KSQL is an open source streaming SQL engine that implements continuous,
+   interactive queries.
+
+   KSQL allows you to query, read, write, and process data in real-time,
+   at scale using SQL commands. KSQL interacts directly with the [1]Kafka
+   Streams API, removing the requirement of building a Java application.
+
+   The KSQL data flow architecture is designed where the user interacts
+   with the KSQL server and, in turn, the KSQL server interacts with the
+   MapR Event Store For Apache Kafka server.
+
+Use Cases
+
+   Common use cases include fraud detection, personalization,
+   notifications, real-time analytics, and sensor data and IoT.
+
+Architecture
+
+   There is a KSQL server process which executes queries. A set of KSQL
+   processes run as a cluster. You can dynamically add more processing
+   capacity by starting more instances of the KSQL server. These instances
+   are fault-tolerant: if one fails, the others will take over its work.
+   Queries are launched using the interactive KSQL command line client
+   which sends commands to the cluster over a REST API. The command line
+   allows you to inspect the available streams and tables, issue new
+   queries, check the status of and terminate running queries.
+   [ksql-arch.png]
+
+   KSQL Server
+          The KSQL server runs the engine that executes KSQL queries. This
+          includes processing, reading, and writing data to and from the
+          target Kafka cluster. KSQL servers form KSQL clusters and can
+          run in containers, virtual machines, and bare-metal machines.
+          You can add and remove servers to/from the same KSQL cluster
+          during live operations to elastically scale KSQL’s processing
+          capacity as desired. You can deploy different KSQL clusters to
+          achieve workload isolation.
+
+   KSQL CLI
+          You can interactively write KSQL queries by using the KSQL
+          command line interface (CLI). The KSQL CLI acts as a client to
+          the KSQL server.
+
+Non-Interactive vs. Interactive Mode
+
+   In MapR Event Store For Apache Kafka, non-interactive KSQL clusters
+   (headless mode) is the main deployment model for KSQL queries (similar
+   to the Apache Kafka model). In particular, MapR only supports
+   production scenarios that run in non-interactive “headless” mode.
+
+   Non-interactive mode supports locked-down, “headless” deployment
+   scenarios where interactive use of the KSQL cluster is disabled,
+   thereby preventing KSQL CLI access. When deploying queries, headless
+   deployment allows you to lock-down access to KSQL servers,
+   version-control the exact queries, and store them in a .sql file. This
+   prevents users from interacting directly with the production KSQL
+   cluster.
+
+   Interactive KSQL clusters is not supported in a production environment.
+   However, interactive mode may be useful by, for example, allowing a
+   team of users to develop and verify their queries interactively on a
+   shared testing KSQL cluster. Interactive KSQL clusters require that the
+   authenticated KSQL user has open access to create, read, write, delete
+   topics, and use any consumer group. When deploying those queries in
+   your production environment, you want to lock-down access to KSQL
+   servers by deploying a non-interactive (headless) environment.
+   Important: SSL/TLS is not supported between the KSQL client and the
+   KSQL server. [2]KSQL Security for more information.
+
+For More Information
+
+     * [3]Apache Kafka KSQL
+     * [4]Configuring Apache Kafka KSQL Server
+     * [5]Apache Kafka Streams
+
+References
+
+   1. https://kafka.apache.org/documentation/streams/
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/KSQL/Ksql-security.html
+   3. https://docs.confluent.io/current/ksql/docs/index.html
+   4. https://docs.confluent.io/current/ksql/docs/installation/server-config/index.html
+   5. https://kafka.apache.org/documentation/streams/

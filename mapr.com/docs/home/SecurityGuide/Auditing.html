@@ -3,24 +3,73 @@ Auditing in MapR
    MapR allows you to log audit records of cluster-administration
    operations and operations on directories, files, and tables.
 
-   Auditing creates audit records of maprcli commands, REST API calls, and
-   other actions performed on a cluster through the MapR Control System
-   (MCS). Auditing records many different types of operations on
-   directories, files, MapR-DB tables, and streams in log files in various
-   locations in your MapR cluster. You can then process the information in
-   these log files with Apache Drill or other tools. For an overview of
-   how auditing works and the wide variety of ways you can use auditing,
-   see [1]Auditing of Cluster Administration and Operations on
-   Directories, Files, and Tables.
+   The auditing capabilities in MapR are critical for regulatory
+   compliance as well as for understanding user behavior. Regulations
+   often require the ability to prove which user accessed which data.
+   Logging user behavior helps to identify suspicison activities on
+   sensitive data.
 
-   More information is available for using auditing in [2]cluster
-   administration or [3]file system and table operations. The
-   [4]information on audit log files can be used to interpret auditing
+What Information is Collected?
+
+   If you enable auditing, MapR records many different kinds of
+   information about data access, operations on data objects, and
+   execution of maprcli commands, including the following:
+     * All administrator activities via maprcli commands, REST API calls,
+       and actions performed on a cluster through the MapR Control System
+       (MCS)
+     * Authentication to MCS
+     * Operations on directories and files
+     * Operations on MapR Database objects
+     * Operations on MapR Event Store For Apache Kafka
+
+How is Auditing Typically Used?
+
+   By analyzing audit records, security analysts can answer questions such
+   as these:
+     * Who accessed customer records outside of business hours?
+     * What actions did users take in the days before leaving the company?
+     * What operations were performed without following change control?
+     * Are users accessing sensitive files from protected or secured IP
+       addresses?
+     * Why do my reports sourced from the same underlying data look
+       different?
+
+   Data scientists can analyze audit records to answers these questions:
+     * Which data is used most frequently, is therefore of high value, and
+       should be shared more broadly?
+     * Which data is least commonly used, is therefore of low value, and
+       could be purged?
+     * Which data should be used more, is therefore underused, and needs
+       better advertising?
+     * Which administrative actions are most commonly performed and are
+       therefore candidates for automation?
+
+How to use Audit Logs?
+
+   After you enable auditing, audit records immediately start to be
+   recorded in audit logs. You can use Apache Drill or other tools to
+   process these logs. The following diagram shows the workflow for
+   processing audit logs of cluster-administration operations:
+   [audit_log_workflow_cluster_admin.png]
+
+   The next diagram shows the workflow for processing audit logs of
+   filesystem and table operations.
+   [audit_log_workflow_file_ops.png]
+
+   The step "Expand IDs in log files periodically" refers to the use of
+   the expandaudit utility. Raw audit logs contain file identifiers,
+   volume identifiers, and user identifiers. The expandaudit utility looks
+   up the names that are associated with those identifiers and puts them
+   in new copies of the audit logs. In addition, the MapR audit streaming
+   feature uses an API to convert file and volume IDs.
+
+   More information is available for using auditing in [1]cluster
+   administration or [2]file system and table operations. The
+   [3]information on audit log files can be used to interpret auditing
    messages.
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-Overview.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AuditingClusterAdminActivity.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AuditLogs-FilesystemTableOperations.html
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AuditingClusterAdminActivity.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AuditLogs-FilesystemTableOperations.html

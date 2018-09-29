@@ -25,7 +25,8 @@ hadoop mfs
   [ -Lsr <path> ]
   [ -lsrv <path> ]
   [ -lss <path> ]
-
+  [ -offload <file_path> [-v] ]
+  [ -recall <file_path> [-v] ]
   [ -rmr <path> ]
   [ -setace [-R]
      [-readfile <ace>] [-writefile <ace>] [-executefile <ace>]
@@ -36,9 +37,10 @@ ld:<ace>]"]
   [ -setaudit  on|off <dir|file|table> ]
   [ -setcompression  on|off|lzf|lz4|zlib <dir|table> ]
   [ -setchunksize <size> <dir> ]
-   (available from v6.0.1)
+
   [ -setnetworkencryption on|off <target> ]
   [ -stat <path> ]
+  [ -tierstatus <file_path> [-v] ]
 
 Parameters
 
@@ -131,6 +133,14 @@ Parameters
    -lss <path> Lists files in the directory specified by <path>, with an
    additional column that displays the number of disk blocks per file.
    Disk blocks are 8192 bytes.
+   offload <file_path> [-v] The file to offload to the storage tier. This
+   is a blocking operation; the control is not returned until the
+   operation is complete and the file has been offloaded. Use -v (for
+   verbose) to view the status of the ongoing offload.
+   recall <file_path> [-v] The file to recall from the storage tier. This
+   is a blocking operation; the control is not returned until the
+   operation is complete and the file has been recalled. Use -v (for
+   verbose) to view the status of the ongoing recall.
    -rmr <path> Deletes files and directories in the specified path
    recursively. This is a highly optimized version of the normal generic
    hadoop fs rmr command and is 10X faster for large directories. This
@@ -237,14 +247,14 @@ Parameters
           Specifies path to file or directory.
 
    -setaudit on|off <dir|file|table> Enables auditing of the specified
-   directory, file, or MapR-DB table.
+   directory, file, or MapR Database table.
 
    Enabling auditing of a directory does not enable auditing of files and
    subdirectories that exist in the directory. You must enable auditing on
    those existing files and subdirectories. However, any new files and
    subdirectories that you create will automatically be enabled for
    auditing. See [5]Checking Whether Auditing is Enabled for a Directory,
-   File, or MapR-DB Table.
+   File, or MapR Database Table.
 
    For operations on the object to be logged, auditing also needs to be
    enabled on the cluster and the volume in which the object is located.
@@ -274,6 +284,16 @@ Parameters
    The path is required and specifies the path (to the file) on which to
    run the command. The output fields for this command are described
    [7]below.
+   tierstatus <file_path> [-v] The status of the offload or recall of the
+   given file. If -v (for verbose) is also specified, for the given file,
+   the command specifies whether data is local or offloaded as the final
+   output. If the file:
+     * Contains local data, returns the following final output:
+File has local data
+     * Is completely offloaded, returns the following final output:
+File does not have local data
+
+   See [8]Output below for more information.
 
 Output
 
@@ -298,7 +318,7 @@ Output
    mode
 
    A text string indicating the read, write, and execute permissions for
-   the owner, group, and other permissions. See also [8]Managing
+   the owner, group, and other permissions. See also [9]Managing
    Permissions.
 
    compression
@@ -420,6 +440,13 @@ Output
    Note: For all other types, subtypes are not valid.
    gid The group ID.
    compression The compression setting.
+   When used with [10]tierstatus, the output varies based on whether or
+   not data is local, was offloaded, or was recalled. The output looks
+   similar to the following if:
+     * Data was completely offloaded:
+File does not have local data
+     * Data could not be completely offloaded or data was recalled:
+File has local data
 
 Examples
 
@@ -559,6 +586,21 @@ Path: /vol1/file1
   networkencryption: false
   compression: off
 
+   View the status of the offload or recall operation for the file named
+   file2 in volume named vol1:
+# hadoop mfs -tierstatus  /vol1/file2
+File has local data.
+
+   View the status of file named test1 in volume named vol1:
+# hadoop mfs -tierstatus /vol1/test1 -v
+        FID          Has Local Data
+2154.109.1049824        Yes
+2172.143.524906         Yes
+2172.153.524926         Yes
+2172.166.524952         Yes
+2172.167.524954         Yes
+File has local data.
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ACEs.html
@@ -568,4 +610,6 @@ References
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/CheckingWhetherAuditingisEnabled.html#CheckingWhetherAuditingisEnabledforaDirectoryFileorMapR-DBTable
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-Prerequisites.html#EnablingAuditing
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs__stat-output-fields
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_setting_user_permissions_overview.html#SettingUserPermissions-Se_26982517-d3e207
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs__output
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_setting_user_permissions_overview.html#SettingUserPermissions-Se_26982517-d3e207
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs__tierstatus

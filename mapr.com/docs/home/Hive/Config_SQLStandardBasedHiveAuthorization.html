@@ -1,0 +1,135 @@
+SQL Standards-Based Hive Authorization
+
+   Using MEP 6.0.0 and later, you can configure SQL standards-based
+   authorization to enable fine grained access control with SQL commands.
+    1. Add the following properties to hive-site.xml:
+<!-- SQL standard based authorization -->
+<property>
+  <name>hive.server2.enable.doAs</name>
+  <value>false</value>
+</property>
+<property>
+  <name>hive.users.in.admin.role</name>
+  <value>mapr</value>
+</property>
+<property>
+  <name>hive.security.metastore.authorization.manager</name>
+  <value>org.apache.hadoop.hive.ql.security.authorization.MetaStoreAuthzAPIAutho
+rizerEmbedOnly</value>
+</property>
+<property>
+  <name>hive.security.authorization.manager</name>
+  <value>org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdCo
+nfOnlyAuthorizerFactory</value>
+</property>
+    2. Create a hiveserver2-site.xml configuration file:
+touch /opt/mapr/hive/hive-<version>/conf/hiveserver2-site.xml
+       Add the following properties to the hiveserver2-site.xml file:
+<configuration>
+<property>
+  <name>hive.security.authorization.manager</name>
+  <value>org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHi
+veAuthorizerFactory</value>
+</property>
+<property>
+  <name>hive.security.authorization.enabled</name>
+  <value>true</value>
+</property>
+<property>
+  <name>hive.security.authenticator.manager</name>
+  <value>org.apache.hadoop.hive.ql.security.SessionStateUserAuthenticator</value
+>
+</property>
+<property>
+  <name>hive.metastore.uris</name>
+  <value></value>
+</property>
+</configuration>
+    3. Change owner of the hiveserver2-site.xml file to mapr, and restart
+       Hive services:
+chown mapr:mapr /opt/mapr/hive/hive-<version>/conf/hiveserver2-site.xml
+
+maprcli node services -name hs2 -action restart -nodes `hostname -f`
+maprcli node services -name hivemeta -action restart -nodes `hostname -f`
+
+   If you are a database administrator and want to run commands such as
+   create role and drop role or to access objects without being given
+   explicit access, you must run the set role command.
+    1. Create a test role:
+hive> set role admin;
+OK
+Time taken: 0.02 seconds
+
+hive> create role example_role;
+OK
+Time taken: 0.099 seconds
+
+hive> show roles;
+OK
+admin
+public
+role1
+example_role
+Time taken: 0.02 seconds, Fetched: 3 row(s)
+    2. Grant access:
+hive> GRANT example_role to USER testuser;
+OK
+Time taken: 0.058 seconds
+
+hive> GRANT SELECT  on table eg_test to role example_role;
+OK
+Time taken: 0.146 seconds
+    3. Using the test role, check access:
+sudo -u mapruser1 hive
+       If there is an access violation, correct it. The following is an
+       example of an access violation error:
+hive> insert into table eg_test values (4), (5), (6);
+FAILED: RuntimeException Cannot create staging directory
+'maprfs:///user/hive/warehouse/eg_test/.hive-staging_hive_2018-06-08_10-24-11_56
+6_5325052587659005252-1':
+User mapruser1(user id 5001) has been denied access to create .hive-staging_hive
+_2018-06-08_10-24-11_566_5325052587659005252-1
+       You can apply access restrictions to all actions except for READ
+       access.
+       The following are examples of permitted access operations:
+          + Select:
+hive> select count (*) from eg_test;
+OK
+3
+Time taken: 2.491 seconds, Fetched: 1 row(s)
+          + Describe:
+hive> describe extended eg_test;
+OK
+id                      int
+
+Detailed Table Information
+Table(tableName:eg_test, dbName:default, owner:mapr, createTime:1528453013, last
+AccessTime:0, retention:0,
+sd:StorageDescriptor(cols:[FieldSchema(name:id, type:int, comment:null)],
+location:maprfs:/user/hive/warehouse/eg_test, inputFormat:org.apache.hadoop.mapr
+ed.TextInputFormat,
+outputFormat:org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat,
+compressed:false, numBuckets:-1, serdeInfo:SerDeInfo(name:null, serializationLib
+:org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe,
+parameters:{serialization.format=1}), bucketCols:[], sortCols:[], parameters:{},
+
+skewedInfo:SkewedInfo(skewedColNames:[], skewedColValues:[], skewedColValueLocat
+ionMaps:{}),
+storedAsSubDirectories:false), partitionKeys:[], parameters:{totalSize=6, numRow
+s=3, rawDataSize=3,
+COLUMN_STATS_ACCURATE={"BASIC_STATS":"true"}, numFiles=1, transient_lastDdlTime=
+1528453046}, viewOriginalText:null,
+viewExpandedText:null, tableType:MANAGED_TABLE, rewriteEnabled:false)
+Time taken: 0.12 seconds, Fetched: 3 row(s)
+          + Show columns:
+hive> SHOW COLUMNS from eg_test;
+OK
+id
+Time taken: 0.049 seconds, Fetched: 1 row(s)
+
+   Note: For more information about privileges required for Hive
+   operations, see the [1]open source documentation.
+
+References
+
+   1. https://cwiki.apache.org/confluence/display/Hive/SQL+Standard+based+hive+authorization#SQLStandardBasedHiveAuthorization-PrivilegesRequiredforHiveOperations

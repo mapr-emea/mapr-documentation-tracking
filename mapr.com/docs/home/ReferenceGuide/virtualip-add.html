@@ -18,6 +18,7 @@ maprcli virtualip add
     -virtualip <virtualip>
     [ -virtualipend <virtual IP range end> ]
     [ -preferredmac <MAC address> ]
+    [ -service nfs3|nfs4 ]
 
    REST
 
@@ -40,11 +41,19 @@ Parameters
    addresses that list a MAC address on this node as a preferred MAC to
    this node. If the new value is null, this parameter resets the
    preferred MAC value.
+   service The service to assign VIPs to. Value can be one of the
+   following:
+     * nfs3 — for NFSv3
+     * nfs4 — for NFSv4
+
+   The default value is nfs3, which is used if this option is not
+   specified. You must specify the MAC addresses (macs) with this option.
    virtualip The virtual IP, or the start of the virtual IP range.
    virtualipend The end of the virtual IP range.
 
 Example
 
+   Add VIP for NFSv3 node:
      * [1]CLI
      * [2]REST
 
@@ -60,7 +69,47 @@ curl -k -X POST 'https://abc.sj.us:8443/rest/virtualid/add?cluster=mycluster.402
 A0E%3A22%3A71%3AAD%3A34%22&netmask=255.255.255.0&virtualid=10.1.1.5&preferredmac
 =%2202%3A0E%3A22%3A71%3AAD%3A34%22' --user mapr:mapr
 
+   Add VIP range for NFSv3 nodes:
+     * [3]CLI
+     * [4]REST
+
+maprcli virtualip add
+        -cluster mycluster.402.source
+        -service nfs3
+        -macs "09:0C:29:3C:47:AB 03:3C:34:76:CF:21 02:0E:22:71:AD:34"
+        -netmask 255.255.255.0
+        -virtualip  10.1.1.5
+        -virtualipend 10.1.1.7
+        -preferredmac "02:0E:22:71:AD:34"
+
+curl -k -X POST 'https://abc.sj.us:8443/rest/virtualid/add?cluster=mycluster.402
+.source&service=nfs3&macs=%2209%3A0C%3A29%3A3C%3A47%3AAB%2003%3A3C%3A34%3A76%3AC
+F%3A21%2002%3A0E%3A22%3A71%3AAD%3A34%22&netmask=255.255.255.0&virtualid=10.1.1.5
+&virtualipend=10.1.1.7&preferredmac=%2202%3A0E%3A22%3A71%3AAD%3A34%22' --user ma
+pr:mapr
+
+   Add VIP for NFSv4 node:
+     * [5]CLI
+     * [6]REST
+
+maprcli virtualip add
+        -cluster mycluster.402.source
+        -service nfs4
+        -macs "09:0C:29:3C:47:AB 03:3C:34:76:CF:21 02:0E:22:71:AD:37"
+        -netmask 255.255.255.0
+        -virtualip  10.1.2.7
+        -preferredmac "02:0E:22:71:AD:37"
+
+curl -k -X POST 'https://abc.sj.us:8443/rest/virtualid/add?cluster=mycluster.402
+.source&service=nfs4&macs=%2209%3A0C%3A29%3A3C%3A47%3AAB%2003%3A3C%3A37%3A76%3AC
+F%3A21%2002%3A0E%3A22%3A71%3AAD%3A34%22&netmask=255.255.255.0&virtualid=10.1.2.7
+&preferredmac=%2202%3A0E%3A22%3A71%3AAD%3A37%22' --user mapr:mapr
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-add.html#div1entry1
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-add.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-add.html#div2entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-add.html#div2entry2
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-add.html#div3entry1
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-add.html#div3entry2

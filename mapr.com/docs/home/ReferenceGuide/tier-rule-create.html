@@ -1,0 +1,225 @@
+tier rule create
+
+   Creates a rule for offloading data to a tier.
+
+Syntax
+
+   CLI
+
+$ maprcli tier rule create
+    -name <rule_name>
+    -expr <regular_expression>
+   [ -cluster <cluster_name> ]
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host:port>/rest/tier/rule/create?<parameters>
+
+Parameters
+
+   Parameter Description
+   cluster The name of the cluster on which to run the command.
+   expr The criteria for offloading data. The criteria can be defined
+   using a combination of the following:
+   u Username or user ID, as configured in the OS registry (such as
+   /etc/passwd file, LDAP, etc.), of a specific user.
+
+   Usage: u:<username or user ID>
+   g Group name or group ID, as configured in the OS registry (such as
+   /etc/group file, LDAP, etc.), of a specific group.
+
+   Usage: u:<groupname or group ID>
+   m (mtime) Time (in seconds or days) since the files were last modified.
+   The number of seconds can be specified by appending s to value and the
+   number of days can be specified by appending d to the value.
+
+   Usage:
+     * "m:<value>s" — specifies mtime in seconds
+     * "m:<value>d" — specifies mtime in days
+
+   All files whose modification timestamp (mtime) exceeds the specified
+   amount of time are offloaded.
+   Note: If the system time on CLDB and file server nodes are different,
+   the mtime rule for offloading data may not work as intended.
+   s The size of the file in bytes, kilobytes, megabytes, or gigabytes.
+   The size of the file can be specified by appending one of the following
+   to the value: b for bytes, k for kilobytes, m for megabytes, or g for
+   gigabytes.
+
+   Usage
+     * "s:<value>b" — specifies filesize in bytes
+     * "s:<value>k" — specifies filesize in KB
+     * "s:<value>m" — specifies filesize in MB
+     * "s:<value>g" — specifies filesize in GB
+
+   All files whose size exceeds the specified size are offloaded.
+   Or, use the following:
+   p (Default) Specifies all files. Specifies that this operation is
+   applicable to all the files without restriction. This cannot be
+   combined with any other operator.
+   "" Indicates none of the files. Specifies that this operation cannot be
+   performed on any of the files.
+   Use the following to string multiple criteria for offload:
+   & AND operation to combine multiple expressions as the criteria for the
+   rule.
+   | OR operation to indicate either of the expressions as the criteria
+   for the rule.
+   () Delimiters for subexpressions.
+   name The name of the rule.
+
+Examples
+
+   Create a rule to offload files older than a year:
+     * [1]CLI
+     * [2]REST
+
+/opt/mapr/bin/maprcli tier rule create -name rule1 -expr "m:365d" -json
+{
+        "timestamp":1519681290079,
+        "timeofday":"2018-02-26 01:41:30.079 GMT-0800 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created rule: 'rule1'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/rule/create?name=rule1&expr=
+m:365d' --user mapr:mapr
+{"timestamp":1519681475025,"timeofday":"2018-02-26 01:44:35.025 GMT-0800 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created rule: 'rule1'"]
+}
+
+   Create a rule to offload files larger than 5 GB:
+     * [3]CLI
+     * [4]REST
+
+# /opt/mapr/bin/maprcli tier rule create -name rule2 -expr "s:5g" -json
+{
+        "timestamp":1519681586774,
+        "timeofday":"2018-02-26 01:46:26.774 GMT-0800 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created rule: 'rule2'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/rule/create?name=rule2&expr=
+s:5g' --user mapr:mapr
+{"timestamp":1519681667766,"timeofday":"2018-02-26 01:47:47.766 GMT-0800 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created rule: 'rule2'"]
+}
+
+   Create rule to offload files whose owner is m7user1:
+     * [5]CLI
+     * [6]REST
+
+# /opt/mapr/bin/maprcli tier rule create -name rule3 -expr "u:m7user1" -json
+{
+    "timestamp":1519682014521,
+    "timeofday":"2018-02-26 01:53:34.521 GMT-0800 PM",
+    "status":"OK",
+    "total":0,
+    "data":[
+
+    ],
+    "messages":[
+        "Successfully created rule: 'rule3'"
+    ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/rule/create?name=rule3&expr=
+u:m7user1' --user mapr:mapr
+{"timestamp":1519682095080,"timeofday":"2018-02-26 01:54:55.080 GMT-0800 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created rule: 'rule3'"]
+}
+
+   Create rule to offload all files:
+     * [7]CLI
+     * [8]REST
+
+# /opt/mapr/bin/maprcli tier rule create -name rule4 -expr "p" -json
+{
+        "timestamp":1519682694183,
+        "timeofday":"2018-02-26 02:04:54.183 GMT-0800 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created rule: 'rule4'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/rule/create?name=rule4&expr=
+p' --user mapr:mapr
+{"timestamp":1519682828031,"timeofday":"2018-02-26 02:07:08.031 GMT-0800 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created rule: 'rule4'"]
+}
+
+   Create rule to not offload any files:
+# /opt/mapr/bin/maprcli tier rule create -name rule5 -expr "" -json
+{
+        "timestamp":1519682947271,
+        "timeofday":"2018-02-26 02:09:07.271 GMT-0800 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created rule: 'rule5'"
+        ]
+}
+
+   Create a rule, called testRule, for offloading all files owned by user
+   m7user1 or for offloading files owned by user mapr and whose size is
+   greater than 5 GB or whose file modification timestamp is greater than
+   365 (days):
+     * [9]CLI
+     * [10]REST
+
+# /opt/mapr/bin/maprcli tier rule create -name testRule -expr "u:m7user1 | (u:ma
+pr & (s:5g | m:365d))" -json
+{
+        "timestamp":1519683138305,
+        "timeofday":"2018-02-26 02:12:18.305 GMT-0800 PM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully created rule: 'testRule'"
+        ]
+}
+
+# curl -k -X POST 'https://10.10.82.24:8443/rest/tier/rule/create?name=testRule&
+expr=u%3Am7user1%7C%28u%3Amapr%26%28s%3A5g%20%7C%20m%3A365d%29%29' --user mapr:m
+apr
+{"timestamp":1526488621687,"timeofday":"2018-05-16 09:37:01.687 GMT-0700 AM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully created rule: 'testRule
+'"]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div2entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div2entry2
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div3entry1
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div3entry2
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div4entry1
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div4entry2
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div5entry1
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-create.html#div5entry2

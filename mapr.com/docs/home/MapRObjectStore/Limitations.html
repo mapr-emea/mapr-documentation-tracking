@@ -1,0 +1,34 @@
+MapR Object Store Limitations
+
+   To fully benefit from the functionality of MapR Object Store
+   1.0.0-1808, it is important to understand certain limitations and
+   restrictions involving protocol support, object naming, and specific
+   object and bucket APIs that are not supported.
+     * Multiple protocol support limitation
+       You can write data via S3 API and read data via NFS/POSIX. But, you
+       CANNOT write to NFS and read via the S3 API as NFS has no ability
+       to populate the necessary S3 metadata required by MapR Object
+       Store.
+     * MapR Object Store instance limitation
+       You can use only one instance of MapR Object Store on any given
+       bucket.
+     * Object name character restrictions
+       You cannot use object names that contain characters `^*|" are NOT
+       supported in Windows and other file systems which do not support
+       them.
+     * S3 object APIs not supported
+          + ObjectACL (Use bucket policies instead)
+          + ObjectTorrent
+          + ObjectVersions
+     * S3 Bucket APIs not supported
+          + BucketACL (Use bucket policies instead)
+          + BucketCORS (CORS enabled by default on all buckets for all
+            HTTP verbs)
+          + BucketLifecycle (Not required for Minio erasure coded backend)
+          + BucketReplication (Use mc mirror instead)
+          + BucketVersions, BucketVersioning (Use s3git)
+          + BucketWebsite (Use caddy or nginx)
+          + BucketAnalytics, BucketMetrics, BucketLogging (Use bucket
+            notification APIs)
+          + BucketRequestPayment
+          + BucketTagging

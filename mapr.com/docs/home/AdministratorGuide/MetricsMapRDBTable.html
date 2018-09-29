@@ -1,0 +1,108 @@
+MapR Database Table Metrics
+
+   Starting in MapR 6.1, MapR Database supports table metrics. This
+   section describes the available MapR Database table metrics. It also
+   describes how to configure metrics per table, disable them in your
+   cluster, and how to filter them by operation and table.
+
+   Table metrics are collected per node. By default, these metrics are
+   written to OpenTSDB every minute. Pre-existing tables in your MapR
+   cluster inherit this default setting. You can change this default per
+   table using either the [1]table create or [2]table edit command.
+   Secondary indexes inherit their metric configuration from their parent
+   table.
+
+   You cannot disable metrics on individual tables. During installation,
+   you can disable table metrics across your entire cluster. If you are
+   using the MapR installer, select the minimum metrics collection
+   configuration option. If you are doing a manual install, see
+   [3]Installing Metering Using Manual Steps.
+
+   The following table lists MapR Database table metrics:
+   Name Description
+   mapr.db.table.latency The latency of RPC operations on tables,
+   represented as a histogram. Endpoints identify histogram bucket
+   boundaries.
+   Note: Put latency metrics for indexes reflect only the index update
+   time. They do not include lag time due to [4]asynchronous index
+   updates.
+   mapr.db.table.read_bytes The number of bytes read from tables
+   mapr.db.table.read_rows The number of rows read from tables
+   mapr.db.table.resp_rows The number of rows returned from tables
+   mapr.db.table.rpcs The number of RPC calls completed on tables
+   mapr.db.table.value_cache_hits The number of MapR Database operations
+   on tables that utilized the MapR Database value cache
+   mapr.db.table.value_cache_lookups The number of MapR Database
+   operations on tables that performed a lookup on the MapR Database value
+   cache
+   mapr.db.table.write_rows The number of rows written to tables
+   mapr.db.table.write_bytes The number of bytes written to tables
+
+Tags for Table Metrics
+
+   Each table metric collects data across all operations on tables and
+   secondary indexes in a MapR node. To view metrics for a particular RPC
+   operation on a specific table, you must filter the metric by RPC type
+   and table path, as described in the following table:
+   Tag Name Description
+   rpc_type
+
+   The name of the RPC:
+     * append
+     * check_and_put
+     * get
+     * increment
+     * put
+     * scan
+     * update_and_get
+
+   table_path
+
+   The path of the MapR Database table.
+
+   OpenTSDB supports only the following characters:
+     * Alphanumeric characters
+     * Dot (.)
+     * Underscore (_)
+     * Dash (-)
+     * Slash (/)
+     * Space ( )
+     * Unicode letters
+
+   If a table path contains characters that are not in this list, MapR
+   cannot collect those table metrics.
+   index The name of the secondary index defined on the table specified in
+   table_path, if you want to filter on a specific index. When you specify
+   this tag, you cannot specify the noindex tag.
+   Note: You can use regular expressions when specifying the index name to
+   filter for a group of indexes.
+   noindex Set to "//primary" if you want to filter metrics for only the
+   primary table and exclude metrics for secondary indexes defined on the
+   table. When you specify this tag, you cannot specify the index tag.
+
+   The following table shows examples of the table-specific tags to use to
+   filter different table metrics:
+   Desired Metric Metric Name Tag Name Tag Value
+   The number of rows written to a table in the path
+   /var/mapr/mapr.monitoring/tsdb-meta, including writes to its secondary
+   indexes mapr.db.table.write_rows table_path
+   /var/mapr/mapr.monitoring/tsdb-meta
+   The number of completed get RPCs for a table in the path
+   /var/mapr/mapr.monitoring/tsdb-meta, excluding metrics on the table's
+   secondary indexes mapr.db.table.rpcs rpc_type get
+   table_path /var/mapr/mapr.monitoring/tsdb-meta
+   noindex //primary
+   The number of rows read from a secondary index named tsdbIdx, defined
+   on the table in the path /var/mapr/mapr.monitoring/tsdb-meta
+   mapr.db.table.read_rows table_path /var/mapr/mapr.monitoring/tsdb-meta
+   index tsdbIdx
+   Note: In addition to these table-specific tags, [5]Metric Collection
+   describes other available tags.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-create.html#tablecreate
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-edit.html#tableedit
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Installing_Metering_Manually.html#concept_oqy_lbh_22b
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-consistency.html#indexes-consistency
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MetricsCollections.html#concept_w3j_f44_vv

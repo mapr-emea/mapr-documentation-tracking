@@ -1,0 +1,215 @@
+Data Replication, Snapshots, Mirroring, Auditing, and Metrics Collection
+
+Replication
+
+   Data from one of the replica containers is first offloaded and then the
+   data in all the replica containers is purged. MapR Filesystem only
+   stores the metadata after data is offloaded. The offload is considered
+   successful only when data on all active replicas have been purged (or
+   removed from the storage pool to release the disk space on the MapR
+   file system). If, during the offload, the node on which one of the
+   replicas reside is down, the data on that container is purged once the
+   node comes back up.
+
+   In the tiering architecture, although data is moved to the storage
+   tier, the namespace of the volume continues to be 3-way replicated. So,
+   the metadata related to namespace container has 3x cost.
+
+   The offloaded replica containers are recalled if/when the whole volume
+   is recalled. When a replica is reinstituted to the cluster as a result
+   of a recall operation, a re-synchronization happens to bring all the
+   replicas up to date from the designated master container.
+   Note: The offload and recall settings on the master container are
+   applicable to the replica containers as well.
+
+Snapshots
+
+   You can associate a snapshot schedule with tiering-enabled volumes.
+   When the data in the volume is offloaded, associated snapshots are also
+   offloaded and MapR Filesystem only stores the metadata. If the whole
+   volume is recalled, the snapshots are also recalled to MapR file
+   system. When offloading recalled snapshots, the rules for data offload
+   apply to snapshots as well.
+   Note: You may experience latencies when accessing snapshots associated
+   with offloaded data.
+
+Mirroring
+
+   You can create tiering-enabled source volumes and associate them with
+   tiering-enabled mirror volumes. You cannot associate tiering-enabled
+   mirror volumes with standard volumes that are not tiering-enabled and
+   vice versa. Only homogeneous combination of mirror and standard volumes
+   are supported; heterogeneous combination of mirror and standard volumes
+   are not supported.
+   Note: Both mirror volume and source volume data can be set up to be
+   offloaded to the same tier (i.e., the same cold tier) or different
+   tiers (i.e., different cold tiers). MapR does not require the source
+   and mirror volume to be configured to use the same tier or have the
+   same tier settings. Warm tier enabled volumes can have the same tier
+   settings; however, the volume's tier only stores the meta data and data
+   in each volume is offloaded to an associated back-end volume.
+
+   When a synchronization of the tiering-enabled mirror volume with the
+   (local or remote) tiering-enabled source volume is triggered (either
+   manually or automatically based on a schedule), the mirror volume
+   synchronizes with the source volume if source volume data is local (and
+   not yet tiered). On the other hand, if the source volume data is
+   tiered, the tiering-enabled mirror volume synchronizes with the tiered
+   data fetched by the MAST Gateway that is assigned to the source volume.
+   Incremental changes in the mirror volume are offloaded based on the
+   offload rules associated with the tiering-enabled mirror volume.
+
+   Using Tiering-Enabled Mirror Volumes for Disaster Recovery
+          You can create a secondary, cost optimized disaster recovery
+          cluster for a primary three-way replicated cluster. To do this,
+          create two clusters — a primary tiering-enabled cluster with no
+          active schedule to automatically offload data and an associated
+          secondary cluster where primary cluster data is mirrored and
+          then aggressively offloaded to the tier. While the primary or
+          source cluster continues to be three-way replicated, if the the
+          secondary, disaster recovery cluster data is:
+
+          + Erasure coded (warm tier), it provides space savings in the
+            range of 1.2x-1.5x.
+          + On a third-party cloud storage (cold tier), it can be
+            three-way replicated on a low-cost storage alternative.
+
+          In case of a disaster, you can recall data from the tier to the
+          MapR cluster.
+
+   Note: If you promote a tiering-enabled mirror volume during an offload
+   or recall operation of the data associated with the mirror volume, the
+   offload or recall operation is aborted and the mirror volume is
+   converted to a read-write volume; the tierjobstatus command for the
+   offload or recall job shows AbortedInternal status.
+
+Auditing
+
+   The MapR audit feature lets you log audit records of
+   cluster-administration operations and operations on the data in the
+   volume. Scheduled (and automatically triggered) tiering operations such
+   as offload and compaction are not audited. However, if auditing is
+   enabled at the cluster level, the manually triggered volume-level
+   tiering operations such as offload, recall, abort, etc. are audited in
+   the CLDB audit logs. For example, you can see a record similar to the
+   following in the /opt/mapr/logs/cldbaudit.log.json file for [1]volume
+   offload command:
+{"timestamp":{"$date":"2018-06-07T15:34:28.580Z"},"resource":"vol1","operation":
+"volumeOffload","uid":0,"clientip":"10.20.30.40","status":0}
+
+   If auditing is enabled for data in the tiering-enabled volume and files
+   within, file-level tiering operations such as offload, recall, etc.
+   triggered using the [2]REST API, [3]hadoop, and [4]dot-interface are
+   audited in the FS audit logs
+   (/var/mapr/local/<hostname>/audit/5661/FSAudit.log-<*>.json file).See
+   [5]Auditing Data Access Operations for the list of file-level tiering
+   operations that are audited. You can selectively enable or disable
+   auditing of these operations. See [6]Selective Auditing of MapR
+   Filesystem, MapR Database Table, and MapR Event Store For Apache Kafka
+   Operations Using the CLI for more information. For example, you can see
+   records similar to the following in the
+   /var/mapr/local/<hostname>/audit/5661/FSAudit.log-<*>.json file for
+   [7]file offload command:
+/mapr123/Cloudpool19//var/mapr/local/abc.sj.us/audit/5660/FSAudit.log-2018-09-12
+-001.json:1:{"timestamp":{"$date":"2018-09-12T05:47:04.199Z"},"operation":"FILE_
+OFFLOAD","uid":0,"ipAddress":"10.20.35.45","srcFid":"3184.32.131270","volumeId":
+16558233,"status":0}
+
+   Both the [8]tier rule list and [9]tier list commands are audited in the
+   /opt/mapr/logs/cldbaudit.log.json file as well as the
+   /opt/mapr/mapr-cli-audit-log/audit.log.json file. The record in the
+   audit log might look something similar to the following:
+{"timestamp":{"$date":"2018-06-13T09:15:24.004Z"},"resource":"cluster","operatio
+n":"offloadRuleList","uid":0,"clientip":"10.10.81.14","status":0}
+{"timestamp":{"$date":"2018-06-13T09:14:42.304Z"},"resource":"cluster","operatio
+n":"tierList","uid":0,"clientip":"10.10.81.14","status":0}
+
+   When auditing operations like tierjobstatus and tierjobabort, the
+   coalesce interval set at the volume level is not honored. You may see
+   multiple records of the same operation from the same client in the log.
+
+   Read requests processed using cache-volumes or erasure-coded volumes
+   are not audited because when the file is accessed, the request first
+   goes to the front-end volume and the operation is audited there. The
+   audit record contains the ID of the front-end volume (volid) and
+   primary file ID (fid). However, the write to the cache-volume for a
+   volume-level recall of data is audited in the audit logs on the file
+   server hosting the cache-volume with the primary file ID (fid). The
+   write to the cache-volume for a file-level recall of data is not
+   audited.
+
+   In addition, you can enable auditing of offload and/or recall events at
+   both the volume and file levels by enabling auditing for
+   filetieroffloadevent and filetierrecallevent at the volume level. By
+   default, auditing is disabled for filetieroffloadevent and
+   filetierrecallevent. If you enable auditing for filetieroffloadevent
+   and filetierrecallevent using the dataauditops parameter with the
+   [10]volume create or [11]volume modify command, the following are
+   audited in the FS audit log:
+     * For filetieroffloadevent, files offloaded by running the [12]file
+       offload command or (only) files purged on MapR file system after
+       running [13]volume offload command.
+     * For filetierrecallevent, files recalled by running the [14]file
+       recall or [15]volume recall command.
+
+   For example, you can see a record similar to the following in the
+   /var/mapr/local/<hostname>/audit/5661/FSAudit.log-<*>.json file if
+   auditing is enabled at the volume-level for filetieroffloadevent:
+abc.sj.us/audit/5661/FSAudit.log-2018-06-07-001.json:{"timestamp":{"$date":"2018
+-06-07T07:27:58.810Z"},"operation":"FILE_TIER_OFFLOAD_EVENT","uid":2000,"ipAddre
+ss":"1}
+
+   For more information:
+     * [16]Auditing in MapR
+     * [17]Managing Auditing
+
+Collecting Metrics
+
+   If volume metrics collection is enabled on the tiering-enabled volume,
+   metrics for all read and write operations on the tiered volume are
+   logged in the metrics log. For example, you can see a record similar to
+   the following in the metrics log file:
+{"ts":1534960230000,"vid":248672388,"RDT":0.0,"RDL":0.0,"RDO":0.0,"WRT":363622.7
+,"WRL":7209.0,"WRO":2580.0}
+{"ts":1534960250000,"vid":248672388,"RDT":363686.7,"RDL":2856.0,"RDO":2847.0,"WR
+T":0.0,"WRL":0.0,"WRO":0.0}
+
+   Tiering-related operations do not generate metrics records. That is,
+   volume and file level offload, recall, and abort operations are not
+   logged in the metrics log. However, the volumes created to support
+   tiering (such as the cache-volume, the metadata volume, and the
+   erasure-coded volume) have metrics collection enabled and the metrics
+   records for these volumes are logged with the ID of the associated
+   parent or front-end volume. That is, read operations on the the
+   cache-volume are logged with the ID of the associated front-end volume.
+   For example, you can see records similar to the following in the
+   metrics log file for the volume:
+{"ts":1534968850000,"vid":209801522,"RDT":6328.5,"RDL":161.0,"RDO":158.0,"WRT":0
+.0,"WRL":0.0,"WRO":0.0}
+{"ts":1534968860000,"vid":209801522,"RDT":234669.7,"RDL":5241.0,"RDO":5143.0,"WR
+T":0.0,"WRL":0.0,"WRO":0.0}
+
+   See [18]Enabling Volume Metric Collection and [19]Collecting Volume
+   Metrics for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-offload.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RunTierCommands-POSIXandNFSclients.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SelectiveAuditingOfOperations.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-offload.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-list.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-list.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-offload.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-offload.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-recall.html
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-recall.html
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing.html
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-Prerequisites.html
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/overview/EnableMetricCollection.html
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/overview/CollectingVolumeMetrics.html

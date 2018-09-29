@@ -1,0 +1,296 @@
+Drill 1.14.0-1808 (MEP 6.0.0) Release Notes
+
+   This section provides reference information, including new features,
+   improvements, resolved issues, known issues, and limitations for Drill
+   1.14.0-1808.
+
+   The following release notes apply to the 1.14.0 version of the Drill
+   component:
+   Version 1.14.0
+   Release Date September 2018
+   MapR Version Interoperability [1]Component Versions for Released MEPs
+   Package Names Navigate to [2]https://package.mapr.com/releases/MEP/,
+   and select your MEP and OS to view the list of package names.
+
+New in this Release
+
+   Drill 1.14.0 includes the following new features and improvements:
+
+   Query Planning
+          The query planner in Drill can leverage indexes created on MapR
+          Database JSON document fields with array fields. See [3]Writing
+          Drill Queries that Leverage Indexes on Array Fields. (MD-3742)
+          When you query a view created on a MapR Database table, the
+          query planner in Drill creates the same query plan it would
+          create if you ran the underlying query directly against the MapR
+          Database table. (MD-3360, MD-3313)
+
+   SQL
+          Drill supports lateral joins. You must enable the lateral join
+          functionality in Drill. See [4]Lateral Join.
+          The DECIMAL data type is enabled by default and has [5]enhanced
+          support. (MD-3522, MD-1138, MD-640)
+          Hive schema and table names are case-insensitive. See
+          [6]Case-Sensitivity. (MD-948)
+          Support for the ANY_VALUE function; based on [7]CALCITE-2366.
+          (MD-4498)
+          Drill allows comparisons between date and timestamp values.
+          (MD-4220)
+
+   Resource management
+          Drill can directly manage the CPU resources through the Drill
+          start-up script, drill-env.sh. See [8]Configuring cgroups to
+          Control CPU Usage. (MD-3862)
+
+   Storage plugin management
+          Ability to [9]export and save your storage plugin configurations
+          to a JSON file for reuse. (MD-4621)
+          Ability to manage storage plugin configurations in the Drill
+          configuration file [10]storage-plugins-override.conf. (MD-2732)
+
+   Integration with Hive and Hue
+          Hue integration with Drill is officially supported. See
+          [11]Integrate Hue with Drill. (MD-2382)
+          Ability to specify Hive properties at the session level through
+          the store.hive.conf.properties option. See [12]Setting Hive
+          Properties. (MD-4370)
+          A new option,
+          store.hive.maprdb_json.optimize_scan_with_native_reader, enables
+          Drill to use the native Drill reader to read Hive MapR Database
+          JSON tables. When you enable this option, Drill typically
+          performs faster reads of data and applies filter pushdown
+          optimizations. See [13]SET maprdb Format Plugin Options.
+          (MD-3662)
+
+   Parquet filter pushdown and partition pruning
+          Drill can [14]infer filter conditions for join queries and push
+          the filter conditions down to the data source. (MD-3542,
+          MD-2181, MD-1399, MD-1272)
+          [15]Parquet filter pushdown pushes filters past the ITEM
+          operator; useful for queries on complex fields. (MD-1271)
+          Parquet performance improvements. (MD-2518, MD-1582)
+          Drill uses a native reader to read Hive tables when the
+          [16]store.hive.optimize_scan_with_native_readers option is
+          enabled; Drill reads data faster and applies filter pushdown
+          optimizations. (MD-1267)
+          Drill can pushdown filters into the Systems table. (MD-4055)
+
+   Query profiles
+          Profiles in Drill show the amount of memory used by the
+          Unordered Receiver operator. (MD-4260)
+
+   Drivers
+          Drill 1.14 requires new versions of the ODBC and JDBC drivers.
+          You can download previews of the MapR [17]ODBC and [18]JDBC
+          drivers for Drill 1.14. Earlier versions of the drivers do not
+          work with Apache Drill 1.14.
+
+   For a list of additional features and improvements, see the [19]Apache
+   Drill 1.14 Release Notes.
+
+Default Configuration Changes
+
+   Note the following changes to default configurations in Drill 1.14.0:
+     * Warden manages memory as a percentage of total system memory. See
+       [20]Configuring Drill Memory. (MD-2850)
+     * [21]Spillable operators spill data to the /tmp/drill/spill
+       directory on the MapR Filesystem. You can override this setting in
+       drill-override.conf. Refer to the examples in
+       drill-override-example.conf. (MD-4775)
+     * Query profile data is stored in maprfs:///apps/drill/profiles. The
+       drill-override.conf file includes the
+       sys.store.provider.zk.blobroot property that you can use to
+       override the default location. See [22]Configuring the ZooKeeper
+       PStore Location. (MD-3527)
+
+Resolved Issues
+
+   Drill 1.14.0 includes the following resolved issues:
+   MapR Tracking Numbers Resolved Issues
+   MD-4871 When querying a target MapR stream, the query stops running,
+   and Drill prints a message stating "Failed to fetch messages within 200
+   milliseconds."
+   MD-4831 The Drill-on-Yarn package has inconsistent libMapRClient.so
+   versions.
+   MD-4721 The following error should be logged as a warning instead of an
+   error:
+
+   "ERROR o.a.d.e.p.index.IndexDiscoverBase - No index returned from
+   Admin.getTableIndexes"
+   MD-4666 DRILL-6612: Drill logs an assertion error when a query joins on
+   a temporary table.
+   MD-4643 DRILL-6732: Disabled storage plugins work as if they are
+   enabled.
+   MD-4607 DRILL-6557: Scanning input splits in Hive table causes an
+   exceptionally long planning phase.
+   MD-4535 DRILL-6513: Drill should only allow valid values when users set
+   planner.memory.max_query_memory_per_node. This option should be limited
+   by direct memory; otherwise, there can be memory pressure and
+   out-of-memory errors.
+   MD-4422 DRILL-6468: The Drillbit stays in QUIESCENT mode after an
+   out-of-memory condition.
+   MD-4371 A specific query returns an exception when using the "equals"
+   operator to filter on a boolean column.
+   MD-4251 DRILL-6474: Queries with ORDER BY and OFFSET (without LIMIT) do
+   not return any rows.
+   MD-4156
+
+   When selecting a column from a Parquet file, a query may stop running
+   and return an error stating "ArrayIndexOutOfBoundsException,"
+   MD-4133 The INFO log level provides excessive logging information.
+   MD-4107 Queries on Hive data sources may stop running amd return an
+   error stating “UnsupportedOperationException:
+   org.apache.hadoop.hive.ql.io.parquet.convert.ETypeConverter$8$1.”
+   MD-4102 UNION ALL queries return a UNION-ALLNumberFormatException
+   MD-4065 The Hash Aggregate operator uses ~2X memory.
+   MD-4048 DRILL-6282: Update Drill's metric dependencies.
+   MD-4033 Drill does not return results for some queries with an inner
+   join.
+   MD-4017
+
+   DRILL-6254: Flatten queries may stop running due to an error that
+   states “IllegalArgumentException: the requested size must be
+   non-negative.”
+   MD-4005 The HashJoinSpill operator does not use memory efficiently.
+   MD-3997 DRILL-6250: The SQLLine start command and password appears in
+   sqlline.log.
+   MD-3984 DRILL-6241: The Saffron properties configuration file has
+   excessive permissions.
+   MD-3886 DRILL-6199: Filter push down does not work with more than one
+   nested subquery.
+   MD-3716 DRILL-6223: Queries stop running if they select on all columns
+   from a set of Parquet files.
+   MD-3688 Impersonating a view owner does not work.
+   MD-3656 DRILL-6132 The HashPartitionSender leaks memory.
+   MD-3541 If Drill encounters JRE SIGSEGV, the Drillbit stops running.
+   MD-3525 Drill queries fails on function LOG10.
+   MD-2883 DRILL-4337: Querying Hive tables with INT96 fields causes Drill
+   to fail.
+   MD-2082 DRILL 4807: An ORDER BY aggregate function in a window
+   definition results in an assertion error.
+   MD-2048 The JSESSIONID cookie is not set with the HttpOnly flag.
+   MD-1549 DRILL-5188: TPC-DS query16 fails with the following exception:
+   “IllegalArgumentException: Target must be less than target count”
+   MD-1487 DRILL-3855: Predicate pushdown does not occur for the UNION ALL
+   operator.
+
+Known Issues
+
+   Drill 1.14.0 has the following known issues:
+   MapR Tracking Numbers Known Issues
+   MD-4938 The planner.index.covering_selectivity_threshold does not take
+   effect in the execution plan when the option is set to values less than
+   1.0 for complex data.
+   MD-4906
+
+   For selectivity queries on secondary indexes, Drill may return an
+   exception that states “ForemanException: One more more nodes lost
+   connectivity during query.”
+   MD-4902 Queries with AND conditions on indexed complex type fields are
+   not parallelized.
+   MD-4894 Queries with nested FLATTEN functions may stop running and
+   return an error that states “Error: UNSUPPORTED_OPERATION ERROR: Hash
+   aggregate does not support schema change.”
+   MD-4890 The query planner in Drill does not create an index-based query
+   plan for queries with multi-level flattens or queries with intermediate
+   filters that reference multi-level flattens.
+   MD-4865 Certain queries with AND conditions on alphanumeric data, such
+   as keys, stop running, and Drill returns an error that states
+   “UNSUPPORTED_OPERATION ERROR: In a list of type BIT, encountered a
+   value of type FLOAT4.”
+   MD-4860 Simple select star queries return a NullPointerException when
+   the data is highly complex.
+   MD-4846 When operators hit the maximum buffer size, Drill returns an
+   OversizedAllocationException that states "Unable to expand the buffer.
+   Max allowed buffer size is reached."
+   MD-4827 The ODBC driver returns INFINITY in capital letters instead of
+   mixed case.
+   MD-4821
+
+   DRILL-6707: A query with a 10-way merge join fails with an
+   IllegalArgumentException.
+   MD-4799 Data batches for the Project operator exceed the specified
+   maximum.
+   MD-4773 A data verification failure in
+   Functional/tpch/sf0dot01/smoke/parquet/join10-hash.q needs to be
+   resolved.
+   MD-4759 An orderby on a field with [][] throws a NullPointerException.
+   MD-4739 Parallelism for complex secondary index plans are unrestricted.
+   MD-4738 The query planner incorrectly determines parallelism for
+   secondary index plans.
+   MD-4736 Queries with multiple flatten functions may hang.
+   MD-4730 Drill may log the following exception during index planning:
+   java.lang.ClassCastException:
+   org.apache.drill.common.expression.FunctionCall cannot be cast to
+   org.apache.drill.common.expression.SchemaPath
+   MD-4709 Queries pick non-covering index plans if the Streaming
+   Aggregate operator is disabled.
+   MD-4704
+
+   Queries that have an exact equality filter with a map JSON literal stop
+   running and return an error that states "SchemaChangeException - Error:
+   Missing function implementation: [equal(MAP-REQUIRED,
+   VARBINARY-REQUIRED)]."
+   MD-4577 The HashJoin operator allocates too much memory and slows down
+   queries (TPCH 16) when spill to disk is enabled.
+   MD-4574 MapR Database cannot push filters on non-rowkey columns down to
+   the data source when using a convert function with the byte_substr
+   manipulation function; for example:
+
+   … where
+   convert_from(byte_substr(t.cf1.ADDR_WORK_OPT_OUT_DATE_DM,1,8),'UTF8')='
+   20130402'
+   MD-4531 The total batches for the Project operator are not properly
+   split and exceed the maximum specified.
+   MD-4518 The total batch size for the Project operator exceeds the
+   maximum specified.
+   MD-4504 [DRILL-6465] Transitive closure is not working for joins with
+   multiple local conditions.
+   MD-4479 The error message for group by queries on a complex type needs
+   to be updated to state that they are unsupported.
+   MD-4404 The Datediff function returns the wrong result if Drill uses a
+   timezone with DST.
+   MD-4377
+
+   Queries on complex data may stop running and return a
+   NumberFormatException.
+   MD-4376 Queries on complex data may return a NullPointerException.
+   MD-4375 Queries with invalid filters on fields with complex types hang
+   during the planning phase.
+   MD-4264 HashAgg Batch throws an IllegalStateException when asserts are
+   enabled for a non-covering index plan.
+   MD-4229 DRILL-6329 : TPC-DS Query 66 failed due to out-of-memory
+   errors.
+
+Patches
+
+   None
+
+Limitations
+
+   None
+
+References
+
+   1. https://maprdocs.mapr.com/61/InteropMatrix/Component_versions_all_MEPs.html
+   2. https://package.mapr.com/releases/MEP/
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/leverage-si-array-field.html#leverage-si-array-field
+   4. https://drill.apache.org/docs/lateral-join/
+   5. http://drill.apache.org/docs/supported-data-types/#decimal-data-type
+   6. https://drill.apache.org/docs/lexical-structure/#case-sensitivity
+   7. https://issues.apache.org/jira/browse/CALCITE-2366
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/config-cgroup-cpu.html#config-cgroup-cpu
+   9. https://drill.apache.org/docs/configuring-storage-plugins/#exporting-storage-plugin-configurations
+  10. http://drill.apache.org/docs/configuring-storage-plugins/#configuring-storage-plugins-with-the-storage-plugins-override.conf-file
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hue/ConfigureHuewithDrill-61.html#integrate-drill-hue
+  12. https://drill.apache.org/docs/hive-storage-plugin/#setting-hive-properties
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/maprdb-format-set.html#maprdb-format-set
+  14. http://drill.apache.org/docs/parquet-filter-pushdown/#viewing-the-query-plan
+  15. http://drill.apache.org/docs/parquet-filter-pushdown/#support
+  16. https://drill.apache.org/docs/configuration-options-introduction/
+  17. https://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.22.1055_Preview/
+  18. https://package.mapr.com/tools/MapR-JDBC/MapR_Drill/MapRDrill_jdbc_v1.6.0_LinuxPreview/
+  19. https://drill.apache.org/docs/apache-drill-1-14-0-release-notes/
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/a-config-drill-memory-61.html#config-drill-memory-61
+  21. https://drill.apache.org/docs/sort-based-and-hash-based-memory-constrained-operators/
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/configure_persistent_config_data-61.html#config-zk-pstore-61

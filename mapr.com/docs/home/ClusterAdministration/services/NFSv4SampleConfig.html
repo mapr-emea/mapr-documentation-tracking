@@ -1,0 +1,160 @@
+Sample Configurations
+
+   You can refer to the following sections, which contain blocks for the
+   various required configurations using sample values.
+
+Configuration for Supported NFS Protocols
+
+   To specify the supported NFS protocols, set the value for the
+   NFS_Protocols parameter in the /opt/mapr/conf/nfs4server.conf file. For
+   example, for NFSv4 protocol, in the /opt/mapr/conf/nfs4server.conf
+   file, set the value for the NFS_Protocols parameter as shown (in bold)
+   below.
+NFS_CORE_PARAM
+{
+        Plugins_Dir = /opt/mapr/lib;
+        NFS_Protocols = 4;
+        Clustered = false;
+}
+
+   Note: The only supported protocol is 4.
+
+   For NFSv4, the showmount command does not return the list of exported
+   NFS shares.
+
+Configuration for Mounting the Cluster
+
+   Add the MAPRFS block in the /opt/mapr/conf/nfs4server.conf file as
+   shown below.
+MAPRFS
+{
+  #Directory path where nfsv4 logs should be stored
+  log_path = /opt/mapr/logs/nfs4;
+
+  #Set number of readahead sessions
+  ra_sessions = 5;
+
+  #Flush all writes inline
+  flush_inline = true;
+
+  #Optimize for local direct writes
+  fast_local_directio = false;
+
+  #Set security ticket file
+  tkt_location = /tmp/maprticket_XXX;
+
+  #Hearbeat interval for NFSv4 (in seconds)
+  hb_interval = 5;
+
+  #Request threshold, logs warning if any request takes more time (in seconds)
+  req_threshold = 5;
+}
+
+Configuration for Exporting the File System
+
+   Modify the EXPORT block in the /opt/mapr/conf/nfs4server.conf file as
+   shown (in bold) below. The following sample block shows a standard
+   configuration where the exported path and the actual path are the same.
+EXPORT
+{
+     # Export Id (mandatory, each EXPORT must have a unique Export_Id)
+     Export_Id = 77;
+
+     # Exported path (mandatory)
+     Path = /mapr;
+
+     # Pseudo Path (required for NFS v4)
+     Pseudo = /mapr;
+
+     # Required for access (default is None)
+     # Could use CLIENT blocks instead
+     Access_Type = RW;
+     Squash = No_root_squash;
+     SecType=krb5;
+
+     # Exporting FSAL
+     FSAL{
+         Name = MAPR;
+     }
+}
+
+   Note: If you change anything in the export block, restart NFSv4 service
+   and remount the path.
+
+Configuration for Pseudo Path
+
+   To mask the path to the volume from the client, set the pseudo path.
+   For the pseudo path, you can specify a value that is different from the
+   path parameter to hide the true path name. To hide the full path to
+   volumes and/or directories, specify the complete path in the EXPORT
+   block.
+
+   For example, modify the EXPORT block in the
+   /opt/mapr/conf/nfs4server.conf file as shown (in bold) below to mask
+   the path and show only the name of the volume to the client. Note that
+   the following sample block shows a pseudo path that is different from
+   the exported path.
+EXPORT
+{
+    # Export Id (mandatory, each EXPORT must have a unique Export_Id)
+    Export_Id = 77;
+
+    # Exported path (mandatory)
+    Path = /mapr;
+
+    # Pseudo Path (required for NFS v4)
+    Pseudo = /vol1;
+
+    # Required for access (default is None)
+    # Could use CLIENT blocks instead
+    Access_Type = RW;
+    Squash = No_root_squash;
+
+    # Exporting FSAL
+    FSAL{
+       Name = MAPR;
+    }
+}
+
+Configuration for Security
+
+   The NFS client to NFS Server can be secured using Kerberos. Before
+   configuring Kerberos to work with MapR, modify the
+   /opt/mapr/conf/nfs4server.conf file to specify the security type. For
+   example, modify the EXPORT block in the /opt/mapr/conf/nfs4server.conf
+   file as shown (in bold) below.
+EXPORT
+{
+    # Export Id (mandatory, each EXPORT must have a unique Export_Id)
+    Export_Id = 77;
+
+    # Exported path (mandatory)
+    Path = /mapr;
+
+    # Pseudo Path (required for NFS v4)
+    Pseudo = /vol1;
+
+    # Required for access (default is None)
+    # Could use CLIENT blocks instead
+    Access_Type = RW;
+    Squash = No_root_squash;
+    SecType=krb5;
+
+    # Exporting FSAL
+    FSAL{
+        Name = MAPR;
+    }
+}
+
+   The NFSv4 server uses the ticket in /opt/mapr/conf directory, if it is
+   present, to secure communication between the NFS server and the MapR
+   cluster.
+
+Configuration for NFS Ganesha Debug Logging
+
+   Add the following block in the /opt/mapr/conf/nfs4server.conf file.
+LOG {
+  COMPONENTS {
+    ALL = DEBUG;
+  }
+}

@@ -1,6 +1,6 @@
 table index add
 
-   This topic describes how to add secondary indexes on MapR-DB JSON
+   This topic describes how to add secondary indexes on MapR Database JSON
    tables.
 
 Permissions Required
@@ -14,9 +14,9 @@ Permissions Required
    have indexperm permission. For tables created before 6.0, even if you
    are the owner of the table, you must explicitly add indexperm
    permission.
-   Note: The mapr user is not treated as a superuser. MapR-DB does not
-   allow the mapr user to run this command unless that user is given the
-   relevant permission or permissions with access-control expressions.
+   Note: The mapr user is not treated as a superuser. MapR Database does
+   not allow the mapr user to run this command unless that user is given
+   the relevant permission or permissions with access-control expressions.
 
 Syntax
 
@@ -87,8 +87,8 @@ Parameters
    hashed (Optional) True | False. Default: false
    numhashpartitions (Optional) Number of [1]hash index partitions when
    the hashed index option is enabled. This parameter determines the
-   number of logical partitions MapR-DB distributes keys across. Incoming
-   keys are hashed to 2 byte partition IDs. Default: 10
+   number of logical partitions MapR Database distributes keys across.
+   Incoming keys are hashed to 2 byte partition IDs. Default: 10
 
 Applying CAST on Indexed Fields
 
@@ -110,9 +110,9 @@ Y@INT)' \
   -includedfields L_LINESTATUS,L_QUANTITY
 
    The index stores the values of the L_LINENUMBER and L_ORDERKEY fields
-   as the int data type. MapR-DB can use the index for any subsequent
-   queries that cast these fields to int instead of accessing data in the
-   primary table and converting the values to int.
+   as the int data type. MapR Database can use the index for any
+   subsequent queries that cast these fields to int instead of accessing
+   data in the primary table and converting the values to int.
 
    See [2]Using Casts in Secondary Indexes for more information.
 
@@ -122,14 +122,17 @@ Restrictions
 
    Type Restrictions
 
-          + Indexed fields must contain scalar types.
-            Scalar types include integer, character, boolean, string, and
-            byte. See [3]Data Types and Secondary Index Fields for the
-            complete list of types.
-          + Indexed fields cannot contain nested documents.
-            An indexed field can be a subfield of a nested document,
-            provided the subfield contains scalar types.
-          + Indexed fields cannot contain arrays.
+          + If a composite index includes the same subfield in multiple
+            indexed fields, the implied types of the subfields must be
+            consistent.
+            For example, you cannot create an index with the following
+            indexed fields:
+a.b[].c, a.b.d
+            Although subfield b appears in both indexed fields, in the
+            first, it is an array and in the second, it is a nested
+            document.
+            See [3]Composite Indexes and Container Field Paths for more
+            details.
 
    Size Restrictions
 
@@ -145,22 +148,28 @@ Restrictions
           + You cannot specify individual array elements as indexed
             fields.
           + You cannot specify a table's _id field as an indexed field.
+          + If a field contains an array of nested documents and you want
+            to index on subfields in the nested documents, then you must
+            define the indexed field using a container field path.
           + You can include a specific field only once as either an
-            indexed or included field, except if you cast the field to
-            different types.
-            For example:
-               o You can create an index in which the score field is an
+            indexed or included field, with the following two exceptions:
+               o The indexed field is a container field path:
+maprcli table index add -path /people \
+   -index phoneNumberIdx \
+   -indexedfields Phones[].Number \
+   -includedfields Phones[].Number
+               o The field specifies a cast to another type.
+                 You can create an index in which the score field is an
                  indexed field cast as a double type, and score is also an
-                 included field.
-                 The included field retains the original data type of the
-                 score field.
+                 included field. The included field retains the original
+                 data type of the score field:
 maprcli table index add -path /castTable \
    -index castIdx1 \
    -indexedfields '$CAST(score@DOUBLE)' \
    -includedFields score
-               o You can create an index in which the score field is an
+                 You can create an index in which the score field is an
                  indexed field, cast as a double type, and the score field
-                 is also another indexed field, cast as a long type.
+                 is also another indexed field, cast as a long type:
 maprcli table index add -path /castTable \
    -index castIdx2 \
    -indexedfields '$CAST(score@DOUBLE)','$CAST(score@LONG)'
@@ -215,6 +224,17 @@ e than one column family."
                 }
          ]
 }
+          + You cannot specify a composite index with more than one
+            container field path as your indexed fields, unless the
+            prefixes of the container field paths are the same.
+            See [4]Composite Indexes and Container Field Paths for more
+            details.
+          + You cannot specify a composite index with an indexed field
+            that is a subfield of another indexed field.
+            For example, you cannot create an index with the following
+            indexed fields:
+a, a.b
+            The indexed field a.b is a subfield of the indexed field a.
 
    Option Restrictions
 
@@ -223,9 +243,6 @@ e than one column family."
 
    Index Use Restrictions
 
-          + Indexes optimize filter conditions if you compare indexed
-            fields against scalar values, and the field and scalar value
-            have [4]comparable types.
           + Indexes do not optimize non-existence filter conditions.
 
 Example
@@ -246,5 +263,5 @@ References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/hashed-index.html#hashed-index
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-functional-index.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/datatypes-comparable.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz__section_yly_trq_jdb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/design-composite-index.html#reference_n2y_m1n_pz__section_yly_trq_jdb

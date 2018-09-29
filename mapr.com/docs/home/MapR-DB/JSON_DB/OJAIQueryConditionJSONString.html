@@ -1,13 +1,16 @@
 Creating an OJAI Query Condition Using a JSON String
 
    You can create a query condition using OJAI syntax to specify the
-   condition in JSON format.
+   condition in JSON format. This is the preferred approach for the
+   Node.js and Python OJAI clients.
 
    The following example shows you how to create the following query
    condition using the syntax:
 (a.b.[0].boolean == false && (a.c.d != 5 || a.b[1].decimal > 1 || a.b[1].decimal
  < 10))
      * [1]Java
+     * [2]Node.js
+     * [3]Python
 
    This is a Java string for the condition:
 String jc = new String(
@@ -22,16 +25,54 @@ String jc = new String(
         ]} \
     )';
 
-   Pass the string to the [2]Query.where method. See the Java - OJAI Query
-   Condition in JSON Format example at [3]Querying with Conditions for a
+   Pass the string to the [4]Query.where method. See the Java - OJAI Query
+   Condition in JSON Format example at [5]Querying with Conditions for a
    complete Java code example.
 
+   This is a Node.js JSON object for the condition:
+query =
+    {"$where":
+        {"$and":[
+            {"$eq":{"a.b[0].boolean":false}},
+            {"$or":[
+                {"$ne":{"a.c.d":5}},
+                {"$gt":{"a.b[1].decimal":1}},
+                {"$lt":{"a.b[1].decimal":10}}
+            ]}
+        ]}
+    };
+
+   See the Node.js - OJAI Query Condition in JSON Format example at
+   [6]Querying with Conditions for a complete Node.js code example.
+
+   This is a Python dictionary for the condition:
+query =
+    {"$where":
+        {"$and":[
+            {"$eq":{"a.b[0].boolean":false}},
+            {"$or":[
+                {"$ne":{"a.c.d":5}},
+                {"$gt":{"a.b[1].decimal":1}},
+                {"$lt":{"a.b[1].decimal":10}}
+            ]}
+        ]}
+    }
+
+   See the Python - OJAI Query Condition in JSON Format example at
+   [7]Querying with Conditions for a complete Python code example.
+
    To learn about the complete OJAI syntax for query conditions, see
-   [4]OJAI Query Condition Syntax.
+   [8]OJAI Query Condition Syntax.
+   Note: The Node.js and Python OJAI clients are supported starting in MEP
+   6.0.
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionJSONString.html#div1entry1
-   2. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#where-java.lang.String-
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionJSONString.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditionJSONString.html#div1entry3
+   4. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-java.lang.String-
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields

@@ -1,0 +1,56 @@
+Kafka Streams Security
+
+   Discusses Kafka Streams security topics.
+
+Internal Topics
+
+   All Kafka Streams application’s internal topics are grouped in the
+   Kafka Streams application directory: /apps/kafka-streams.
+     * The /apps directory has only write access to mapr user. The
+       /apps/kafka-streams directory is not modifiable/deletable by any
+       user other than mapr user.
+     * All users can create sub-directories inside the /apps/kafka-streams
+       directory. Only the following users have read/write/delete
+       permission for sub-directories or files created in this directory.
+          + mapr user
+          + Current user of the sub-directory:
+               o If security is enabled, the current user is the MapR
+                 ticket identity. See [1]Managing Tickets for more
+                 information.
+               o If security is not enabled, the current MapR identity.
+
+Kafka Streams Application Specific Folders
+
+   Some Kafka Streams applications need to create internal topics. These
+   topics are created in the /apps/kafka-streams/<application.id>
+   directory.
+   Important: This directory is created at runtime by the Kafka Streams
+   application and can only be modified by the current user or super
+   users. This directory can only be deleted by the [2]Application Reset
+   Tool (ART) and, again, by only the current user or super users.
+
+Application Reset Tool and Cleanup APIs
+
+   The application reset tool allows to reset a Kafka Streams
+   application's internal state, such that it can re-process its input
+   data from scratch. Kafka Streams internal topics can be cleaned using
+   application reset tool.
+
+   Only the current user of the Kafka Streams application or mapr user has
+   permissions to clean up a Kafka Streams application using Application
+   Reset Tool. The Application Reset Tool is integrated with the cleanup
+   APIs so that the application’s internal topics are prefixed with the
+   same directory.
+
+   The application reset tool takes application.id as the input for
+   cleaning up Kafka Streams application. As part of this process, all
+   internal-topics are deleted for the application user under the
+   /apps/kafka-streams/<application.id> directory, including the
+   /apps/kafka-streams/<application.id> directory. See [3]Application
+   Reset Tool for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Tickets.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/KStreams/Kstreams-reset-tool.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/KStreams/Kstreams-reset-tool.html

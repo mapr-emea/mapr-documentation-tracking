@@ -1,0 +1,42 @@
+Authenticating the MapR Object Store
+
+   You need to authenticate the MapR Object Store.
+
+   As defined in the [1]Amazon S3 documentation, the S3 REST API uses a
+   “key” and “secret” in a REST-like manner as credentials to authenticate
+   to the underlying object store for authorization purposes when
+   accessing data.
+
+   In the S3 world, "credentials" represent the application and not the
+   identity of the end user. The application layer is responsible for
+   end-user verification.
+
+   The S3 administrator is responsible to assign S3 credentials for the
+   application or set of applications and optionally to map those S3
+   credentials to a MapR identity.
+
+   The MapR Object Store supports a multitenant scenario in which the S3
+   administrator can configure one or more credentials with the
+   appropriate MapR-credential mapping.
+   The S3 administrator can assign credentials to a user and optionally
+   map them to a MapR identity.
+   The tenants.json file describes the tenants configuration. This file
+   consists of a JSON object with two keys: credentials and tenants. The
+   credentials key contains an array of objects with the following fields:
+     * accessKey - S3 format access key
+     * secretKey - S3 format secret key
+     * Tenant - Internal tenant name, used to link an access key to an
+       operating systems user
+       The tenants key contains an array of objects with the following
+       fields:
+          + uid - Operating systems user ID for file impersonation
+          + gid - Operating systems group ID for file impersonation
+          + name - Internal tenant name, used to link an access key to an
+            operating systems user
+
+   The credentials block relates more to MapR Object Store authorization,
+   whereas the tenants block relates to the users in the system.
+
+References
+
+   1. https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html

@@ -1,0 +1,146 @@
+L7 Load Balancing with the MapR Data Access Gateway
+
+   You can use nginx for L7 load balancing of clients that use the MapR
+   Data Access Gateway. This topic describes how to install, configure,
+   and run nginx, and how to set your client connection string to connect
+   to the load balancing service.
+   Determine the server where you want to run the load balancing service.
+   The server must be reachable by the clients using the Data Access
+   Gateway. It also must be able to connect to the Data Access Gateway.
+    1. Install the nginx service on the server you have identified:
+          + [1]CentOS
+          + [2]Ubuntu
+          + [3]SUSE
+sudo yum install nginx
+sudo apt install nginx
+sudo zypper install nginx
+    2. Configure the nginx service by setting the following parameters in
+       the configuration file at /etc/nginx/nginx.conf:
+         a. In the http section, create an upstream block with one server
+            entry for each Data Access Gateway server:
+upstream <upstream_name> {
+    server <DAG_server_host1>:<DAG_server_port1>;
+    server <DAG_server_host2>:<DAG_server_port2>;
+    ...
+    server <DAG_server_hostN>:<DAG_server_portN>
+    }
+         b. Create (or modify) the server block, depending on whether your
+            MapR cluster is secure or nonsecure:
+               o [4]Secure MapR Cluster
+               o [5]Nonsecure MapR Cluster
+            For a secure cluster, you must specify the following SSL
+            parameters:
+               o Listen port and protocol
+               o Path to the SSL certificate
+               o Path to the SSL key
+               o Path to the file containing the SSL password
+server {
+    listen 80 ssl http2;
+    listen [::]:80;
+
+    ssl_certificate <path_to_certificate>;
+    ssl_certificate_key <path_to_key>;
+    ssl_password_file <path_to_password_file>;
+
+    access_log logs/access.log main;
+
+    location / {
+            grpc_pass grpcs://<upstream_name>;
+    }
+}
+server {
+    listen 80 http2;
+    listen [::]:80;
+
+    access_log logs/access.log main;
+
+    location / {
+        grpc_pass grpc://<upstream_name>;
+    }
+}
+            The <upstream_name> is the parameter you specified in Step 2a.
+    3. Restart the nginx service:
+sudo service nginx restart
+
+   Setting Your Client Connection String
+   Assume you have the following nginx configuration settings and you have
+   installed nginx on node1.cluster.com:
+     * [6]Secure MapR Cluster
+     * [7]Nonsecure MapR Cluster
+
+user mapr;
+worker_processes 1;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+events {
+    worker_connections  1024;
+}
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request"'
+                      '$status $body_bytes_sent "$http_referer"'
+                      '"$http_user_agent"';
+    upstream servers {
+        server node1.cluster.com:5678;
+        server node2.cluster.com:5678;
+    }
+    server {
+        listen 80 ssl http2;
+        listen [::]:80;
+
+        ssl_certificate /opt/mapr/conf/ssl_keystore.pem;
+        ssl_certificate_key /opt/mapr/conf/ssl_keystore.pem;
+        ssl_password_file /root/passwd;
+
+        access_log logs/access.log main;
+
+        location / {
+            grpc_pass grpcs://servers;
+        }
+    }
+}
+
+   You can use the following client connection string with this sample
+   configuration:
+node1.cluster.com:80?auth=basic;user=mapr;password=mapr;ssl=true;sslCA=/opt/mapr
+/conf/ssl_truststore.pem;sslTargetNameOverride=node1.cluster.com
+
+user mapr;
+worker_processes 1;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+events {
+    worker_connections  1024;
+}
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request"'
+                      '$status $body_bytes_sent "$http_referer"'
+                      '"$http_user_agent"';
+    upstream servers {
+        server node1.cluster.com:5678;
+        server node2.cluster.com:5678;
+    }
+    server {
+        listen 80 http2;
+        listen [::]:80;
+
+        access_log logs/access.log main;
+
+        location / {
+            grpc_pass grpc://servers;
+        }
+    }
+}
+
+   You can use the following client connection string with this sample
+   configuration:
+node1.cluster.com:80?auth=basic;user=mapr;password=mapr;ssl=false
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithNginx.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithNginx.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithNginx.html#div1entry3
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithNginx.html#div2entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithNginx.html#div2entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithNginx.html#div3entry1
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/LoadBalancingDAGWithNginx.html#div3entry2

@@ -7,10 +7,11 @@ Syntax
    CLI
 
 maprcli dashboard info
-    [ -cluster <cluster> ]
-    [ -multi_cluster_info <true|false>]
-    [ -version <true|false> ]
+    [ -cluster <cluster name> ]
+    [ -multi_cluster_info true|false]
+    [ -version true|false ]
     [ -zkconnect <ZooKeeper connect string> ]
+    -json
 
           Note: The -json option is required.
 
@@ -29,10 +30,11 @@ Parameters
    multi_cluster_info Specifies whether to display cluster information
    from multiple clusters.
 
-   Values: true/false. Default: false
-   version Specifies whether to display the version. Values: true/false.
-   Default: false
+   Values: true or false. Default: false.
+   version Specifies whether to display the version. Values: true or
+   false. Default: false.
    zkconnect [1]ZooKeeper Connect String
+   json Formats the output.
 
 Output
 
@@ -67,7 +69,10 @@ Output
 
    The following information about the cluster:
      * name — the cluster name
-     * secure — where the cluster is secure or not. Value: true or false
+     * secure — where the cluster is secure or not. Value: true (if
+       enabled) or false (if disabled)
+     * dare — whether the cluster is enabled for data at rest encyrption
+       or not. Value: true (if enabled) or false (if disabled)
      * ip — the IP address of the active CLDB
      * id — the cluster ID
      * nodesUsed — number of nodes in the cluster
@@ -88,6 +93,57 @@ Output
      * Memory — total and active in mB.
      * Disk space — total and active in GB.
      * Compression — compressed and uncompressed data size
+     * Tiering — following cluster level tiering information:
+          + logicalUsed — The total gigabytes of disk space used (before
+            compression) for the tiered volumes in the cluster.
+            This value does not include erasure-coded backend volumes and
+            cache-volumes.
+          + replicatedLogicalUsed — The logical size, in gigabytes, of
+            disk used by the tiered volumes and all associated replicas.
+            This is calculated using the following: disk space (before
+            compression) used by volume x number of replicas. This value
+            does not include erasure-coded backend volumes and
+            cache-volumes.
+          + replicatedTotalUsed — The total space after compression (in
+            GB) used by tiered volumes and associated snapshots and
+            replicas.
+            This is calculated using the following: total space used by
+            volume x number of replicas. This sum does not include
+            EC-backend volumes and cache-volumes since their
+            replicatedTotalUsed is already accounted for by the front-end
+            and parent volumes respectively.
+          + metaDBUsedMB — The disk space (in MB) used by the metadata
+            volume associated with the tier.
+          + replicatedMetaDBUsedMB — The disk space (in MB) used by the
+            replicas of the metadata volume associated with the tier.
+          + offloaded — The total physical data (in GB) offloaded to the
+            cold tier.
+            This is calculated using the following: amount of data purged
+            from the hot tier (MapR cluster) + amount of data recalled to
+            the hot tier (MapR cluster).
+          + recalled — The total physical data (in GB) recalled from the
+            cold tier.
+            This is calculated using the following: amount of data
+            recalled to the hot tier (MapR cluster) + total amount of disk
+            space used by the cache-volume.
+          + cvTotalUsed — The total disk space (in GB) used by all the
+            cache-volumes. At the volume level, for mirror volumes, this
+            is the total size of the cache volume and its replicas.
+          + replicatedCvTotalUsed — The total disk space (in GB) used by
+            all the cache-volumes and associated replicas.
+          + ecOffloaded — The total physical data (in GB) offloaded to the
+            erasure-coded volume (warm tier).
+            This is calculated using the following: amount of data purged
+            from the hot tier (MapR cluster) + amount of data recalled to
+            the hot tier (MapR cluster).
+          + ecRecalled — The total physical data (in GB) recalled from the
+            erasure-coded volume (warm-tier).
+            This is calculated using the following: amount of data
+            recalled to the hot tier (MapR cluster) + total amount of disk
+            space used by the cache-volume.
+          + ecTotalUsed — The total space after compression (in GB) used
+            by the erasure coded volumes.
+            This includes the disk space used by the parity fragments.
 
    clusterReplication
 
@@ -109,7 +165,9 @@ Output
      * Fileserver
      * ResourceManager
      * NodeManager
+     * NFSv4
      * hoststats
+     * MAST Gateway
      * API server
 
    yarn
@@ -146,7 +204,7 @@ Output
             "cluster":{
                 "name":"my.cluster.com",
                 "secure":true,
-
+                "dare":true,
                 "ip":"10.20.30.100",
                 "id":"8925630648055792748",
                 "nodesUsed":1,
@@ -179,7 +237,21 @@ Output
                 "compression":{
                     "compressed":1,
                     "uncompressed":11
-                }
+                },
+                  "tiering":{
+                        "logicalUsed":79,
+                        "replicatedLogicalUsed":239,
+                        "replicatedTotalUsed":149,
+                        "metaDBUsedMB":22,
+                        "replicatedMetaDBUsedMB":66,
+                        "offloaded":0,
+                        "recalled":0,
+                        "cvTotalUsed":0,
+                        "replicatedCvTotalUsed":0,
+                        "ecOffloaded":8,
+                        "ecRecalled":2,
+                        "ecTotalUsed":29
+                  }
             },
             "clusterReplication":{
                 "bytesReceived":0,
@@ -204,6 +276,18 @@ Output
                         "total":1
                   },
                   "cldb":{
+                        "active":1,
+                        "stopped":0,
+                        "failed":0,
+                        "total":1
+                  },
+                  "nfs4":{
+                        "active":0,
+                        "stopped":0,
+                        "failed":0,
+                        "total":1
+                  },
+                  "mastgateway":{
                         "active":1,
                         "stopped":0,
                         "failed":0,
@@ -267,6 +351,7 @@ Examples
                         "cluster":{
                                 "name":"Cloudpool19",
                                 "secure":true,
+                                "dare":true,
                                 "ip":"10.10.25.19",
                                 "id":"5362989631404162594",
                                 "nodesUsed":4,
@@ -300,6 +385,21 @@ Examples
                                         "compressed":20,
                                         "uncompressed":41
                                 },
+                                "tiering":{
+                                       "logicalUsed":79,
+                                        "replicatedLogicalUsed":239,
+                                        "replicatedTotalUsed":149,
+                                        "metaDBUsedMB":22,
+                                        "replicatedMetaDBUsedMB":66,
+                                        "offloaded":0,
+                                        "recalled":0,
+                                        "cvTotalUsed":0,
+                                        "replicatedCvTotalUsed":0,
+                                        "ecOffloaded":8,
+                                        "ecRecalled":2,
+                                        "ecTotalUsed":29
+                                }
+                        },
                      "clusterReplication":{
                                 "bytesReceived":0,
                                 "bytesSend":0
@@ -340,6 +440,12 @@ Examples
                                         "failed":0,
                                         "total":4
                                 },
+                                   "mastgateway":{
+                                   "active":3,
+                                   "stopped":0,
+                                   "failed":0,
+                                   "total":3
+                                   },
                      "nodemanager":{
                                         "active":4,
                                         "stopped":0,
@@ -379,21 +485,25 @@ Examples
 # curl -k -X GET 'https://abc.sj.us:8443/rest/dashboard/info' --user mapr:mapr
 {"timestamp":1527008591378,"timeofday":"2018-05-22 10:03:11.378 GMT-0700 AM","st
 atus":"OK","total":1,"data":[{"version":"6.1.0.20180521161953.GA","cluster":{"na
-me":"Cloudpool19","secure":true,"ip":"10.10.25.19","id":"5362989631404162594","n
-odesUsed":4,"totalNodesAllowed":-1},"volumes":{"mounted":{"total":105,"size":211
-77},"unmounted":{"total":8,"size":124}},"utilization":{"cpu":{"util":34,"total":
-64,"active":0},"memory":{"total":252985,"active":99361},"disk_space":{"total":10
-353,"active":33},"compression":{"compressed":20,"uncompressed":41},"clusterRepli
-cation":{"bytesReceived":0,"bytesSend":0},"streamThroughput":{"bytesProduced":0,
-"bytesConsumed":0},"services":{"fileserver":{"active":4,"stopped":0,"failed":0,"
-total":4},"resourcemanager":{"active":2,"stopped":0,"failed":0,"total":2},"histo
-ryserver":{"active":1,"standby":0,"stopped":0,"failed":0,"total":1},"cldb":{"act
-ive":2,"stopped":0,"failed":0,"total":2},"nfs":{"active":4,"stopped":0,"failed":
-0,"total":4},"nodemanager":{"active":4,"stopped":0,"failed":0,"total":4},"hostst
-ats":{"active":4,"stopped":0,"failed":0,"total":4},"apiserver":{"active":2,"stop
-ped":0,"failed":0,"total":2}},"yarn":{"running_applications":0,"queued_applicati
-ons":0,"num_node_managers":4,"total_memory_mb":134360,"total_vcores":48,"total_d
-isks":12,"used_memory_mb":0,"used_vcores":0,"used_disks":0}}]}
+me":"Cloudpool19","secure":true,"dare":true,"ip":"10.10.25.19","id":"53629896314
+04162594","nodesUsed":4,"totalNodesAllowed":-1},"volumes":{"mounted":{"total":10
+5,"size":21177},"unmounted":{"total":8,"size":124}},"utilization":{"cpu":{"util"
+:34,"total":64,"active":0},"memory":{"total":252985,"active":99361},"disk_space"
+:{"total":10353,"active":33},"compression":{"compressed":20,"uncompressed":41},"
+tiering":{"logicalUsed":79,"replicatedLogicalUsed":239,"replicatedTotalUsed":149
+,"metaDBUsedMB":22,"replicatedMetaDBUsedMB":66,"offloaded":0,"recalled":0,"cvTot
+alUsed":0,"replicatedCvTotalUsed":0,"ecOffloaded":8,"ecRecalled":2,"ecTotalUsed"
+:29}},"clusterReplication":{"bytesReceived":0,"bytesSend":0},"streamThroughput":
+{"bytesProduced":0,"bytesConsumed":0},"services":{"fileserver":{"active":4,"stop
+ped":0,"failed":0,"total":4},"resourcemanager":{"active":2,"stopped":0,"failed":
+0,"total":2},"historyserver":{"active":1,"standby":0,"stopped":0,"failed":0,"tot
+al":1},"cldb":{"active":2,"stopped":0,"failed":0,"total":2},"nfs":{"active":4,"s
+topped":0,"failed":0,"total":4},"mastgateway":{"active":3,"stopped":0,"failed":0
+,"total":3},"nodemanager":{"active":4,"stopped":0,"failed":0,"total":4},"hoststa
+ts":{"active":4,"stopped":0,"failed":0,"total":4},"apiserver":{"active":2,"stopp
+ed":0,"failed":0,"total":2}},"yarn":{"running_applications":0,"queued_applicatio
+ns":0,"num_node_managers":4,"total_memory_mb":134360,"total_vcores":48,"total_di
+sks":12,"used_memory_mb":0,"used_vcores":0,"used_disks":0}}]}
 
 References
 

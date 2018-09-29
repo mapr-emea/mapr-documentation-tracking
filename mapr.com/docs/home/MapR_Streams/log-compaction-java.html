@@ -1,0 +1,57 @@
+Enabling Log Compaction
+
+   Provides a code example for using timestamps on MapR Event Store For
+   Apache Kafka streams and topics.
+
+   Log compaction is enabled through the MapR Event Store For Apache Kafka
+   StreamDescriptor interface with the setCompact method where the compact
+   value is set to true. Additionally, use the setDeleteRetentionMS and
+   setMinCompactionLagMS methods to set the time delay before compacting
+   records and the time that deleted records are retained.
+   Configuration values include:
+     * compact - used to set log compaction at the stream-level.
+     * min.compaction.lag.ms - used to set a minimum time delay
+       (milliseconds) before starting to compact records after they are
+       written. Records won’t get compacted until after this period. The
+       setting gives consumers time to retrieve every record.
+     * delete.retention.ms - used to set the minimum time (milliseconds)
+       that deleted records are retained.
+
+   Note: You can set not set log compaction when creating the stream; only
+   when editing the stream configuration. The configuration parameters,
+   min.compaction.lag.ms and delete.retention.ms can be set when both
+   creating and editing streams.
+
+Enabling Log Compaction
+
+   The following code example performs the following:
+     * Enables log compaction at the stream-level.
+     * Sets the minumum time delay before log compaction starts
+     * Set the minimum time that deleted record are retained.
+
+// Creates a stream
+// Sets log compaction on the stream
+// Sets the minimum time for a message to stay uncompacted
+// Sets the time that deleted records are retained.
+
+(Admin streamAdmin = Streams.newAdmin(conf))
+        StreamDescriptor streamDescriptor = Streams.newStreamDescriptor();
+       streamDescriptor.setCompact(true);
+       streamDescriptor.setDeleteRetentionMS(deleteRetentionMs);
+        streamDescriptor.setMinCompactionLagMS(minCompactionLagMs);
+       streamAdmin.editStream(streamName, streamDesc);
+}
+
+For More Information
+
+   See the following topics for more information:
+     * [1]Log Compaction
+     * maprcli [2]stream create and [3]stream edit
+     * [4]Preparing Clusters for Log Compaction
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/log-compaction.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_edit.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/logCompaction-gateways.html

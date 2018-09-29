@@ -1,0 +1,129 @@
+Specifying a Schedule for Offloading Data
+
+   You can create a schedule using the MapR Control System, the CLI, and
+   REST API. After creating a schedule, you can associate it with the
+   tiering-enabled volume when you create or modify the volume. If a
+   schedule for offloading data is associated with the volume, data is
+   offloaded automatically as scheduled based on the rules associated with
+   the volume for offloading data. You can also manually trigger the
+   maprcli command to offload data.
+
+   The following schedules are available out-of-the-box for offloading
+   data:
+          Schedule Name        Schedule ID
+   Critical data               1
+   Important data              2
+   Normal data                 3
+   Automatic Tiering Scheduler 4^*
+
+   ^* The Automatic Tiering Scheduler ID might be different on different
+   clusters. To retrieve the correct ID, run the [1]schedule list command.
+
+   For volumes enabled for warm tiering, the Automatic Tiering Scheduler
+   is used by default for offloading data if you do not explicitly assign
+   a schedule. The frequency of the Automatic Tiering Scheduler run is
+   based on two the following:
+
+   time
+          The frequency. The cldb.auto.offload.frequency.minutes property
+          stores the default value of 24 * 60 minutes. This can be
+          configured using the [2]config save command. The value for this
+          property must be in minutes.
+
+   size
+          The amount of data (that has not yet been offloaded) in the
+          volume. The cldb.auto.offload.threshold.gb property stores the
+          global value for the size threshold. The default value for this
+          property is 1024GB, which cannot be modified. However, you can
+          override the global value at the volume-level using the
+          autooffloadthresholdgb parameter with the [3]volume create and
+          [4]volume modify commands.
+
+   The Automatic Tiering Scheduler run is based on the time setting.
+   However, it runs sooner if the size of the volume in the hot tier
+   reaches or exceeds the size threshold.
+
+   For volumes enabled for cold tiering, you must assign a schedule to
+   automatically offload data; if you do not assign a schedule, data is
+   not offloaded automatically and you must manually run the offload
+   command to offload data. You can associate the Automatic Tiering
+   Scheduler with the cold-tier enabled volume or create a custom schedule
+   and associate it with the volume to automatically offload data.
+   To:
+     * Create a schedule before creating the volume, see [5]Creating a
+       Schedule.
+     * Create a schedule when you are creating the volume, see step 9 in
+       [6]Creating a Volume.
+
+Specifying a Schedule Using the MapR Control System
+
+   You can associate a schedule with a tiering-enabled volume when you
+   are:
+     * Creating a volume by clicking Create Volume button in the Data >
+       Volumes page.
+     * Editing the tiering-enabled volume by clicking Edit Volume button
+       in the [7]volume information page.
+
+   To associate an offload with the volume, in the Schedule tab of the
+   Create Volume or Edit Volume page:
+    1. Click the Browse link associated with the Offload Schedule field to
+       display the Browse Schedules window.
+    2. Review the name and detail of each schedule and choose a schedule
+       from the list.
+    3. Click Save to associate the schedule with the volume.
+    4. Complete the steps for [8]creating or [9]editing the volume.
+
+Specifying a Schedule Using the CLI and REST API
+
+   You can associate a schedule with a tiering-enabled volume by
+   specifying the offloadschedule parameter with the [10]volume create or
+   [11]volume modify command.
+     * [12]CLI
+     * [13]REST
+
+   Run a command similar to the following to associate a schedule when:
+     * Creating a volume:
+maprcli volume create -name <volName> -path <mountPath> -tieringenable true -tie
+rname <tierName> -offloadschedule <scheduleID> -json
+       For the list of all other required and optional parameters, see
+       [14]volume create.
+     * Editing the volume:
+maprcli volume modify -name <volName> -offloadschedule <scheduleID> -json
+       For the list of all other required and optional parameters, see
+       [15]volume modify.
+
+   Send a request of type POST. For example, to associate a schedule when:
+     * Creating a volume:
+curl -k -X POST 'https://<host>:8443/rest/volume/create?name=<volName>&path=<mou
+ntPath>&tieringenable=true&tiername=<tierName>&offloadschedule=<scheduleID>' --u
+ser mapr:mapr
+       For the list of all other required and optional parameters, see
+       [16]volume create.
+     * Editing the volume:
+curl -k -X POST 'https://<host>:8443/rest/volume/modify?name=<volName>&offloadsc
+hedule=<scheduleID>' --user mapr:mapr
+       For the list of all other required and optional parameters, see
+       [17]volume modify.
+
+   To disable automatic schedule-based offload of data, set the value for
+   the offloadschedule parameter to 0.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/schedule-list.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/config-save.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/Schedules-Create.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/ViewVolInfo.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DefineSchedule.html#div1entry1
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DefineSchedule.html#div1entry2
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html

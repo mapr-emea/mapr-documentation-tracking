@@ -7,10 +7,12 @@ Querying with Select
    indexes. See [1]Using Indexes to Optimize Projections in Queries for
    more details.
      * [2]Java
-     * [3]dbshell
+     * [3]Node.js
+     * [4]Python
+     * [5]dbshell
 
    The following example shows how to retrieve the _id and address.zipCode
-   fields from all documents in a store using the [4]Query.select method.
+   fields from all documents in a store using the [6]Query.select method.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -73,8 +75,94 @@ n
 
 }
 
-   The following two dbshell commands are equivalent to the code example.
-   See [5]dbshell find or findbyid for more details about the syntax
+   The following example shows how to retrieve the _id and address.zipCode
+   fields from all documents in a store using an OJAI query.
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((store) => {
+    // Create an OJAI query
+    const query = {"$select": ["_id", "address.zipCode"]};
+    // fetch OJAI Documents by query
+    return store.find(query);
+  })
+  .then((queryResult) => {
+    queryResult.on('data', (document) => {
+      // Print OJAI Documents from document stream
+      console.log(document);
+    });
+    queryResult.on('end', () => {
+      // close the OJAI connection
+      connection.close();
+    });
+  });
+
+   The following example shows how to retrieve the _id and address.zipCode
+   fields from all documents in a store using an OJAI query.
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+# Create an OJAI query
+query = {"$select": ["_id", "address.zipCode"]}
+
+# options for find request
+options = {
+    'ojai.mapr.query.result-as-document': True
+    }
+
+# fetch OJAI Documents by query
+query_result = store.find(query, options=options)
+
+# Print OJAI Documents from document stream
+for doc in query_result:
+    print(doc.as_dictionary())
+
+# close the OJAI connection
+connection.close()
+
+   The following two dbshell commands are equivalent to the code examples.
+   See [7]dbshell find or findbyid for more details about the syntax
    dbshell provides.
 # mapr dbshell
 maprdb root:> find /demo_table --query {"$select":["_id","address.zipcode"]}
@@ -86,5 +174,7 @@ References
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/Projections.html#concept_ipb_cjm_3bb
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select2.html#div1sect1
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select2.html#div1sect2
-   4. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select2.html#div1sect3
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select2.html#div1sect4
+   6. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html

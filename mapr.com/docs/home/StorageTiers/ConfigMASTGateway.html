@@ -1,0 +1,177 @@
+Configuring the MAST Gateway Service
+
+   After installing MAST Gateway service, perform the following steps on
+   the node if MapR Filesystem is not installed on the node. If MapR
+   Filesystem is (also) installed on the node, start at step 4:
+    1. Run [1]configure.sh utility.
+       For example:
+/opt/mapr/server/configure.sh -C <CLDB nodes> -Z <Zookeeper nodes> -N <ClusterNa
+me>
+    2. Start Warden if it is already not running.
+service mapr-warden start
+    3. Run jps or /etc/init.d/mapr-mastgateway status to check whether
+       MAST Gateway is running on the node.
+    4. Open the /opt/mapr/conf/mastgateway.conf file and set values for
+       the following parameters:
+
+   Parameter Default Value Description
+   mastgateway.port 8660 The port on which the MAST Gateway process runs.
+   Default value is 8660.
+   mastgateway.worker.numthreads 16 The number of threads to execute
+   tiered data operations such as read and modify part of the offloaded
+   data. The default value is 16. You can modify this based on the
+   machine’s configuration.
+   mastgateway.cntr.worker.numthreads 16 The number of threads to use to
+   execute container-based tiered data operations such as offload and
+   recall of file-level and volume-level data in parallel. The default
+   value is 16.
+
+   Tip: For faster offload, modify this value based on the machine’s
+   configuration.
+   mastgateway.logfile.size.mb 1024 The maximum size (in MB) of the MAST
+   Gateway log file. When the size limit is reached, the logs get rolled
+   over.
+       Note: If you modify the mastgateway.conf file, you must restart the
+       MAST Gateway for the changes to take effect.
+    5. (Optional) Add the following parameters in the
+       /opt/mapr/conf/mastgateway.conf file only if you wish to customize
+       libcurl.
+       The MAST Gateway uses libcurl to perform tiering-related
+       operations. The following table lists the customizable libcurl
+       options and their default values. If these are not set in the
+       mastgateway.conf file, the default values are used.
+       Note: In the mastgateway.conf file, add only the parameters that
+       you wish to customize.
+
+   Parameter Default Value Description
+   mastgateway.curl.timeout 300000 Timeout for the entire request.
+   mastgateway.curl.connecttimeout 60000 Timeout for the connection phase.
+   mastgateway.curl.nosignal 0 Do not install signal handlers.
+   mastgateway.curl.followlocation 0 Follow HTTP redirects.
+   mastgateway.curl.maxsendspeed 0 Limit on data upload speed.
+   mastgateway.curl.maxrecvspeed 0 Limit on data download speed.
+   mastgateway.curl.maxconnects 5 Maximum number of connections in the
+   connection pool.
+   mastgateway.curl.dnsservers null Preferred DNS servers.
+   mastgateway.curl.interface null Bind connection locally to this.
+   mastgateway.curl.verifypeer 1 Verify the SSL certificate.
+   mastgateway.curl.verifyhost 2 Verify the host name in the SSL
+   certificate.
+   mastgateway.curl.cainfo null CA cert bundle.
+   mastgateway.curl.issuercert null Issuer certificate.
+   mastgateway.curl.sslcert null Client cert.
+   mastgateway.curl.sslcerttype null Client cert type.
+   mastgateway.curl.sslkey null Client key.
+   mastgateway.curl.sslkeytype null Client key type.
+   mastgateway.curl.sslkeypasswd null Client key password.
+   mastgateway.curl.proxy null
+
+   Proxy to use.
+   Note: Specify a value for this parameter to configure MAST Gateway to
+   use a proxy server. See example below this table for more information.
+   mastgateway.curl.preproxy null Socks proxy to use.
+   mastgateway.curl.proxyport 0
+
+   Proxy port to use.
+   Note: Specify a value for this parameter to configure MAST Gateway to
+   use a proxy server. See example below this table for more information.
+   mastgateway.curl.proxytype 0
+
+   Proxy type.
+   Note: Specify a value for this parameter to configure MAST Gateway to
+   use a proxy server. See example below this table for more information.
+   mastgateway.curl.httpproxytunnel 0
+
+   Tunnel through the HTTP proxy.
+   Note: Specify a value for this parameter to configure MAST Gateway to
+   use a proxy server. See example below this table for more information.
+   mastgateway.curl.proxyuser null
+
+   Proxy user name.
+   Note: Specify a value for this parameter to configure MAST Gateway to
+   use a proxy server. See example below this table for more information.
+   mastgateway.curl.proxypasswd null
+
+   Proxy password.
+   Note: Specify a value for this parameter to configure MAST Gateway to
+   use a proxy server. See example below this table for more information.
+   mastgateway.curl.proxyauth 1
+
+   HTTP proxy authentication methods.
+   Note: Specify a value for this parameter to configure MAST Gateway to
+   use a proxy server. See example below this table for more information.
+   mastgateway.curl.proxyverifypeer 1 Verify the proxy's SSL certificate.
+   mastgateway.curl.proxyverifyhost 2 Verify the proxy certificate's name
+   against host.
+   mastgateway.curl.proxycainfo null Path to proxy Certificate Authority
+   (CA) bundle.
+   mastgateway.curl.proxysslcert null SSL proxy client certificate.
+   mastgateway.curl.proxysslcerttype null Type of the proxy client SSL
+   certificate.
+   mastgateway.curl.proxysslkey null Private keyfile for TLS and SSL proxy
+   client cert.
+   mastgateway.curl.proxysslkeytype null Type of proxy private key file.
+   mastgateway.curl.proxysslkeypasswd null Passphrase for proxy private
+   key.
+       For example, to configure the MAST Gateway for proxy server, your
+       mastgateway.conf file settings for proxy server should look similar
+       to the following:
+mastgateway.curl.proxy=10.20.30.140
+
+
+mastgateway.curl.preproxy=null
+
+
+mastgateway.curl.proxyport=3128
+
+
+mastgateway.curl.proxytype=0
+
+
+mastgateway.curl.httpproxytunnel=0
+
+
+mastgateway.curl.proxyuser=proxyuser
+
+
+mastgateway.curl.proxypasswd=proxyuserpwd
+
+
+mastgateway.curl.proxyauth=1
+    6. Save and close the /opt/mapr/conf/mastgateway.conf file.
+    7. (Optional) Configure memory for the MAST Gateway in the
+       /opt/mapr/conf/conf.d/warden.mastgateway.conf file by setting
+       values for the following parameters:
+
+   Parameter Default Value Description
+   service.heapsize.min 2048 The minimum amount of node memory (in MB) to
+   allocate.
+   service.heapsize.max 20480 The maximum amount of node memory (in MB)
+   allocate.
+   service.heapsize.percent 10 The percentage of node memory to allocate.
+       By default, 10% of the node memory or 20GB, whichever is lower, is
+       allocated to MAST Gateway. If the MAST Gateway is processing jobs
+       for both warm and cold tiers, memory consumption can increase up to
+       7GB or more. If you see high memory alarms for small memory
+       consumption also, tune the percentage of memory allocated for MAST
+       Gateway. Ensure that the percentage of memory allocated through
+       service.heapsize.percent is available for MAST Gateway.
+    8. (Optional) Set the value for fs.mapr.pool.queue.max_size parameter
+       to 20000 in the /opt/mapr/conf/dbclient.conf file.
+       If compression is enabled on the data in a tiering-enabled volume,
+       tiering jobs can fail and return errors because of the large number
+       of operations sent to the DB (where metadata for offloaded data is
+       stored). To prevent errors, add the fs.mapr.pool.queue.max_size
+       parameter to the /opt/mapr/conf/dbclient.conf file and set the
+       value for this parameter to a large number, such as 20000. For
+       example, your entry in the /opt/mapr/conf/dbclient.conf file should
+       look similar to the following:
+fs.mapr.pool.queue.max_size = 20000
+    9. Restart the MAST Gateway for the changes to take effect.
+       See [2]Starting, Stopping, and Restarting the MAST Gateway for more
+       information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/StartStopRestartMASTGateway.html

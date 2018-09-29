@@ -8,9 +8,9 @@ Administering the MapR Data Access Gateway
 
 Installing the Data Access Gateway Service
 
-   The MapR Data Access Gateway is installed when you install MapR-DB in
-   the MapR installer. To manually install the service, see [1]Installing
-   MapR Data Access Gateway. For installation guidance, see
+   The MapR Data Access Gateway is installed when you install MapR
+   Database in the MapR installer. To manually install the service, see
+   [1]Installing MapR Data Access Gateway. For installation guidance, see
    [2]Understanding the MapR Data Access Gateway.
 
 Upgrading the Data Access Gateway Service
@@ -43,13 +43,49 @@ Modifying Configuration Settings for the Data Access Gateway Service
    Property Name Default Description
    auth.token.expiration 1800 Expiration time (in seconds) for the
    authentication token
+   grpc.service.ojai.query.result-limit 5000 Limit on the number of
+   documents returned in retrieval requests using the Node.js and Python
+   OJAI clients
+   grpc.service.port 5678 Port number gRPC clients use to connect to the
+   Data Access Gateway. The Node.js and Python OJAI clients are gRPC
+   clients.
+   grpc.service.ssl.enabled cluster Controls whether TLS is enabled for
+   the gRPC Service
+
+   Values: cluster|true|false
+   If set to cluster:
+     * TLS is enabled if your MapR cluster is secure
+     * TLS is disabled if your MapR cluster is not secure
+
+   When TLS is enabled, the SSL provider is OpenSSL.
    rest.https.port 8243 Port number used to connect to the Data Access
    Gateway using HTTPS
    rest.result.limit 5000 Limit on the number of documents returned in
-   retrieval requests using the MapR-DB JSON REST API
+   retrieval requests using the MapR Database JSON REST API
+
+   There is also a configuration file
+   /opt/mapr/data-access-gateway/conf/ojai-config.json for parameters used
+   by Data Access Gateway clients:
+     * MapR Database JSON REST API
+     * Node.js OJAI
+     * Python OJAI
+
+   A parameter you can modify is the client sort limit:
+{
+    "ojai": {
+        "mapr": {
+            "query": {
+                "max-client-sort-limit": 6000
+            }
+        }
+    }
+}
+
+   See [4]Comparisons and Ordering in OJAI for details about why you might
+   want to modify this parameter.
 
    After modifying any parameters on a node, restart the service, as
-   described in the [4]Administering the Data Access Gateway Service
+   described in the [5]Administering the Data Access Gateway Service
    section.
    Warden Configuration
 
@@ -79,7 +115,7 @@ Administering the Data Access Gateway Service
 maprcli node services -nodes <node name> -name data-access-gateway -action resta
 rt
 
-   See [5]Managing Services for details about other operations you can
+   See [6]Managing Services for details about other operations you can
    perform on the service.
 
 References
@@ -87,5 +123,6 @@ References
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingDataAccessGateway.html#InstallHue-ToinstallHue
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/MapRDataAccessGateway.html#MapRDataAccessGateway
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__section_p1r_ppw_zcb
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__section_p1r_ppw_zcb
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ManageServices.html#concept_ytv_nft_5v
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#querying_documents_with_maprdb_ojai_java_api___section_dwc_bjc_hbb
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__section_p1r_ppw_zcb
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ManageServices.html#concept_ytv_nft_5v

@@ -1,0 +1,80 @@
+KSQL Security
+
+   Discusses KSQL security topics.
+
+Non-interactive Clusters (headless mode)
+
+   In MapR Event Store For Apache Kafka, the non-interactive mode is the
+   main deployment model for KSQL queries (similar to the Apache Kafka
+   model). You are responsible for deploying your own KSQL server clusters
+   with KSQL queries.
+   Important: MapR’s ticket-based security is used for communication
+   between a KSQL Server and MapR Server.
+
+Interactive KSQL Clusters
+
+   The MapR Event Store For Apache Kafka implementation does not perform
+   any impersonation on behalf of KSQL CLI users in KSQL Servers. SSL/TLS
+   protocols are not supported between KSQL CLI and KSQL Servers. It is
+   not possible to transmit user credentials (username, password)
+   securely. Interactive mode is not supported or recommended for
+   production. Use headless mode.
+   Important: Security Socket Layer (SSL) and Transport Layer Security
+   (TLS) protocols are not supported between the KSQL client and the KSQL
+   server. When using KSQL in interactive mode, user credentials
+   (username, password) are not passed. For production environments, use
+   headless mode. See the Non-Interactive (Headless) KSQL Usage section in
+   [1]Configuring Apache Kafka KSQL Server for more information.
+
+KSQL_COMMANDS
+
+   The KSQL_COMMANDS internal topic is used to backup information about
+   KSQL streams, KSQL tables, KSQL persistent queries, and so on. KSQL
+   uses KSQL_COMMANDS to restore KSQL server state in case there is a
+   fault or server restart.
+
+   Each KSQL Server cluster has a unique servise ID which can be provided
+   by using the ksql.service.id property. By default, the service.id is
+   _default. To provide additional security, kql.service.id-specific
+   folders are created in the ksql-internal-stream stream.
+   Note: The /apps directory has only write access to mapr user. So the
+   /apps/ksql directory can not be modifiable/deletable by any user other
+   than mapr user.
+
+   KSQL service.id-specific folders are created in the /apps/ksql/
+   directory for every KSQL server cluster (represented by
+   ksql.service.id).
+
+Default Stream
+
+   KSQL Server provides a default stream for topics when they are being
+   processed. When KSQL Server is not impersonated (non-interactive or
+   interactive+no-impersonation), the KSQL Server default stream is used.
+
+KSQL Cleanup
+
+   The KSQL cleanup feature is integrated to ensure that the underlying
+   KSQL state (such as internal topics) are cleaned up correctly. See
+   [2]Application Reset Tool for more information.
+
+Deployment
+
+   MapR KSQL deployment model is the same as Apache Kafka's deployment
+   model. The KSQL Servers are not managed as part of the MapR cluster
+   (for example, mapr-warden); you are required to run (or manage) your
+   own KSQL Servers.
+   Note: A service ID (service.id) is uniquely created for the KSQL
+   implementation; this means that the user associated with the service ID
+   cannot grant permissions to other users to use the same service ID.
+
+For More Information
+
+     * [3]Apache Kafka KSQL
+     * [4]Configuring Apache Kafka KSQL Server
+
+References
+
+   1. https://docs.confluent.io/current/ksql/docs/installation/server-config/index.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Kafka/KStreams/Kstreams-reset-tool.html
+   3. https://docs.confluent.io/current/ksql/docs/index.html
+   4. https://docs.confluent.io/current/ksql/docs/installation/server-config/index.html

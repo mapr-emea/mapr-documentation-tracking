@@ -1,0 +1,46 @@
+Creating JSON Documents in Python OJAI
+
+   There are two ways to create JSON documents in your Python OJAI
+   application, one of which is the preferred approach.
+
+   The preferred way to create a Python dictionary object and then pass it
+   to the Connection.new_document() method:
+json_dict = {
+    "_id" : "movie0000001",
+    "title" : "OJAI -- The Documentary",
+    "studio" : "MapR Technologies, Inc.",
+    "release_date" : "2015-09-29",
+    "trailers" : {
+        "teaser" : "https://10.10.21.90/trailers/teaser",
+        "theatrical" : "https://10.10.21.90/trailers/theatrical"
+    },
+    "characters" : [
+        "Heroic Developer",
+        "Evil Release Manager",
+        "Mad Development Manager"
+    ],
+    "box_office_gross" : 1000000000L
+}
+new_document = connection.new_document(dictionary=json_dict)
+
+   Alternatively, you can call Document interface methods to set fields
+   and values:
+doc = connection.new_document()
+        .set_id("movie0000001")
+        .set('title', 'OJAI – The Documentary')
+        .set('studio', 'MapR Technologies, Inc.')
+        .set('release_date', ODate.parse(date_str='2015-09-29'))
+        .set('trailers.teaser', 'https://10.10.21.90/trailers/teaser')
+        .set('trailers.theatrical', 'https://10.10.21.90/trailers/theatrical')
+        .set('characters', ['Heroic Developer', 'Evil Release Manager', 'Mad Dev
+elopment Manager'])
+        .set('box_office_gross', 1000000000)
+
+   See the following for more details about the APIs:
+     * [1]Connection
+     * [2]Document
+
+References
+
+   1. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_connection_1_1_connection.html
+   2. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1_document_1_1_document.html

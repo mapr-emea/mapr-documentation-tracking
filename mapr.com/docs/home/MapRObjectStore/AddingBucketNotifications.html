@@ -1,0 +1,87 @@
+Adding Bucket Notifications Using S3 REST API
+
+   Bucket notifications are based on the mapr-kafka component.
+    1. Install the mapr-kafka* package:
+zypper|yum|apt-get install mapr-kafka
+    2. Configure mapr-kafka:
+maprcli stream create -path /path/to/stream
+maprcli stream topic create -path /path/to/stream -topic nameOfTopic
+    3. Set up
+       /opt/mapr/objectstore-client/objectstore-client-1.0.0/conf/config.j
+       son in block notifications:
+"notify": {
+  "kafka": {
+    "notifyBlockName": {
+      "enable": true,
+      "brokers": [””],
+      "topic": "/path/to/stream:nameOfTopic"
+      }
+   }
+}
+    4. Restart the MapR Object Store.
+
+   To install and use the AWS CLI, see [1]Install and Configure the AWS
+   CLI.
+   For reading a topic:
+./kafka/kafka-1.1.1/bin/kafka-console-consumer.sh --topic /path/to/stream:nameOf
+Topic --bootstrap-server some:9092 --from-beginning
+
+   For adding notifications to a bucket:
+aws s3api --endpoint-url http://node1.cluster.com:9000 put-bucket-notification-c
+onfiguration  --notification-configuration file://fileWithNotificationRules.json
+ --bucket bucketName
+
+   For getting notifications for a bucket:
+aws s3api --endpoint-url https://node1.cluster.com:9000 get-bucket-notification-
+configuration  --bucket bucketName
+
+Bucket Notification Examples
+
+    1. To create object events for all names:
+{
+  "QueueConfigurations": [
+  {
+   "Id": "1",
+   "QueueArn":  "arn:minio:sqs::notifyBlockName:kafka",
+   "Events": [
+       "s3:ObjectCreated:*"
+      ],
+   "Filter": {
+       "Key": {
+       "FilterRules": [
+      {
+        "Name": "prefix",
+        "Value": "*"
+       }
+     ]
+    }
+   }
+  }
+ ]
+}
+    2. To remove object events with names with the mybuck prefix:
+{
+  "QueueConfigurations": [
+    {
+     "Id": "1",
+     "QueueArn": "arn:minio:sqs::notifyBlockName:kafka",
+     "Events": [
+          "s3:ObjectRemoved:*"
+         ],
+       "Filter": {
+            "Key": {
+            "FilterRules": [
+              {
+                "Name": "prefix",
+                "Value": "mybuck"
+              }
+            ]
+          }
+        }
+      }
+    ]
+ }
+
+References
+
+   1. https://docs.aws.amazon.com/streams/latest/dev/kinesis-tutorial-cli-installation

@@ -1,0 +1,68 @@
+Uploading Metering Measurement Results to MapR Server
+
+   You can choose to automatically send metrics to MapR server or upload
+   metrics manually, depending on whether your cluster has internet
+   connectivity.
+
+Uploading Automatically While Connected to the Internet
+
+   If the cluster is connected to the internet, automatic upload of
+   metrics is enabled by default. To disable automatic upload, see
+   [1]Enabling or Disabling Upload to MapR Server.
+
+Uploading Manually While Connected to the Internet
+
+   If you do not want to send your metrics every 30 minutes and instead
+   want to send metrics on demand, perform the following steps:
+    1. Disable automatic upload of metrics in the MapR Control System web
+       interface.
+       See [2]Enabling or Disabling Upload to MapR Server for the steps.
+    2. Run the following command in the MapR CLI to create a .zip file of
+       the metrics:
+mapr-apiserver-cli.sh --prepareForOfflineSend
+       The .zip file is stored in the /var/mapr/metering/zips/ directory.
+    3. Download the following tar file:
+http://artifactory.devops.lab/artifactory/list/local-flatfiles/mapr-apiserver-ut
+ils/b10/mapr-apiserver-utils-1.0.201808092042.tar
+    4. Untar the file into any target directory and cd into the that
+       directory:
+$ tar -xvf mapr-apiserver-utils-1.0.201808092042.tar -C <TARGET_DIR>
+$ cd <TARGET_DIR>
+    5. Change directory into ./mapr-apiserver-utils/bin:
+$ cd ./mapr-apiserver-utils/bin/
+    6. Run the upload command:
+$ ./uploadMetrics.sh -u -z <ZIP>
+
+Uploading Using a Standalone Utility on an Internet-Connected Computer
+
+   You must transfer the metrics file to an internet-connected computer
+   and then upload manually when your cluster is not connected to the
+   internet.
+    1. Run the following command to create a .zip file of the metrics:
+mapr-apiserver-cli.sh --prepareForOfflineSend
+       The .zip file is stored in the /var/mapr/metering/zips/ directory.
+    2. Copy the .zip file from the MapR cluster onto an internet-connected
+       computer:
+$ hadoop fs -copyToLocal /var/mapr/metering/zips/<ZIP>
+    3. On the internet-connected computer, download the following tar
+       file:
+http://artifactory.devops.lab/artifactory/list/local-flatfiles/mapr-apiserver-ut
+ils/b10/mapr-apiserver-utils-1.0.201808092042.tar
+    4. Untar the file into any target directory and cd into the that
+       directory:
+$ tar -xvf mapr-apiserver-utils-1.0.201808092042.tar -C <TARGET_DIR>
+$ cd <TARGET_DIR>
+    5. Change directory into ./mapr-apiserver-utils/bin:
+$ cd ./mapr-apiserver-utils/bin/
+    6. Run the upload command:
+          + [3]Linux
+          + [4]Windows
+$ ./uploadMetrics.sh -u -z <ZIP>
+$ ./uploadMetrics.bat -u -z <ZIP>
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/EnableDisableS3Upload.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/EnableDisableS3Upload.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/UploadMeteringResults.html#div1entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/UploadMeteringResults.html#div1entry2

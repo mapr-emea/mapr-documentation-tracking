@@ -4,17 +4,17 @@ Using Indexes to Optimize Projections in Queries
    indexes even when there are no filter conditions referencing the fields
    of an index. This requires a full scan of the index. But in cases where
    all fields referenced in the query are fields in an index, this
-   eliminates the need to read the MapR-DB JSON table. The referenced
-   fields can be either indexed fields or included fields
+   eliminates the need to read the MapR Database JSON table. The
+   referenced fields can be either indexed fields or included fields
 
-   The following table provides examples where MapR-DB can and cannot use
-   the index for projections. Assume you have an index with the following
-   fields:
+   The following table provides examples where MapR Database can and
+   cannot use the index for projections. Assume you have an index with the
+   following fields:
      * Indexed fields - IdxField1, IdxField2
      * Included fields - Field3, Field4, Field5
 
    Further assume that the fields referenced in the index are a small
-   subset of the total fields in the MapR-DB JSON table. With these
+   subset of the total fields in the MapR Database JSON table. With these
    assumptions, avoiding reads on the JSON table is beneficial.
    OJAI Query Elements Use of Index for Projections
      * SELECT IdxField1, Field4
@@ -54,3 +54,15 @@ Using Indexes to Optimize Projections in Queries
    All fields referenced are fields in the index, but the index cannot
    optimize the ORDER BY. The query needs the OJAI Distributed Query
    Service to sort large data sets.
+
+Projections on Container Field Paths
+
+   When your query projects a container field path and the container field
+   path is an included field in an index, then MapR Database can use the
+   index for the projection. It is not enough for the container field path
+   to be an indexed field. See [1]Covering Indexes and Container Field
+   Paths for details.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html#concept_qdg_p5j_t1b__section_hk4_rcw_jdb

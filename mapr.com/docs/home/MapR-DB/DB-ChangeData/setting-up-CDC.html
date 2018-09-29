@@ -1,20 +1,21 @@
 Setting Up CDC
 
    To set up the Change Data Capture (CDC) feature, the following must
-   exist or be created: a MapR-DB source table (JSON or binary), a MapR-ES
-   changelog stream, a MapR-ES stream topic, and a MapR-DB table changelog
+   exist or be created: a MapR Database source table (JSON or binary), a
+   MapR Event Store For Apache Kafka changelog stream, a MapR Event Store
+   For Apache Kafka stream topic, and a MapR Database table changelog
    relationship between the source table and the destination stream topic.
 
 Before Setting Up CDC
 
-   The destination MapR-ES stream can be in same cluster as the MapR-DB
-   source table or it can be on a remote MapR cluster. If you are
-   propagating changed data from a source table on a source cluster to a
-   destination stream topic on a remote destination cluster, a gateway
-   must be setup. Gateways are setup by installing the gateway on the
-   destination cluster and specifying the gateway node(s) on the source
-   cluster. See [1]Administering MapR Gateways and [2]Configuring Gateways
-   for Table and Stream Replication.
+   The destination MapR Event Store For Apache Kafka stream can be in same
+   cluster as the MapR Database source table or it can be on a remote MapR
+   cluster. If you are propagating changed data from a source table on a
+   source cluster to a destination stream topic on a remote destination
+   cluster, a gateway must be setup. Gateways are setup by installing the
+   gateway on the destination cluster and specifying the gateway node(s)
+   on the source cluster. See [1]Administering MapR Gateways and
+   [2]Configuring Gateways for Table and Stream Replication.
 
    The following diagram shows a simple CDC data model, with one source
    table to one destination topic on one stream. Because this scenario has
@@ -30,19 +31,20 @@ Before Setting Up CDC
 
 Create Table
 
-   A MapR-DB table (JSON or binary) must be established for the CDC data.
-   You can create a new table and add data or use an existing table with
-   data. See [5]maprcli table create for creating a new table or use the
-   MCS. Example code is provided for completing this task using either the
-   maprcli or REST. Alternatively, depending on whether you are
+   A MapR Database table (JSON or binary) must be established for the CDC
+   data. You can create a new table and add data or use an existing table
+   with data. See [5]maprcli table create for creating a new table or use
+   the MCS. Example code is provided for completing this task using either
+   the maprcli or REST. Alternatively, depending on whether you are
    establishing JSON documents or binary files, you can use the following:
-     * [6]mapr dbshell for MapR-DB JSON documents
-     * [7]hbshell for MapR-DB binary data
+     * [6]mapr dbshell for MapR Database JSON documents
+     * [7]hbshell for MapR Database binary data
 
    Attention: Ensure that a volume exists and mounted for both tables and
-   streams. Even though MapR-DB tables and MapR-ES stream can exist in the
-   same volume, for organizational purposes, you could create separate
-   volumes for both tables and streams.
+   streams. Even though MapR Database tables and MapR Event Store For
+   Apache Kafka stream can exist in the same volume, for organizational
+   purposes, you could create separate volumes for both tables and
+   streams.
    The following code examples show how to:
      * Create and mount a volume for a source table.
      * Create a new binary table. The -tabletype parameter's default
@@ -73,13 +75,13 @@ https://10.10.100.17:8443/rest/table/create?path=/tableVolume/cdcTable&tabletype
 
 Create Stream
 
-   A MapR-ES changelog stream must be created for the propagated changed
-   data records using the maprcli stream create -ischangelog parameter.
-   See [10]maprcli stream create or use the MCS.
+   A MapR Event Store For Apache Kafka changelog stream must be created
+   for the propagated changed data records using the maprcli stream create
+   -ischangelog parameter. See [10]maprcli stream create or use the MCS.
    Note: Ensure that a volume exists and mounted for both tables and
-   streams. Even though MapR-DB tables and MapR-ES stream can exist in the
-   same volume, for organizational purposes, you could create separate
-   volumes for tables and streams.
+   streams. Even though MapR Database tables and MapR Event Store For
+   Apache Kafka stream can exist in the same volume, for organizational
+   purposes, you could create separate volumes for tables and streams.
    Important: The changelog stream's default partitions can impact how
    many partitions a stream topic can have. This is because once you
    create a stream topic for a changelog stream, the number of topic
@@ -126,8 +128,9 @@ ischangelog=true&defaultpartitions=3
 
 Create Topic
 
-   A MapR-ES stream topic must be created for the changed data records.
-   This can be accomplished in a variety of ways:
+   A MapR Event Store For Apache Kafka stream topic must be created for
+   the changed data records. This can be accomplished in a variety of
+   ways:
      * Use the [13]maprcli table changelog add command. This command
        establishes a changelog relationsip between the source table and
        the destination stream topic.
@@ -172,7 +175,8 @@ Add Changelog
    and the destination stream topic by using the [17]maprcli table
    changelog add command or the MCS. By adding a table changelog
    relationship, you are creating an environment that propagates changed
-   data records from a source table to a MapR-ES stream topic.
+   data records from a source table to a MapR Event Store For Apache Kafka
+   stream topic.
      * If you are creating a changelog relationship and the stream topic
        does not exist, you specify the stream path and topic.
      * If you are creating a changelog relationship and the stream topic
@@ -218,13 +222,13 @@ maprcli table changelog list -path /tableVolume/cdcTable
 What's Next: Modifying and Consuming Data
 
    In order to have CDC changed data records to consume, you need to
-   perform inserts, updates, and deletes on the MapR-DB table data. See
-   CRUD operations on documents using mapr dbshell for JSON documents,
-   mapr hbshell for binary data, Java applications for MapR-DB JSON, C or
-   Java applications for MapR-DB Binary.
-   A MapR-ES Kafka/OJAI consumer application subscribes to the topic and
-   consumes the change data records. See [21]Consuming CDC Records for
-   more information.
+   perform inserts, updates, and deletes on the MapR Database table data.
+   See CRUD operations on documents using mapr dbshell for JSON documents,
+   mapr hbshell for binary data, Java applications for MapR Database JSON,
+   C or Java applications for MapR Database Binary.
+   A MapR Event Store For Apache Kafka Kafka/OJAI consumer application
+   subscribes to the topic and consumes the change data records. See
+   [21]Consuming CDC Records for more information.
 
 References
 

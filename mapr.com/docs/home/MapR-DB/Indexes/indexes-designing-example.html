@@ -5,8 +5,8 @@ Examples of Designing Secondary Indexes
    account for sizing, storage, and updates, you should always weigh the
    benefits of indexes against these other requirements.
 
-   Assume that you have a MapR-DB JSON table with the following customer
-   data:
+   Assume that you have a MapR Database JSON table with the following
+   customer data:
 {
    "_id": "10000",
    "FullName": {
@@ -68,9 +68,17 @@ Examples of Designing Secondary Indexes
      * Gender
      * FullName.LastName
 
+   7 Find all customers who have "Reading" as a hobby.
+     * Hobbies[]
+
+   8 Find all customers who have a mobile phone number with a prefix of
+   "650".
+     * Phones[].Type
+     * Phones[].Number
+
    The following table contains indexes you can create to optimize the
    queries listed in the previous table and the rationale for doing so:
-                                 Index                                 Rationale
+   Index Rationale
    Simple index on DateOfBirth
 
    Optimizes the range condition on DateOfBirth in [1]query 1.
@@ -114,6 +122,112 @@ Examples of Designing Secondary Indexes
        FullName.LastName results in more selective index lookups for
        [11]query 6
 
+   Simple index on Hobbies[] Optimizes the equality condition on array
+   elements of Hobbies in [12]query 7:
+{"$eq":{"Hobbies[]":"Reading"}}
+
+   Composite index on:
+     * Phones[].Type
+     * Phones[].Number
+
+   Optimizes the following two conditions in [13]query 8:
+     * Equality condition on the Type subfield in nested documents in the
+       Phones array
+     * Pattern matching condition on the Number subfield in nested
+       documents in the Phones array
+
+Example with Multiple Container Field Paths
+
+   The following example references documents that store the high and low
+   temperatures for each day in a week. They use an array to store the
+   data, where each element in the array corresponds to a day in the week.
+   For each day of the week, there is a two element array of nested
+   documents. The nested documents indicate whether the temperature
+   corresponds to the high or low for that day. Typically, the outermost
+   array has seven elements, one for each day of the week. But in cases
+   where data is unavailable, the document has only the days available.
+{
+   "_id": "001",
+   "temps": [{"hiLo": [{"type": "hi", "temp": 61}, {"type": "lo", "temp": 49}],
+"dow": "Sun"},
+             {"hiLo": [{"type": "hi", "temp": 74}, {"type": "lo", "temp": 51}],
+"dow": "Mon"},
+             {"hiLo": [{"type": "hi", "temp": 75}, {"type": "lo", "temp": 51}],
+"dow": "Tue"},
+             {"hiLo": [{"type": "hi", "temp": 74}, {"type": "lo", "temp": 52}],
+"dow": "Wed"},
+             {"hiLo": [{"type": "hi", "temp": 78}, {"type": "lo", "temp": 54}],
+"dow": "Thu"},
+             {"hiLo": [{"type": "hi", "temp": 75}, {"type": "lo", "temp": 53}],
+"dow": "Fri"},
+             {"hiLo": [{"type": "hi", "temp": 75}, {"type": "lo", "temp": 54}],
+"dow": "Sat"}],
+   "weekOf": "4/29/2018"
+}
+{
+   "_id": "002",
+   "temps": {"hiLo": [{"type": "hi","temp": 81}, {"type": "lo", "temp": 60}], "d
+ow":"Sat"},
+   "weekOf": "5/12/2018"
+}
+{
+   "_id": "003",
+   "temps": [{"hiLo": [{"type": "hi", "temp": 80}, {"type": "lo", "temp": 55}],
+"dow": "Sun"},
+             {"hiLo": [{"type": "hi", "temp": 78}, {"type": "lo", "temp": 54}],
+"dow": "Mon"},
+             {"hiLo": [{"type": "hi", "temp": 79}, {"type": "lo", "temp": 54}],
+"dow": "Tue"},
+             {"hiLo": [{"type": "hi", "temp": 77}, {"type": "lo", "temp": 53}],
+"dow": "Wed"},
+             {"hiLo": [{"type": "hi", "temp": 79}, {"type": "lo", "temp": 54}],
+"dow": "Thu"},
+             {"hiLo": [{"type": "hi", "temp": 77}, {"type": "lo", "temp": 54}],
+"dow": "Fri"},
+             {"hiLo": [{"type": "hi", "temp": 78}, {"type": "lo", "temp": 54}],
+"dow": "Sat"}],
+   "weekOf": "5/13/2018"
+}
+
+   Suppose you frequently run the following queries:
+   Query Description Documents Returned
+find /apps/hiLoTemps
+    --f weekOf
+    --c '{"$eq":{"temps[].hiLo[].temp":60}}'
+
+   Find weeks where any day has either a high or low temperature of 60.
+   002
+find /apps/hiLoTemps
+    --f weekOf,temps[].hiLo[].type,temps[].hiLo[].temp
+    --c
+        '{
+            "$elementAnd":{
+                "temps[].hiLo[]":[
+                    {"$eq":{"type":"hi"}},
+                    {"$ge":{"temp":80}}
+                ]
+            }
+        }'
+
+   Find weeks and the high/low temperatures for all days on those weeks
+   where any day of the week has a high temperature of at least 80. 002,
+   003
+
+   To optimize these queries, you should define an index with the
+   following fields:
+     * Indexed fields: temps[].hiLo[].temp, temps[].hiLo[].type
+     * Included fields: weekOf, temps[].hiLo
+
+   By defining the composite index with temps[].hiLo[].temp as the first
+   indexed field, the index can optimize both queries.
+
+   By adding weekOf as an included field, the index is a covering index
+   for the first query. By adding temps[].hiLo, the index becomes a
+   covering index for the second query as well. Note that you must add
+   this included field even though the subfields are also indexed fields.
+   This is due to how indexes with container field paths store data. See
+   [14]Covering Indexes and Container Field Paths for more details.
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query1
@@ -127,3 +241,6 @@ References
    9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query4
   10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query6
   11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query6
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query7
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query8
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html#concept_qdg_p5j_t1b__section_hk4_rcw_jdb

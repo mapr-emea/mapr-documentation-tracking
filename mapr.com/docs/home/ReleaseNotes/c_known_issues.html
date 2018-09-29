@@ -1,14 +1,14 @@
-Known Issues at Release (MapR 6.0.1)
+Known Issues at Release (MapR 6.1.0)
 
    You may encounter the following known issues after upgrading to Version
-   6.0.1. This list is current as of the release date. For a dynamic list
-   of all known issues for all MapR product releases, refer to [1]MapR
-   Support List of all known issues.
+   6.1. This list is current as of the release date. For a dynamic list of
+   all known issues for all MapR product releases, refer to [1]MapR
+   Support List of all known issues
 
-   Where available, the workaround for an issue is also documented here.
-   MapR releases maintenance releasese and patches to fix issues. We
-   recommend checking the the release notes for any subsequent maintenance
-   releases to see if one or more of these issues are fixed.
+   Where available, the workaround for an issue is also documented in this
+   topic. MapR regularly releases maintenance releases and patches to fix
+   issues. We recommend checking the release notes for any subsequent
+   maintenance releases to see if one or more of these issues are fixed.
 
 Installation and Configuration Issues
 
@@ -17,96 +17,54 @@ Installation and Configuration Issues
 
 Upgrade Issues
 
-   MD-4026
-          Issue: After an upgrade to MapR 6.0.1 or later, Drillbits can
-          fail to start if the cluster has Drill 1.11 or Drill 1.12 and
-          the Drill package is not upgraded as part of the upgrade. This
-          issue can also occur during a manual rolling upgrade. The issue
-          occurs because the upgrade process removes symlinks to MapR-FS
-          jar files in the /opt/mapr/lib directory.
-          Workaround: After upgrading MapR Core, paste the following
-          script into a Linux shell, and execute the script on each of the
-          upgraded nodes.
+   30422
+          Issue: Using the configure.sh -R command after an upgrade from
+          5.2.x to 6.0 or later can return error messages for some MapR
+          Monitoring components. For example:
 
-MAPR_HOME=/opt/mapr
-DRILL_BASE=${MAPR_HOME}/drill
-DRILL_VERSION=`cat ${DRILL_BASE}/drillversion`
-DRILL_HOME=${DRILL_BASE}/drill-${DRILL_VERSION}
+/opt/mapr/server/configure.sh -R
+Configuring Hadoop-2.7.0 at /opt/mapr/hadoop/hadoop-2.7.0 Done configuring Hadoo
+p Node setup configuration: drill-bits fileserver hbinternal nfs nodemanager ope
+ntsdb Log can be found at: /opt/mapr/logs/configure.log
+ls: cannot access /opt/mapr/hbinternal: No such file or directory Configuring op
+entsdb
+getopt: unrecognized option '--unsecure'
+getopt: unrecognized option '-EC'
+usage: /opt/mapr/opentsdb/opentsdb-2.3.0/bin/configure.sh [-nodeCount <cnt>] [-n
+odePort <port> -nodeZkCount <zkCnt>] [-nodeZkPort <zkPort>] [-R] -OT "ip:port,ip
+1:port," -Z "ip:port,ip1:port,"
 
-find ${DRILL_HOME}/jars -type l -exec rm -f {} \;
-ln -sf ${MAPR_HOME}/lib/maprfs*.jar ${DRILL_HOME}/jars/3rdparty/.
-ln -sf ${MAPR_HOME}/lib/maprdb*.jar ${DRILL_HOME}/jars/3rdparty/.
-ln -sf ${MAPR_HOME}/lib/mapr-hbase*.jar ${DRILL_HOME}/jars/3rdparty/.
-rm -f ${DRILL_HOME}/jars/3rdparty/mapr*tests.jar
-rm -f ${DRILL_HOME}/jars/3rdparty/maprfs-d*
-rm -f ${DRILL_HOME}/jars/3rdparty/maprdb-c*
-rm -f ${DRILL_HOME}/jars/3rdparty/maprdb-s*
+/opt/mapr/server/configure.sh -R
+Configuring Hadoop-2.7.0 at /opt/mapr/hadoop/hadoop-2.7.0
+Done configuring Hadoop
+Node setup configuration: drill-bits fileserver grafana hbinternal historyserver
+ nfs nodemanager spark-historyserver
+Log can be found at: /opt/mapr/logs/configure.log
+ls: cannot access /opt/mapr/hbinternal: No such file or directory
+ls: cannot access /opt/mapr/spark-historyserver: No such file or directory
+Configuring grafana
+getopt: unrecognized option '--unsecure'
+getopt: unrecognized option '-EC'
+usage: /opt/mapr/grafana/grafana-4.1.2/bin/configure.sh [-nodeCount <cnt>] [-nod
+ePort <port>] [-grafanaPort <port>] [-secureCluster] [-loadDataSourceOnly] [-R]
+-OT "ip:port,ip1:port,"
 
-          After invoking the script, drillbits should start successfully.
-          To confirm that there are symlinks to jar files in opt/mapr/lib,
-          use this command:
+          These errors are generated because a newer version of the server
+          configure.sh uses certain options that do not exist with older
+          ecosystem components.
 
- ls -ltr $DRILL_HOME/jars/3rdparty/mapr*
+          Workaround: None. The upgrade can succeed in spite of the
+          errors, and the current ecosystem configuration is left
+          unchanged. The error messages can be ignored.
 
-   31038
-          Issue: During an upgrade to MapR 6.0.1 from any other MapR
-          release, the following file is not updated automatically:
+Indexing and MapR Drill
 
-/opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/log4j.properties
-
-          Without the properties updates, you cannot use the scheduler
-          debug logger.
-
-          Workaround: This workaround is necessary only if you plan to use
-          the scheduler debug logger. After the upgrade to MapR 6.0.1, add
-          the following lines to the log4j.properties file:
-
-yarn.debug.controller.logger = INFO, ED
-yarn.debug.controller.log.file=yarn-mapr-scheduling-debug.log
-yarn.debug.controller.log.maxfilesize=256MB
-yarn.debug.controller.log.maxbackupindex=20
-
-log4j.logger.org.apache.hadoop.yarn.server.resourcemanager.scheduler.
-DebugController=${yarn.debug.controller.logger}
-log4j.additivity.org.apache.hadoop.yarn.server.resourcemanager.scheduler.
-DebugController=false
-
-log4j.appender.ED=org.apache.hadoop.yarn.WorldWritableLogAppender
-log4j.appender.ED.File=${hadoop.log.dir}/${yarn.debug.controller.log.file}
-log4j.appender.ED.MaxFileSize=${yarn.debug.controller.log.maxfilesize}
-log4j.appender.ED.layout=org.apache.log4j.PatternLayout
-log4j.appender.ED.layout.ConversionPattern=%d{ISO8601} : %m%n
-
-   29752
-          Issue: The Oozie process fails following a manual upgrade from
-          MapR 5.2.x (MEP 3.0.1) to MapR 6.0 if Oozie is not upgraded to
-          the MEP 4.0.0 version.
-          Workaround: Upgrading all ecosystem components to MEP 4.0.0 is
-          required before you can enable MapR 6.0 features. If you cannot
-          upgrade to MEP 4.0.0 immediately, use these steps to restart
-          Oozie:
-
-         1. Stop Oozie:
-maprcli node services -name oozie -action stop -nodes <nodes>
-         2. Recreate the Oozie war file by using one of the following
-            commands:
-               o If SSL was enabled for Oozie, use this command:
-/opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh -hadoop <version> /opt/mapr/h
-adoop/hadoop-<version> -secure
-               o If SSL was not enabled for Oozie, use this command:
-/opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh -hadoop <version> /opt/mapr/h
-adoop/hadoop-<version>
-         3. Start Oozie:
-maprcli node services -name oozie -action start -nodes <nodes>
-
-Indexing and Mapr Drill
-
-   28041
-          Running multiple queries in sequence can cause drillbits to run
+   MD-2218 (previously 28041)
+          Running multiple queries in sequence can cause Drillbits to run
           out of direct memory. Limiting records in large batches to 5KB
           may prevent this issue from occurring. Should Drill return an
           out of memory exception, issue the following command to restart
-          the drillbits:
+          the Drillbits:
 
 $ maprcli node services -name drill-bits -action restart -nodes <node host names
  separated by a space>
@@ -122,25 +80,34 @@ tarted()Lcom/google/common/base/Stopwatch;
           can use the following dependency:
 
             <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
-            </dependency>
+              <groupId>com.google.guava</groupId>
+              <artifactId>guava</artifactId>
+              <version>18.0</version>
+              </dependency>
 
-MapR-DB
+MapR Database
+
+   MAPRDB-1375
+          If you have a MapR Database JSON table with multiple column
+          families and the table has a secondary index, after you perform
+          a series of update operations (for example: set, increment,
+          decrement, replace, append, etc.) on the table, the index may
+          have duplicate rows.
+
+   MAPRDB-1520
+          If you have an OR condition that references a container field
+          path more than once, and MapR Database uses an index to process
+          the query, then the query may return incorrect results. You can
+          workaround this problem by forcing MapR Database to not use
+          indexes. See [3]Forcing Secondary Index Usage in Java OJAI for
+          details.
 
    27057
           When you issue a maprcli table changelog add command, during the
           initial sync when the existing data is copied to the change log,
           the end-to-end latency during the initial 5 minutes can be high.
-          After the initial sync, any latency will be small, specifically
-          2-4 seconds.
-
-MapR-ES
-
-   31074
-          MapR-ES APIs that make use of streams.rpc.timeout.ms are best
-          effort APIs, the timeout is not guaranteed.
+          After the initial sync, latency will be small, specifically 2-4
+          seconds.
 
 MapR Client
 
@@ -155,6 +122,57 @@ MapR Client
             user wants to access only the nonsecure cluster.
 
 MapR Control System
+
+   MON-4788
+          Description: When running large number of table (get, scan,
+          index) operations, the API server may become unresponsive and
+          you may see following error: GC overhead limit exceeded.
+          Resolution: Check the heap size and increase it based on
+          available system resources or set up a load balancer to
+          distribute the HTTP requests (load) to other API servers. To
+          increase heap size:
+
+         1. Open /opt/mapr/apiserver/bin/mapr-apiserver.sh file.
+         2. Modify the value for JVMXMS and JVMXMX (under JVM tuning).
+            For example, modify the following in the file:
+# JVM tuning
+JVMXMS=${JVMXMS:-1024m}
+JVMXMX=${JVMXMX:-1024m}
+         3. Save and close the file.
+         4. Restart apiserver for the changes to take effect.
+            For example, run the following command to restart the
+            apiserver:
+maprcli node services -action restart -name apiserver -nodes `hostname`
+
+   MON-4776
+          Description: You cannot mount or unmount multiple volumes at the
+          same time by selecting them from different pages in the Volumes
+          pane (of the Data > Volumes page).
+          Workaround: Increase the number of rows, if possible, in the
+          Volumes pane and select the volumes from the same page to mount
+          or unmount.
+
+   MON-4701
+          Description: The table metrics list view displays metric values
+          calculated using endTime-startTime. If you select a time range
+          like Today, This Week, This Month, where the end time is in the
+          future, no data is displayed in the columns.
+          Workaround: Choose Today so far, This week so far, This month so
+          far instead to view the most current data.
+
+   MON-3817
+          Description: The Node Health by Topology pane does not reflect
+          the most recent topology of the node if the node was just moved
+          to a different/new topology.
+          Workaround: Navigate to another tab or page and then return to
+          the page to view the updated topology for the node in the Node
+          Health by Topology pane.
+
+   MON-3709
+          Description: The list of services in the Services page do not
+          refresh per the configured refresh rate settings.
+          Workaround: To view the latest status for the services, reload
+          the page in the browser.
 
    MON-3476
           Issue:In the MapR Control System, table permissions can only be
@@ -188,27 +206,13 @@ MapR Control System
           the Services page. This is because starting from v6.0, the UI
           static files are in mapr-webserver and the mapr-apiserver runs
           the server that sends the queries. For more information on
-          webserver in v6.0, see [3]Setting Up the MapR Control System.
+          webserver in v6.0, see [4]Setting Up the MapR Control System.
 
    MON-3404
           Issue: The topic search field in the Stream (detail) > Topic tab
           does not display correctly in Firefox.
           Workaround: Use Chrome (v58 and later) to perform a topic
           search.
-
-   MON-3325
-          Issue: The MapR Control System does not display topologies with
-          hostname (in the topology). You cannot configure node-specific
-          topology for a volume from MCS.
-          Workaround: Use the CLI to set node-specific topology for a
-          volume.
-
-   MON-3248
-          Issue: The MapR Control System does not support filtering list
-          of nodes by services running on client nodes.
-          Workaround: Use the [4]node list command with the filter option
-          to retrieve the list of nodes, including client nodes, running a
-          service.
 
    MON-3247
           Issue: The MapR Control System does not display NFS edge nodes
@@ -223,6 +227,17 @@ MapR Control System
           page, the Overview page for the current cluster displays and it
           takes a few minutes to display the MCS login page for the other
           cluster.
+
+   MON-2374
+          Issue: If a node has multiple IP addresses, the log viewer link
+          for the services in the nodes information page is broken because
+          the Kibana URL contains multiple IP addresses.
+          Workaround: Remove all irrelevant IP addresses in the URL and
+          use the modified URL to view logs for the service.
+
+   MON-2321
+          Issue: If Elasticsearch fails, the Services page does not show
+          the nodes on which Elasticsearch has failed.
 
    MON-2219
           Issue: If you add Streams license separately, you may not be
@@ -327,36 +342,10 @@ $
 maprcli node services -name opentsdb -nodes <space-separated list of OpenTSDB no
 des> -action restart
 
-   ES-27
-          Issue: On a new installation of a secure cluster using the MapR
-          Installer, Elasticsearch fails to start, and logs indicate that
-          Elasticsearch key generation failed.
-          Workaround: Use the Incremental Install feature of the MapR
-          Installer to retry installation of the MapR Monitoring logging
-          components.
-
-   SPYG-916
-          Issue: On a non-secure cluster, the MapR Monitoring index fails
-          to load because Kibana tried to load the template before
-          Elasticsearch started.
-          Workaround: In MCS, click the Services tab, locate Kibana, and
-          click the restart button to restart Kibana.
-
-   OPTSDB-25
-          Issue: Purge scripts are disabled by default because
-          occasionally a purge process will not exit properly.
-          Workaround: Edit the crontab file in the /etc/crontab file in
-          the OpenTSDB installation directory, as follows:
-
-crontab -e mapr
-
-          In the file, remove the hashtag (#) at the beginning of the line
-          that refers to opentsdb. You should manage and monitor the
-          cronjob. Typically, the cronjob takes 30 - 45 minutes to run on
-          an idle system, but on a busy system could take much longer. In
-          most cases, it will not overlap with the next cronjob. Also,
-          monitor the jobs to ensure that OpenTSDB is not started or
-          stopped mid-job, which would cause a problem.
+   SPYG-994
+          Issue: The time-to-live for MapR Event Store For Apache Kafka
+          metrics is fixed at 30 days and cannot be reduced to lower disk
+          space usage.
 
    SPYG-934
           Issue: On secure Ubuntu 14.04 or 16.04 clusters, Elasticsearch
@@ -367,12 +356,6 @@ crontab -e mapr
           Ubuntu repository:
 
 apt-get install uuid-runtime
-
-   KIB-12
-          Issue: Kibana versions prior to 5.6.1 have a cross-site
-          scripting (XSS) vulnerability in Timelion (CVE‌-2017-11479).
-          This is NOT a MapR vulnerability as MapR does not support (or
-          recommend) Timelion.
 
 MapR PACC
 
@@ -387,23 +370,6 @@ Oozie
           Workaround: Restart the resource manager and timeline server.
           For more information, see [8]Configuring the Timeline Server to
           Use the Hive-on-Tez User Interface.
-
-   29657
-          Issue: If TimelineServer and Oozie Bootstrap exist on your
-          cluster, the following error message appears exactly every 10
-          seconds:
-
-Class com.sun.jersey.server.wadl.generators.WadlGeneratorJAXBGrammarGenerator$8
-can not access a member of class javax.ws.rs.core.Response with modifiers "prote
-cted" in at "resourcemenager.out log
-
-          This issue is caused by Jersey 1.9 minor bug.
-          Workaround: To suppress the message and keep the logs clean,
-          disable logging of WadlGeneratorJAXBGrammarGenerator class in
-          JRE_HOME/lib/logging.properties in the following way:
-
-com.sun.jersey.server.wadl.generators.WadlGeneratorJAXBGrammarGenerator.level =
-OFF
 
 PJDTest Suite Compliance
 
@@ -428,8 +394,8 @@ References
 
    1. https://mapr.com/support/s/knownissues
    2. http://maprdocs.mapr.com/home/MapRInstallerReleaseNotes/mapr_installer_known_issues.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient-mcs.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/SettingQueryOptions.html#SettingQueryOptions__section_xpf_hrf_d2b
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient-mcs.html
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html
    6. https://maprdocs.mapr.com/home/AdvancedInstallation/c_install_prerequisites.html
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/MapR_PACC_Known_Issues.html#concept_n3p_pfc_tbb

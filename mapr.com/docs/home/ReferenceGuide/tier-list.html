@@ -1,0 +1,89 @@
+tier list
+
+   Lists the tiers on the cluster.
+
+Syntax
+
+   CLI
+
+maprcli tier list
+    [ -cluster <cluster_name> ]
+    [ -sortby <attribute> ]
+    [ -sortorder asc|desc ]
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host:port>/rest/tier/list?<parameters>
+
+Parameters
+
+   Parameter Description
+   cluster The name of the cluster on which to run the command.
+   sortby Specifies one of the following attributes to sort the list of
+   tiers by: tierid, tiername, tiertype, url, throttling, bucketname,
+   region, objectstoretype, volume, topology
+   sortorder The order to sort the results by. Value can be:
+     * asc - for ascending order
+     * desc - for descending order
+
+Output
+
+   The command returns the following:
+   volume The name of the tiered volume.
+   tiertype The type of tier. Value can be one of the following:
+     * cold
+     * ectier
+
+   dbtopology The topology of the metadata volume associated with the
+   tier.
+   dbvolumeid The ID of the metadata volume associated with the tier.
+   tierid The ID of the tier.
+   tiername The name of the tier.
+   bucketname The name of the bucket. The value is displayed for cold
+   tiers only.
+   region The region. The value is displayed for cold tiers only.
+   objectstoretype The type of object store (for cold tiers only). Value
+   can be one of the following:
+     * S3-AWS
+     * S3-GCS
+     * S3-HDS
+     * S3-IBM
+     * S3-Others
+     * Azure-Blobs
+
+   url The tier URL. The value is displayed for cold tiers only.
+
+Example
+
+   Get the list of tiers:
+     * [1]CLI
+     * [2]REST
+
+# maprcli tier list
+volume                         tiertype  dbtopology  dbvolumeid  tierid     tier
+name    bucketname    region     objectstoretype  url
+mapr.internal.tier.ksTestCold  cold      /data       135415553   30712925   ksTe
+stCold  ksekhar-test  us-east-1  S3-AWS           http://s3.amazonaws.com
+mapr.internal.tier.testCold    cold      /data       192997092   189158428  test
+Cold    testbucket    us-east-1  S3-AWS           http://s3.amazon.com
+mapr.internal.tier.ksTestEC    ectier    /data       87658196    198680137  ksTe
+stEC
+
+# curl -k -X GET 'https://abc.sj.us:8443/rest/tier/list' --user mapr:mapr
+{"timestamp":1533055528861,"timeofday":"2018-07-31 09:45:28.861 GMT-0700 AM","st
+atus":"OK","total":0,"data":[{"tierid":"30712925","tiername":"ksTestCold","tiert
+ype":"cold","url":"http://s3.amazonaws.com","bucketname":"ksekhar-test","region"
+:"us-east-1","volume":"mapr.internal.tier.ksTestCold","dbtopology":"/data","dbvo
+lumeid":135415553,"objectstoretype":"S3-AWS"},{"tierid":"189158428","tiername":"
+testCold","tiertype":"cold","url":"http://s3.amazon.com","bucketname":"testbucke
+t","region":"us-east-1","volume":"mapr.internal.tier.testCold","dbtopology":"/da
+ta","dbvolumeid":192997092,"objectstoretype":"S3-AWS"},{"tierid":"198680137","ti
+ername":"ksTestEC","tiertype":"ectier","volume":"mapr.internal.tier.ksTestEC","d
+btopology":"/data","dbvolumeid":87658196}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-list.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-list.html#div1entry2

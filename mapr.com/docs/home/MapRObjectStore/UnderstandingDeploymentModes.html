@@ -1,0 +1,37 @@
+Understanding MapR Object Store Standalone Deployment Mode
+
+   Because each MapR Object Store interacts only with one bucket or set of
+   buckets at a time, you can use only Amazon S3 standalone deployment
+   mode.
+
+   You cannot have more than one server instance working against a bucket
+   because each MapR Object Store exclusively handles one or more buckets
+   at a time.
+
+   To use the S3 API in standalone mode, each MapR Object Store must have
+   its own backend directory in MapR File System. You can map it to either
+   a volume mount point or a directory path.
+
+   Each S3 gateway serves an exclusive set of buckets. If a bucket does
+   not exist, then an application can create a bucket through any of the
+   S3 gateways, but it will subsequently only be served through that
+   gateway.
+
+   An S3 instance exclusively uses the allocated directory or volume in
+   MapR File System. In case you need to migrate buckets to another S3
+   instance, move or copy the buckets to another directory or volume.
+
+   The following deployment scenario shows one MapR Object Store per
+   cluster that supports multiple applications and multiple buckets with
+   bucket sharing supported.
+   [S3-3.png]
+
+   The following deployment scenario shows two MapR Object Stores for the
+   cluster that supports multiple applications and multiple buckets with
+   bucket sharing supported. In this case, bucket sharing across S3
+   instances are not supported.
+   [S3-4.png]
+   Note: If you want to access multiple buckets without the application
+   having to know about bucket locations beforehand, you can deploy a
+   single MapR Object Store to serve all requests without the need to
+   partition any buckets.

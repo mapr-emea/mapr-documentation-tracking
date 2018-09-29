@@ -1,0 +1,96 @@
+volume compact
+
+   Runs the compactor to remove recalled data on the MapR cluster or stale
+   data on the tier.
+
+Permissions Required
+
+   The user running the command must have one of the following:
+     * Full control (fc) on the cluster or volume
+     * Volume edit permissions
+
+Syntax
+
+   CLI
+
+maprcli volume compact
+        [ -cluster <cluster_name> ]
+         -name <vol_name>
+         [ -forcerecallexpiry true|false ]
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host>:<port>/rest/volume/compact?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster The name of the cluster on which to run the command.
+   forcerecallexpiry Specifies whether (true) or not (false) to purge
+   recalled data on the MapR cluster. If the command is run with the value
+   for this set to true, the compactor purges recalled data on the MapR
+   cluster whether or not the expiry time for recalled data has been
+   reached. If this is not specified or if the value for this is false,
+   the compactor purges stale data on the tier and recalled data on the
+   MapR cluster if the expiry time for recalled data has been reached or
+   has passed. The default value is false.
+   name The name of the volume.
+
+Examples
+
+   Remove stale data on the tier for the volume named sampleVol:
+     * [1]CLI
+     * [2]REST
+
+# maprcli volume compact -name sampleVol -json
+{
+        "timestamp":1528299575917,
+        "timeofday":"2018-06-06 08:39:35.917 GMT-0700 AM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully started compaction."
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/compact?name=sampleVol' --
+user mapr:mapr
+{"timestamp":1528299575917,"timeofday":"2018-06-06 08:39:35.917 GMT-0700 AM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully started compaction."]}
+
+   Remove recalled data immediately on the volume named sampleVol:
+     * [3]CLI
+     * [4]REST
+
+# maprcli volume compact -name sampleVol -forcerecallexpiry true -json
+{
+        "timestamp":1528299765110,
+        "timeofday":"2018-06-06 08:42:45.110 GMT-0700 AM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully started compaction."
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/volume/compact?name=sampleVol&for
+cerecallexpiry=true' --user mapr:mapr
+{"timestamp":1528299765110,"timeofday":"2018-06-06 08:42:45.110 GMT-0700 AM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully started compaction."]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-compact.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-compact.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-compact.html#div2entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-compact.html#div2entry2

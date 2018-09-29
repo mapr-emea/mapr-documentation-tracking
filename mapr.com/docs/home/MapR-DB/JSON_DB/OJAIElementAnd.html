@@ -1,0 +1,242 @@
+OJAI Query Conditions Using elementAnd
+
+   The elementAnd operator allows you to specify multiple conditions on
+   the same array element using a container field path. This is in
+   contrast to the and operator where conditions can refer to any array
+   element. You can use elementAnd with both nested documents and scalar
+   values. You can also use it in combination with other operators,
+   including between, and, and or.
+
+Using elementAnd with Nested Documents
+
+   Assume that you have the following set of documents that reflect
+   student scores on courses. Each document has an array of grades. Grades
+   is a nested document that reflects how the students scored on each
+   course they took.
+{"_id":"001","grades":[{"course":"math","score":15.5},{"score":12,"course":"hist
+ory"},{"course":"english","score":8}]}
+{"_id":"002","grades":[{"course":"math","score":4},{"course":"history","score":1
+2,"cmts":"..."},{"course":"english","score":18}]}
+{"_id":"003","grades":[{"course":"math","score":11},{"course":"history","score":
+15},{"course":"english","score":12},{"course":"sports","score":4}]}
+{"_id":"004","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12,"details":{"info":"..."}}]}
+{"_id":"005","grades":[{"course":"math","score":15.5},{"course":"history","score
+":10},{"course":"physics","score":11}]}
+
+   If you want to find the students who scored 12 in history, you use the
+   following elementAnd condition:
+{
+    "$elementAnd":{
+        "grades[]":[
+            {"$eq":{"course":"history"}},
+            {"$eq":{"score":12}}
+        ]
+    }
+}
+
+   The condition matches the following documents, with the matching
+   conditions highlighted in bold:
+{"_id":"001","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12},{"course":"english","score":8}]}
+{"_id":"002","grades":[{"course":"math","score":4},{"course":"history","score":1
+2,"cmts":"..."},{"course":"english","score":18}]}
+{"_id":"004","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12,"details":{"info":"..."}}]}
+
+   The example illustrates the following behavior:
+     * The positions of the subfields in the nested document are not
+       significant.
+     * In document 002, there are other subfields in the nested document
+       that do not match the specified conditions.
+
+   In contrast, the following example expresses a different condition,
+   using and instead of elementAnd:
+{
+    "$and":[
+        {"$eq":{"grades[].course":"history"}},
+        {"$eq":{"grades[].score":12}}
+    ]
+}
+
+   This condition returns documents corresponding to students who have
+   taken history and scored 12 on any course. The following are the
+   matching documents, with the matching conditions highlighted in bold:
+{"_id":"001","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12},{"course":"english","score":8}]}
+{"_id":"002","grades":[{"course":"math","score":4},{"course":"history","score":1
+2,"cmts":"..."},{"course":"english","score":18}]}
+{"_id":"003","grades":[{"course":"math","score":11},{"course":"history","score":
+15},{"course":"english","score":12},{"course":"sports","score":4}]}
+{"_id":"004","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12,"details":{"info":"..."}}]}
+
+   The example illustrates the following behavior:
+     * Besides returning the same documents as the previous elementAnd
+       example, this condition also returns document 003.
+     * Document 003 matches because that student took history and scored
+       12 on english, rather than history.
+     * Document 005 does not match because although the student took
+       history, the student did not score 12 on any courses.
+
+Using elementAnd with Scalar Values
+
+   If you apply elementAnd to a container of scalar values, you use the $
+   symbol to denote an unspecified container element.
+
+   Suppose you have the following documents:
+{"_id" : "001", "name" : "a", "values" : [1, 2, 3, 6, 15] }
+{"_id" : "002", "name" : "b", "values" : [3, 6, 9, 10, 15] }
+{"_id" : "003", "name" : "c", "values" : [14] }
+{"_id" : "004", "name" : "c", "values" : 11 }
+
+   To find all documents where values[] contains a number between 7 and 11
+   (inclusive), you can use the following condition:
+{
+    "$elementAnd":{
+        "values[]":[
+            {"$ge":{"$":7}},
+            {"$le":{"$":11}}
+        ]
+    }
+}
+
+   The condition returns the following documents, with the matching
+   numbers highlighted in bold:
+{"_id":"002","name":"b","values":[3,6,9,10,15]}
+{"_id":"004","name":"c","values":11}
+
+   The example illustrates the following behavior:
+     * In document 002, multiple elements in the array match the
+       condition.
+     * In document 004, values is a scalar value.
+
+   Suppose you apply the following condition that uses and instead of
+   elementAnd:
+{
+    "$and":[
+        {"$ge":{"values[]":7}},
+        {"$le":{"values[]":11}}
+    ]
+}
+
+   All documents except 003 match this and condition because in the
+   matching documents, values[] contains some number greater than or equal
+   to 7 and some number less than or equal to 11. The difference is that
+   the same number does not need to match both conditions, which is the
+   case for document 001.
+
+Using between with elementAnd
+
+   You cannot use a container field path in a between condition. To use
+   the between operator to match against an arbitrary array element, you
+   must include the between condition in an elementAnd condition.
+
+   The following table shows the proper way to specify a between condition
+   that is equivalent to the elementAnd example from the previous section:
+          Correct Condition        Incorrect Condition
+{
+    "$elementAnd":{
+        "values[]":[
+            {"$between":{"$":[7,11]}}
+        ]
+    }
+}
+
+   {"$between":{"values[]":[7,11]}}
+
+   This example uses between to match against an arbitrary scalar array
+   element. You can also use between to match against a subfield in a
+   nested document, in which the nested document is an arbitrary array
+   element.
+
+   For example, using the sample documents shown earlier, the following
+   table shows the correct way to apply the between operator on the
+   subfield score in the nested documents that are elements in the grades
+   array:
+               Correct Condition            Incorrect Condition
+{
+    "$elementAnd":{
+        "grades[]":[
+            {"$between":{"score":[15.5,20]}}
+        ]
+    }
+}
+
+   {"$between":{"grades[].score":[15.5,20]}}
+
+   The condition returns the following documents, with the matching
+   conditions highlighted in bold:
+{"_id":"001","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12},{"course":"english","score":8}]}
+{"_id":"002","grades":[{"course":"math","score":4},{"cmts":"...","course":"histo
+ry","score":12},{"course":"english","score":18}]}
+{"_id":"004","grades":[{"course":"math","score":15.5},{"course":"history","detai
+ls":{"info":"..."},"score":12}]}
+{"_id":"005","grades":[{"course":"math","score":15.5},{"course":"history","score
+":10},{"course":"physics","score":11}]}
+
+Using Other Operators in elementAnd Conditions
+
+   You can also use operators like or in elementAnd's query condition
+   list.
+
+   For example, the following condition finds all students who scored 12
+   in either history or english:
+{
+    "$elementAnd":{
+        "grades[]":[
+            {"$or":[
+                {"$eq":{"course":"history"}},
+                {"$eq":{"course":"english"}}
+            ]},
+            {"$eq":{"score":12}}
+        ]
+    }
+}
+
+   The condition returns the following documents, with the matching
+   conditions highlighted in bold:
+{"_id":"001","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12},{"course":"english","score":8}]}
+{"_id":"002","grades":[{"course":"math","score":4},{"cmts":"...","course":"histo
+ry","score":12},{"course":"english","score":18}]}
+{"_id":"003","grades":[{"course":"math","score":11},{"course":"history","score":
+15},{"course":"english","score":12},{"course":"sports","score":4}]}
+{"_id":"004","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12,"details":{"info":"..."}}]}
+
+Combining elementAnd with Other Operators
+
+   You can combine elementAnd with other operators like and.
+
+   For example, using the sample documents shown earlier, suppose you want
+   to find all students who scored 12 in history as well scored 15.5 in
+   math. The following condition expresses this criteria:
+{
+   "$and":[
+      {
+         "$elementAnd":{
+            "grades[]":[
+               {"$eq":{"course":"history"}},
+               {"$eq":{"score":12}}
+            ]
+         }
+      },
+      {
+         "$elementAnd":{
+            "grades[]":[
+               {"$eq":{"course":"math"}},
+               {"$eq":{"score":15.5}}
+            ]
+         }
+      }
+   ]
+}
+
+   The condition returns the following documents, with the matching
+   conditions highlighted in bold:
+{"_id":"001","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12},{"course":"english","score":8}]}
+{"_id":"004","grades":[{"course":"math","score":15.5},{"course":"history","score
+":12,"details":{"info":"..."}}]}

@@ -1,7 +1,7 @@
 Designating NICs for MapR
 
-   By default, MFS instances and the CLDB nodes advertise all the
-   available IP addresses and MapR automatically uses all available
+   By default, MapR Filesystem instances and the CLDB nodes advertise all
+   the available IP addresses and MapR automatically uses all available
    network interface cards (NICs) on each node for all communication. For
    nodes that have multiple NICs, MapR supports segregation of NICs such
    that certain IPs can be used for clients/communication within the
@@ -41,8 +41,9 @@ About MAPR_SUBNETS Environment Variable
    The MAPR_SUBNETS environment variable can be used to restrict MapR to a
    subset of NICs. If MAPR_SUBNETS is not set, all IPs are available for
    all communication. When MAPR_SUBNETS is set on:
-     * MFS nodes, MFS registers these IP addresses with CLDB as internal
-       IP addresses on which MFS nodes can be reached.
+     * MapR Filesystem nodes, MapR Filesystem registers these IP addresses
+       with CLDB as internal IP addresses on which MapR Filesystem nodes
+       can be reached.
      * CLDB nodes, CLDB advertises the IP address to clients on the
        cluster.
 
@@ -77,12 +78,15 @@ About MAPR_EXTERNAL Environment Variable
 
    This variable can be set on the cluster nodes only. When MAPR_EXTERNAL
    environment variable is set on:
-     * MFS nodes, MFS registers these IP addresses with CLDB as the IP
-       addresses on which external clients can reach MFS nodes.
-       Communication between MFS nodes on the cluster still happen over
-       the internal IP addresses.
+     * MapR Filesystem nodes, MapR Filesystem registers these IP addresses
+       with CLDB as the IP addresses on which external clients can reach
+       MapR Filesystem nodes. Communication between MapR Filesystem nodes
+       on the cluster still happen over the internal IP addresses.
      * CLDB nodes, CLDB advertises these IPs addresses to clients outside
        the cluster or data center.
+     * MAST Gateway nodes, the gateway registers these IP addresses with
+       CLDB as the IP addresses on which external clients can reach MAST
+       Gateway.
 
    Note: Do not set the MAPR_EXTERNAL environment variable on the client
    host(s).
@@ -159,9 +163,9 @@ Limitations
        listed in the MAPR_SUBNETS environment variable and external
        communication happens over the IP addresses listed in the
        MAPR_EXTERNAL environment variable.
-     * Only MAPR_SUBNETS environment variable is set, MFS registers the IP
-       addresses (in the MAPR_SUBNETS environment variable) with CLDB as
-       internal IPs.
+     * Only MAPR_SUBNETS environment variable is set, MapR Filesystem
+       registers the IP addresses (in the MAPR_SUBNETS environment
+       variable) with CLDB as internal IPs.
      * Only MAPR_EXTERNAL environment variable is set, the environment
        variable setting is ignored and all the NICs are used for internal
        communication; external communication from/to outside the cluster
@@ -174,6 +178,51 @@ Limitations
    variable 4 IP addresses in the MAPR_EXTERNAL environment variable.
    Note: ZooKeeper must be configured with an IP address that is reachable
    by both internal and external clients.
+
+Summary
+
+   The following table describes the environment variables to set for the
+   various services that use non-default ports and that support public IP
+   address(es) for communication with external clients and remote
+   clusters:
+   Service Environment variable to set...
+   Public IP Address for External Clients/Remote Clusters Non-default Port
+   CLDB MAPR_EXTERNAL CLDB_EXTERNAL_RPC_PORT
+   MapR Filesystem MAPR_EXTERNAL MAPR_EXTERNAL
+   MAST Gateway MAPR_EXTERNAL MASTGATEWAY_EXTERNAL_RPC_PORT
+
+   The following illustration shows the client communicating with CLDB,
+   MapR file system, and MAST Gateway using the IP address(es) defined in
+   the MAPR_EXTERNAL environment variable because all the IP addresses on
+   the servers are not public and accessible outside the cluster. All
+   communication between CLDB, MapR Filesystem, and MAST Gateway on the
+   same cluster happen over the IP address specified in the MAPR_SUBNETS
+   environment variable because communication between the services and
+   clients on the cluster is restricted to a subset of the available NICs.
+
+   When the client connect to the MapR file system from outside the
+   cluster, the client uses either the default port (5660) or the port
+   specified for the MapR file system in the MAPR_EXTERNAL environment
+   variable. When communicating with CLDB, if the CLDB_EXTERNAL_RPC_PORT
+   environment variable is set, the client communicates with CLDB over the
+   port specified in this environment variable. Similarly for MAST
+   Gateway, if the MASTGATEWAY_EXTERNAL_RPC_PORT environment variable is
+   set, the client communicates with MAST Gateway over the port specified
+   in this environment variable. For both CLDB and MAST Gateway, if the
+   ports are not set in the CLDB_EXTERNAL_RPC_PORT and
+   MASTGATEWAY_EXTERNAL_RPC_PORT environment variables respectively, the
+   client communicates over the default port.
+   [EnvVariables_ExternalAccess.png]
+
+   The following illustration shows that during mirroring and other
+   cross-cluster activities, the services on the destination cluster
+   communicate with the services on the source cluster using the IP
+   address defined in the MAPR_EXTERNAL environment variable. Similar to
+   the external client, the services and clients in the remote destination
+   cluster communicate with the services in the source cluster over the
+   default ports or the port specified in the environment variable for the
+   service.
+   [EnvVariables.png]
 
 References
 

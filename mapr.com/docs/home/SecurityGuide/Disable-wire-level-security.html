@@ -1,13 +1,53 @@
 Disabling Wire-level Security
 
-   To disable security features for your cluster:
-    1. If the cluster is running, [1]shut it down.
-    2. On all nodes, run the configure.sh script with the -unsecure option
-       and specify the CLDB and ZooKeeper nodes.
-configure.sh -unsecure -C <CLDB_Node> -Z <ZK_Node> -N <cluster_name>
-    3. [2]Start the cluster.
+   You can disable wire encryption for a volume using the MapR Control
+   System, the CLI, and REST API.
+
+Disabling Wire-level Security for a Volume Using the MapR Control System
+
+    1. Log in to MCS and click Data > Volumes.
+    2. Click Create Volume to display the Create New Volume page or go to
+       the [1]Edit Volume page.
+    3. Set the value for the Data on Wire Encryption property to No (to
+       disable).
+       See [2]Creating a Volume or [3]Modifying a Volume for more
+       information.
+    4. Complete the steps to create or modify the volume.
+       See [4]Creating a Volume or [5]Modifying a Volume for more
+       information.
+
+Disabling Wire-Level Security for a Volume Using the CLI and REST API
+
+   You can disable encryption of data on wire at the volume level.
+     * [6]CLI
+     * [7]REST
+
+   Set the value for the wiresecurityenabled parameter to true when you:
+     * Create the volume. For example:
+maprcli volume create -name <volName> -path <volMountPath> -wiresecurityenabled
+false
+     * Modify the volume. For example:
+maprcli volume modify -name <volName> -wiresecurityenabled false
+
+   Send a request of type POST and set the value for the
+   wiresecurityenabled parameter to true when you:
+     * Create the volume. For example:
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=<volName>&path=<
+volMountPath>&wiresecurityenabled=false' --user mapr:mapr
+     * Modify the volume. For example:
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=<volName>&wirese
+curityenabled=false' --user mapr:mapr
+
+   See [8]volume create and [9]volume modify for more information.
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ShutDownCluster.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/StartCluster.html
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Disable-wire-level-security.html#div1entry1
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Disable-wire-level-security.html#div1entry2
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html

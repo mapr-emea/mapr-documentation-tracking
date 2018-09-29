@@ -2,8 +2,9 @@ Producers
 
    Producers are data-generating applications, such as sensors in
    automobiles or activity loggers in servers. Producers create messages
-   with the collected data and publishes the messages to MapR-ES topics,
-   specifically, to MapR-ES topic-partitions.
+   with the collected data and publishes the messages to MapR Event Store
+   For Apache Kafka topics, specifically, to MapR Event Store For Apache
+   Kafka topic-partitions.
 
 Permissions
 
@@ -19,52 +20,93 @@ Permissions
 Producing Messages
 
    Producers create messages about the collected data and send the
-   collected data to a MapR-ES producer client library. In addition to the
-   actual message, the producer specifies the topic that the message is
-   intended for and an optional partition ID. The producer client buffers
-   incoming messages and sends them (in batches) to the MapR-ES server.
+   collected data to a MapR Event Store For Apache Kafka producer client
+   library. In addition to the actual message, the producer specifies the
+   topic that the message is intended for and an optional partition ID.
+   The producer client buffers incoming messages and sends them (in
+   batches) to the MapR Event Store For Apache Kafka server.
    Note: In case of server failure, the producer client automatically
    continues to retry sending messages.
+   Attention: As of MapR 6.1, the MapR Event Store For Apache Kafka API
+   enforces a maximum of 4096 partitions for a topic. That is, when you
+   create an application with the API, the maximum number of partitions is
+   4096. If you previously created an application with MapR Event Store
+   For Apache Kafka 6.0.1 API (or older) and you've upgraded, the original
+   number of partitions can be used. For example, if you were using more
+   than 4096 partitions in MapR 6.0.1 or earlier, you will be able to
+   continue with the same number of partitions after upgrading.
 
 Event-time Timestamp
 
-   As of MapR 6.0.1, MapR-ES supports an event-time timestamp. The
-   timestamp type can be either createtime (default) or logappendtime. See
-   the maprcli [2]stream create and [3]stream edit for more information
-   about these parameters.
+   As of MapR 6.0.1, MapR Event Store For Apache Kafka supports an
+   event-time timestamp. The timestamp type can be either createtime
+   (default) or logappendtime. See the maprcli [2]stream create and
+   [3]stream edit for more information about these parameters.
    Tip: Because each message is automatically published into a
    topic-partition with an event-time timestamp as part of the message
    record, this allows the Consumer application to seek records based on
    the timestamp.
 
+Idempotent (exactly once) Producers
+
+   An "exactly-once" message delivery semantic produces messages without
+   duplication. Each message is delivered once and only once. Exactly-once
+   is insured by uniquely identifying a group of messages that are
+   atomically persisted. Exactly-once message delivery is set with the
+   producer idempotence option. See [4]Modes of Publishing for more
+   information.
+   The following failure scenarios are addressed with idempotence:
+     * The stream processor might take input from multiple source topics
+       and the ordering across these source topics is not deterministic
+       across multiple runs. So if you re-run your stream processor that
+       takes input from multiple source topics, it might produce different
+       results.
+     * The stream processor might produce output to multiple destination
+       topics. If the producer cannot do an atomic write across multiple
+       topics, then the producer output can be incorrect if writes to some
+       (but not all) partitions fail.
+     * The stream processor might aggregate or join data across multiple
+       inputs. If one of the instances of the stream processor fails, then
+       you need to be able to rollback the state materialized by that
+       instance of the stream processor. On restarting the instance, you
+       also need to be able to resume processing and recreate its state.
+     * The stream processor might look up enriching information in an
+       external database or by calling out to a service that is updated
+       out of band. By depending on an external service, the stream
+       processor can be fundamentally non-deterministic. For example, if
+       the external service changes its internal state between two runs of
+       the stream processor, it can lead to incorrect results downstream.
+
 For More Information
 
    For more information about creating and editing streams or topics:
      * maprcli
-          + See the maprcli [4]stream create for information about
+          + See the maprcli [5]stream create for information about
             creating streams.
-          + See the maprcli [5]stream edit for information about editing
+          + See the maprcli [6]stream edit for information about editing
             streams.
-          + See the maprcli [6]stream info for information about streams.
-          + See the maprcli [7]stream topic create for information about
+          + See the maprcli [7]stream info for information about streams.
+          + See the maprcli [8]stream topic create for information about
             creating topics.
-          + See the maprcli [8]stream topic edit for information about
+          + See the maprcli [9]stream topic edit for information about
             modifying topics.
-          + See the maprcli [9]stream topic info for information about
+          + See the maprcli [10]stream topic info for information about
             topic data.
-     * MapR-ES Java API
-          + See the [10]MapR-ES Java API Library for the methods used to
-            create and edit streams and to create and edit topics.
+     * MapR Event Store For Apache Kafka Java API
+          + See the [11]MapR Event Store For Apache Kafka Java API Library
+            for the methods used to create and edit streams and to create
+            and edit topics.
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_edit.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_edit.html
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_info.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_create.html
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_edit.html
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_info.html
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/streams-java-api.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/the_two_modes_of_publishing.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_edit.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_info.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_create.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_edit.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_topic_info.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/streams-java-api.html

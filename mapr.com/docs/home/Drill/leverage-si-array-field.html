@@ -1,0 +1,362 @@
+Writing Drill Queries that Leverage Indexes on Array Fields
+
+   Starting in MEP 6.0, the query planner in Drill can leverage indexes
+   created on MapR Database JSON document fields with array data types,
+   such as "NUMBERS": [1, 2, 3, 4, 5] and "ADDRESSES": [{"CITY" : "SAN
+   JOSE"}, {"CITY" : "PALO ALTO"}].
+
+   See [1]JSON Document Data Types and [2]Data Types and Secondary Index
+   Fields for definitions and detailed examples.
+   If you want the query planner in Drill to leverage an index created on
+   a field with an array data type, you must write the Drill query such
+   that it includes specific SQL syntax, as shown in bold in the following
+   example:
+SELECT NAME, PHONE
+FROM CUSTOMERS
+WHERE _id IN ( SELECT _id
+               FROM ( SELECT _id, FLATTEN(ADDRESSES) as f
+          FROM CUSTOMERS) as t
+               WHERE t.f.CITY = 'SAN JOSE' and t.f.STATE = 'CA')
+
+   The specific SQL syntax indicates (to the query planner in Drill) that
+   the query is eligible for an index-based query plan.
+
+   The [3]FLATTEN function separates elements in an array into individual
+   records in a table. For example, if an array consists of five elements,
+   FLATTEN separates each element into a single row, creating a table with
+   five rows.
+
+   The IN operator prevents Drill from returning duplicate rows. For
+   example, when an array is flattened into a table, duplicate values may
+   exist for a particular _id (rowkey). Using IN prevents Drill from
+   returning rows with duplicate values.
+
+Example
+
+   Suppose a JSON primary table named CUSTOMERS exists in MapR Database
+   with the following data:
+{ "_id": "001",
+ "NAME": "ALICE",
+ "PHONE": "408-555-1212",
+ "ADDRESSES": [{"CITY" : "SAN JOSE" , "ZIPCODE" : 95124, "STATE" : "CA", "UNITS"
+ : [{"UNIT_NO":555, "FLOOR": 5}, {"UNIT_NO":777, "FLOOR": 7}]}, {"CITY" : "PALO
+ALTO", "ZIPCODE" : 94020, "STATE" : "CA",  "UNITS" : [{"UNIT_NO":555, "FLOOR": 5
+}, {"UNIT_NO":777, "FLOOR": 7}]}, {"CITY" : "SANTA CLARA", "ZIPCODE" : 95050, "S
+TATE" : "CA", "UNITS" : [{"UNIT_NO":555, "FLOOR": 5}, {"UNIT_NO":777, "FLOOR": 7
+}]}],
+  "QTY": [11, 25, 16, 2, 10, 39, 5, 8, 7, 11]
+}
+{ "_id": "002",
+ "NAME": "BOB",
+ "PHONE": "408-555-1313",
+ "ADDRESSES": [{"CITY" : "SAN JOSE" , "ZIPCODE" : 95132, "STATE" : "CA", "UNITS"
+ : [{"UNIT_NO":838, "FLOOR": 8}, {"UNIT_NO":888, "FLOOR": 8}]}, {"CITY" : "SAN J
+OSE", "ZIPCODE" : 95127, "STATE" : "CA", "UNITS" : [{"UNIT_NO":555, "FLOOR": 5},
+ {"UNIT_NO":777, "FLOOR": 7}]}, {"CITY" : "SAN RAMON", "ZIPCODE" : 94582, "STATE
+" : "CA", "UNITS" : [{"UNIT_NO":123, "FLOOR": 1}, {"UNIT_NO":124, "FLOOR": 1}]}]
+,
+ "QTY": [2, 8, 1, 4, 3, 10, 2, 23]
+}
+{ "_id": "003",
+ "NAME": "CHRIS",
+ "PHONE": "408-555-1414",
+ "ADDRESSES": [{"CITY" : "MOUNTAIN VIEW", "ZIPCODE" : 94043, "STATE" : "CA", "UN
+ITS" : [{"UNIT_NO":922, "FLOOR": 9}, {"UNIT_NO":958, "FLOOR": 9}]}, {"CITY" : "P
+ALO ALTO", "ZIPCODE" : 94020, "STATE" : "CA", "UNITS" : [{"UNIT_NO":666, "FLOOR"
+: 6}, {"UNIT_NO":728, "FLOOR": 7}]}, {"CITY" : "SUNNYVALE", "ZIPCODE" : 94086, "
+STATE" : "CA", "UNITS" : [{"UNIT_NO":226, "FLOOR": 2}, {"UNIT_NO":333, "FLOOR":
+3}]}],
+ "QTY": [56, 19, 45, 25, 4, 77, 110, 3, 2, 1]
+}
+
+   Note: The QTY field is an array. The ADDRESSES field is an array of
+   maps.
+   The following query on the CUSTOMERS table returns the result of
+   flattening the “ADDRESSES" array field into a column aliased as “f"
+   where each element in the array is flattened into individual rows:
+   Note: In the results, notice that Bob has two addresses where the
+   “CITY" is “SAN JOSE". Later in this example, you will see that using
+   the IN operator prevents the query from returning duplicate rows.
+SELECT NAME, PHONE, f FROM (SELECT NAME, PHONE, FLATTEN(ADDRESSES) AS f  FROM CU
+STOMERS);
+
++---------+--------------+------------------------------------------------------
+--------------------------------------------------------------+
+| NAME    | PHONE        | f
+                                                              |
++---------+--------------+------------------------------------------------------
+--------------------------------------------------------------+
+| ALICE   | 408-555-1212 | {"CITY":"SAN JOSE","STATE":"CA","UNITS":[{"FLOOR":5,"
+UNIT_NO":555},{"FLOOR":7,"UNIT_NO":777}],"ZIPCODE":95124}
+                                   |
+| ALICE   | 408-555-1212 | {"CITY":"PALO ALTO","STATE":"CA","UNITS":[{"FLOOR":5,
+"UNIT_NO":555},{"FLOOR":7,"UNIT_NO":777}],"ZIPCODE":94020}
+                                             |
+| ALICE   | 408-555-1212 | {"CITY":"SANTA CLARA","STATE":"CA","UNITS":[{"FLOOR":
+5,"UNIT_NO":555},{"FLOOR":7,"UNIT_NO":777}],"ZIPCODE":95050}
+                                           |
+| BOB     | 408-555-1313 | {"CITY":"SAN JOSE","STATE":"CA","UNITS":[{"FLOOR":8,"
+UNIT_NO":838},{"FLOOR":8,"UNIT_NO":888}],"ZIPCODE":95132}
+                                         |
+| BOB     | 408-555-1313 | {"CITY":"SAN JOSE","STATE":"CA","UNITS":[{"FLOOR":5,"
+UNIT_NO":555},{"FLOOR":7,"UNIT_NO":777}],"ZIPCODE":95127}
+                                         |
+| BOB     | 408-555-1313 | {"CITY":"SAN RAMON","STATE":"CA","UNITS":[{"FLOOR":1,
+"UNIT_NO":123},{"FLOOR":1,"UNIT_NO":124}],"ZIPCODE":94582}
+                                         |
+| CHRIS   | 408-555-1414 | {"CITY":"MOUNTAIN VIEW","STATE":"CA","UNITS":[{"FLOOR
+":9,"UNIT_NO":922},{"FLOOR":9,"UNIT_NO":958}],"ZIPCODE":94043}
+                                              |
+| CHRIS   | 408-555-1414 | {"CITY":"PALO ALTO","STATE":"CA","UNITS":[{"FLOOR":6,
+"UNIT_NO":666},{"FLOOR":7,"UNIT_NO":728}],"ZIPCODE":94020}
+                                          |
+| CHRIS   | 408-555-1414 | {"CITY":"SUNNYVALE","STATE":"CA","UNITS":[{"FLOOR":2,
+"UNIT_NO":226},{"FLOOR":3,"UNIT_NO":333}],"ZIPCODE":94086}
+                            |
++---------+--------------+------------------------------------------------------
+-------------------------------------------------------------+
+
+   The following query returns the results of filter conditions on the
+   fields “CITY" and “STATE" if the CITY is SAN JOSE and STATE is CA.
+SELECT NAME, PHONE, f FROM (SELECT NAME, PHONE, FLATTEN(ADDRESSES) AS f  FROM CU
+STOMERS) AS t WHERE t.f.CITY = 'SAN JOSE' and t.f.STATE = 'CA';
+
++-------+--------------+--------------------------------------------------------
+-------------------------------------------------------+
+| NAME  | PHONE        | f
+                                                       |
+
++-------+--------------+--------------------------------------------------------
+-------------------------------------------------------+
+| ALICE | 408-555-1212 | {"CITY":"SAN JOSE","STATE":"CA","UNITS":[{"FLOOR":5,"UN
+IT_NO":555},{"FLOOR":7,"UNIT_NO":777}],"ZIPCODE":95124}
+                                       |
+| BOB   | 408-555-1313 | {"CITY":"SAN JOSE","STATE":"CA","UNITS":[{"FLOOR":8,"UN
+IT_NO":838},{"FLOOR":8,"UNIT_NO":888}],"ZIPCODE":95132}
+                                      |
+| BOB   | 408-555-1313 | {"CITY":"SAN JOSE","STATE":"CA","UNITS":[{"FLOOR":5,"UN
+IT_NO":555},{"FLOOR":7,"UNIT_NO":777}],"ZIPCODE":95127}
+                                             |
++-------+--------------+--------------------------------------------------------
+-------------------------------------------------------+
+
+   Suppose a composite index exists on ADDRESSES[].CITY and
+   ADDRESSES[].STATEwith "NAME" as an included field. For the query
+   planner to use the index, you must write the query using the specific
+   SQL syntax that indicates that the query is eligible for an index-based
+   query plan, as shown:
+SELECT NAME, PHONE
+FROM CUSTOMERS
+WHERE _id IN ( SELECT _id
+               FROM ( SELECT _id, FLATTEN(ADDRESSES) as f
+          FROM CUSTOMERS) as t
+               WHERE t.f.CITY = 'SAN JOSE' and t.f.STATE = 'CA');
+
+//Issuing this query against the data in the CUSTOMERS table returns the followi
+ng results:
++--------+---------------+
+|  NAME  |     PHONE     |
++--------+---------------+
+| ALICE  | 408-555-1212  |
+| BOB    | 408-555-1313  |
++--------+---------------+
+
+
+   Note: Although Bob has two addresses where the "CITY" is "SAN JOSE",
+   the query returns only one result. The IN operator prevents the query
+   from returning duplicate rows.
+
+   The following list summarizes key points about this query:
+     * The innermost subquery projects on the _id field (rowkey) and
+       includes the FLATTEN function to separate the array elements in the
+       “ADDRESSES” field. The field “ADDRESSES” is flattened into a table
+       aliased as “t”, in a column aliased as “f”.
+     * The query uses the IN operator to ensure that the results returned
+       contain unique values only; no duplicates. DISTINCT on the subquery
+       to the right of IN is implicit. The SQL query pattern indicates to
+       the query planner that the query is eligible for an index-based
+       query plan.
+     * The query projects on column “NAME” and “PHONE”. “PHONE” requires a
+       join back to the primary table on the _id field (rowkey) because it
+       is not included in the composite index.
+     * The query planner recognizes that t.f.CITY references
+       t.ADDRESSES[].CITY and t.f.STATE references t.ADDRESSES[].STATE and
+       creates an index-based query plan.
+     * The index table in MapR Database is already flattened for the array
+       field, “ADDRESSES”. Flatten is not evaluated in Drill. Drill pushes
+       the filter conditions on the array field into MapR Database.
+
+Filter Conditions on Various Types of Array Fields
+
+   The following table shows examples of filter conditions on various
+   types of array fields and includes the MapR Database notation for the
+   array field with the filter condition, as well as the SQL syntax for
+   writing queries against the array fields.
+   Note: The queries in the table are written against the CUSTOMERS data
+   used in the previous example.
+   Filter condition on … Example using MapR-DB notation (not SQL notation)
+   SQL
+   Array of scalar values QTY[] < 10
+SELECT NAME, PHONE
+FROM CUSTOMERS
+WHERE _id IN ( SELECT _id
+                  FROM ( SELECT _id, FLATTEN(QTY) as f
+                         FROM CUSTOMERS) as t
+                  WHERE t.f<10);
+
+
+   This query returns the following results:
++--------+---------------+
+|  NAME  |     PHONE     |
++--------+---------------+
+| ALICE  | 408-555-1212  |
+| BOB    | 408-555-1313  |
+| CHRIS  | 408-555-1414  |
++--------+---------------+
+
+   Map field within an array of maps ADDRESSES[].ZIPCODE > 94000 and
+   ADDRESSES[].ZIPCODE < 95000
+SELECT NAME, PHONE
+FROM CUSTOMERS
+WHERE _id IN ( SELECT _id
+               FROM ( SELECT _id, FLATTEN(ADDRESSES) as f
+          FROM CUSTOMERS) as t
+               WHERE t.f.ZIPCODE BETWEEN 94000 and 95000);
+
+   This query returns the following results:
++--------+---------------+
+|  NAME  |     PHONE     |
++--------+---------------+
+| ALICE  | 408-555-1212  |
+| BOB    | 408-555-1313  |
+| CHRIS  | 408-555-1414  |
++--------+---------------+
+
+   AND-ed condition on 2 fields of the same array element
+   elementAND(ADDRESSES[], CITY=SAN JOSE, STATE = CA)
+SELECT NAME, PHONE
+FROM CUSTOMERS
+WHERE _id IN ( SELECT _id
+               FROM ( SELECT _id, FLATTEN(ADDRESSES) as f
+          FROM CUSTOMERS) as t
+               WHERE t.f.CITY = 'SAN JOSE' and t.f.STATE = 'CA');
+
+   This query returns the following results:
++--------+---------------+
+|  NAME  |     PHONE     |
++--------+---------------+
+| ALICE  | 408-555-1212  |
+| BOB    | 408-555-1313  |
++--------+---------------+
+
+   AND-ed condition on 2 fields of different array elements
+   ADDRESSES[].CITY = SAN JOSE AND ADDRESSES[].ZIPCODE = 94020
+SELECT NAME, PHONE
+FROM CUSTOMERS
+WHERE _id IN ( SELECT _id
+               FROM ( SELECT _id, FLATTEN(ADDRESSES) as f1, FLATTEN(ADDRESSES) a
+s f2
+          FROM CUSTOMERS) as t
+               WHERE t.f1.CITY = 'SAN JOSE' and t.f2.ZIPCODE = 94020);
+
+   This query returns the following results:
++--------+---------------+
+|  NAME  |     PHONE     |
++--------+---------------+
+| ALICE  | 408-555-1212  |
++--------+---------------+
+
+   AND-ed condition on scalar field and array field PHONE = 408-555-1212
+   AND ADDRESSES[].ZIPCODE = 94020
+SELECT NAME, PHONE
+FROM CUSTOMERS
+WHERE _id IN ( SELECT _id
+               FROM ( SELECT _id, FLATTEN(ADDRESSES) as f
+          FROM CUSTOMERS) as t
+               WHERE t.f.ZIPCODE = 94020 AND  PHONE = '408-555-1212');
+
+   Map field within nested array of maps ADDRESSES[].UNITS[].FLOOR < 5
+SELECT NAME, PHONE
+FROM CUSTOMERS
+WHERE _id IN ( SELECT _id
+               FROM ( SELECT t1._id, flatten(t1.f.UNITS) as u
+                       FROM (SELECT _id, FLATTEN(ADDRESSES) as f
+                             FROM CUSTOMERS) as t1) as t2
+               WHERE t2.u.`FLOOR` <5);
+
+   This query returns the following results:
++--------+---------------+
+|  NAME  |     PHONE     |
++--------+---------------+
+| BOB    | 408-555-1313  |
+| CHRIS  | 408-555-1414  |
++--------+---------------+
+
+   Exact match for lists or maps col =
+   ADDRESSES[].UNITS[].{"FLOOR":7,"UNIT_NO":777}
+SELECT NAME, PHONE
+FROM CUSTOMERS
+WHERE _id IN ( SELECT _id
+               FROM ( SELECT t1._id, flatten(t1.f.UNITS) as u
+                       FROM (SELECT _id, FLATTEN(ADDRESSES) as f
+                             FROM CUSTOMERS) as t1) as t2
+               WHERE t2.u = CAST('{"FLOOR":7,"UNIT_NO":777}' AS VARBINARY));
+
+   This query returns the following results:
++--------+---------------+
+|  NAME  |     PHONE     |
++--------+---------------+
+| ALICE  | 408-555-1212  |
+| BOB    | 408-555-1313  |
++--------+---------------+
+
+Performance Considerations
+
+   When writing queries that leverage indexes on array fields, consider
+   the following points about performance:
+     * Query patterns that match those described previously in this
+       document are pushed down to MapR Database. Drill does not evaluate
+       the filter conditions, which adds considerable performance benefits
+       even when the query planner does not select an index-based query
+       plan.
+     * Deduplication on the _id is an extra operation (compared to
+       regular, non-complex, indexes) that requires the overhead of hash
+       aggregation.
+     * Try to avoid array columns in included fields within an index
+       table, as they add a significant amount of storage overhead.
+       However, this may result in the query planner selecting
+       non-covering plans.
+     * Indexes with deeply nested array elements, such as
+       a[].b[].c[]...x.y, can add to the MapR Database storage overhead
+       and can potentially make Drill queries longer and more complex.
+
+Limitations
+
+   Drill queries that leverage indexes on array fields have the following
+   limitations:
+     * Only queries with patterns similar to those described previously in
+       this document are eligible for index planning, assuming that the
+       index is defined on an array field.
+     * The following conditions do not produce a covering index plan:
+          + Pushdown conditions on indexed fields and included fields on
+            same array element. For example, if an index has indexed
+            fields a[].b and included fields a[].c, elementAND(a[], b >
+            10, c > 20) does not produce a covering index plan.
+          + Pushdown conditions on scalar indexed fields and included
+            fields containing an array element. For example, an index with
+            indexed field m and included fields a[].b, m = 10 AND a[].b >
+            20 does not produce a covering index plan.
+     * For included array fields, the element must be provided without the
+       [] for the query planner to pick covering plans. For example, a and
+       not a[]. Note that MapR Database considers both a and a[] syntaxes
+       as equivalent for included fields.
+     * Index planning is disabled for queries with multi-level flattens
+       and intermediate filters that reference multi-level flattens. A
+       filter can reference the root level flatten, but not the
+       intermediate flattens.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/JSONDocumentDataTypes.html#JSONDocumentDataTypes
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-datatypes.html#index-datatypes
+   3. https://drill.apache.org/docs/flatten/

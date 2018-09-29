@@ -147,6 +147,31 @@ r/ Z:
 Z: is now successfully connected to ClusterNode1:/mapr/
 The command completed successfully.
 
+Configuring Access When ACES are set
+
+   Some NFS clients, such as the Microsoft native Windows NFSv3 client,
+   check mode bits to determine if access is allowed even before
+   contacting the NFS server. If ACEs are set on a directory or file, the
+   client-side permission checks based solely on mode bits will prevent
+   the client from accessing the file or directory. You can set the value
+   for the WindowsAceSupport property to true in the [6]nfsserver.conf
+   file to allow the Windows client access to the file or directory. The
+   default value for this property is false, denying the client access
+   even before contacting the NFS server.
+
+   When the WindowsAceSupport property value is set to true, MapR returns
+   to the client the mode bits 777 if ACE is set on the file or directory,
+   thus allowing the client to establish a connection to the server.
+   However, when the client actually tries to read or write from the
+   server, MapR performs permission checks against the mode bits and ACEs
+   on the directory and/or file, ensuring proper access.
+   Note: When set to true:
+     * Tools that visually display access information might show
+       read/write access for user who do not have that access.
+     * Files that are not executables might appear so.
+     * NFSv3 client cannot be used to access NFSv4 server because the
+       NFSv4 server only supports the v4 protocol.
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MountingNFSonWindowsClient.html#div1entry1
@@ -154,3 +179,4 @@ References
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MountingNFSonWindowsClient.html#div1entry3
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MountingNFSonWindowsClient.html#div2entry1
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MountingNFSonWindowsClient.html#div2entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/nfsserver.conf.html

@@ -4,7 +4,7 @@ Using Indexes to Optimize Range Conditions
    conditions. The range conditions can appear in combination with
    equality conditions when the most significant index keys have equality
    conditions. You can define indexes that optimize range conditions on
-   scalar data fields.
+   scalar data fields and container field paths.
 
    The following range condition operators benefit from indexes:
      * Less than (or equal to)
@@ -12,8 +12,8 @@ Using Indexes to Optimize Range Conditions
      * Pattern matching operator LIKE, provided the pattern in the
        condition does not start with a wildcard character
 
-   Assume you have a MapR-DB JSON table with documents in the following
-   format:
+   Assume you have a MapR Database JSON table with documents in the
+   following format:
 {
    "_id": "10000",
    "FullName": {
@@ -43,12 +43,12 @@ Using Indexes to Optimize Range Conditions
 
 Indexes on Scalar Data Fields in Range Conditions
 
-   The following table provides examples of when MapR-DB can and cannot
-   use the index with range conditions on scalar data. Assume that a
-   [1]composite index exists on the Address.State and Address.City fields.
-   To use both indexed fields in the composite index, you must have an
-   equality condition on Address.State.
-   Filter Condition How MapR-DB Uses the Index
+   The following table provides examples of when MapR Database can and
+   cannot use the index with range conditions on scalar data. Assume that
+   a [1]composite index exists on the Address.State and Address.City
+   fields. To use both indexed fields in the composite index, you must
+   have an equality condition on Address.State.
+   Filter Condition How MapR Database Uses the Index
 {"$le":{"Address.State":"CA"}}
 
    Reads from the beginning of the index up to and including the condition
@@ -94,14 +94,73 @@ Indexes on Scalar Data Fields in Range Conditions
    Reads from the index starting at the condition Address.State > "C"
    through the end of the index.
 
-   Although Address.City is part of the index key, MapR-DB does not use
-   Address.City > "Oak" when initiating the index search. Applies that
+   Although Address.City is part of the index key, MapR Database does not
+   use Address.City > "Oak" when initiating the index search. Applies that
    filter while reading the index.
 {"$le":{"Address.City":"Oak"}}
 
-   Even if the query references the field Address.State, MapR-DB cannot
-   use the index unless there is also an equality condition on the prefix
-   key of the index, Address.State.
+   Even if the query references the field Address.State, MapR Database
+   cannot use the index unless there is also an equality condition on the
+   prefix key of the index, Address.State.
+
+Indexes on Container Field Paths in Range Conditions
+
+   Starting in MapR 6.1, you can define an index using a container field
+   path as the indexed field.
+
+   For example, suppose you want to apply range conditions on individual
+   hobbies within the Hobbies array field. You can define an index on the
+   following field:
+Hobbies[]
+
+   The following examples show range conditions that benefit from this
+   index:
+   Query Condition Description
+{"$like":{"Hobbies[]":"B%"}}
+
+   Finds documents that contain hobbies that start with the letter "B"
+{"$gt":{"Hobbies[]":"Read"}}
+
+   Finds documents that contain hobbies with a value greater than "Read"
+{
+    "$elementAnd":{
+        "Hobbies[]":[
+            {"$ge":{"$":"D"}},
+            {"$lt":{"$":"J"}
+        ]
+    }
+}
+
+   Finds documents that contain hobbies that start with letters between
+   "D" and "I", inclusive
+
+   When using the Hobbies[] container field path in the query condition,
+   the condition matches both array elements and individual scalar values.
+
+   For another example, suppose you want to apply range filters on phone
+   numbers. You can define an index on the following field:
+Phones[].Number
+
+   The following examples show range conditions that benefit from this
+   index:
+                            Query Condition                          Description
+   {"$like":{"Phones[].Number":"555%"}}
+
+   Finds documents with phone numbers that have a 555 prefix
+{
+    "$elementAnd":{
+        "Phones[]":[
+            {"$gt":{"Number":"408-555-1234"}},
+            {"$lt":{"Number":"408-555-9999"}
+        ]
+    }
+}
+
+   Finds documents that contain phone numbers in the specified range
+
+   When using the Phones[].Number container field path in the query
+   condition, the condition matches instances where Phones is an array of
+   nested documents as well as a single document.
 
 References
 

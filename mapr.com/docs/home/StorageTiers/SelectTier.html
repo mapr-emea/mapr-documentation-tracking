@@ -1,0 +1,77 @@
+Specifying a Tier
+
+   You can associate a tier with a tiering-enabled volume using the MapR
+   Control System and the CLI.
+   Note: In MCS, you can only associate an exiting tier (referred to as
+   Remote Target in the MapR Control System) with a volume enabled for
+   Remote Archiving (or cold-tier). You cannot associate an existing tier
+   with a volume enabled for Erasure Coding (or warm-tier) because MCS
+   allows a new tier to be automatically created when you enable a volume
+   for erasure coding. If you want to associate an existing tier with a
+   volume enabled for erasure coding, use the CLI or REST API to create
+   the volume.
+
+Specifying a Remote Target Using the MapR Control System
+
+   You can associate a remote target with a cold-tier enabled volume when
+   you are:
+     * Creating the volume by clicking Create Volume button in the Data >
+       Volumes page.
+     * Editing the volume by clicking Edit Volume button in the [1]volume
+       information page.
+
+   To associate a remote target with the volume, in the Create Volume or
+   Edit Volume page:
+    1. Click the Browse link associated with the Remote Target field to
+       display the Browse Remote Target window.
+    2. Review the name, vendor, bucket, region, and URL for each remote
+       target and choose a remote target from the list.
+    3. Click Select to associate the remote target with the volume.
+    4. Complete the steps for [2]creating or [3]editing the volume.
+
+Specifying a Tier Using the CLI and REST API
+
+   You can associate an existing tier with a volume when you are creating
+   the tiering-enabled volume. You can associate an existing tier with a
+   tiering-enabled volume when you are editing the volume only if the
+   volume does not already have a tier associated with it. To associate an
+   existing tier, you must specify the tiername parameter with the
+   command.
+     * [4]CLI
+     * [5]REST
+
+   Run a command similar to the following to associate a tier when:
+     * Creating a volume:
+maprcli volume create -name <volName> -path <mountPath> -tieringenable true -tie
+rname <tierName> -json
+       For the list of all other required and optional parameters, see
+       [6]volume create.
+     * Editing the volume:
+maprcli volume modify -name <volName> -tiername <tierName> -json
+       For the list of all other required and optional parameters, see
+       [7]volume modify.
+
+   Send a request of type POST. For example, to associate a tier when:
+     * Creating a volume:
+curl -k -X POST 'https://<host>:8443/rest/volume/create?name=<volName>&path=<mou
+ntPath>&tieringenable=true&tiername=<tierName>&tieringrule=<ruleName>' --user ma
+pr:mapr
+       For the list of all other required and optional parameters, see
+       [8]volume create.
+     * Editing the volume:
+curl -k -X POST 'https://<host>:8443/rest/volume/modify?name=<volName>&tieringru
+le=<ruleName>' --user mapr:mapr
+       For the list of all other required and optional parameters, see
+       [9]volume modify.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/ViewVolInfo.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SelectTier.html#div1entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SelectTier.html#div1entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html

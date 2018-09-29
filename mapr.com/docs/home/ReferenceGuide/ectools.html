@@ -1,0 +1,90 @@
+ectools
+
+   The /opt/mapr/server/tools/ectool utility can be used to dump or check
+   validity of the stripelets in the backend volume associated with the
+   volume configured for warm tiering.
+
+Pre-Requirements
+
+   Before you run the utility, ensure that the node on which you plan to
+   run this utility meets the following requirements:
+     * The path to the library (libjvm.so) must be set in the
+       LD_LIBRARY_PATH environment variable. If it is already not set, run
+       the command to set the environment variable. For example:
+export LD_LIBRARY_PATH=/opt/jdk1.8.0_141/jre/lib/amd64/server/
+     * The protobuf libraries must be installed. To determine if the
+       libraries are installed, run the following command:
+# rpm -qa | grep protobuf
+       The command output should look similar to the following:
+protobuf-2.5.0-8.el7.x86_64
+protobuf-lite-2.5.0-8.el7.x86_64
+protobuf-c-1.0.2-3.el7.x86_64
+       If the protobuf libraries are not installed, run the following
+       command:
+yum install libprotobuf
+
+Syntax
+
+/opt/mapr/server/tools/ectool <cmd> <params>
+
+Commands
+
+   Command Description
+   dump Dumps a stripelet content to the given file.
+   list Lists all the stripes in a given container.
+   validate Validates if the given parity stripelet is valid and matches
+   with other stripelets of the stripe.
+   validateall For a given container, validates if all the stripelets are
+   valid and matches with other stripelets of the stripe.
+
+Parameters
+
+   Parameter Description
+   cid The ID of the container.
+   fid The ID of the file.
+   file The path to the file.
+   volid The ID of the (backend) volume, referred to as ecstorevolume in
+   the CLI output, associated with the tier. The ID can be retrieved using
+   the [1]volume info command. For example:
+# maprcli volume info -name a4 -json | grep ecstorevolume
+"ecstorevolume":"mapr.internal.ec.a4.87379483",
+# maprcli volume info -name mapr.internal.ec.a4.87379483 -json | grep volumeid
+"volumeid":105118862,
+
+Usage
+
+/opt/mapr/server/tools/ectools dump volid fid file
+/opt/mapr/server/tools/ectools list volid cid
+/opt/mapr/server/tools/ectools validate volid fid
+/opt/mapr/server/tools/ectools validateall volid cid
+
+Examples
+
+   Dump the stripelet content to the file /tmp/t for the file specified by
+   ID 2271.160.131606 in the volume specified by ID 116581327:
+# /opt/mapr/server/tools/ectool dump 116581327 2271.160.131606 /tmp/t
+Stripelet Read done!
+
+   List all the stripes in the container specified by ID 2271 for the
+   volume specified by ID 116581327:
+# /opt/mapr/server/tools/ectool list 116581327 2271
+Inum:160 Uniq:131606 Size:4194304
+Inum:161 Uniq:131608 Size:4194304
+Inum:162 Uniq:131610 Size:4194304
+
+   Validates if the given stripelet matches with other stripelets of the
+   stripe for the file specified by ID 2271.160.131606 in the volume
+   specified by ID 116581327
+# /opt/mapr/server/tools/ectool validate 116581327 2271.160.131606
+Valid Stripe
+
+   For the container specified by ID 2271, validate if all stripelets
+   match with other stripelets of the corresponding stripe:
+# /opt/mapr/server/tools/ectool validateall 116581327 2271
+Inum:160 Valid Stripe
+Inum:161 Valid Stripe
+Inum:162 Valid Stripe
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-info.html

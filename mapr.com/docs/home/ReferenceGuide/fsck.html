@@ -6,15 +6,16 @@ fsck
    Every storage pool has its own log to journal updates to the storage
    pool. All operations to a storage pool are done transactionally by
    journaling all operations to the log before they are applied to storage
-   pool metadata. If MFS is not shutdown cleanly, some metadata blocks may
-   not persist. However, on the next load of the storage pool, log
-   recovery takes care of these metadata blocks by replaying the records
-   in the log. The fsck utility also replays the log before it checks the
-   metadata consistency in a storage pool. The fsck utility walks the
-   storage pool in question to verify all MapR-FS metadata (and data
-   correctness if specified on the command line), and reports all
-   potentially lost or corrupt containers, directories, tables, files,
-   filelets, and blocks in the storage pool. The fsck utility:
+   pool metadata. If MapR Filesystem is not shutdown cleanly, some
+   metadata blocks may not persist. However, on the next load of the
+   storage pool, log recovery takes care of these metadata blocks by
+   replaying the records in the log. The fsck utility also replays the log
+   before it checks the metadata consistency in a storage pool. The fsck
+   utility walks the storage pool in question to verify all MapR file
+   system metadata (and data correctness if specified on the command
+   line), and reports all potentially lost or corrupt containers,
+   directories, tables, files, filelets, and blocks in the storage pool.
+   The fsck utility:
      * Checks whether all files and directories are reachable and all
        directory entries are valid.
      * Checks BTrees are consistent for various inode types (such as files
@@ -25,12 +26,13 @@ fsck
      * Checks consistency of snapshots.
      * Visits every allocated block in the storage pool and recovers any
        blocks that are part of a corrupted inodes.
-     * Checks consistency of MapR-DB metadata.
+     * Checks consistency of MapR Database metadata.
      * Checks consistency of tabletmap, tablets, buckets, and spill files.
 
    The fsck utility can be used on an offline storage pool after a node
-   failure, after a disk failure, or after a MapR-FS process crash, or
-   simply to verify the consistency of data for suspected software bugs.
+   failure, after a disk failure, or after a MapR file system process
+   crash, or simply to verify the consistency of data for suspected
+   software bugs.
 
 Typical process flow:
 
@@ -93,7 +95,7 @@ Syntax
     [ -l <log filename> ]
     [ -m <memory in MB> ]
     [ -N ]
-    [ -p <MapR-FS port> ]
+    [ -p <file system port> ]
     [ -P ]
     [ -r ]
 
@@ -117,8 +119,8 @@ Parameters
    <device-paths>
 
    Paths to the disks that make up the storage pool.
-   Note: Before running fsck, remove all the disks from MFS using mrconfig
-   disk remove command. For example:
+   Note: Before running fsck, remove all the disks from MapR Filesystem
+   using mrconfig disk remove command. For example:
 /opt/mapr/server/mrconfig disk remove /dev/sdb
 /opt/mapr/server/fsck /dev/sdb
 
@@ -158,7 +160,7 @@ Parameters
 
    -p
 
-   The MapR-FS port. Default: 5660
+   The MapR Filesystem port. Default: 5660
    -P Purges deleted containers in repair.
 
    -r

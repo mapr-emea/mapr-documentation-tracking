@@ -8,11 +8,15 @@ Querying with Order By
    for more information.
      * [2]Java - Order By
      * [3]Java - Order By with Offset and Limit
-     * [4]dbshell
+     * [4]Node.js - Order By
+     * [5]Node.js - Order By with Offset and Limit
+     * [6]Python - Order By
+     * [7]Python - Order By with Offset and Limit
+     * [8]dbshell
 
    The following example shows how to return the _id, firstName, lastName,
    and address.zipCode fields from documents in a store, sorting the
-   documents by _id. It uses the [5]Query.select and [6]Query.orderBy
+   documents by _id. It uses the [9]Query.select and [10]Query.orderBy
    methods.
    Note: The example sorts in the default ascending order. To sort in
    descending order, modify the orderby method call as follows:
@@ -83,9 +87,9 @@ n
 
    The following example shows how to return the _id, firstName, lastName,
    and address.zipCode fields from documents in a store, sorting the
-   documents by _id. It uses the [7]Query.select and [8]Query.orderBy
+   documents by _id. It uses the [11]Query.select and [12]Query.orderBy
    methods. In addition, the returned documents are offset and limited by
-   using the [9]Query.offset and [10]Query.limit methods.
+   using the [13]Query.offset and [14]Query.limit methods.
    Note: The example sorts in the default ascending order. To sort in
    descending order, modify the orderBy method call as follows:
 orderBy("_id", SortOrder.DESC)
@@ -155,8 +159,207 @@ n
 
 }
 
+   The following example uses an OJAI query to return the _id and name
+   fields from documents in a store and to sort the documents by _id.
+   Note: The example sorts in the default ascending order. To sort in
+   descending order, modify the orderby specification as follows:
+order_by('_id', desc)
+
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((store) => {
+    // Create an OJAI query
+    const query = {"$select": ["_id", "name"], "$orderby": {"_id": "asc"}};
+    // fetch OJAI Documents by query
+    return store.find(query);
+  })
+  .then((queryResult) => {
+    queryResult.on('data', (document) => {
+      // Print OJAI Documents from document stream
+      console.log(document);
+    });
+    queryResult.on('end', () => {
+      // close the OJAI connection
+      connection.close();
+    });
+  });
+
+   The following example uses an OJAI query to return the _id, firstName,
+   lastName, and address.zipCode fields from documents in a store, sort
+   the documents by _id, offset the result by two documents, and limit the
+   result to a single document.
+   Note: The example sorts in the default ascending order. To sort in
+   descending order, modify the orderby specification as follows:
+"$orderby": {"_id": "desc"}
+
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((store) => {
+    // Create an OJAI query
+    const query = {"$offset": 2,
+      "$select": ["_id",
+        "firstName",
+        "lastName",
+        "address.zipCode"],
+      "$limit": 1,
+      "$orderby": {"_id": "asc"}};
+    // fetch OJAI Documents by query
+    return store.find(query);
+  })
+  .then((queryResult) => {
+    queryResult.on('data', (document) => {
+      // Print OJAI Documents from document stream
+      console.log(document);
+    });
+    queryResult.on('end', () => {
+      // close the OJAI connection
+      connection.close();
+    });
+  });
+
+   The following example uses an OJAI query to return the _id and name
+   fields from documents in a store and to sort the documents by _id.
+   Note: The example sorts in the default ascending order. To sort in
+   descending order, modify the orderby specification as follows:
+"$orderby": {"_id": "desc"}
+
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+# Create an OJAI query
+query = {"$select": ["_id", "name"], "$orderby": {"_id": "asc"}}
+
+# fetch OJAI Documents by query
+query_result = store.find(query)
+
+# Print OJAI Documents from document stream
+for doc in query_result:
+    print(doc)
+
+# close the OJAI connection
+connection.close()
+
+   The following example uses an OJAI query to return the _id, firstName,
+   lastName, and address.zipCode fields from documents in a store, sort
+   the documents by _id, offset the result by two documents, and limit the
+   result to a single document.
+   Note: The example sorts in the default ascending order. To sort in
+   descending order, modify the orderby method call as follows:
+order_by('_id', desc)
+
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+# Create an OJAI query
+query = {"$offset": 2,
+         "$select": ["_id",
+                     "firstName",
+                     "lastName",
+                     "address.zipCode"],
+         "$limit": 1,
+         "$orderby": {"_id": "asc"}}
+
+# options for find request
+options = {
+    'ojai.mapr.query.result-as-document': True
+    }
+
+# fetch OJAI Documents by query
+query_result = store.find(query, options=options)
+
+# Print OJAI Documents from document stream
+for doc in query_result:
+    print(doc.as_dictionary())
+
+# close the OJAI connection
+connection.close()
+
    The following dbshell commands are equivalent to the code examples. See
-   [11]dbshell find or findbyid for more details about the syntax dbshell
+   [15]dbshell find or findbyid for more details about the syntax dbshell
    provides.
 find /demo_table --query {
   "$select":["_id","firstName","lastName","address.zipCode"],
@@ -189,10 +392,14 @@ References
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect1
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect2
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect3
-   5. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-   6. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
-   7. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-   8. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
-   9. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#offset-long-
-  10. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#limit-long-
-  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect4
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect5
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect6
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect7
+   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
+  11. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+  12. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
+  13. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#offset-long-
+  14. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#limit-long-
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html

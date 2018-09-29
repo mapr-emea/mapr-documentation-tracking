@@ -3,11 +3,13 @@ Querying By ID
    The examples in this section show you how to query for a single
    document ID.
      * [1]Java
-     * [2]dbshell
+     * [2]Node.js
+     * [3]Python
+     * [4]dbshell
 
    This example retrieves a single document identified by the ID user001.
    Note: To query for a range of document IDs, you must specify an OJAI
-   [3]QueryCondition. See [4]Querying with Conditions for examples of the
+   [5]QueryCondition. See [6]Querying with Conditions for examples of the
    syntax.
 /**
  * Copyright (c) 2017 MapR, Inc.
@@ -62,8 +64,81 @@ n
 
 }
 
-   The following is the equivalent of the code example using dbshell. See
-   [5]dbshell find or findbyid for more details about the syntax dbshell
+   This example retrieves a single document identified by the ID user0001.
+   Note: To query for a range of document IDs, you must specify an OJAI
+   query condition. See [7]Querying with Conditions for examples of the
+   syntax.
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((store) => {
+    // fetch the OJAI Document by its '_id' field
+    return store.findById('user0001');
+  })
+  .then((doc) => {
+    // Print the OJAI Document
+    console.log(doc);
+    connection.close();
+  });
+
+   This example retrieves a single document identified by the ID user0001.
+   Note: To query for a range of document IDs, you must specify an OJAI
+   [8]QueryCondition. See [9]Querying with Conditions for examples of the
+   syntax.
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+# fetch the OJAI Document by its '_id' field
+doc = store.find_by_id("user0001")
+
+# Print the OJAI Document
+print(doc.as_dictionary())
+
+# close the OJAI connection
+connection.close()
+
+   The following is the equivalent of the code examples using dbshell. See
+   [10]dbshell find or findbyid for more details about the syntax dbshell
    provides.
 # mapr dbshell
 maprdb root:> findbyid /demo_table --id user0001
@@ -72,6 +147,11 @@ References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-by-id.html#div1sect1
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-by-id.html#div1sect2
-   3. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/QueryCondition.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-by-id.html#div1sect3
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-by-id.html#div1sect4
+   5. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/QueryCondition.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+   8. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_condition_1_1_query_condition.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html

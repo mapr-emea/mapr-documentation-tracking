@@ -1,0 +1,52 @@
+Moving back end Volume from the Command Line
+
+   This section contains information on migrating the following volumes to
+   a different topology:
+     * Metadata volume, which stores the DB tables for the metadata
+       associated with the tier.
+     * Erasure-coded volume, which stores the erasure-coded data.
+
+Moving Metadata Volume to Another Topology
+
+   By default, the volume, which stores the DB tables for the metadata
+   associated with the tier, is created in
+   /var/mapr/tier/mapr.internal.tier.<volName> and is in the /data
+   topology. However, you can move the metadata volume to another topology
+   using the [1]volume move command. For example:
+     * [2]CLI
+     * [3]REST
+
+/opt/mapr/bin/maprcli volume move -name <metadataVolName> -topology <newTopo>
+
+curl -k -X POST 'https://<host>:8443/volume/move?name=<metadataVolName>&topology
+=<newTopo>' --user mapr:mapr
+
+Moving Erasure-Coded Volume to Another Topology
+
+   The erasure-coded volume is by default created in the same topology as
+   the front-end volume. You can specify a different topology for the
+   erasure-coded volume when creating a front-end volume. You can also
+   move the erasure coded volume to a different topology using the
+   [4]volume move command. For example:
+     * [5]CLI
+     * [6]REST
+
+/opt/mapr/bin/maprcli volume move -name <volName> -ectopology <newTopo>
+
+curl -k -X POST 'https://<host>:8443/volume/move?name=<volName>&ectopology=<newT
+opo>' --user mapr:mapr
+
+   Here, the name parameter takes the name of the front-end volume and the
+   ectopology parameter takes the topology to which to move the
+   erasure-coded volume associated with the front-end volume. For more
+   information, see [7]volume move.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-move.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManageTierData.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManageTierData.html#div1entry2
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-move.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManageTierData.html#div2entry1
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/ManageTierData.html#div2entry2
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-move.html

@@ -1,0 +1,59 @@
+Removing a Storage Policy
+
+   You can remove a storage policy that is currently not in use using the
+   MapR Control System, CLI, and REST API. You cannot remove a storage
+   policy that is associated with a volume.
+
+Removing a Rule Using the MapR Control System
+
+    1. Log in to MCS and go to Storage Policies tab under Data > Volumes.
+       The list of storage policies displays.
+    2. Select the checkbox associated with the storage policy to remove
+       and click Remove Policy.
+       The Remove Policy confirmation window displays.
+    3. Review the list of policies to remove and click Remove.
+
+Removing a Rule Using the CLI and the REST API
+
+     * [1]CLI
+     * [2]REST
+
+   Run the following command to remove a storage policy that is not
+   associated with a volume:
+# maprcli tier rule remove -name <rule_name>
+
+   If you try to remove a rule associated with a volume, the command
+   returns an error (shown in bold) similar to the following:
+# maprcli tier rule remove -name rule1 -json
+{
+   "timestamp":1516771655669,
+   "timeofday":"2018-01-23 09:27:35.669 GMT-0800",
+   "status":"ERROR",
+   "errors":[{
+      "id":10003,
+      "desc":"Cannot remove rule, as some volumes are still using it."
+   }]
+}
+
+   Send a request of type POST. For example:
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/rule/remove?name=sampleRule'
+ --user mapr:mapr
+{"timestamp":1523571783113,"timeofday":"2018-04-12 03:23:03.113 GMT-0700 PM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully deleted rule: 'sampleRu
+le'"]}
+
+   If you try to remove a storage policy associated with a volume, the
+   response contains an error (shown in bold) similar to the following:
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/rule/remove?name=sampleRule'
+ --user mapr:mapr
+{"timestamp":1523571741636,"timeofday":"2018-04-12 03:22:21.636 GMT-0700 PM","st
+atus":"ERROR","errors":[{"id":10003,"desc":"Can not remove rule, as some volumes
+ are still using it."}]}
+
+   For more information, see [3]tier rule remove.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RemoveStoragePolicy.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RemoveStoragePolicy.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-rule-remove.html

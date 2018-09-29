@@ -1,0 +1,66 @@
+Preventing a Non-Administrative User from Installing Hooks
+
+   You need to modify the Hive configuration to prevent a malicious user
+   from using Hive hooks to install malware on your MapR cluster.
+   In general, a hook is a mechanism for intercepting events, messages, or
+   function calls during processing. Hive hooks are a mechanism to tie
+   into the internal workings of Hive without the need of re-compiling
+   Hive. Hive hooks, in this sense, provide the ability to extend and
+   integrate external functionality with Hive.
+    1. Add all hook-related properties to the default value of
+       hive.conf.restricted.list in the hive-site.xml file:
+          + hive.exec.pre.hooks
+          + hive.exec.post.hooks
+          + hive.exec.failure.hooks
+          + hive.exec.query.redactor.hooks
+    2. Add the default values already present in hive.conf.restricted.list
+       to the hive-site.xml file:
+          + [1]Hive 2.3
+          + [2]Hive 2.1
+<property>
+  <name>hive.conf.restricted.list</name>
+  <value>
+     hive.security.authenticator.manager,
+     hive.security.authorization.manager,
+     hive.security.metastore.authorization.manager,
+     hive.security.metastore.authenticator.manager,
+     hive.users.in.admin.role,hive.server2.xsrf.filter.enabled,
+     hive.security.authorization.enabled,
+     hive.server2.authentication.ldap.baseDN,
+     hive.server2.authentication.ldap.url,
+     hive.server2.authentication.ldap.Domain,
+     hive.server2.authentication.ldap.groupDNPattern,
+     hive.server2.authentication.ldap.groupFilter,
+     hive.server2.authentication.ldap.userDNPattern,
+     hive.server2.authentication.ldap.userFilter,
+     hive.server2.authentication.ldap.groupMembershipKey,
+     hive.server2.authentication.ldap.userMembershipKey,
+     hive.server2.authentication.ldap.groupClassKey,
+     hive.server2.authentication.ldap.customLDAPQuery,
+     hive.exec.pre.hooks,
+     hive.exec.post.hooks,
+     hive.exec.failure.hooks,
+     hive.exec.query.redactor.hooks
+  </value>
+</property>
+<property>
+  <name>hive.conf.restricted.list</name>
+  <value>
+     hive.security.authenticator.manager,
+     hive.security.authorization.manager,
+     hive.users.in.admin.role,
+     hive.server2.xsrf.filter.enabled,
+     hive.exec.pre.hooks,
+     hive.exec.post.hooks,
+     hive.exec.failure.hooks,
+     hive.exec.query.redactor.hooks
+  </value>
+</property>
+       Note: Values of the hive.conf.restricted.list are split into
+       separate lines for better readability. In the actual hive-site.xml
+       file, no spaces or newlines exist between the commas.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/PreventingUserInstallingHooks.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/PreventingUserInstallingHooks.html#div1entry2

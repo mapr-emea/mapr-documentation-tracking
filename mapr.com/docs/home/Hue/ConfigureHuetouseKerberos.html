@@ -45,35 +45,39 @@ Modifying the hue.ini File
     5. For Hue with secure Hive: In the beeswax section, make sure that
        the hive_conf_dir property points to a directory containing a valid
        hive-site.xml file (either the original or a synced copy).
-    6. For Hue with secure Hive: Provide the fully-qualified domain name
-       (FQDN) for the hive_server_host.
-       Note: For Hue to work with HiveServer2 with security enabled, you
-       must provide the fully-qualified domain name (FQDN) for the
-       hive_server_host. This must match the FQDN of the hue_principal
-       property.
-    7. Optional: To enable SSL encryption, see [1]Enable SSL Encryption
+    6. Optional: To enable SSL encryption, see [1]Enable SSL Encryption
        Between Hue and Hive.
-    8. For Oozie only: Set the oozie_url parameter in the liboozie
+    7. Make sure that you specified a fully-qualified domain name (FQDN)
+       for all services integrated with Hue that uses Kerberos:
+       For HttpFS: Set the webhdfs_url property in the [hadoop]
+       [[hdfs_clusters]] [[[default]]] section.
+       For HiveServer2: Set the hive_server_host property in the [beeswax]
        section.
-       Note: For Hue to work with Oozie with security enabled, you must
-       provide the URL where the Oozie service is running by setting the
-       oozie_url parameter in the liboozie section.
+       For Impala: Set the server_host property in the [impala] section.
+       For Spark: Set the livy_server_url property in the [impala]
+       section.
+       Note: Support for Kerberos integration with Livy was introduced in
+       Hue 4.2.
+       For Sqoop2: Set the server_url property in the [sqoop] section.
+       For Oozie: Set the oozie_url property in the [liboozie] section.
+       For HBase: Set the hbase_clusters property in the [hbase] section.
+       For Drill: Refer to section.
 
    The changes are summarized in the following hue.ini files, which you
    can use as a template:
 [desktop]
-  [[kerberos]]
-    # Path to Hue's Kerberos keytab file
-    hue_keytab=/opt/mapr/conf/mapr.keytab
+   [[kerberos]]
+     # Path to Hue's Kerberos keytab file
+     hue_keytab=/opt/mapr/conf/mapr.keytab
 
-    # Kerberos principal name for Hue
-    # hue_principal=mapr/<hostname>@<realm>
-    # Substitute your hostname and realm in the example below
-    hue_principal=mapr/perfnode181.perf.lab@dev-maprtech
+     # Kerberos principal name for Hue
+     # hue_principal=mapr/<hostname>@<realm>
+     # Substitute your hostname and realm in the example below
+     hue_principal=mapr/perfnode181.perf.lab@dev-maprtech
 
-    # Path to kinit
-    # Note that the actual path depends on which Linux OS you are using
-    kinit_path=/usr/bin/kinit
+     # Path to kinit
+     # Note that the actual path depends on which Linux OS you are using
+     kinit_path=/usr/bin/kinit
 
 [beeswax]
   # If Kerberos security is enabled, use fully-qualified domain name
@@ -87,52 +91,85 @@ Modifying the hue.ini File
   mechanism=GSSAPI
 
 [impala]
+  # Host of the Impala Server (one of the Impalad)
+  server_host=<FQDN of Impalad>
   # Kerberos principal
   impala_principal=mapr/perfnode181.perf.lab@dev-maprtech
 
 [hadoop]
   ...
-  [[yarn_clusters]]
-    [[[default]]]
-      # Enter the host on which you are running the ResourceManager
-      ## resourcemanager_host=localhost
+  [[hdfs_clusters]]
+     [[[default]]]
+  # Enter the filesystem uri
+  fs_defaultfs=maprfs:///
 
-      # The port where the ResourceManager IPC listens on
-      ## resourcemanager_port=8032
+  # Use WebHdfs/HttpFs as the communication mechanism.
+  # Domain should be the NameNode or HttpFs host.
+  # Default port is 14000 for HttpFs.
+  webhdfs_url=https://<FQDN of HttpFS>:14000/webhdfs/v1
 
-      # Whether to submit jobs to this cluster
-      submit_to=true
+  # Change this if your HDFS cluster is secured
+  security_enabled=True
 
-      # Change this if your YARN cluster is secured
-      security_enabled=true
+  # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+  mechanism=GSSAPI
+  ...
+[[yarn_clusters]]
+  [[[default]]]
+  # Enter the host on which you are running the ResourceManager
+  ## resourcemanager_host=localhost
 
-      # URL of the ResourceManager API
-      ## resourcemanager_api_url=https://localhost:8090
+  # The port where the ResourceManager IPC listens on
+  ## resourcemanager_port=8032
 
-      # URL of the ProxyServer API
-      ## proxy_api_url=https://localhost:8090
+  # Whether to submit jobs to this cluster
+  submit_to=true
 
-      # URL of the HistoryServer API
-      history_server_api_url=https://localhost:19890
+  # Change this if your YARN cluster is secured
+  security_enabled=true
 
-      # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
-      mechanism=GSSAPI
+  # URL of the ResourceManager API
+  ## resourcemanager_api_url=https://localhost:8090
 
-      # In secure mode (HTTPS), if SSL certificates from Resource Manager's
-      # Rest Server have to be verified against certificate authority
-      ssl_cert_ca_verify=False
+  # URL of the ProxyServer API
+  ## proxy_api_url=https://localhost:8090
+
+  # URL of the HistoryServer API
+  history_server_api_url=https://localhost:19890
+
+  # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
+  mechanism=GSSAPI
+
+  # In secure mode (HTTPS), if SSL certificates from Resource Manager's
+  # Rest Server have to be verified against certificate authority
+  ssl_cert_ca_verify=False
+
+[spark]
+  # The Livy Server URL.
+  livy_server_url=https://<FQDN of Livy Server>:8998
+
+  # Whether Livy requires client to perform Kerberos authentication.
+  security_enabled=True
+
+  # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY.
+  mechanism=GSSAPI
 
 [liboozie]
   # The URL where the Oozie service runs on. This is required in order for
   # users to submit jobs.
-  oozie_url=http://perfnode181.perf.lab:<oozie_port_number>/oozie
+  oozie_url=https://<FQDN of Oozie>:<oozie_port_number>/oozie
 
   # Requires FQDN in oozie_url if enabled
   security_enabled=true
   # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
-  mechanism=GSSAPI
+ mechanism=GSSAPI
 
 [hbase]
+  # Comma-separated list of HBase Thrift servers for clusters in the format of '
+(name|host:port)'.
+  # Use full hostname with security.
+  # If using Kerberos we assume GSSAPI SASL, not PLAIN.
+  hbase_clusters=(Cluster|<FQDN of Hbase Thrift Server>:9090)
   # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY
   mechanism=GSSAPI
 

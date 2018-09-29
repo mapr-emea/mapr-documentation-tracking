@@ -1,0 +1,48 @@
+Formatting a Storage Pool for Encryption of Data at Rest
+
+   This section describes how to reformat a storage pool for data at rest
+   encryption and determine if a storage pool is enabled for data at rest
+   encryption.
+
+Formatting a Storage Pool on a Node for Encryption of Data at Rest
+
+    1. Determine the number of SPs on the node by running the following
+       command:
+/opt/mapr/server/mrconfig sp list
+    2. Select the SP to reformat and run the following command:
+mrconfig sp offline <sp path>
+    3. Wait for the [1]Data Under-Replicated alarm to clear and ensure
+       that there are no [2]Data Unavailable alarms.
+    4. Remove the disk from MapR Filesystem.
+       See [3]Removing Disks from MapR Filesystem for more information.
+    5. Format the disk on the node.
+       See [4]Formatting Disks on a Node From the Command-line for more
+       information.
+    6. Add disk to MapR Filesystem.
+       See [5]Adding Disks to MapR Filesystem for more information.
+
+Determining if a Storage Pool is Enabled for Data at Rest Encryption
+
+   Run the following command to determine if an SP is enabled for
+   data-at-rest encryption:
+# /opt/mapr/server/mrconfig sp list -v
+ListSPs resp: status 0:2
+No. of SPs (2), totalsize 3518339 MB, totalfree 691937 MB
+
+SP 0: name SP1, Online, size 1761217 MB, free 377127 MB, path /dev/sdb, log 200
+MB, port 5660, guid 9dd586829e179476005b0ce23f0dae3c, clusterUuid -7600986066553
+737256-4524271553806028052, disks /dev/sdb /dev/sdd, dare 1
+SP 1: name SP2, Online, size 1757121 MB, free 314809 MB, path /dev/sde, log 200
+MB, port 5660, guid daa5916af8909118005b0ce2430d6d54, clusterUuid -7600986066553
+737256-4524271553806028052, disks /dev/sde /dev/sdf, dare 1
+
+   If enabled, the value for dare in the output is 1 (as shown in bold in
+   the above sample command output) and if disabled, the value is 0.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/VolumeAlarms-DataUnderReplicated.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/VolumeAlarms-DataUnavailable.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/nodes/Node-RemoveDisks.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_ManagingNodes_formatting_disks.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/nodes/Node-AddDisks.html

@@ -1,0 +1,108 @@
+Retrying Failed Operation
+
+     * [1]Volume-level
+     * [2]File-level
+
+   If an offload, recall, or abort operation for a volume fails, the
+   [3]volume tierjobstatus command shows one of the following statuses:
+   FailureFatal Indicates failure is fatal and CLDB cannot retry the
+   operation again.
+   FailureRetriable Indicates failure to offload; however, CLDB will try
+   again if the job is not manually restarted again or aborted.
+
+   CLDB tries the operation again (up to 5 times by default) after a
+   specific wait time (of 30 minutes by default) for the following errors:
+     * EAGAIN
+     * ETIMEDOUT
+     * ENETUNREACH
+     * ENETDOWN
+     * ECONNRESET
+
+   The RetryCount field value in the [4]volume tierjobstatus command
+   output shows the number of times CLDB has retried so far. For example:
+# maprcli volume tierjobstatus -name testvol -json
+{
+ "timestamp":1503308792266,
+ "timeofday":"2017-08-21 09:46:32.266 GMT+0000",
+ "status":"OK",
+ "total":1,
+ "data":[
+  {
+   "offload":{
+    "state":"FailureRetriable, RetryCount: 5",
+    "startTime":"2017-08-21 09:07:17.506 GMT+0000",
+    "endTime":"2017-08-21 09:08:49.799 GMT+0000",
+    "gateway":"10.10.102.68:8660"
+   }
+  }
+ ]
+}
+
+   If the offload or recall operation for an individual file fails, the
+   [5]file tierstatus or [6]hadoop mfs command returns one of the
+   following:
+   Code Message Description
+   0 HAS_LOCAL_DATA Indicates that the file is not yet fully offloaded.
+   1 NO_LOCAL_DATA Indicates that the file was completely offloaded.
+   2 OP_FAIL Indicates that the operation to retrieve the status failed.
+   3 INVALID_FILE Indicates that the file does not exist.
+   4 FILE_NOT_TIERED Indicates that the file is not in a tiered volume.
+   5 FILE_EMPTY Indicates that the file specified for offload is an empty
+   file.
+   6 NO_GATEWAY Indicates that no MAST Gateways are available for offload
+   operation.
+   7 OP_TIMEOUT Indicates that there was no response from the MAST Gateway
+   (maybe as a result of an error) during the offload or recall operation.
+   8 FTOS_SUCCESS Indicates that the file was successfully offloaded or
+   recalled.
+   9 FTOS_ABORTED Indicates that the file offload or recall operation was
+   aborted.
+   10 FTOS_ABORT_IN_PROGRESS Indicates that the file offload or recall job
+   is being aborted.
+   11 FTOS_TRANSFER_IN_PROGRESS Indicates that the file offload is in
+   progress.
+   12 FTOS_REQ_QUEUED Indicates that the file offload is scheduled, but
+   has not yet started.
+   13 FTOS_JOB_NOT_AVAILABLE Indicates that the job ID specified with the
+   tierjobstatus command is not available.
+
+   When a file-level offload or recall operation fails, CLDB does not
+   retry the operation. For failed file-level:
+     * Offload operation, you can run the command to retry the operation.
+       For more information, see [7]Offloading a File to a Tier Using the
+       CLI and REST API. Alternatively, if the volume that the file is
+       associated with has a data offload schedule, the file data is
+       automatically offloaded based on the rules associated with the
+       volume.
+     * Recall or abort operation, you can run the command again to retry
+       the operation if the error returned is not EIO.
+
+   You can configure the number of times CLDB retries and the interval
+   between retries using the CLI.
+
+Configuring the Number of Retries
+
+   Set the value for the cldb.gateway.retry.count parameter, whose default
+   value is 5, to configure the number of times that CLDB tries again. For
+   example, to configure CLDB to retry to offload, recall, or abort at
+   least 10 times, run the following command:
+# maprcli config save –values {"cldb.gateway.retry.count":"10"}
+
+Configuring the Interval Between Retries
+
+   Set the value for the cldb.gateway.retry.waittime.seconds parameter,
+   whose default value is 1800 seconds (30 minutes), to configure the
+   amount of time CLDB waits between retries. For example, to configure
+   CLDB to wait for up to 4 hours (14400 seconds), run the following
+   command:
+# maprcli config save –values {"cldb.gateway.retry.waittime.seconds":"14400"}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RetryJob.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RetryJob.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierjobstatus.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/file-tierstatus.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadFileData.html

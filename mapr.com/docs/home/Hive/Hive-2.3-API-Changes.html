@@ -1,0 +1,90 @@
+Hive 2.3 API Changes
+
+   This topic describes the public API changes that occurred between Hive
+   2.1 MEP 5.0.0 and Hive 2.3 MEP 6.0.0.
+
+   For more information, see the [1]Hive 2.1.1-1803 (MEP 4.1.1 and MEP
+   5.0.0) Release Notes and [2]Hive 2.3.3-1808 (MEP 6.0.0) Release Notes.
+
+JDBC classes API changes
+
+   This section contains changes made to classes related to the JDBC API
+   in Hive.
+
+   CAPTION: Table 1. Class org.apache.hive.jdbc.HiveConnection
+
+   Method Description
+   List<String> parseInitFile(String initFile) Parses initial SQL file
+   skipping comments that starts with # or --.
+
+   CAPTION: Table 2. Class org.apache.hive.jdbc.HiveStatement
+
+   Method Description
+   void setInPlaceUpdateStream(InPlaceUpdate stream) Only used by the
+   beeline client to set the stream on which in place progress updates are
+   to be shown.
+
+   CAPTION: Table 3. Class org.apache.hive.jdbc.Utils
+
+   Method Description
+   JdbcConnectionParams parseURL(String uri) Parse JDBC connection URL The
+   new format of the URL is:
+jdbc:hive2://:,:/dbName;sess_var_list?hive_conf_list#hive_var_list
+
+   where the optional sess, conf, and var lists are semicolon separated =
+   pairs. For utilizing dynamic service discovery with HiveServer2,
+   multiple comma-separated host:port pairs can be specified as shown
+   above. The JDBC driver resolves the list of URIs and picks a specific
+   server instance to connect to. Currently, dynamic service discovery
+   using ZooKeeper is supported, in which case the host:port pairs
+   represent a ZooKeeper ensemble. As before, if the host/port is not
+   specified, it the driver runs an embedded Hive:
+     * jdbc:hive2://ubuntu:11000/db2?hive.cli.conf.printheader=true;hive.e
+       xec.mode.local.auto.inputbytes.max=9999
+       #stab=salesTable;icol=customerID
+     * jdbc:hive2://?hive.cli.conf.printheader=true;hive.exec.mode.local.a
+       uto.inputbytes.max=9999 #stab=salesTable;icol=customerID
+     * jdbc:hive2://ubuntu:11000/db2;user=foo;password=bar
+
+   Connect to http://server:10001/hs2, with specified basicAuth
+   credentials and initial database:
+jdbc:hive2://server:10001/db;user=foo;password=bar?hive.server2.transport.mode=
+http;hive.server2.thrift.http.path=hs2
+
+Security-related API changes
+
+   The following properties are removed from the default hive-site.xml
+   configuration on a secured cluster:
+
+   CAPTION: Table 4. Properties removed from default hive-site.xml
+
+                 Property                          Value
+   hive.server2.webui.keystore.path     /opt/mapr/conf/ssl_keystore.
+   hive.server2.webui.keystore.password Default keystore password.
+
+   The following property is added to the default hive-site.xml
+   configuration on a secured cluster:
+
+   CAPTION: Table 5. Properties added to default hive-site.xml
+
+            Method           Description
+   hive.server2.use.SSL true true
+
+   Since the HiveServer2 server is configured to use SSL encryption by
+   default starting from Hive-2.3 MEP-6.0.0, add ssl=true; to a JDBC
+   connection string when PAM or MAPR-SASL authentication is used.
+
+   For example:
+   Old JDBC connection string with PAM authentication:
+beeline> !connect jdbc:hive2://<host>:10000/default;
+
+   New JDBC connection string with PAM authentication:
+beeline> !connect jdbc:hive2://<host>:10000/default;ssl=true;
+
+   Note: All API functionality changes are compatible with previous
+   versions.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/HiveRN-2.1.1-1803.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/HiveRN-2.3.3-1808-MEP6.0.0.html

@@ -1,0 +1,76 @@
+Security Exceptions
+
+   "Secure by default" means network-safe authentication and encryption.
+   This page describes areas in which secure-by-default capabilities are
+   not yet implemented for the MapR platform or ecosystem components.
+   Included where applicable are links to more information to help you
+   work around those issues.
+
+Flume
+
+   Flume does not provide encryption by default for secure clusters but
+   can be secured through manual configuration. See [1]Configuring Flume.
+   In addition, Flume does not support any authentication mechanism for an
+   Avro client.
+
+Hive
+
+   Any user using beeline can install Java code as a Hive hook. On the
+   MapR platform, these hooks run as the mapr user, which could represent
+   a security vulnerability. To prevent a malicious user from using Hive
+   hooks to install malware on a MapR cluster, the cluster admin should
+   add the following properties to the default value of
+   hive.conf.restricted.list in the hive-site.xml file, and then restart
+   HiveServer 2 (HS2):
+     * hive.exec.pre.hooks
+     * hive.exec.post.hooks
+     * hive.exec.failure.hooks
+     * hive.exec.query.redactor.hooks
+
+   Adding the properties prevents a non-admin user from installing hooks
+   into Hive. For more information, see [2]Preventing a Non-Administrative
+   User from Installing Hooks.
+
+Hue
+
+   Certificate verification is disabled on Hue.
+
+Impala
+
+   Impala is not secure by default, but encryption and authentication can
+   be enabled. See [3]Impala Security.
+
+KSQL
+
+   KSQL does not support encryption between a KSQL client and KSQL server.
+
+NFSv3
+
+   NFSv3 is not secure by default, and there are no provisions for
+   authentication or network encryption.
+
+NFSv4
+
+   NFSv4 is not secure by default, but it can be secured using Kerberos to
+   enable both encryption and authentication. See [4]Configuring NFSv4
+   Server for Kerberos.
+
+OpenTSDB
+
+   There is no authentication or network encryption by default for read
+   access over REST, and authentication and encryption cannot be enabled.
+   However, note that no updates are allowed over REST; therefore,
+   intruders cannot alter cluster metric data.
+
+ZooKeeper
+
+   ZooKeeper supports server-to-server authentication by default, but
+   ZooKeeper does not support encryption and cannot be configured to do
+   so.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Flume/ConfigFlume.html#ConfiguringFlumeonaSecure_26281171-d3e61
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/PreventingUserInstallingHooks.html#PreventingUserInstallingHooks
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Impala/ImpalaSecurity.html#ImpalaSecurity
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/NFSv4KerberosConfig.html#NFSv4KerberosConfig

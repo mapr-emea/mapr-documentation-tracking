@@ -1,0 +1,91 @@
+Data Compaction
+
+   When you release the space allocated to a volume on the MapR cluster by
+   deleting a file or snapshot, or by truncating a file, MapR's tier
+   compactor can be set up to run automatically or manually to release the
+   space on the tier associated with the volume by deleting the
+   corresponding stripes or objects from the tier. In addition, when you
+   recall data, the compactor automatically purges the recalled data on
+   the MapR cluster if there are no changes to the data. By default, the
+   compactor runs on an automatic internal schedule to determine if any
+   deletion has happened on the MapR cluster since it last ran and if
+   necessary, remove the corresponding stripelets or objects from the
+   tier.
+   MapR uses two settings (at the volume level) to determine when and how
+   frequently to run the compactor:
+     * Overhead threshold — You can specify a percentage of offloaded data
+       that must have been deleted to trigger the compaction operation. By
+       default, the compactor performs the compaction operation only if at
+       least 30% of the offloaded data is deleted.
+     * Compactor schedule — You can set up a custom schedule to run the
+       compactor. By default, MapR uses the Internal Automatic Scheduler
+       (ID is 4), which is based on internal parameters, to run the
+       compactor.
+
+   The compactor runs only when there are no other tiering operations
+   running for the volume. If there are other tiering operations, such as
+   offload or recall, running for the volume, the compactor does not run
+   until the tiering operation completes. If a tiering operation is
+   triggered while the compactor is running, the tiering operation will
+   fail. You cannot trigger a volume-level tiering job when another job is
+   running for the volume. You can trigger a file-level offload or recall
+   operation when a volume level job is running and vice versa.
+
+Purging Recalled Data
+
+   When you recall data to the MapR cluster explicitly (by running the
+   recall command) or implicitly (by doing a read or an overwrite), the
+   recalled data is purged by the compactor if there are no changes to the
+   data and if the expiration time for recalled data has been reached or
+   has passed. You can also manually run the compactor to force an
+   immediate purge of recalled data. See [1]Running the Compactor to Purge
+   Recalled Data on the MapR Cluster for more information.
+
+Purging Stale Data
+
+   When you release space on the MapR cluster by deleting or modifying
+   data, the compactor purges the data on the tier also. Depending on
+   whether file data is completely deleted or partially deleted on the
+   MapR cluster, the MapR compactor processes purging of data on the tier.
+     * [2]Warm Tier
+     * [3]Cold Tier
+
+   For warm tiered volumes, the MapR compactor identifies corresponding
+   objects (or stripes) on the tier and deletes entire objects first.
+   After deleting entire objects, if there are partial objects to delete,
+   the MapR compactor identifies the objects (with partially deleted data)
+   that can be coalesced, fetches them, creates new objects with combined
+   data, updates the metadata in the DB tables, deletes the old objects
+   from the tier, and offloads the new objects to the tier. The compactor
+   handles partial deletions only after deleting entire objects and only
+   if the size of the remaining data to delete exceeds the compaction
+   threshold.
+
+   For cold tiered volumes in the S3 environment, while entire objects can
+   be easily deleted, modifications and partial deletions are not
+   supported. For example, suppose data associated with a file is
+   distributed across objects. When a file is deleted on the MapR cluster,
+   corresponding data on the S3 tier can be easily removed if the object
+   in the S3 only contains data associated with the deleted file. On the
+   other hand, if the object contains data from other files also, the
+   object cannot be deleted and S3 does not support changes to the object
+   or partial deletion of the object.
+
+   For partial deletions, the MapR compactor identifies the objects (with
+   partially deleted data) that can be coalesced, fetches them, creates
+   new objects with combined data, updates the metadata in the DB tables,
+   deletes the old objects from the tier, and offloads the new objects to
+   the S3 tier. The compactor handles partial deletions only after
+   deleting entire objects and only if the size of the remaining data to
+   delete exceeds the compaction threshold.
+
+   You can manually trigger the compactor to purge the stale data on the
+   tier. See [4]Running the Compactor to Purge Stale Data on the Tier for
+   more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RunCompactor.html#recall-data
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataCompaction.html#div1entry1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/DataCompaction.html#div1entry2
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RunCompactor.html#tier-data

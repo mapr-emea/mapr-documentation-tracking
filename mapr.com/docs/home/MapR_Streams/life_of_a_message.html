@@ -1,15 +1,17 @@
 Life of a Message
 
-   To show how the MapR-ES concepts fit together, here is an example of
-   the flow of one message from a producer to a consumer.
+   To show how the MapR Event Store For Apache Kafka concepts fit
+   together, here is an example of the flow of one message from a producer
+   to a consumer.
 
 The Setup
 
-   Suppose that you are using MapR-ES as part of a system to monitor
-   traffic in San Francisco. Your producers are sensors in streets,
-   freeways, bridges, overpasses, and other infrastructure, as well as
-   sensors reporting the weather in many different locations. Your
-   consumers are various analytical and reporting tools.
+   Suppose that you are using MapR Event Store For Apache Kafka as part of
+   a system to monitor traffic in San Francisco. Your producers are
+   sensors in streets, freeways, bridges, overpasses, and other
+   infrastructure, as well as sensors reporting the weather in many
+   different locations. Your consumers are various analytical and
+   reporting tools.
 
    In a volume in a MapR cluster, you create the stream
    /somepath/traffic_monitoring. In that stream, you create the topics
@@ -32,29 +34,32 @@ A Message Enters the System
    [message_enters_e.png]
     1. A car, one of hundreds on Market Street in morning rush-hour
        traffic, runs over the sensor. This action triggers the sensor to
-       send a message to a MapR-ES producer client library.
+       send a message to a MapR Event Store For Apache Kafka producer
+       client library.
        Note: This message might list geospatial coordinates, time, date,
        direction, weight, distance between front and rear wheels, and
-       more. MapR-ES does not help you decide which data to collect.
+       more. MapR Event Store For Apache Kafka does not help you decide
+       which data to collect.
     2. The client buffers the message.
     3. When the client has a large enough number of messages buffered
        (because other cars have subsequently triggered the sensor) or
        after an interval of time has expired, the client batches and sends
        the messages in the buffer. The message that we are following is
        published in the partition along with the rest of the messages in
-       the batch. When the message is published, the MapR-ES server
-       assigns it the offset 001030 (which is only an example offset; real
-       offsets are more sophisticated). These messages being the most
-       recent to be published, they are written to the head of the
-       partition.
+       the batch. When the message is published, the MapR Event Store For
+       Apache Kafka server assigns it the offset 001030 (which is only an
+       example offset; real offsets are more sophisticated). These
+       messages being the most recent to be published, they are written to
+       the head of the partition.
        For a moment, suppose that this example used more than one
-       partition. In that case, the sensor could influence how the MapR-ES
-       server determines which messages go to which partition. In the
-       example that we're following, the sensor could include a key with
-       each message. The MapR-ES server would hash the key to determine
-       which partition to place all messages from the sensor in. More
-       information about how partitions are selected if there are more
-       than one in a topic is explained later in this documentation.
+       partition. In that case, the sensor could influence how the MapR
+       Event Store For Apache Kafka server determines which messages go to
+       which partition. In the example that we're following, the sensor
+       could include a key with each message. The MapR Event Store For
+       Apache Kafka server would hash the key to determine which partition
+       to place all messages from the sensor in. More information about
+       how partitions are selected if there are more than one in a topic
+       is explained later in this documentation.
     4. Each partition and all of its messages are replicated. The server
        owning the primary partition for the traffic topic assigns the
        offset 001030 to the message that we're following, and replicates

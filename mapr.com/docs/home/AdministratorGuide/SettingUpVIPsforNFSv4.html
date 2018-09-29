@@ -1,0 +1,100 @@
+Setting Up VIPs for NFSv4
+
+   You can set up VIPs using the MapR Control System or the CLI.
+   Note: The NFSv3 server (mapr-nfsserver) nodes cannot failover to NFSv4
+   server (mapr-nfs4server) nodes and vice versa. Ensure that different
+   set of VIPs are assigned for NFSv3 and NFSv4 server nodes. When running
+   the maprcli virtualip add command to set up VIPs, list the MACs of the
+   respective nodes so that the failover works properly (this is necessary
+   if both NFSv3 and NFSv4 are going to be set up on the same cluster).
+   The MACs should be mutually exclusive as both NFSv3 and NFSv4 servers
+   cannot run on the same node.
+
+Adding VIPs Using the MapR Control System
+
+   You can use the MCS to specify a range of virtual IP addresses and
+   assign them to the pool of servers that are running the NFS service.
+   You can also restrict the assignment of virtual IP addresses to certain
+   subnets.
+
+   Before following this procedure, make sure:
+     * You have installed NFS on at least three nodes (recommended).
+     * You have started the NFS gateway service on the servers to which
+       you plan to assign VIPs.
+
+    1. Log in to MCS and go to the [1]NFS4 service information page where
+       you can configure VIPs for NFSv4 nodes.
+    2. Click Add Virtual IP to display the Add Virtual IP page.
+    3. Enter the start of the VIP range in the Starting Virtual IP field.
+       MapR distributes the VIPs in this range to the selected network
+       interfaces. VIPs are automatically migrated between the network
+       interfaces when failures occur.
+    4. Enter the end of the VIP range in the Ending Virtual IP field.
+       If you are assigning only one VIP, you can leave the field blank.
+       MapR distributes the VIPs in this range to the selected network
+       interfaces. VIPs are automatically migrated between the network
+       interfaces when failures occur.
+    5. Enter the Netmask for the VIP range in the Netmask field.
+       For example: 255.255.255.0MapR assigns this netmask to the network
+       interfaces along with the VIPs.
+    6. Specify whether (Yes) or not (No) to assign a particular VIP
+       address to a specific server or MAC address. If Yes, enter the MAC
+       address for the network interface to be assigned to the listed VIP
+       address. The remaining VIP addresses from the same pool are
+       assigned randomly.
+    7. Select one of the following:
+          + Use all network interfaces on all nodes that are running the
+            NFS Gateway service to set up VIPs that use all network
+            interfaces on all the nodes running the NFS Gateway service.
+            If additional NFS Gateway services are started, the network
+            interfaces on their nodes will automatically become candidates
+            for the VIPs in this range.
+          + Select network interfaces to restrict the assignment of
+            virtual IP addresses to certain subnets:
+            A list of available and selected node names, physical IP
+            addresses, and MAC addresses displays. Select from the:
+               o Available list and click [rightArrow.png] to move
+                 selection to Selected VIPs.
+               o Selected list and click [leftArrow.png] to remove from
+                 selected list of VIPs.
+            See [2]Designating NICs for MapR.
+    8. Confirm the actual VIP assignment by clicking Save Changes.
+       It might take up to 40 seconds to assign the VIPs. If necessary,
+       refresh the page in your browser to view the list of VIPs.
+
+Setting up VIPs for NFSv4 Server from the Command-Line
+
+   Virtual IP addresses (VIPs) allow you to achieve HA with failover when
+   the NFS servers use them to connect the your cluster. When configuring
+   VIPs for NFSv4 servers, ensure that you select NFSv4 server nodes only.
+   MapR does not support failing over between v3 and v4 servers.
+
+   To set up VIPs for NFSv4 server:
+    1. Add VIPs to the NFS server nodes in the cluster by running the
+       [3]virtualip add command.
+       For example:
+maprcli virtualip add -service nfs4 -netmask netmask> -virtualip <vip> -macs <ma
+c>
+       For the complete list of required and optional parameters, see
+       [4]virtualip add.
+    2. Add hostname for each VIP in the /etc/hosts file.
+       Note: Make the changes to the /etc/hosts file on all the nodes in
+       the cluster.
+    3. Add the principal for each VIP and generate the keytab file. That
+       is, repeat this step in the following order for each VIP:
+         a. Add the principals for the following:
+               o NFS server hostnames in the kerberos server.
+               o VIP hostname in the kerberos server.
+         b. Generate the keytab file, which contains entries for all the
+            NFS server and VIP hostname principals.
+    4. Restart rpc.gssd services on all the NFSv4 server nodes.
+       To restart, run the following command:
+service rpcgssd start
+    5. Mount the cluster.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/ViewInfo.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DesignatingNICs.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-add.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/virtualip-add.html

@@ -25,7 +25,7 @@ Step 9: Install Log Monitoring
        not installed. uuid-runtime is one of the package dependencies
        required for installing without the MapR Installer. See the entry
        for SPYG-934 and uuid-runtime in the [1]Known Issues at Release
-       (MapR 6.0.1).
+       (MapR 6.1.0).
        For example, on a three node MapR cluster, you can run the
        following commands to install log packages:
           + For CentOS/RedHat:
@@ -65,56 +65,98 @@ comma-separated list of Elasticsearch nodes> -R -EPelasticsearch -genESKeys
             hostname node1.qa.lab returns 192.100.1.1. If the DNS lookup
             for 192.100.1.1 returns nothing (instead of hostname
             node1.qa.lab), key creation will fail.
-         c. Copy the specified files to the locations indicated in the
-            table below:
+         c. For Elasticsearch, copy the specified files to the locations
+            indicated in the following table:
 
-   File Permissions Copy from location (on master) Copy to location (on
+   File Permissions Copy from location (on master) Copy to location (all
    other ES nodes)*
    es-root-ca.pem 0600
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/ca/es-
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/ca/es-
    root-ca.pem
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/ca
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/ca
+   admin-usr-private-key.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/admin-
+   usr-private-key.pem
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/certs
+   admin-usr-signed.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/admin-
+   usr-signed.pem
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/certs
    truststore.jks 0640
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/trusts
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/trusts
    tore.jks
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/keystores
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/keystores
    admin-usr-keystore.jks 0640
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/admin-
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/admin-
    usr-keystore.jks
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/keystores
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/keystores
    /admin-usr-keystore.jks
    <node-fqdn>-srvr-keystore.jks 0640
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/<node-
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/<node-
    fqdn>-srvr-keystore.jks
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/keystores
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/keystores
 
    Note: Only include the file that matches the nodename.
    sg2.yml 0600
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/sg2.ym
-   l /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/sg2.ym
+   l /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/
    sg_http_<node-fqdn>.yml 0600
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/sg_htt
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/sg_htt
    p_<node-fqdn>.yml
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch
 
    Note: Only include the file that matches the nodename.
    sg_ssl_<node-fqdn>.yml 0600
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/sg_ssl
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/sg_ssl
    _<node-fqdn>.yml
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch
 
    Note: Only include the file that matches the nodename.
    .keystore_password 0600
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/.keystore
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/.keystore
    _password
-   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/.keystore
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/.keystore
    _password
             *The Copy to directories might not exist and might need to be
             created.
-         d. Copy the es-root-ca.pem file from the master Elasticsearch
-            node to each Kibana node, as shown:
-cp /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/ca/es-root-c
-a.pem /opt/mapr/kibana/kibana-5.4.1/config/ca/es-root-ca.pem
+         d. For Kibana, copy the specified files to the locations
+            indicated in the following table:
+
+   File Permissions Copy from location (on master) Copy to location (all
+   other Kibana nodes)*
+   es-root-ca.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/ca/es-
+   root-ca.pem /opt/mapr/kibana/kibana-6.2.3/config/ca
+   kibanaserver-usr-clientCombo.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/kibana
+   -server-usr-clientCombo.pem /opt/mapr/kibana/kibana-6.2.3/config/certs
+   kibanaserver-usr-signed.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/kibana
+   -server-usr-signed.pem /opt/mapr/kibana/kibana-6.2.3/config/certs
+   kibanaserver-usr-private-key.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/kibana
+   -server-usr-private-key.pem /opt/mapr/kibana/kibana-6.2.3/config/certs
+            *The Copy to directories might not exist and might need to be
+            created.
+         e. For Fluentd, copy the specified files to the locations
+            indicated in the following table:
+
+   File Permissions Copy from location (on master) Copy to location (all
+   other Fluentd nodes)*
+   es-root-ca.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg/ca/es-
+   root-ca.pem /opt/mapr/fluentd/fluentd-<version>/etc/fluentd/ca/
+   fluentd-usr-signed.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/fluent
+   d-usr-signed.pem /opt/mapr/fluentd/fluentd-1.1.2/etc/fluentd/certs
+   fluentd-usr-private-key.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/fluent
+   d-usr-private-key.pem /opt/mapr/fluentd/fluentd-1.1.2/etc/fluentd/certs
+   fluentd-usr-clientCombo.pem 0600
+   /opt/mapr/elasticsearch/elasticsearch-6.2.3/etc/elasticsearch/sg/fluent
+   d-usr-clientCombo.pem /opt/mapr/fluentd/fluentd-1.1.2/etc/fluentd/certs
+            *The Copy to directories might not exist and might need to be
+            created.
     4. MapR 6.0.1 and later: For secure MapR clusters, copy the
        $ES_HOME/etc/elasticsearch/.keystore_password file from the
        Elasticsearch master node to $KIBANA_HOME/config/.keystore_password

@@ -1,0 +1,142 @@
+NFSv4 Troubleshooting
+
+   Issues with listing the exports:
+          If nfs4mgr list-exports command returns the error, Error
+          org.freedesktop.DBus.Error.ServiceUnknown: The name
+          org.ganesha.nfsd was not provided by any .service files, do the
+          following to resolve the error:
+
+         1. Open the /etc/dbus-1/system.conf file.
+         2. Find and replace the following in the file:
+              a. Find:
+<deny send_destination="org.freedesktop.DBus"
+ send_interface="org.freedesktop.DBus"
+ send_member="UpdateActivationEnvironment"/>
+              b. Replace with:
+<!-- Allow anyone to talk to the message bus -->
+<allow send_destination="org.freedesktop.DBus"/>
+<!-- But disallow some specific bus services -->
+<allow send_interface="*"/>
+<allow receive_interface="*"/>
+<allow own="*"/>
+         3. Save and close the file.
+         4. Restart the messagebus and NFSv4 service.
+            To restart the messagebus service, run the following command:
+service messagebus restart
+            To restart NFSv4 service, see [1]Starting, Stopping, and
+            Restarting MapR NFSv4.
+
+   Lock expires as a result of problems in node connection or node
+          failover:
+          If the lock expires as a result of problems in node connection
+          or node failover, all IOs from the application will fail with
+          EIO message to prevent the file from getting corrupted. You can
+          tune the kernel to reclaim lost locks and not fail writes on
+          lock lease expiration. To tune the kernel, run the following
+          command:
+
+echo Y > /sys/module/nfs/parameters/recover_lost_locks
+
+          Warning: This kernel tuning this might result in data
+          corruption.
+
+   User ID mapping is not working when NFSv4 server and client are in two
+          different sub-domains:
+          If user ID (with FQDN user names) mapping is not working with
+          the installed libnfsidmap library (for example,
+          libnfsidmap-0.25-19 on Centos), do the following:
+
+         1. Download the latest libnfsidmap library for the OS.
+            For CentOS:
+              a. Download the library source with the patches.
+              b. Apply the patches till
+                 libnfsidmap-0.25-dns-resolved.patch.
+              c. Build the new library.
+         2. Stop NFSv4 service and replace the old library with the new
+            library.
+         3. Replace the old nsswitch.so file with the new nsswitch.so file
+            that is compiled.
+         4. Restart rpcidmapd service and NFSv4 service.
+
+   NFS Ganesha crashes when unmounting the cluster:
+          NFS Ganesha crashes when unmounting the cluster as a non-root
+          user. Download and install the following Kerberos 16 package:
+
+          + sssd-krb5-common-1.16.0-19.el7.x86_64
+          + sssd-krb5-1.16.0-19.el7.x86_64
+
+   Discover realm command fails:
+          If the realm discover command fails with following error: realm:
+          Couldn't connect to realm service: Error calling
+          StartServiceByName for org.freedesktop.realmd:
+          GDBus.Error:org.freedesktop.DBus.Error.TimedOut: Activation of
+          org.freedesktop.realmd timed out, reboot the node and add Active
+          Directory information in the /etc/resolv.conf again. For
+          example, your entry in the /etc/resolv.conf file should look
+          similar to the following:
+
+# cat /etc/resolv.conf
+nameserver 10.10.111.41
+domain nfs4ad.com
+search nfs4ad.com lab qa.lab scale.lab perf.lab ipmi.lab
+
+   Unable to start the service:
+          If you or the warden is unable to restart the NFS service, do
+          the following:
+
+         1. Review the warden logs (in $MAPR_HOME/logs/warden.log file) to
+            determine when the [2]NFSv4 Service Alarm was raised.
+         2. Review the following NFSv4 server logs in
+            $MAPR_HOME/logs/nfs4/nfs4server.log-0 and
+            $MAPR_HOME/logs/nfs4/fsal.log-0, and other logs under
+            $MAPR_HOME/logs/nfs4 on the node where the service went down
+            to determine the cause for the error.
+            The following example logs show some common causes for NFSv4
+            service shutting down such as license not present or an issue
+            in the configuration.
+# tail -f /opt/mapr/logs/nfs4/fsal.log-0
+2018-08-10 04:04:20,3058 FATAL FuseOps fs/client/fuse/cc/fuse_ops_ll.c:505 Threa
+d: 1209 No license found. Shutting down
+
+2018-08-10 04:04:34,6487 ERROR FuseAPI fc/fuse_api.cc:1384 Thread: 8877 Shmid to
+ be used by fcdebug 1003847690, guts 0
+2018-08-10 04:04:34,7749 ERROR Cidcache fc/cidcache.cc:5448 Thread: 8877 License
+ not found. Shutting down
+2018-08-10 04:04:34,7749 FATAL FuseOps fs/client/fuse/cc/fuse_ops_ll.c:505 Threa
+d: 8877 No license found. Shutting down
+
+2018-08-10 04:04:48,6729 ERROR FuseAPI fc/fuse_api.cc:1384 Thread: 15412 Shmid t
+o be used by fcdebug 1005748236, guts 0
+2018-08-10 04:04:48,7412 ERROR Cidcache fc/cidcache.cc:5448 Thread: 15412 Licens
+e not found. Shutting down
+2018-08-10 04:04:48,7413 FATAL FuseOps fs/client/fuse/cc/fuse_ops_ll.c:505 Threa
+d: 15412 No license found. Shutting down
+# tail -f /opt/mapr/logs/nfs4/nfs4server.log-0
+10/08/2018 T05:58:06.410328-0700 8163[none] [main] 713 :export_commit_common :Ex
+porting to NFSv4 but not Pseudo path defined
+10/08/2018 T05:58:06.410338-0700 8163[none] [main] 2267 :fsal_put :FSAL MAPR now
+ unused
+10/08/2018 T05:58:06.410369-0700 8163[none] [main] 1443 :build_default_root :Exp
+ort 0 (/) successfully created
+10/08/2018 T05:58:06.410373-0700 8163[none] [main] 476 :main :No export entries
+found in configuration file !!!
+10/08/2018 T05:58:06.410380-0700 8163[none] [main] 219 :config_errs_to_log :Conf
+ig File (/opt/mapr/conf/nfs4server.conf:104): Syntax error in statement
+10/08/2018 T05:58:06.410384-0700 8163[none] [main] 219 :config_errs_to_log :Conf
+ig File (/opt/mapr/conf/nfs4server.conf:65): Unknown parameter (nfs_track_memory
+)
+10/08/2018 T05:58:06.410387-0700 8163[none] [main] 219 :config_errs_to_log :Conf
+ig File (/opt/mapr/conf/nfs4server.conf:68): Unknown parameter (mapr_log_debug_l
+evel)
+10/08/2018 T05:58:06.410389-0700 8163[none] [main] 219 :config_errs_to_log :Conf
+ig File (/opt/mapr/conf/nfs4server.conf:95): 1 validation errors in block EXPORT
+10/08/2018 T05:58:06.410392-0700 8163[none] [main] 219 :config_errs_to_log :Conf
+ig File (/opt/mapr/conf/nfs4server.conf:95): Errors processing block (EXPORT)
+10/08/2018 T05:58:06.411681-0700 8163[none] [main] 1040 :cache_inode_lru_pkginit
+ :Setting the system-imposed limit on FDs to 65536.
+         3. Take corrective action to rectify the cause for the error.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/services/StartStopRestartNFSv4.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/NodeAlarms-NFSv4ServiceAlarm.html

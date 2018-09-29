@@ -31,24 +31,24 @@ ALTER SESSION SET `planner.enable_index_planning` = false
    the results of a non-covering query in sorted order.
    false true|false
    planner.enable_rowkeyjoin_conversion Introduced in Drill 1.13. Drill
-   can push down the rowkey filter to MapR-DB during runtime. For a query
-   to qualify for runtime filter pushdown, the join condition must filter
-   on a rowkey. A rowkey is the value of the _id field in a JSON document,
-   for example:
+   can push down the rowkey filter to MapR Database during runtime. For a
+   query to qualify for runtime filter pushdown, the join condition must
+   filter on a rowkey. A rowkey is the value of the _id field in a JSON
+   document, for example:
 SELECT t.mscIdentities FROM dfs.root.`/user/mapr/MixTable` t WHERE t.row_key IN
 (SELECT max(convert_fromutf8(i.KeyA.ENTRY_KEY)) FROM dfs.root.`/user/mapr/TableI
 MSI` i WHERE i.row_key='460021050005636')
 
    Drill evaluates the results of the subquery at runtime. The subquery
    yields a list of rowkeys from the TableIMSI table. Drill pushes down
-   the list of rowkeys to MapR-DB. MapR-DB uses the rowkeys to locate the
-   corresponding documents in the MixTable table and sends the results to
-   Drill.
+   the list of rowkeys to MapR Database. MapR Database uses the rowkeys to
+   locate the corresponding documents in the MixTable table and sends the
+   results to Drill.
    Note: Currently, Drill does not support runtime filters for queries
    with equality conditions. The query planner in Drill converts an
    equality condition to a left join. As a workaround, use the IN operator
    instead of the equality (=) operator for queries in which you want
-   Drill to push down the rowkey filter to MapR-DB.
+   Drill to push down the rowkey filter to MapR Database.
    Drill does not perform runtime filter pushdown for queries that filter
    on rowkeys in small fact tables when the rowcount is generated from the
    right side of the join. true true|false

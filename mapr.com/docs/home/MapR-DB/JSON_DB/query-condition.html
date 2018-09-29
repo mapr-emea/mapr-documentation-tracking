@@ -10,11 +10,14 @@ Querying with Conditions
    Indexes for more details.
      * [3]Java - OJAI QueryCondition Object
      * [4]Java - OJAI Query Condition in JSON Format
-     * [5]dbshell
+     * [5]Node.js - OJAI Query Condition in JSON Format
+     * [6]Python - OJAI QueryCondition Object
+     * [7]Python - OJAI Query Condition in JSON Format
+     * [8]dbshell
 
    The following example shows how to return all documents from a store
-   where address.zipCode equals 95196, using the [6]Query.where method. It
-   uses an OJAI [7]QueryCondition to specify the condition.
+   where address.zipCode equals 95196, using the [9]Query.where method. It
+   uses an OJAI [10]QueryCondition to specify the condition.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -83,8 +86,8 @@ n
 }
 
    The following example shows how to return all documents from a store
-   where address.zipCode equals 95196, using the [8]Query.where method. It
-   specifies the query condition using a JSON string.
+   where address.zipCode equals 95196, using the [11]Query.where method.
+   It specifies the query condition using a JSON string.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -147,8 +150,130 @@ n
 
 }
 
+   The following example uses an OJAI query condition specified in JSON
+   format to return all documents from a store where address.zipCode
+   equals 95196.
+/*
+ * Copyright (c) 2018 MapR, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { ConnectionManager } = require('node-maprdb');
+
+const connectionString = 'localhost:5678?' +
+  'auth=basic;' +
+  'user=mapr;' +
+  'password=mapr;' +
+  'ssl=true;' +
+  'sslCA=/opt/mapr/conf/ssl_truststore.pem;' +
+  'sslTargetNameOverride=node1.mapr.com';
+
+let connection;
+
+// Create a connection to data access server
+ConnectionManager.getConnection(connectionString)
+  .then((conn) => {
+    connection = conn;
+    // Get a store
+    return connection.getStore('/demo_table');
+  })
+  .then((store) => {
+    // Create an OJAI query
+    const query = {"$where": {"$eq": { 'address.zipCode': 95196 }}};
+    // fetch OJAI Documents by query
+    return store.find(query);
+  })
+  .then((queryResult) => {
+    queryResult.on('data', (document) => {
+      // Print OJAI Documents from document stream
+      console.log(document);
+    });
+    queryResult.on('end', () => {
+      // close the OJAI connection
+      connection.close();
+    });
+  });
+
+   The following example shows how to return all documents from a store
+   where address.zipCode equals 95196, using the [12]Query.where method.
+   It uses an OJAI [13]QueryCondition to specify the condition.
+from mapr.ojai.ojai_query.QueryOp import QueryOp
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+# Create an OJAI query
+query = connection.new_query()\
+    .where(connection.new_condition()
+           .is_('address.zipCode', QueryOp.EQUAL, 95196)
+           .close()
+           .build())\
+    .build()
+
+# fetch the OJAI Documents by query
+query_result = store.find(query)
+
+# Print OJAI Documents from document stream
+for doc in query_result:
+    print(doc)
+
+# close the OJAI connection
+connection.close()
+
+   The following example uses an OJAI query condition specified in JSON
+   format to return all documents from a store where address.zipCode
+   equals 95196.
+from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
+
+# Create a connection to data access server
+connection_str = "localhost:5678?auth=basic;user=mapr;password=mapr;" \
+          "ssl=true;" \
+          "sslCA=/opt/mapr/conf/ssl_truststore.pem;" \
+          "sslTargetNameOverride=node1.mapr.com"
+connection = ConnectionFactory.get_connection(connection_str=connection_str)
+
+# Get a store and assign it as a DocumentStore object
+store = connection.get_store('/demo_table')
+
+# Create an OJAI query
+query = {"$where": {"$eq": {"address.zipCode": 95196}}}
+
+# options for find request
+options = {
+    'ojai.mapr.query.result-as-document': True
+    }
+
+# fetch OJAI Documents by query
+query_result = store.find(query, options=options)
+
+# Print OJAI Documents from document stream
+for doc in query_result:
+    print(doc.as_dictionary())
+
+# close the OJAI connection
+connection.close()
+
    The following two dbshell commands are equivalent to the code examples.
-   See [9]dbshell find or findbyid for more details about the syntax
+   See [14]dbshell find or findbyid for more details about the syntax
    dbshell provides.
 # mapr dbshell
 maprdb root:> find /demo_table --q {"$where":{"$eq":{"address.zipCode":95196}}}
@@ -162,7 +287,12 @@ References
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect1
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect2
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect3
-   6. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
-   7. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/QueryCondition.html
-   8. https://mapr.com/docs/apidocs/60/OJAI/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect4
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect5
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect6
+   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/QueryCondition.html
+  11. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+  12. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#aa1aacf4f5d425ac82b6a5371a95b2277
+  13. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_condition_1_1_query_condition.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html

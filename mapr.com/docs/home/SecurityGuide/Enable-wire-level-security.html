@@ -1,147 +1,63 @@
 Enabling Wire-level Security
 
-   Describes how to enable wire-level security.
-
    Wire-level security encrypts data transmission between the nodes in
    your cluster.
 
-   When you set up a cluster, run the [1]configure.sh script on each node
-   that you want to add to the cluster.
+   You can enable encryption for data on the wire at the volume level only
+   if security is enabled at the cluster level. If necessary, refer to
+   [1]Determining if a Cluster is Secure Using the CLI and REST API to
+   determine if the cluster is secure before enabling wire-level
+   encryption on a volume. If your cluster is enabled for security,
+   wire-level security is enabled by default on all new volumes and no
+   additional steps are required. This section describes how to enable
+   wire-level security on new and existing volumes (if the volume is
+   already not enabled for wire-level security).
 
-Basic Procedure
+Enabling Wire-level Security for a Volume Using the MapR Control System
 
-   To enable wire-level encryption for the cluster, follow these steps in
-   order:
-    1. If the cluster is running, [2]shut it down.
-    2. Delete the ssl_keystore, ssl_truststore, ssl_truststore.p12, and
-       ssl_truststore.pem files on a machine where wire-level security is
-       not enabled because the configure.sh script fails if you already
-       have these files in the directory.
-       Note: The ssl_keystore, ssl_truststore, ssl_truststore.p12, and
-       ssl_truststore.pem files are generated during installation of the
-       Web server even if you did not enable security.
-       For example, to delete the files, run the following commands:
-cd /opt/mapr/conf
-/bin/rm -f ssl_keystore ssl_truststore ssl_truststore.p12 ssl_truststore.pem
-       If you are re-running the script due to an invocation error from a
-       previous run, the cldb.key and maprserverticket files may also have
-       been created. Delete these files because the script fails if you
-       already have these files in the directory. For example, run the
-       following command to delete these files:
-cd /opt/mapr/conf
-/bin/rm -f cldb.key maprserverticket ssl_keystore ssl_truststore ssl_truststore.
-p12 ssl_truststore.pem
-    3. Run the configure.sh script with the -secure -genkeys options on
-       the first CLDB node in your cluster:
-/opt/mapr/server/configure.sh -secure -genkeys -Z <Zookeeper_node_list> -C <CLDB
-_node_list> -N <cluster_name>
-       where both <Zookeeper_node_list> and <CLDB_node_list> have the form
-       hostname[:port_no][,hostname[:port_no]...] and -N <cluster_name>
-       specifies the cluster name.
-       Important: You must run configure.sh -genkeys only once on one CLDB
-       node, since the resulting files must be copied to other nodes.
-       This command generates six files in the /opt/mapr/conf directory:
-          + cldb.key
-          + maprserverticket
-          + ssl_keystore
-          + ssl_truststore
-          + ssl_truststore.p12
-          + ssl_truststore.pem
-    4. Copy the cldb.key file to any node that has the CLDB or Zookeeper
-       service installed.
-    5. Copy the maprserverticket, ssl_keystore, ssl_truststore,
-       ssl_truststore.p12, and ssl_truststore.pem files to the
-       /opt/mapr/conf directory of every node in the cluster.
-    6. Verify that the files from the previous step are owned by the user
-       that runs cluster services. This user is mapr by default. Also, the
-       maprserverticket and ssl_keystore files must have their UNIX
-       permission-mode bits set to 600, and the ssl_truststore,
-       ssl_truststore.p12, and ssl_truststore.pem files must be readable
-       to all users.
-    7. Run configure.sh -secure on each existing node in the cluster using
-       the same arguments as in Step 3 but without the -genkeys option.
-/opt/mapr/server/configure.sh -secure -Z <Zookeeper_node_list> -C <CLDB_node_lis
-t> -N <cluster_name>
-       The -secure option indicates that wire-level security must be
-       enabled on the node where the command is run.
-       Important: You must also do this on any nodes that you add to the
-       cluster in the future.
-    8. Copy the ssl_truststore, ssl_truststore.p12, and ssl_truststore.pem
-       files to any client nodes outside the cluster.
-       Important: If you run configure.sh -secure on a node before you
-       copy the necessary files to that node, the command fails.
-    9. Log in as the mapr superuser using the [3]maprlogin command:
-       maprlogin password (in this command, password is literal text).
-   10. Set the volume-level encryption flag (for the volumes whose traffic
-       you wish to encrypt) using the [4]volume create or [5]volume modify
-       command with the -wiresecurityenabled argument set to true.
-   11. If clients will connect to multiple secure clusters, merge the
-       ssl_truststore files with the /opt/mapr/server/manageSSLKeys.sh
-       tool. See [6]Setting Up the Client for more information on MapR
-       clients.
+    1. Log in to MCS and click Data > Volumes.
+    2. Click Create Volume to display the Create New Volume page or go to
+       the [2]Edit Volume page.
+    3. Set the value for the Data on Wire Encryption property to Yes (to
+       enable).
+       See [3]Creating a Volume or [4]Modifying a Volume for more
+       information.
+    4. Complete the steps to create or modify the volume.
+       See [5]Creating a Volume or [6]Modifying a Volume for more
+       information.
 
-Advanced Procedure
+Enabling Wire-Level Security for a Volume Using the CLI and REST API
 
-   In certain situations, you may opt for variant of the basic procedure.
-   Such situations include, but are not limited to the following:
-     * You are running the script on a host that is configured without a
-       domain name.
-     * You have a cluster where all the machines do not have the same
-       domain name.
-     * You wish to import your own custom certificates instead of the
-       self-signed certificates generated by the configure.sh utility.
+     * [7]CLI
+     * [8]REST
 
-Running on Hosts with no Configured Domain Name
+   Set the value for the wiresecurityenabled parameter to true when you:
+     * Create the volume. For example:
+maprcli volume create -name <volName> -path <volMountPath> -wiresecurityenabled
+true
+     * Modify the volume. For example:
+maprcli volume modify -name <volName> -wiresecurityenabled true
 
-   When used without the -certdomain argument, the configure.sh script
-   discovers the domain name of the node on which it is being executed
-   using the hostname -d command and then creates a 100-year self-signed
-   certificate using the PKCS#1 v1.5 with SHA-512 hash function
-   (SHA512withRSA) with a wildcard certificate with the common name (CN)
-   *.<domain>. For example, if hostname -d returns the domain name
-   mycompany.com, then the CN of the certificate is *.mycompany.com. This
-   certificate works for all machines within the mycompany.com domain and
-   can therefore be copied to all cluster nodes as specified in Step 5 in
-   the [7]Basic Procedure.
+   Send a request of type POST and set the value for the
+   wiresecurityenabled parameter to true when you:
+     * Create the volume. For example:
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/create?name=<volName>&path=<
+volMountPath>&wiresecurityenabled=true' --user mapr:mapr
+     * Modify the volume. For example:
+curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=<volName>&wirese
+curityenabled=true' --user mapr:mapr
 
-   Certificate generation fails if the host that you are running the
-   script from is configured without a domain name. To fix this, modify
-   your machine configuration so that hostname -d returns a non-empty
-   string and then run the configure.sh script.
-
-   Alternatively, re-run the script with the -certdomain option as shown
-   in Step 3 of the [8]Basic Procedure:
-/opt/mapr/server/configure.sh -secure -genkeys -certdomain <domain_name> -Z <Zoo
-keeper_node_list> -C <CLDB_node_list> [ -N <cluster_name> ]
-
-Securing Clusters with Multiple Domain Names
-
-   Generally, all machines within a cluster should belong to the same
-   domain. In the unusual case where you have a cluster with different
-   machines belonging to different domains, applications that perform
-   hostname verification can fail if you run the configure.sh script (as
-   described in Step 3 of the [9]Basic Procedure) to generate a
-   single-domain wildcard certificate. In this case, you must provide your
-   own multi-domain wildcard certificate and import the custom certificate
-   into the keystore as described in [10]Importing a Certificate Authority
-   Signed (CA Signed) SSL Certificate Into a MapR Cluster.
-
-Using Custom Certificates
-
-   To import your own custom certificates into the keystore instead of
-   using the self-signed certificates, see [11]Importing a Certificate
-   Authority Signed (CA Signed) SSL Certificate Into a MapR Cluster.
+   See [9]volume create and [10]volume modify for more information.
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ShutDownCluster.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html#basic
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html#basic
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html#basic
-  10. https://mapr.com/support/s/article/Importing-a-Certificate-Authority-Signed-CA-Signed-SSL-Certificate-Into-a-MapR-Clusters
-  11. https://mapr.com/support/s/article/Importing-a-Certificate-Authority-Signed-CA-Signed-SSL-Certificate-Into-a-MapR-Clusters
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DetermineClusterSecurity.html#cli-rest-secure
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVolume.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html#div1entry1
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html#div1entry2
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html

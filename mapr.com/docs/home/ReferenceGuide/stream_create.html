@@ -16,9 +16,10 @@ Permissions Required
      * readAce and writeAce on the volume
      * lookupdir on directories in the path
 
-   Note: The mapr user is not treated as a superuser. MapR-ES does not
-   allow the mapr user to run this command unless that user is given the
-   relevant permission or permissions with access-control expressions.
+   Note: The mapr user is not treated as a superuser. MapR Event Store For
+   Apache Kafka does not allow the mapr user to run this command unless
+   that user is given the relevant permission or permissions with
+   access-control expressions.
 
 Syntax
 
@@ -40,9 +41,12 @@ maprcli stream create
        [ -ischangelog <true|false> default: false ]
        [ -defaulttimestamptype timestamp type: createtime | logappendtime. defau
 lt: createtime ]
-
-
-
+       [ -pidexpirysecs <Producer ID expiry time in seconds. Default: 6048000> ]
+       [ -mincompactionlag <Set time in melliseconds for which a message remains
+ uncompacted. Default: 0> ]
+       [ -deleteretention <Set the time in milliseconds for which delete records
+ are retained.
+                    Default: 86400000> ]
 
    REST http[s]://<host>:<port>/rest/stream/create?path=<path>
 
@@ -131,6 +135,23 @@ Parameters
 
    A logappendtime value is the time when the message (log) was appended
    to the server.
+   pidexpirysecs Specifies the expiration time for the Producer ID. This
+   parameter fixes the lifetime for the Producer ID. Default: 604800
+   mincompactionlag Sets the minimum delay (in milliseconds) before which
+   messages are not compacted. It is the minimum time that the messages
+   are available for consumption. Beyond this time period, the messages
+   may be compacted. Default: 0
+
+   The lag is calculated from the time that a message was produced to the
+   stream topic-partition.
+   Note: Compaction is set only when you edit the stream. See [8]stream
+   edit.
+   deleteretention Sets the minimum time (in milliseconds) before which
+   deleted records are removed. It is the minimum time that the deleted
+   records are still available. Beyone this time period, the deleted
+   messages may be removed. Default: 86400000
+
+   Used with log compaction.
 
 References
 
@@ -141,3 +162,4 @@ References
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_edit.html

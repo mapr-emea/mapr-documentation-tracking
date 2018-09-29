@@ -1,0 +1,75 @@
+Splitting Hive Logs into HiveServer2 and Metastore logs by Process ID
+
+   You can split Hive log files into HiveServer2 and Metestore log files
+   by process ID.
+   To enable this feature, you must create a hive-log4j2.properties file,
+   if one does not already exist, and then edit it:
+    1. If the hive-log4j2.properties file does not exist, create it from
+       the template:
+cp /opt/mapr/hive/hive-<version>/conf/hive-log4j2.properties.template  /opt/mapr
+/hive/hive-<version>/conf/hive-log4j2.properties
+    2. Edit the hive-log4j2.properties file to replace Daily Rolling File
+       Appender (DRFA) with the routing appender:
+#property.hive.root.logger = DRFA
+property.hive.root.logger = routing
+#appenders = console, DRFA
+appenders = console, routing
+    3. Restart Hive services.
+
+   The resultant Hive log structure is as follows:
+   The HiveServer2 log is located at:
+${HIVE_HOME}/log/<ADMIN_USER>/<ADMIN_USER>-hiveserver2-<HOSTNAME>.log.<PID>@<HOS
+TNAME>
+
+   Where:
+     * ${HIVE_HOME} is the home folder for Hive.
+     * <ADMIN_USER> is the administrator user of the cluster. Typically,
+       mapr.
+     * <HOSTNAME> is the host where HiveServer2 log file is placed.
+     * <PID> is the process ID of HiveServer2.
+
+   The Metastore log is located at:
+${HIVE_HOME}/log/<ADMIN_USER>/<ADMIN_USER>-metastore-<HOSTNAME>.log.<PID>@<HOSTN
+AME>
+
+   Where:
+     * ${HIVE_HOME} is the home folder for Hive.
+     * <ADMIN_USER> is the administrator user of the cluster. Typically,
+       mapr.
+     * <HOSTNAME> is the host where Hive Metastore log file is placed.
+     * <PID> is the process ID of Hive Metastore.
+
+Logging CLI session
+
+   After splitting logs for HiveServer2 and Hive Metastore, CLI log
+   appears separately for each CLI session at
+   ${HIVE_HOME}/logs/<USERNAME>.
+   A log file is created for every launched CLI session:
+${HIVE_HOME}/log/<USERNAME>/<USERNAME>-hiveserver2-<HOSTNAME>.log.<PID>@<HOSTNAM
+E>
+
+   Where <PID> is process identifier of the CLI session.
+
+Logging into Default Log Files
+
+   After daemons of HiveServer2 and Hive Metastore are started, log data
+   is collected into files:
+${HIVE_HOME}/log/<ADMIN_USER>/<ADMIN_USER>-hiveserver2-<HOSTNAME>.log.<PID>@<HOS
+TNAME>
+
+   and
+${HIVE_HOME}/log/<ADMIN_USER>/<ADMIN_USER>-metastore-<HOSTNAME>.log.<PID>@<HOSTN
+AME>
+
+   Where <PID> is process identifier of the CLI session.
+   A default log file is created for HiveServer2:
+${HIVE_HOME}/log/<ADMIN_USER>/<ADMIN_USER>-hiveserver2-<HOSTNAME>.log-default
+
+   and Hive Metastore:
+${HIVE_HOME}/log/<ADMIN_USER>/<ADMIN_USER>-metastore-<HOSTNAME>.log-default
+
+   All the latest logs for HiveServer2 and Hive Metastore can be found at
+   the default log files (with prefix -default). When daemons of
+   HiveServer2 and hive Metastore are successfully started, no information
+   is added to <ADMIN_USER>-hiveserver2-<HOSTNAME>.log.<PID>@<HOSTNAME> or
+   <ADMIN_USER>-metastore-<HOSTNAME>.log.<PID>@<HOSTNAME>.

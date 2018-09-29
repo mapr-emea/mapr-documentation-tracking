@@ -15,6 +15,7 @@ Viewing All the Volumes Using the MapR Control System
    each page. For each volume, the pane displays the following:
    Column Name Column Description
    Volumes The name of the volume (used for default sorting).
+   Data Tiering Whether volume is enabled or disabled for data tiering.
    Alarms The number of alarms associated with the volume. Hover the
    cursor over the number for information on the alarm including alarm
    name, severity, and time when the alarm was raised.
@@ -28,8 +29,8 @@ Viewing All the Volumes Using the MapR Control System
    is not set, displays option to [1]Set Quota.
    Total Size The total physical size of the volume and associated
    snapshots. When you move the cursor over the value, the popover shows
-   the total logical size, the logical size of the volume, and the logical
-   size of the snapshots.
+   the total logical size (Data Size), the logical size of the volume
+   (Volume Size), and the logical size of the snapshots (Snapshot Size).
    RF The replication factor that specifies the number of copies for the
    volume.
    Physical Topology The rack path to the volume.
@@ -65,6 +66,7 @@ Viewing the List of Standard Volumes Using the MapR Control System
    Mnt Specifies whether the volume is mounted.
    Type The type of volume. Only standard volumes are displayed.
    Mount Path The path where the volume is mounted.
+   Data Tiering Whether volume is enabled or disabled for data tiering.
    Creator The user or group that owns the volume.
    Quota The amount of disk space allocated and utilized by the volume and
    associated snapshots and the reserve limit (in red). If quota is not
@@ -103,6 +105,8 @@ Viewing the List of Mirror Volumes Using the MapR Control System
    Mirror Status The status of the last mirroring operation.
    Percentage Complete The percentage of the in-progress mirroring
    operation that has been completed.
+   Data Tiering Whether or not the volume is enabled or disabled for data
+   tiering.
    Selecting the checkbox beside a volume makes the Actions dropdown menu
    available. From the Actions dropdown menu, you can:
      * [16]Edit the selected volume(s)
@@ -116,12 +120,57 @@ Viewing the List of Mirror Volumes Using the MapR Control System
      * [22]Mount the selected volume(s)
      * [23]Unmount the selected volume(s)
 
+Viewing the List of Tiered Volumes Using the MapR Control System
+
+   The Volumes pane in the Summary tab of the Data > Volumes page displays
+   the list of (both) standard and mirror volumes in the cluster by
+   default. To view a list of tiered standard and mirror volumes:
+   Select Tiered Volumes from the dropdown menu in the Volumes pane.
+   The list of tiered standard and mirror volumes in the cluster displays.
+   By default, the list is sorted by volume name. For each volume, the
+   pane displays the following:
+   Column Name Description
+   Volumes The name of the volume (used for default sorting).
+   Offload Tier The name of the tier where the volume data is stored.
+   Job The tiering operation that is currently running or was last
+   performed on the volume. Value can be one of the following:
+     * Offload — if volume data was offloaded or is currently being
+       offloaded
+     * Abort — if volume data offload or recall operation was aborted or
+       is being aborted
+     * Recall — if volume data was recalled or is being recalled from the
+       tier
+
+   State The status of the job.
+   Progress The job completion percentage.
+   Start Date/Time The date and time when the job was started.
+   End Date/Time The date and time when the job completed.
+   Offload Speed The amount of data (in MB) offloaded or being offloaded
+   per second.
+   Recall Speed The amount of data (in MB) recalled or being recalled per
+   second.
+   Selecting the checkbox beside a volume makes the Actions dropdown menu
+   available. From the Actions dropdown menu, you can:
+     * [24]Edit selected volume(s)
+     * [25]Remove selected volume(s)
+     * [26]Create snapshot(s) of selected volume(s)
+     * [27]Change the mirror volume to a standard volume
+     * [28]Start the mirroring operation(s) for the selected mirror
+       volume(s)
+     * [29]Stop the mirroring operation(s) for the selected mirror
+       volume(s)
+     * [30]Mount selected volume(s), if they are not already mounted
+     * [31]Unmount selected volume(s), if they are currently mounted
+     * [32]Offload selected volume(s)
+     * [33]Recall selected volume(s)
+     * [34]Abort currently running tiering job for selected volume(s)
+
 Retrieving the List of Volumes Using the CLI and REST API
 
    The basic command to retrieve the list of volumes is:
 maprcli volume list
 
-   For complete reference information, see [24]volume list.
+   For complete reference information, see [35]volume list.
 
 References
 
@@ -148,4 +197,15 @@ References
   21. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/MirrorVols-MirrorStop.html#task_l2y_zps_4y
   22. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/MountVol.html#task_xcy_yfq_4y
   23. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/UnmountVol.html#task_mfj_sgq_4y
-  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-list.html#volumelist
+  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/EditVols.html#task_yqk_1r4_4y
+  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/RemoveVol.html#task_gy2_sdj_4y
+  26. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateSnapshot.html#task_vb1_m5s_4y
+  27. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/MirrorVols-Promote.html
+  28. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/MirrorVols-MirrorStart.html#task_vrk_w4s_4y
+  29. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/MirrorVols-MirrorStop.html#task_l2y_zps_4y
+  30. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/MountVol.html#task_xcy_yfq_4y
+  31. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/UnmountVol.html#task_mfj_sgq_4y
+  32. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/OffloadVolData.html
+  33. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/RecallVolData.html
+  34. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/AbortVolJob.html
+  35. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-list.html#volumelist

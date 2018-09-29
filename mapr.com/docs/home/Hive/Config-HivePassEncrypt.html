@@ -7,6 +7,9 @@ Hive Password Encryption
    MEP 4.0 introduces default configuration for Hive Metastore password
    encryption using the MapR Installer. The password is stored in the
    hive-site.xml file.
+   Note: For Hive-2.1 (MEP-5.0.0 and later) and Hive-2.3 (MEP-6.0.0 and
+   later) installed using the MapR Installer,
+   javax.jdo.option.ConnectionPassword is automatically encrypted.
 <property>
   <name>javax.jdo.option.ConnectionPassword<name>
   <value>{password}<value>
@@ -17,8 +20,14 @@ Hive Password Encryption
    hive-site.xml file that contains the path to the keystore file created
    by the Hadoop Crediential Provider. Credential providers store and
    protect passwords out of clear text for the underlying database. By
-   default, the MapR Installer creates the keystore file in MapR-FS
-   /user/${MAPR_USER}/hivemetastore.jceks.
+   default, the MapR Installer creates the keystore file in MapR file
+   system. /user/${MAPR_USER}/hivemetastore.jceks.
+   Note: Starting from Hive-2.3 MEP 6.0.0, SSL keystore passwords,
+   hive.server2.webui.keystore.password, hive.server2.keystore.password,
+   and templeton.keystore.password, are automatically read from the
+   /opt/mapr/conf/ssl-client.xml file without any additional steps from
+   your side. But you can still encrypt them manually and store them in
+   the *jceks files.
 
 Reset MapR Installer Default Configuration
 
@@ -50,7 +59,7 @@ keystore>
   <value>{yourpassword}</value>
 </property>
     3. Add the hadoop.security.credential.provider.path property to the
-       /opt/mapr/hive/hive-2.1/conf/hive-site.xml file:
+       /opt/mapr/hive/hive-2.3/conf/hive-site.xml file:
 <property>
   <name>hadoop.security.credential.provider.path</name>
   <value>jceks://maprfs/user/mapr/hivemetastore.jceks</value>
@@ -59,3 +68,4 @@ keystore>
     4. Restart the Hive services to update the configuration:
 maprcli node services -name hivemeta -action restart -nodes `hostname -f`
 maprcli node services -name hs2 -action restart -nodes `hostname -f`
+maprcli node services -name hcat -action restart -nodes `hostname -f`

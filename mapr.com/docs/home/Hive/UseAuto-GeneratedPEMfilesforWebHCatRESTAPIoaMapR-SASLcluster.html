@@ -1,0 +1,56 @@
+Requirements for Using Automatically Generated PEM Files
+
+   To use automatically generated PEM files for the WebHCat REST API on a
+   MapR-SASL cluster, you need to have a cluster with a host name that
+   consists at least of three parts: administrator user name and password,
+   and WebHCat REST API host.
+   Check the status of the WebHCat REST API to make sure you have a
+   cluster with a host name that consists of the administrator user name
+   and password, and WebHCat REST API host service:
+curl  --cacert /opt/mapr/conf/ssl_truststore.pem  -u <cluster_admin_user>:<clust
+er_admin_password>
+"https://<myhost.mapr.com>:50111/templeton/v1/status" -v
+
+   The sample output for this example is as follows:
+* TCP_NODELAY set
+* Connected to c74v610.mapr.com (192.168.122.254) port 50111 (#0)
+* Cipher selection: ALL:!EXPORT:!EXPORT40:!EXPORT56:!aNULL:!LOW:!RC4:@STRENGTH
+* successfully set certificate verify locations:
+CAfile: /opt/mapr/conf/ssl_truststore.pem
+CApath: none
+* (303) (OUT), TLS Unknown, Certificate Status (22):
+* (303) (OUT), TLS handshake, Client hello (1):
+* (303) (IN), TLS handshake, Server hello (2):
+* (303) (IN), TLS handshake, Certificate (11):
+* (303) (IN), TLS handshake, Server key exchange (12):
+* (303) (IN), TLS handshake, Server finished (14):
+* (303) (OUT), TLS handshake, Client key exchange (16):
+* (303) (OUT), TLS change cipher, Client hello (1):
+* (303) (OUT), TLS handshake, Finished (20):
+* (303) (IN), TLS change cipher, Client hello (1):
+* (303) (IN), TLS handshake, Finished (20):
+* SSL connection using unknown / ECDHE-RSA-AES256-GCM-SHA384
+* Server certificate:
+*  subject: CN=*.mapr.com
+*  start date: May 10 15:18:03 2018 GMT
+*  expire date: Apr 16 15:18:03 2118 GMT
+*  common name: *.mapr.com (matched)
+*  issuer: CN=*.mapr.com
+*  SSL certificate verify ok.
+* Server auth using Basic with user 'mapr'
+> GET /templeton/v1/status HTTP/1.1
+> Host: c74v610.mapr.com:50111
+> Authorization: Basic bWFwcjptYXBy
+> User-Agent: curl/7.59.0
+> Accept: */*
+>
+< HTTP/1.1 200 OK
+< Set-Cookie: hadoop.auth="u=mapr&p=mapr&t=multiauth&e=1526001586135&s=dgOtxP2Hs
+95DBl0JyxyV/oJ1BZk="; Path=/; Domain=.mapr.com; Expires=Fri, 11-May-2018 01:19:4
+6 GMT; Secure; HttpOnly
+< Content-Type: application/json
+< Transfer-Encoding: chunked
+< Server: Jetty(7.6.0.v20120127)
+<
+* Connection #0 to host c74v610.mapr.com left intact
+{"version":"v1","status":"ok"}

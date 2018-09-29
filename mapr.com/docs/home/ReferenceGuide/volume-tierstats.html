@@ -1,0 +1,99 @@
+volume tierstats
+
+   Retrieves statistics on the offload and recall operation.
+
+Permissions Required
+
+   The user running the command must have one of the following:
+     * Full control (fc) on the cluster or volume
+     * Volume edit permissions
+
+Syntax
+
+   CLI
+
+maprcli volume tierstats
+            [ -cluster cluster_name ]
+            -name <volume_name>
+
+   REST
+
+          Request Type GET
+          Request URL
+http[s]://<host>:<port>/rest/volume/tierstats?<parameters>
+
+Parameters
+
+   Parameter
+
+   Description
+   cluster  The name of the cluster on which to run the command.
+   name     The name of the volume.
+
+Output
+
+   The command returns the following:
+   offloadThroughput The amount of data (in MB) offloaded per second.
+   totalTierDataSize The total size of tiered data (in MB).
+   totalTierReclaimableSize The size of deleted data (in MB) that is under
+   the compaction operation threshold.
+   recallThroughput The amount of data (in MB) recalled per second.
+
+Example
+
+   Retrieve statistics for a volume specified by name:
+     * [1]CLI
+     * [2]REST
+
+# /opt/mapr/bin/maprcli volume tierstats -name sampleVol -json
+{
+        "timestamp":1520275614872,
+        "timeofday":"2018-03-05 06:46:54.872 GMT+0000",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "totalTierDataSize":"404.323 MB",
+                        "offloadThroughput":"17.063 MB/s",
+                        "recallThroughput":"14.071 MB/s"
+                }
+        ]
+}
+
+curl -k -X GET 'https://abc.sj.us:8443/rest/volume/tierstats?name=sampleVol' --u
+ser marp:mapr
+{"timestamp":1520275614872,"timeofday":"2018-03-05 06:46:54.872 GMT+0000","statu
+s":"OK","total":1,"data":[{"totalTierDataSize":"404.323 MB","offloadThroughput":
+"17.063 MB/s","recallThroughput":"14.071 MB/s"}]}
+
+   Retrieve statistics for a volume after a compaction operation:
+     * [3]CLI
+     * [4]REST
+
+# maprcli volume tierstats -name test1 -json
+{
+        "timestamp":1527048672887,
+        "timeofday":"2018-05-23 04:11:12.887 GMT+0000 AM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "totalTierDataSize":"3001.926 MB",
+                        "totalTierReclaimableSize":"100 MB",
+                        "offloadThroughput":"31.064 MB/s"
+                }
+        ]
+}
+
+curl -k -X GET 'https://abc.sj.us:8443/rest/volume/tierstatus?name=test1' --user
+ mapr:mapr
+{"timestamp":1527048672887,"timeofday":"2018-05-23 04:11:12.887 GMT+0000 AM","st
+atus":"OK","total":1,"data":[{"totalTierDataSize":"3001.926 MB","totalTierReclai
+mableSize":"100 MB","offloadThroughput":"31.064 MB/s"}]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierstats.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierstats.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierstats.html#div2entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-tierstats.html#div2entry2

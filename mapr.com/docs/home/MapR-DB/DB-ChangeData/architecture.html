@@ -5,14 +5,14 @@ Architecture and CDC
    CDC uses a log-based data capture for the changed data records,
    propagates the data (from the source table) using replication remote
    procedural calls (RPCs) through an internal MapR gateway and produces
-   the data to a MapR-ES destination stream topic(s). Once data is
-   received by the topic, the changed data records can be consumed by
-   external applications. The consumer application registers the CDC
-   Deserializer as its record value deserializer and pulls the topic data
-   by using a Kafka API. The data changes can be read from the
-   ChangeDataRecord through the OJAI ChangeData APIs. Consumers could be
-   databases, data archives, search engines, or applications that perform
-   real-time analytics, security, or monitoring.
+   the data to a MapR Event Store For Apache Kafka destination stream
+   topic(s). Once data is received by the topic, the changed data records
+   can be consumed by external applications. The consumer application
+   registers the CDC Deserializer as its record value deserializer and
+   pulls the topic data by using a Kafka API. The data changes can be read
+   from the ChangeDataRecord through the OJAI ChangeData APIs. Consumers
+   could be databases, data archives, search engines, or applications that
+   perform real-time analytics, security, or monitoring.
    [cdc-architecture.png]
 
 How are the Change Data Records Propagated?
@@ -28,8 +28,9 @@ How are the Change Data Records Propagated?
    changed data record is propagated (replicated) to an internal MapR
    gateway. The order of when the data is produced to the stream topic is
    the same order of when the changed data records are replicated to the
-   gateway. The data flow is one way, meaning, the flow is from a MapR-DB
-   source table to a MapR-ES destination stream topic(s).
+   gateway. The data flow is one way, meaning, the flow is from a MapR
+   Database source table to a MapR Event Store For Apache Kafka
+   destination stream topic(s).
    Note: When an array value is updated, the changed data record is the
    full array record rather the specific data change.
 
@@ -58,9 +59,10 @@ What's the Impact of using Columns/Column Families?
 
 Where is the Destination Stream Setup?
 
-   The destination MapR-ES stream can be in same cluster as the MapR-DB
-   source table or it can be on a remote MapR cluster. Where and how
-   destination streams are setup depends on the purpose for using CDC.
+   The destination MapR Event Store For Apache Kafka stream can be in same
+   cluster as the MapR Database source table or it can be on a remote MapR
+   cluster. Where and how destination streams are setup depends on the
+   purpose for using CDC.
 
    If you are propagating changed data from a source table on a source
    cluster to a destination stream topic on a remote destination cluster,

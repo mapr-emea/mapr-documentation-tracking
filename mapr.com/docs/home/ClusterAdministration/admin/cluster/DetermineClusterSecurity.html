@@ -1,0 +1,116 @@
+Determining if a Cluster is Secure and Enabled for Encryption
+
+   You can determine whether or not a cluster is secure and whether or not
+   on-wire encryption and data at rest encryption are enabled at the
+   cluster and volume levels using the MapR Control System, CLI, and REST
+   API.
+
+Determining if a Cluster is Secure Using the MapR Control System
+
+   Log in to MCS and click [secureLock.png] to display the Security page.
+   The Security page contains information for determining whether or not
+   the cluster is secure and enabled for on-wire encryption and/or
+   data-at-rest encryption.
+
+Determining if a Secure Cluster is Enabled for Encryption Using the MapR
+Control System
+
+   Log in to MCS on a secure cluster and click [secureLock.png] to display
+   the Security page.
+   The page displays the following:
+     * Cluster-level Settings — whether or not on-wire encryption and
+       authentication, and data-at-rest encryption is enabled at the
+       cluster-level. The pane shows:
+          + [diskStatus-ActiveGood.png] — if enabled
+          + [unsecureIcon.png] — if disabled
+     * Volume Settings — the number of volumes that are not enabled for:
+          + Data on Wire Encryption
+          + Data at Rest Encryption
+       You can click the number associated with Data on Wire Encryption or
+       Data at Rest Encryption to display the list of volumes filtered by
+       Data on Wire Encryption or Data at Rest Encryption respectively.
+
+Determining if a Cluster is Secure Using the CLI and REST API
+
+     * [1]CLI
+     * [2]REST
+
+   Run the following command to determine if a cluster is secure or
+   unsecure:
+/opt/mapr/bin/maprcli dashboard info -cluster <clusterName> -json | grep secure
+
+   The value for secure is true if secure and false if unsecure in the
+   command output.
+   Send a request of type GET. For example:
+curl -k -X GET 'https://10.10.82.24:8443/rest/dashboard/info' --user mapr:mapr
+{"timestamp":1525198793701,"timeofday":"2018-05-01 11:19:53.701 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"version":"6.1.0.20180501072815.GA","cluster":{"na
+me":"ksTest","secure":true,"dare":true,"ip":"10.10.82.24","id":"6000214179272613
+712","nodesUsed":1,"totalNodesAllowed":-1},"volumes":{"mounted":{"total":17,"siz
+e":0},"unmounted":{"total":1,"size":1}},"utilization":{"cpu":{"util":1,"total":8
+,"active":0},"memory":{"total":15886,"active":10268},"disk_space":{"total":273,"
+active":0},"compression":{"compressed":0,"uncompressed":0},"tiering":{"logicalUs
+ed":0,"replicatedLogicalUsed":0,"replicatedTotalUsed":0,"ecTotalUsed":0,"cvTotal
+Used":0,"offloaded":0,"recalled":0}},"clusterReplication":{"bytesReceived":0,"by
+tesSend":0},"streamThroughput":{"bytesProduced":0,"bytesConsumed":0},"services":
+{"fileserver":{"active":1,"stopped":0,"failed":0,"total":1},"resourcemanager":{"
+active":1,"standby":0,"stopped":0,"failed":0,"total":1},"cldb":{"active":1,"stop
+ped":0,"failed":0,"total":1},"nfs4":{"active":0,"stopped":0,"failed":0,"total":1
+},"mastgateway":{"active":1,"stopped":0,"failed":0,"total":1},"nodemanager":{"ac
+tive":1,"stopped":0,"failed":0,"total":1},"gateway":{"active":1,"stopped":0,"fai
+led":0,"total":1},"hoststats":{"active":1,"stopped":0,"failed":0,"total":1},"api
+server":{"active":1,"stopped":0,"failed":0,"total":1}},"yarn":{"running_applicat
+ions":0,"queued_applications":0,"num_node_managers":1,"total_memory_mb":5120,"to
+tal_vcores":4,"total_disks":3,"used_memory_mb":0,"used_vcores":0,"used_disks":0}
+}]}
+
+   The value for secure is true if secure and false if unsecure.
+   If the value for secure is true, your cluster is enabled for on-wire
+   encryption. See [3]dashboard info for more information.
+
+Determining if a Secure Cluster is Enabled for Encryption of Data at Rest
+Using the CLI and REST API
+
+     * [4]CLI
+     * [5]REST
+
+   Run the following command to determine if a cluster is enabled or
+   disabled for data at rest encryption:
+/opt/mapr/bin/maprcli dashboard info -name <clusterName> -json | grep dare
+
+   The value for dare is true if enabled and false if disabled in the
+   command output.
+   Send a request of type GET. For example:
+curl -k -X GET 'https://10.10.82.24:8443/rest/dashboard/info' --user mapr:mapr
+{"timestamp":1525198793701,"timeofday":"2018-05-01 11:19:53.701 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"version":"6.1.0.20180501072815.GA","cluster":{"na
+me":"ksTest","secure":true,"dare":true,"ip":"10.10.82.24","id":"6000214179272613
+712","nodesUsed":1,"totalNodesAllowed":-1},"volumes":{"mounted":{"total":17,"siz
+e":0},"unmounted":{"total":1,"size":1}},"utilization":{"cpu":{"util":1,"total":8
+,"active":0},"memory":{"total":15886,"active":10268},"disk_space":{"total":273,"
+active":0},"compression":{"compressed":0,"uncompressed":0},"tiering":{"logicalUs
+ed":0,"replicatedLogicalUsed":0,"replicatedTotalUsed":0,"ecTotalUsed":0,"cvTotal
+Used":0,"offloaded":0,"recalled":0}},"clusterReplication":{"bytesReceived":0,"by
+tesSend":0},"streamThroughput":{"bytesProduced":0,"bytesConsumed":0},"services":
+{"fileserver":{"active":1,"stopped":0,"failed":0,"total":1},"resourcemanager":{"
+active":1,"standby":0,"stopped":0,"failed":0,"total":1},"cldb":{"active":1,"stop
+ped":0,"failed":0,"total":1},"nfs4":{"active":0,"stopped":0,"failed":0,"total":1
+},"mastgateway":{"active":1,"stopped":0,"failed":0,"total":1},"nodemanager":{"ac
+tive":1,"stopped":0,"failed":0,"total":1},"gateway":{"active":1,"stopped":0,"fai
+led":0,"total":1},"hoststats":{"active":1,"stopped":0,"failed":0,"total":1},"api
+server":{"active":1,"stopped":0,"failed":0,"total":1}},"yarn":{"running_applicat
+ions":0,"queued_applications":0,"num_node_managers":1,"total_memory_mb":5120,"to
+tal_vcores":4,"total_disks":3,"used_memory_mb":0,"used_vcores":0,"used_disks":0}
+}]}
+
+   The value for dare is true if enabled and false if disabled.
+   See [6]dashboard info for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DetermineClusterSecurity.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DetermineClusterSecurity.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dashboard-info.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DetermineClusterSecurity.html#div2entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/DetermineClusterSecurity.html#div2entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dashboard-info.html

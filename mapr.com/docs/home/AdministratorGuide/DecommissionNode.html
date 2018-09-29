@@ -1,0 +1,34 @@
+Decommissioning a Node for Enabling Encryption of Data at Rest
+
+   Use the following procedure to decommission a node for preparing the
+   node for data at rest encryption.
+    1. Drain the node of data by moving the node to the /decommissioned
+       physical topology.
+       See [1]Changing the Topology of one or more Nodes for more
+       information. By default, all the data on a node in the
+       /decommissioned topology is migrated to volumes and nodes in the
+       /data topology.
+    2. Run the following command to check if volumes are present on the
+       node:
+maprcli dump volumenodes -volumename <volume> -json | grep <ip:port>
+       Note: Run this command for each non-local volume in your cluster to
+       verify that the node being decommissioned is not storing any volume
+       data.
+    3. Stop Warden on the node as the root user or use sudo.
+       For example, run the following command to stop Warden using sudo:
+       sudo /bin/systemctl stop warden
+    4. Run [2]configure.sh utility with the -C and -Z options on all the
+       other nodes if the node you moved is a CLDB or ZooKeeper node.
+    5. Remove the node.
+       See [3]Removing one or more Nodes for more information.
+    6. Verify that the SPs associated with the node (that you removed in
+       the previous step) are not displayed in the list of storage pools
+       in the CLDB service information page.
+       See [4]Viewing CLDB Information for more information.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/nodes/AllNodes-ChangeTopology.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/nodes/AllNodes-Remove.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/CLDBView.html

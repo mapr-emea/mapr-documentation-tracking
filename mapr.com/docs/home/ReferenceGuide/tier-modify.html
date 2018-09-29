@@ -1,0 +1,131 @@
+tier modify
+
+   Modifies the credentials used to access tier.
+
+Syntax
+
+   CLI
+
+maprcli tier modify
+     -name <tier_name>
+     [ -credential <path_to_credentials_file> ]
+     [ -credential_str <tier_credentials> ]
+     [ -cluster <cluster_name> ]
+     [ -force true|false ]
+     [ -tag <object_store_type> ]
+     [ -url <tier_url> ]
+
+   REST
+
+          Request Type POST
+          Request URL
+http[s]://<host:port>/rest/tier/modify?<parameters>
+
+Parameters
+
+   Parameter Description
+   cluster The name of the cluster on which to run the command.
+   credential (For cold tier only) The path to the credentials file to use
+   to access the tier.
+   Note: You cannot modify the bucket name in the credentials file after
+   the tier is created; only the accesskey and the secretkey can be
+   modified.
+   For more information, see [1]Setting up a Credentials File for
+   Connecting to a Cold Tier Using the CLI or REST API.
+   credential_str (For cold tier only) The region, bucket, and
+   credentials, access key and secret key, specified in JSON format.
+   Either this or -credential is required to connect to a cold tier.
+   force Required to force a change of any of the following:
+     * Bucket on the tier where data is offloaded.
+     * Region where the bucket resides.
+     * URL (or endpoint) of the tier.
+
+   Value can be one of the following:
+     * true — to force a change
+     * false — to not change
+
+   The default value is false.
+   name The name of the tier.
+   tag (For cold tier only) The tier to connect to. Value can be one of
+   the following:
+     * S3-GCS
+     * S3-HDS
+     * S3-IBM
+     * S3-AWS
+     * S3-Others
+     * Azure-Blobs
+
+   The MAST Gateway uses this to determine the connector library (such as
+   libcurl, etc.) to use.
+   Note: You must specify this parameter to connect to Azure.
+   url (For cold tier only) The URL (or endpoint) of the tier. This can be
+   modified only with the -force option. See [2]Specifying the
+   Vendor/Object Store for a Cold Tier for information on the tier
+   endpoints and supported authentication protocols.
+   Note: If the credentials for the new URL are different, specify the new
+   credentials through the [3]credentials file or using the credential_str
+   parameter.
+
+Examples
+
+   Modify the credentials (credential file) used to access the tier:
+     * [4]CLI
+     * [5]REST
+
+# /opt/mapr/bin/maprcli tier modify -name testCold -credential credentials.txt -
+json
+{
+        "timestamp":1519670281090,
+        "timeofday":"2018-02-26 10:38:01.090 GMT-0800 AM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully updated tier: 'ksTestCold'"
+        ]
+}
+
+# curl -k -X POST 'https://10.10.82.24:8443/rest/tier/modify?name=testCold&crede
+ntial=credentials.txt' --user mapr:mapr
+{"timestamp":1526485277061,"timeofday":"2018-05-16 08:41:17.061 GMT-0700 AM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully updated tier: 'testCold
+'"]}
+
+   Modify the tier by passing the credentials as a string:
+     * [6]CLI
+     * [7]REST
+
+# maprcli tier modify -name testCold -credential_str '{"bucketName":"testbucket"
+,"credentials":{"accessKey":"ABCDEFGHIJKL","secretKey":"MNOPQRSTUVWXYZ"}}' -json
+{
+        "timestamp":1526484682668,
+        "timeofday":"2018-05-16 08:31:22.668 GMT-0700 AM",
+        "status":"OK",
+        "total":0,
+        "data":[
+
+        ],
+        "messages":[
+                "Successfully updated tier: 'testCold'"
+        ]
+}
+
+# curl -k -X POST 'https://abc.sj.us:8443/rest/tier/modify?name=testCold&credent
+ial_str=%7B%22buck3A%22testbucket%22%2C%22credentials%22%3A%7B%22accessKey%22%3A
+%22ABCDEFGHIJKLMN%22%2C%22secretKey%22%3A%22OPQRSTUVWXYZ%22%7D%7D' --user mapr:m
+apr
+{"timestamp":1526485116177,"timeofday":"2018-05-16 08:38:36.177 GMT-0700 AM","st
+atus":"OK","total":0,"data":[],"messages":["Successfully updated tier: 'testCold
+'"]}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SetUpCredentialsFile.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SpecifyVendor.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SetUpCredentialsFile.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-modify.html#div1entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-modify.html#div1entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-modify.html#div2entry1
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/tier-modify.html#div2entry2

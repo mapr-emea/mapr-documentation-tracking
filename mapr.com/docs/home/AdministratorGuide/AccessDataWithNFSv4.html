@@ -1,0 +1,61 @@
+Accessing Data with NFSv4
+
+   MapR lets you mount the cluster via NFS so that your applications can
+   read and write data directly. MapR allows direct file modification and
+   multiple concurrent reads and writes via POSIX semantics. With an
+   NFS-mounted cluster, you can read and write data directly with standard
+   tools, applications, and scripts. For example, you could run a
+   MapReduce application that outputs to a CSV file, then import the CSV
+   file directly into SQL via NFS.
+
+   MapR uses NFS Ganesha for supporting NFSv4 features. NFS Ganesha is an
+   Open Source userspace implementation of the NFS server. The MapR NFSv4,
+   running as a userspace process, registers callbacks with NFS Ganesha
+   through the File System Abstraction Layer (FSAL), which is a shared
+   library (libfsalmapr.so). NFS Ganesha loads and uses this library
+   whenever MapR Filesystem is exported/mounted. The FSAL, in turn, uses
+   FileClient (libMapRClient.so library) to connect to the cluster.
+
+   The following diagram illustrates how the MapR processes read and write
+   operations to the MapR cluster using NFSv4. When the user enters a
+   command (such as ls), the NFS client submits the request over TCP to
+   the MapR NFSv4 server. The NFS server uses MapR FileClient to perform
+   the requested operation on the cluster and returns the response to the
+   NFS client over TCP.
+   [NFSv4Architecture.png]
+
+   MapR exports each cluster as the directory /mapr/<cluster name> (for
+   example, /mapr/my.cluster.com). If you create a mount point with the
+   local path /mapr, then Hadoop FS paths and NFS paths to the cluster
+   will be the same. This makes it easy to work on the same files via NFS
+   and Hadoop. In a multi-cluster setting, the clusters share a single
+   namespace, and you can see them all by mounting the top-level /mapr
+   directory.
+
+   For NFSv4, MapR also requires alias or pseudo-path, which when
+   specified masks the mount path from the NFS client. MapR’s NFSv4 server
+   provides a pseudo-file system where only the exported volumes are
+   visible. This is especially useful in scenarios where one or more
+   volumes in the hierarchy should be hidden and not be visible. For more
+   information, see [1]NFSv4 RFC.
+
+Unsupported NFSv4 Features
+
+   MapR does not currently support the following NFSv4.0 features:
+     * pNFS
+     * Delegations
+     * Mandatory locking
+     * Lock upgrades and downgrades
+     * Deny share
+     * Access control lists (ACL)
+     * Namespaces
+     * Persistent reply cache
+     * Data retention
+     * Attributes such as time_access, FATTR4_ARCHIVE, FATTR4_FILES_AVAIL,
+       FATTR4_FILES_FREE, FATTR4_FILES_TOTAL, FATTR4_FS_LOCATIONS,
+       FATTR4_MIMETYPE, FATTR4_QUOTA_AVAIL_HARD, FATTR4_QUOTA_AVAIL_SOFT,
+       FATTR4_QUOTA_USED, FATTR4_TIME_BACKUP, and FATTR4_ACL
+
+References
+
+   1. https://tools.ietf.org/html/rfc3530#section-7.3

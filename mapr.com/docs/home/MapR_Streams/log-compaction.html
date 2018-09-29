@@ -1,0 +1,116 @@
+Log Compaction
+
+   Log compaction purges previous, older messages that were published to a
+   topic-partition and retains the latest version of the record.
+
+   Log compaction reduces the size of a topic-partition by deleting older
+   messages and retaining the last known value for each message key in a
+   topic-partition. The mincompactionlag parameter provides a lower bound
+   on how long each message remains prior to compaction and the
+   deleteretention parameter provides a lower bound on how long a
+   tombstone (a message with a null value) is retained. See the maprcli
+   [1]stream create and [2]stream edit commands and [3]Enabling Log
+   Compaction for more information about these retention parameters.
+   Note: Log refers to the topic-partition pair. So when you are
+   performing log compaction on the stream, you are compacting the stream
+   and all the topic-partitions.
+   Log compaction is used for the following purposes:
+     * Application recovery time - Since log compaction retains the last
+       known value, it is a full snapshot of the latest records. It is
+       useful for restoring state after a crash or system failure.
+     * Storage space - This becomes noticeable when there is a high volume
+       of messages.
+
+Compaction Process
+
+   Log compaction is implemented by running a compaction process in the
+   background that identifies duplicates, determines whether older
+   messages exist, and purges older messages from the topic-partition.
+
+   The following diagram shows an intial message (published to a
+   topic-partition) that is identified by the key-value pair, K1V1. When a
+   subsequent message (K1V2) is published to the topic-partition, based on
+   it's key-value pair, it is identified as a duplicate. The compactor
+   then deletes the older message (K1V1) from the topic-partition.
+   [compaction-partition.png]
+
+   Log compaction never re-orders messages, just deletes them. Any
+   consumer reading from the start of the log sees at least the final
+   state of all records in the order they were written. In addition, the
+   offset for a message never changes.
+
+Compaction and Gateways
+
+   The log compaction process uses a gateway that has an internal index
+   and a compactor. The internal index tracks message key-value pairs.
+   this allows duplicate messages in the topic-partition to be identified.
+   Based on the identification of duplicate messages, the compactor runs
+   the compaction process which purges the older message from the
+   topic-partition. This process results in stream data being compacted.
+
+   Figure: Log compaction with one gateway
+   [log-compaction-gateway.png]
+
+   The number of gateways impacts the compaction process, in that,
+   increasing the number of gateways on the cluster improves the load
+   distribution of the log compaction activity.
+   Important: Log compaction requires a gateway to be installed on the
+   same cluster as the MapR stream. See [4]Preparing Clusters for Log
+   Compaction for more information about implementing gateways for this
+   purpose. For example, if you are manually installing or upgrading, you
+   must install a MapR gateway locally.
+
+Stream Replication
+
+   When a stream on a source cluster has both log compaction and
+   replication enabled, the replica cluster does not automatically have
+   log compaction enabled. You must explicitly enable log compaction on
+   the replica cluster.
+
+   If a replica cluster has been upgraded and the stream data for a source
+   cluster is compacted (that is, one or more messages have been deleted),
+   then the source cluster replicates the compacted data to the replica
+   cluster.
+   If a replica cluster has not been upgraded, the source cluster:
+     * Fails the replication.
+     * Automatically retries replication with an exponential backoff.
+     * Resumes replication when the replica cluster has been upgraded.
+
+   Note: The error message associated with the failed replication is
+   displayed via the maprcli stream replica status command. This error
+   requests that you upgrade the replica cluster.
+
+Performance
+
+   Log compaction has a performance impact on other MapR Database and MapR
+   Event Store For Apache Kafka applications running on the system. If log
+   compaction is enabled on a very active stream (with more than 100K
+   messages per second), all MapR Database and MapR Event Store For Apache
+   Kafka applications running on the same cluster could see a drop in
+   their performance (close to 2x).
+   Note: It is possible that the NODE_ALARM_TINY_BUCKET_FLUSH alarm may
+   occur during high ingestion rates on source clusters with high
+   topic-partition count. Under these circumstances, consider increasing
+   the memory for MapR Filesystem.
+
+For More Information
+
+   See the following topics for more information:
+     * maprcli [5]stream create and [6]stream edit
+     * [7]Preparing Clusters for Log Compaction
+     * [8]MapR Event Store For Apache Kafka Java Applications, [9]MapR
+       Event Store For Apache Kafka Java API Library, and [10]Enabling Log
+       Compaction
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_edit.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/log-compaction-java.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/logCompaction-gateways.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_create.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_edit.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/logCompaction-gateways.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/MapRStreamsJavaApplications.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/streams-java-api.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/log-compaction-java.html

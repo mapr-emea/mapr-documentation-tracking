@@ -1,9 +1,15 @@
 Permissions on Arrays
 
    When granting permissions on a field, if the field contains array data,
-   you must grant the permission on the array field. This grants access to
-   only array data in the field. It is also possible to set permissions on
-   subfields within nested documents that are stored in an array.
+   you must grant the permission on the array field. This grants access
+   not only to array data in the field, but also nested documents and
+   scalar data. It is also possible to set permissions on subfields within
+   nested documents that are stored in an array.
+   Note: This topic describes the behavior of permissions in MapR Database
+   version 6.1 and later, regardless of the MapR version you used to grant
+   the permissions. To understand how permissions on arrays behave in
+   earlier releases, see [1]Operational Changes (MapR 6.1.0) - Permissions
+   on Arrays in MapR Database JSON.
 
 Granting Permissions on Array Elements
 
@@ -30,9 +36,16 @@ Granting Permissions on Array Elements
 
    If you grant a user read permission on the array person[], that user
    can read every field in every nested document within the array in
-   document id001. The permission does not allow the user to read the
-   person field in documents id002 and id003. You must define a separate
-   permission on person.
+   document id001. The permission also enables the user to read the person
+   field in documents id002 and id003.
+
+   If you receive an error when trying to grant permission on person[]
+   because you previously granted permission on person, then you (or an
+   administrator with the appropriate permissions) must first remove the
+   existing permission on person. If you expect the schema of the person
+   field to evolve to include non-array and array data, then you should
+   grant the permission on person[] rather than person, to avoid having to
+   remove the conflicting person permission.
 
    You cannot grant permissions on individual elements in an array; for
    example: person[1]. Granting permission on an array enables access to
@@ -40,14 +53,32 @@ Granting Permissions on Array Elements
 
 Granting Permissions on Nested Document Fields in an Array
 
-   If you want to restrict read access to only specific fields in the
-   array person[] , perform the following steps:
+   If you want to restrict read access to only specific fields in person,
+   whether the field is an array of nested documents or a single nested
+   document, perform the following steps:
     1. Deny the user read permission on the array person[].
     2. Grant the user traverse permission on the array person[].
     3. Grant the user read permission on the specific fields.
 
    For example, to grant the user read permission on only the first names
    in the nested documents, for the third step, grant read permission on
-   person[].name.first. The permission enables the user to read the fields
-   in only document id001. You must grant separate permissions on
-   person.name.first to enable reads on the field in document id002.
+   person[].name.first. The permission enables the user to read the field
+   in all nested documents in documents id001 and id002.
+
+   If permissions already exist on person.name.first and you attempt to
+   define permissions on person[].name.first, the attempt fails. You (or
+   an administrator with the appropriate permissions) must first remove
+   the existing permission on person.name.first. Similar to the scenario
+   described in the previous section, if you expect the schema of the
+   person field to evolve to include individual nested documents as well
+   as arrays of nested documents, then you should grant the permission on
+   person[].name.first to avoid having to remove the conflicting
+   permission.
+
+   If you already have permissions on person[].name.first, then attempting
+   to define permissions on person.name.first fails. There is no need to
+   add this permission.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_operational_changes_61.html#concept_wdg_2y2_55__dlentry_qvs_sqq_q2b

@@ -18,6 +18,11 @@ gfsck
    epoch container was promoted as master or when a container was
    permanently lost) at highest epoch.
 
+Permissions Required
+
+   You will need root user permissions to run gfsck. However, commands for
+   checking tiering-enabled volumes can only be run by the mapr user.
+
 Typical process flow
 
     1. Take the affected storage pools offline with the [1]mrconfig sp
@@ -43,8 +48,13 @@ Syntax
     [ -b|--dbcheck ]
     [ -r|--repair ]
     [ -y|--assume-yes ]
+    [ -Gquick|--check-gateway-consistency-only ]
+    [ -Gfull|--check-gateway-vcd-consistency ]
+    [ -Dquick|--check-object-presence ]
+    [ -GdelLog|--delete-Gateway-Log ]
     [ cluster=<cluster name> ]
     [ rwvolume=<volume name> ]
+    [scanthreads=<inode scanner threads count> ]
     [ snapshot=<snapshot name> ]
     [ snapshotid=<snapshot-id> ]
 
@@ -60,6 +70,19 @@ Parameters
    filesystem check.
    -d|--debug Provides additional information in the output for debug
    purposes.
+   -Gquick|--check-gateway-consistency-only Can be run as mapr user only.
+   Checks if the entries in the metadata tables maintained internally (for
+   objects and tiers) are consistent. If inconsistent, reports the error.
+   -Gfull|--check-gateway-vcd-consistency Can be run as mapr user only.
+   Checks if the entries in the metadata tables maintained internally (for
+   objects and containers) are consistent. If inconsistent, reports the
+   error.
+   -Dquick|--check-object-presence Can be run as mapr user only. This must
+   be specified with either -Gquick or -Gfull. Checks if the object in the
+   metadata tables exists in the tier or not. If inconsistent, reports the
+   error.
+   -GdelLog|--delete-Gateway-Log Can be run as mapr user only. Deletes the
+   metalog created by MAST Gateway when it crashes.
    -h|--help Prints usage text.
    -r --repair Indicates that repairs should be performed if needed.
    Note: Running the gfsck command with the -r (--repair) option might
@@ -199,6 +222,81 @@ lse dRec: false
   remove volume mapr.cluster.root from global-fsck mode (ret = 0) ...
 
 GlobalFsck completed successfully (7142 ms); Result: verify succeeded
+
+   Execute the gfsck command on the tiering-enabled read/write volume
+   named for_test5 to verify if the object is present on the tier:
+/opt/mapr/bin/gfsck rwvolume=for_test5 -Gfull -Dquick
+
+   Sample output is shwon below:
+Starting GlobalFsck:
+  clear-mode            = false
+  debug-mode            = false
+  dbcheck-mode          = false
+  repair-mode           = false
+  assume-yes-mode       = false
+  cluster               = Cloudpool19
+  rw-volume-name        = for_test5
+  snapshot-name         = null
+  snapshot-id           = 0
+  user-id               = 2000
+  group-id              = 2000
+
+  get volume properties ...
+
+  put volume for_test5 in global-fsck mode ...
+
+  get snapshot list for volume for_test5 ...
+
+  starting phase one (get containers) for volume for_test5(16558233) ...
+    got volume containers map
+
+done phase one
+
+  starting phase two (get inodes) for volume for_test5(16558233) ...
+    got container inode lists
+  done phase two
+
+  starting phase three (get fidmaps & tabletmaps) for volume for_test5(16558233)
+ ...
+    got fidmap lists
+    got tabletmap lists
+    completed secondary index field path info gathering
+    completed secondary index consistency check
+    Starting DeferMapCheck..
+    completed DeferMapCheck
+  done phase three
+
+  === Start of GlobalFsck Report ===
+
+  file-fidmap-filelet union --
+    no errors
+
+  table-tabletmap-tablet union --
+    empty
+
+  containers that need repair --
+    none
+
+  user statistics --
+    containers          = 6
+    directories         = 6
+    files               = 1
+    filelets            = 2
+    tables              = 0
+    tablets             = 0
+
+  === End of GlobalFsck Report ===
+
+Putting volume for_test5 in GWgfsckMode . . . . .
+        Tier stats----
+        numVerifiedVcds         5719
+        numVerifiedObjects      32
+        numCorruptedVcd         0
+        numCorruptedObjects     0
+Removing volume for_test5 from GWgfsckMode
+  remove volume for_test5 from global-fsck mode (ret = 0) ...
+
+GlobalFsck completed successfully (37039 ms); Result: verify succeeded
 
 References
 

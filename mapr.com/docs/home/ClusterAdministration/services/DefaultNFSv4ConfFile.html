@@ -1,0 +1,132 @@
+Default NFSv4 Server Configuration File
+
+   The nfs4server.conf file is available in /opt/mapr/conf directory.
+      LOG
+{
+  COMPONENTS {
+    ALL = INFO;
+  }
+
+  FORMAT {
+    EPOCH = false;
+    CLIENTIP = true;
+    HOSTNAME = false;
+    PROGNAME = false;
+    FILE_NAME = false;
+    LINE_NUM = true;
+    FUNCTION_NAME = true;
+    COMPONENT = false;
+    LEVEL = false;
+    time_format = syslog_usec;
+  }
+}
+
+NFSV4
+{
+  #Delegation is not supported.
+  Delegations = false;
+
+  #Dirent cache threshold. Use only when readdirplus is true
+  #Dirent_Cache_Threshold = 128;
+}
+
+NFS_CORE_PARAM
+{
+  Plugins_Dir = /opt/mapr/lib;
+
+  Clustered = false;
+
+  # Max number of results stored in DRC
+  DRC_TCP_Size = 16;
+
+  # Expire DRC after 60 seconds (if refcount is zero)
+  DRC_TCP_Recycle_Expire_S = 60;
+
+  # Only NFSv4 is supported. showmount will not work
+  NFS_Protocols = 4;
+
+  # RQUOTA protocol is not supported
+  Enable_RQUOTA = false;
+
+  # To set number of Nfs4server logs
+  Num_Log_Files = 1;
+
+  # Total disk space usage for logs = Num_Log_Files * Max_LogFile_Size
+  # If Num_Log_Files = 32 and Max_LogFile_Size = 1GB,then disk space used for lo
+gs = 32 GB.
+  Max_Logfile_Size = 1073741824;
+
+  # Monitor dirent entries (process restarts if number of entries beyond limit,
+if true
+  Dirent_Entries_Track = true;
+}
+
+MAPRFS
+{
+  #Set number of readahead sessions
+  #ra_sessions = 5;
+
+  #Flush all writes inline
+  #flush_inline = true;
+
+  #Optimize for local direct writes
+  #fast_local_directio = false;
+
+  #Enable/Disable memory tracking for nfs
+  nfs_track_memory = false;
+
+  #Sets client debug level, values are fatal, error, warn, info, debug
+  mapr_log_debug_level = error;
+
+  #Hearbeat interval for NFSv4 (in seconds)
+  #hb_interval = 5;
+
+  #Request threshold, logs warning if any request takes more time (in seconds)
+  #req_threshold = 5;
+
+  #Specify the folder to copy libMapRClient
+  #client_lib_path="/tmp/nfs4";
+
+  #Readdirplus support
+  #readdirplus = true;
+}
+
+#EXPORT_DEFAULTS
+#{
+  #Default value for anonymous uid/gid is -2. Should be configured to
+  #nfsnobody/nobody uid/gid if required
+  #Anonymous_Uid = -2;
+
+  #Anonymous_Gid = -2;
+
+  #Supported NFS protocols. Currently only v4 is supported.
+  #Protocols = 4;
+#}
+
+EXPORT
+{
+  # Export Id (mandatory, each EXPORT must have a unique Export_Id)
+  Export_Id = 30;
+
+  # Exported path (mandatory)
+  Path = /mapr;
+
+  # Pseudo Path (required for NFS v4)
+  Pseudo = /mapr;
+
+  Squash = No_Root_Squash;
+
+  # Required for access (default is None)
+  # Could use CLIENT blocks instead
+  Access_Type = RW;
+
+  # Security type (krb5,krb5i,krb5p)
+  #SecType = krb5;
+
+  # Exporting FSAL
+  FSAL {
+    Name = MAPR;
+  }
+
+  #SuperUser_Uid = 0;
+}

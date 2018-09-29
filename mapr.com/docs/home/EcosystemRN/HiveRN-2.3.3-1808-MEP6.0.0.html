@@ -1,0 +1,217 @@
+Hive 2.3.3-1808 (MEP 6.0.0) Release Notes
+
+   This section provides reference information, including new features,
+   patches, known issues, and limitations for Hive 2.3.3-1808 MEP 6.0.0.
+   Hive Version 2.3.3
+   Release Date September 2018
+   MapR Version Interoperability See [1]Hive and HCatalog Support Matrix
+   and [2]Ecosystem Support Matrix and [3]MEP Components and OS Support.
+   Source on GitHub [4]https://github.com/mapr/hive
+   GitHub Release Tag
+
+   2.3.3-mapr-1808
+   Maven Artifacts See [5]Maven Artifacts for MapR.
+   Package Names Navigate to [6]https://package.mapr.com/releases/MEP/,
+   and select your MEP and OS to view the list of package names.
+
+Feature Support
+
+     * MEP 6.0.0 supports Hive-2.3.3 on Tez-0.9.
+       For more information, see [7]Tez 0.9.1-1808 (MEP 6.0.0) Release
+       Notes.
+     * MEP 6.0.0 does not support Hive on Spark, so you cannot use Spark
+       as an execution engine for Hive.
+       However, you can run Hive and Spark on the same cluster. You can
+       also use Spark SQL and Drill to query Hive tables.
+     * MEP 6.0.0 does not support HDFS encryption in Hive tables.
+     * MEP 6.0.0 does not support HBase with Hive-2.3.3 starting from the
+       6.0.0 release.
+     * MEP 6.0.0 does not support LLAP with Hive-2.3.3, because Apache
+       Slider is not a MapR ecosystem component.
+     * Hive 2.1 and later needs to run the schematool command as an
+       initialization step.
+
+New Features
+
+     * MERGE operator for MapR Database JSON Tables in Tez mode
+       For more information, see [8]Understanding the MERGE Statement.
+     * hive.metastore.allow.new.db.in.existing.directory property with
+       default value as false
+       You must set hive.metastore.allow.new.db.in.existing.directory=true
+       in the hive-site.xml file to create a database if the directory
+       already exists and then restart Hive Metastore and HiveServer2.
+       CAUTION:
+       You cannot set the
+       hive.metastore.allow.new.db.in.existing.directory using the Hive
+       CLI or Beeline.
+     * Ability to read default SSL passwords and keystore location from
+       /opt/mapr/conf/ssl-client.xml
+
+Changes in Security with Default Configuration
+
+     * The following properties are removed from the default hive-site.xml
+       configuration on a secured cluster:
+     *
+
+                     Property                          Value
+       hive.server2.webui.keystore.path     /opt/mapr/conf/ssl_keystore
+       hive.server2.webui.keystore.password Default keystore password
+     * The following property is added to the hive-site.xml configuration
+       by default on a secured cluster:
+
+             Property       Value
+       hive.server2.use.SSL true
+     * Because HiveServer2 is configured to use SSL encryption by default
+       starting from Hive-2.3 MEP-6.0.0, you must add ssl=true; to a JDBC
+       connection string when using PAM or MapR-SASL authentication.
+     * You can configure the JDBC connection string with SSL enabled or
+       disabled.
+       For more information, refer to [9]Configuring JDBC Connection
+       String with SSL Encryption Enabled or Disabled.
+     * World-readable permissions enabled for Hive configuration files.
+
+Known Issues
+
+     * In [10]HIVE-19502, you cannot insert values into a table stored by
+       JdbcStorageHandler.
+     * You cannot connect to a Spark Thrift Server on a Kerberos-secured
+       cluster, because Kerberos and SSL are not compatible.
+       However, you can modify the hive.server2.use.SSL to false in the
+       hive-site.xml file.
+     * In MAPR-HIVE-302, you cannot interact with Hive tables on
+       PostgreSQL after upgrade.
+     * In Bug 32349, Simple Fetch from MapR Database JSON tables does not
+       work in the Hive 2.3 release. Workaround: Set
+       hive.fetch.task.conversion=none in the hive-site.xml file or using
+       the Hive CLI. The hive.fetch.task.conversion property is used for
+       query conversion. Some select queries can be converted to a single
+       FETCH task that minimizes the latency. Currently, the query should
+       be single sourced and not have any subquery and also must not have
+       any aggregations or distincts (which incurs RS -
+       ReduceSinkOperator, requiring a MapReduce task), lateral views and
+       joins:
+          + none: disable hive.fetch.task.conversion
+          + minimal: SELECT star, filter on partition columns, LIMIT only
+          + more: SELECT, filter, LIMIT only (supports TABLESAMPLE and
+            virtual columns)
+
+Patches
+
+   The Hive 2.3.3-1808 (MEP 6.0.0) release includes the following patches
+   on the base Apache release. For complete details, refer to the commit
+   log for this project in GitHub.
+   Commit Date (YYYY-MM-DD) Comment
+   5ea2352 2018-08-08 MAPR-HIVE-300: Hive HCat does not create a proper
+   "client" on MapR-SASL cluster without Hive metastore
+   c50c43b 2018-07-24 MSEN-11: You can save a file with a newline at the
+   end
+   d009cf0 2018-07-21 MAPR-HIVE-281: WebHCat issues an error during an
+   attempt to run a Hive query
+   56ea17e 2018-07-17 MAPR-HIVE-285: The configure.sh fails when a custom
+   security flag is set
+   34180bf 2018-07-09 MAPR-HIVE-272: The HiveMapRDBJsonOutputFormat class
+   must implement the HiveOutputFormat interface
+   af94d85 2018-06-17 MAPR-31641: The failed queries with invalid table
+   alias or column reference are deleted
+   9c572f7 2018-06-27 MAPR-31803: The fix for Bug 30031 results in users
+   not being able to create databases on an existing location
+   1855442 2018-06-21 MAPR-HIVE-242: The configure.sh script adds two rows
+   to the end of hive-site.xml after every launching
+   cf0655e 2018-06-19 MAPR-HIVE-258: The Zookeeper version in Hive is
+   updated from 3.4.6 to 3.4.11
+   61773b5 2018-06-19 MAPR-HIVE-244: The Hive configure.sh script
+   overwrites properties by secure by default values and does not take
+   into account the .not_configured_yet flag
+   836f751 2018-06-19 MAPR-HIVE-251: The default SSL password is read from
+   the /opt/mapr/conf/ssl-server.xml
+   28025b1 2018-06-22 MAPR-HIVE-262: Only client passwords from
+   ssl-client.xml are used
+   3c463a5 2018-06-01 MAPR-HIVE-223: NPE during CREATE ROLE uses SQL
+   Standard-Based Hive Authorization
+   0a458b4 2018-05-22 MAPR-31380: The HeartBeat thread uses a cancelled
+   delegation token while connecting to meta
+   bc7a6bd 2018-05-22 MAPR-HIVE-212: SSL is setup by default when PAM plus
+   MapR-SASL is configured by default
+   39ae559 2018-05-12 MAPR-HIVE-184: SSL encryption with PAM
+   authentication is configured on the MapR-SASL secured cluster
+   1f92945 2018-05-07 MAPR-HIVE-208: Import to Hive as a parquet data
+   format failed and could not initialize class
+   org.apache.derby.jdbc.AutoloadedDriver40
+   f371524 2018-04-17 MAPR-HIVE-193: The MERGE syntax for MapR Database
+   JSON tables is implemented
+   dfc7cfd 2018-04-24 MAPR-31175: The hive.exec.tmp.maprfsvolume should be
+   false when operating with Tez
+   19fd04f 2018-04-13 MAPR-HIVE-196: Running the configure.sh -R
+   reconfigures the underlying MetastoreDB to derby in the hive-site.xml
+   file
+   5cfebda 2018-04-12 MAPR-27663: PidFilePatternConverter does not append
+   the PID to the log name
+   d842904 2018-04-11 MAPR-HIVE-190: The log writes in two Hive.log files
+   instead of one
+   61735a1 2018-04-11 MAPR-HIVE-171: A bash script for MapR configuration
+   tool is added
+   1f12b05 2018-04-11 MAPR-HIVE-167: A sub-module API for configuring
+   hadoop.security.credential.provider.path is added into the MapR
+   configuration
+   72c75e7 2018-04-11 MAPR-HIVE-165: The HiveEncryption tool is moved to a
+   separate sub-module and split into a CLI processing class and an
+   Encryption processing class
+   bd611a2 2018-04-10 MAPR-HIVE-189: World-readable permissions for Hive
+   configuration files are set
+   efd951f 2018-04-03 MAPR-HIVE-187: The Hive CLI does not start on a
+   6.0.1 cluster with Spark 2.2.1
+   4f23f26 2018-03-21 MAPR-30940: A Hive job fails by
+   AccessControlException against files on the NM local disk
+   c9445f0 2018-03-20 MAPR-30895: Tez jobs are shown as KILLED in a RM UI
+
+   The Hive 2.3.3-1808 (MEP 6.0.0) release also includes the following
+   backported issues. For complete details, refer to the commit log for
+   this project in GitHub.
+   Commit Date Comment
+   5b67110 2018-08-07 HIVE-12408: SQLStdAuthorizer does not require an
+   external table creator to be the owner of directory, in addition to
+   read or write permissions
+   e57f603 2018-07-25 HIVE-17429: Hive JDBC does not return rows when
+   querying Impala
+   d1c113d 2018-07-24 HIVE-18393: Error returned when some other type is
+   read as string from parquet tables
+   224b05b 2018-06-25 HIVE-13000: Hive returns useless parsing error
+   3b0918d 2018-06-13 HIVE-17963: Fix for HIVE-17113 is improved for
+   non-blobstore file systems
+   d313347 2018-06-12 HIVE-17113: Duplicate bucket files are written to
+   table by runaway task
+   3eaba39 2018-05-31 HIVE-17155: findConfFile() in HiveConf.java has
+   issues with the configuration path
+   800c6e5 2018-05-25 HIVE-19649: Clean up inputs in JDBC
+   PreparedStatement. Add unit tests
+   24165d1 2018-04-05 HIVE-18710: Extend inheritPerms to ACID in Hive 2.X
+
+Related Links
+
+   Following are release notes for the Hive component included in the MapR
+   Converged Data Platform. You might also be interested in the following
+   documents:
+     * [11]Apache Hive 2.3.3 Release Notes
+     * [12]Apache Hive 2.3.2 Release Notes
+     * [13]Apache Hive 2.3.1 Release Notes
+     * [14]Apache Hive 2.3.0 Release Notes
+
+   You can also refer to the [15]Apache Hive homepage.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_hive_hcat_matrix.html#reference_zfq_nsb_t5
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_eco_matrix.html#reference_kyp_kfv_s5
+   3. https://maprdocs.mapr.com/home/InteropMatrix/r_MEP_52.html
+   4. https://github.com/mapr/hive
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/MavenArtifacts.html#MavenArtifactsforMapR
+   6. https://package.mapr.com/releases/MEP/
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/TezRN-0.9.1-1808-MEP6.0.0.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/MERGE_Statement_with_MapR-DB-JSON-tables.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/ConfiguringJDBCConnectionStringSSLencryption.html
+  10. https://issues.apache.org/jira/browse/HIVE-19502
+  11. https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12342162&styleName=Text&projectId=12310843
+  12. https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12342053&styleName=Text&projectId=12310843
+  13. https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12341418&styleName=Text&projectId=12310843
+  14. https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12340269&styleName=Text&projectId=12310843
+  15. http://hive.apache.org/

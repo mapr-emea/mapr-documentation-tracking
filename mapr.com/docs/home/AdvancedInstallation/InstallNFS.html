@@ -1,7 +1,7 @@
 Installing MapR NFS
 
    You can install NFSv3 on a node. The following sections describe how to
-   install the NFSv3 server and the NFS client.
+   install the NFSv3 server, NFSv4 server, and the NFS client.
 
 Installing MapR NFSv3 Server
 
@@ -21,6 +21,57 @@ zypper install mapr-nfs
    the node will be moved to /data topology, which is the default for
    fileserver nodes.
 
+Installing MapR NFSv4 Server
+
+   The MapR NFSv4 server can only be installed on MapR 6.1 or later
+   clusters. Both NFSv4 and NFSv3 servers cannot run on the same node. If
+   you have NFS client running on an edge node, you can use that client to
+   connect to MapR NFS server on clusters running either 5.2, where NFSv3
+   server can be installed, or 6.1, where NFSv4 or NFSv3 can be installed.
+    1. Download, if necessary, and install the nfs-utils package, if it is
+       already not installed, on the host where you plan to install the
+       NFSv4 server.
+    2. Modify the /etc/yum.repos.d/mapr_ecosystem.repo file on CentOS/Suse
+       or /etc/apt/sources.list file on Ubuntu to add the following:
+          + CentOS:
+[mapr-dev-ecosystem]
+name=mapr-dev-ecosystem
+baseurl=http://artifactory.devops.lab/artifactory/eco-rpm/releases/opensource/re
+dhat
+enabled=1
+gpgcheck=0
+          + Ubuntu:
+deb http://artifactory.devops.lab/artifactory/eco-deb binary trusty
+#opensource.repo
+    3. Ensure that rpc.statd is running on the node.
+       To verify, run the following command:
+# ps -ef| grep rpc.st
+rpcuser 18889 1 0 01:04 ? 00:00:00 /sbin/rpc.statd
+root 27016 6933 0 01:25 pts/0 00:00:00 grep color=auto rpc.st
+       If it is already not running, execute the following to start it:
+# /sbin/rpc.statd
+    4. Install NFSv4 server package.
+       To install, run the following command:
+
+       Red Hat or CentOS
+yum install mapr-nfs4server
+
+       Ubuntu
+apt-get install mapr-nfs4server
+
+       SUSE
+zypper install mapr-nfs4server
+
+       The mapr-nfsganesha package is also installed as a dependency
+       package. If NFS server is installed without fileserver on a node,
+       the node is in /nfsserver topology. If fileserver is installed at a
+       later time, the node is moved to /data topology, which is the
+       default for fileserver nodes.
+    5. Run [1]configure.sh utility with the -u and -g options to configure
+       the services to run under user mapr and the group of the mapr user.
+       Important: This step is required only if you are configuring NFSv4
+       server to work with Kerberos.
+
 Installing NFS Client
 
    To install NFS client, run the following command:
@@ -32,3 +83,10 @@ sudo apt-get install nfs-common
 
    SUSE
 sudo zypper install nfs-client
+
+   Note: NFSv3 clients cannot connect to NFSv4 server because NFSv4 server
+   only supports v4 protocol.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
