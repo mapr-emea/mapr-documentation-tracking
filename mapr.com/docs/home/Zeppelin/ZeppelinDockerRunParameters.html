@@ -4,7 +4,7 @@ Understanding Zeppelin Docker Parameters
    containers. This includes parameters related to the connection port,
    bridge networking, specifying your MapR cluster, enabling security
    through MapR ticketing, and enabling the FUSE-based POSIX client.
-   The general syntax for running the Apache Zeppelin docker image is the
+   The general syntax for running the Apache Zeppelin Docker image is the
    following:
 docker run -it -p 9995:9995 \
     -e HOST_IP=<docker-host-ip> \
@@ -27,7 +27,7 @@ docker run -it -p 9995:9995 \
     -e MAPR_HS_HOST=<historyserver-ip> \
     -e ZEPPELIN_NOTEBOOK_DIR=<path-for-notebook-storage> \
     -e MAPR_TZ=<time-zone> \
-    maprtech/data-science-refinery:v1.2_6.0.1_5.0.0_centos7
+    maprtech/data-science-refinery:v1.3_6.1.0_6.0.0_centos7
 
    Following is a sample command:
 docker run -it -p 9995:9995 \
@@ -51,7 +51,7 @@ docker run -it -p 9995:9995 \
     -e MAPR_HS_HOST=172.24.9.248 \
     -e ZEPPELIN_NOTEBOOK_DIR=/mapr/my.cluster.com/user/mapruser1/notebook \
     -e MAPR_TZ=US/Pacific \
-    maprtech/data-science-refinery:v1.2_6.0.1_5.0.0_centos7
+    maprtech/data-science-refinery:v1.3_6.1.0_6.0.0_centos7
 
    The following sections describe each category of parameters in more
    detail. Where appropriate, the descriptions reference the sample
@@ -78,7 +78,7 @@ docker run -it \
 
 Bridge Networking
 
-   By default, docker uses bridge networking. In general, bridge
+   By default, Docker uses bridge networking. In general, bridge
    networking provides better isolation from the host machine and other
    containers.
    You must set the HOST_IP environment variable, the -p
@@ -128,7 +128,7 @@ docker run -it \
    networking.
 
    See [2]https://docs.docker.com/engine/userguide/networking/ for more
-   details about docker networking.
+   details about Docker networking.
 
 MapR Cluster
 
@@ -162,7 +162,7 @@ my.cluster.com secure=true ip-172-24-11-84
        your source ticket file.
     3. Change the owner and group on your source ticket so it matches the
        UID and GID in the ticket file.
-    4. Specify the source ticket path in the docker mount point, as
+    4. Specify the source ticket path in the Docker mount point, as
        described in the table below.
 
    The table lists the parameters related to MapR tickets and their values
@@ -235,7 +235,7 @@ Notebook Storage
    The environment variable ZEPPELIN_NOTEBOOK_DIR specifies where to store
    your notebooks. If you do not specify ZEPPELIN_NOTEBOOK_DIR, Zeppelin
    stores your notebooks in the directory
-   /opt/mapr/zeppelin/zeppelin-0.7.2/notebook.
+   /opt/mapr/zeppelin/zeppelin-0.8.0/notebook.
 
    Storage Options
 
@@ -255,11 +255,22 @@ docker run -it ... \
    -e ZEPPELIN_NOTEBOOK_DIR=/mapr/my.cluster.com/user/mapruser1/notebook ...
 
           Important: You must specify the parameters used by the
-          [7]FUSE-Based POSIX Client. If docker is unable to start the
+          [7]FUSE-Based POSIX Client. If Docker is unable to start the
           FUSE-based client, you cannot open Zeppelin in your browser.
           Your browser will return the following error:
 
 HTTP ERROR: 503
+
+   MapR Filesystem without the FUSE-based POSIX client
+          Starting in MapR Data Science Refinery 1.3, you can store your
+          notebooks in MapR file system without using the FUSE-based POSIX
+          client. To use this option, specify the full MapR file system
+          path in the ZEPPLIN_NOTEBOOK_DIR variable.
+
+          The following example is equivalent to the previous:
+
+docker run -it ... \
+   -e ZEPPELIN_NOTEBOOK_DIR=maprfs:///user/mapruser1/notebook ...
 
    Local file system
           To store your notebooks in your local file system, specify the
@@ -278,13 +289,144 @@ docker run -it ... \
        to MapR file system paths:
           + [8]POSIX
           + [9]Hadoop
-cp -r /opt/mapr/zeppelin/zeppelin-0.7.2/notebook/* /mapr/my.cluster.com/user/map
+cp -r /opt/mapr/zeppelin/zeppelin-0.8.0/notebook/* /mapr/my.cluster.com/user/map
 ruser1/notebook/
-hadoop fs -put /opt/mapr/zeppelin/zeppelin-0.7.2/notebook/* maprfs:///user/mapru
+hadoop fs -put /opt/mapr/zeppelin/zeppelin-0.8.0/notebook/* maprfs:///user/mapru
 ser1/notebook/
     2. After moving the notebook, make sure you reload your notebooks from
        storage by clicking on the icon circled in red below:
        [NotebookStorage.png]
+
+Python Version
+
+   By default, when you use Python with either the Livy or Spark
+   interpreters, the interpreters use Python 2. Although you can run only
+   one version of Python with MapR Data Science Refinery, you can switch
+   to Python 3, by setting the PYSPARK_PYTHON environment variable to the
+   absolute path of the Python 3 executable on your MapR cluster:
+docker run -it ... -e PYSPARK_PYTHON=/usr/local/bin/python3.6 ...
+
+   You can also install custom Python packages. See [10]Installing Custom
+   Packages for PySpark
+
+Idle Interpreter Timeout Threshold
+
+   Starting with the 1.3 release, by default, MapR Data Science Refinery
+   terminates interpreters that have been idle for one hour. To modify
+   this idle timeout threshold, specify the
+   ZEPPELIN_INTERPRETER_LIFECYCLE_MANAGER_TIMEOUT_THRESHOLD environment
+   variable. The parameter value is in milliseconds.
+
+   The following example sets the idle timeout to 10 minutes:
+docker run -it ... \
+   -e ZEPPELIN_INTERPRETER_LIFECYCLE_MANAGER_TIMEOUT_THRESHOLD=600000 ...
+
+   If a Spark job terminates due to the Spark interpreter reaching the
+   timeout threshold, the job shows a status of FAILED in the YARN UI.
+
+Configuration Storage
+
+   By default, the following Zeppelin configuration files are stored in
+   /opt/mapr/zeppelin/zeppelin-0.8.0/conf/:
+     * interpreter.json
+     * notebook-authorization.json
+
+   Starting with MapR Data Science Refinery 1.3, you can store these files
+   in MapR file system by specifying the ZEPPELIN_CONFIG_FS_DIR
+   environment variable. You can also specify a local system for this
+   variable.
+
+   The following shows sample commands for the three available options:
+
+   MapR Filesystem using the FUSE-based POSIX client
+          This example assumes your MapR file system mount point is /mapr
+          and your cluster name is my.cluster.com:
+
+docker run -it ... \
+   -e ZEPPELIN_CONFIG_FS_DIR=/mapr/my.cluster.com/user/mapruser1/dsrconf ...
+
+          Important: You must specify the parameters used by the
+          [11]FUSE-Based POSIX Client to use this option.
+
+   MapR Filesystem without the FUSE-based POSIX client
+          The following example is equivalent to the previous:
+
+docker run -it ... \
+   -e ZEPPELIN_CONFIG_FS_DIR=maprfs:///user/mapruser1/dsrconf ...
+
+   Local file system
+          The following specifies a local file system path:
+
+docker run -it ... \
+   -e ZEPPELIN_CONFIG_FS_DIR=/opt/mapr/dsrconf ...
+
+   If all of the following apply, then you must restart all containers to
+   enable the new configuration settings:
+     * ZEPPELIN_CONFIG_FS_DIR is set to a MapR file system path
+     * Multiple containers share the two configuration files
+     * You make a change in either of the configuration files that
+       requires a container restart
+
+Default Drill JDBC Connection URL
+
+   The default Drill JDBC connection URL is
+   jdbc:drill:drillbit=drillbitnode:31010. Starting with MapR Data Science
+   Refinery 1.3, you can configure this default URL using one of the
+   following two environment variables:
+
+   MAPR_DRILLBITS_HOST
+
+   Description
+          Comma separated list of Drillbit servers and optional port
+          numbers.
+
+          Use if you want to connect to Drill through a Drillbit server.
+          If you do not specify port numbers, they default to 31010.
+
+   Sample commands
+
+docker run -it ... \
+  -e MAPR_DRILLBITS_HOSTS=node1.cluster.com,node2.cluster.com ...
+
+docker run -it ... \
+  -e MAPR_DRILLBITS_HOSTS=node1.cluster.com:31010,node2.cluster.com:31010 ...
+
+   Resulting URL
+
+jdbc:drill:drillbit=node1.cluster.com:31010,node2.cluster.com:31010
+
+   MAPR_ZK_QUORUM
+
+   Description
+          Comma separated list of servers and optional port numbers in
+          your Zookeeper cluster.
+
+          Use if you want to connect to Drill through a Zookeeper cluster.
+          If you do not specify port numbers, they default to 5181.
+
+   Sample commands
+
+docker run -it ... \
+  -e MAPR_ZK_QUORUM=node1.cluster.com,node2.cluster.com,node3.cluster.com \
+  ...
+
+docker run -it ... \
+  -e MAPR_ZK_QUORUM=node1.cluster.com:5181,node2.cluster.com:5181,node3.cluster.
+com:5181 \
+  ...
+
+   Resulting URL
+
+jdbc:drill:zk=node1.cluster.com:5181,node2.cluster.com:5181,node3.cluster.com:51
+81/drill/my.cluster.com-drillbits
+
+   You should specify only one of the two environment variables. If you
+   mistakenly specify both, MAPR_DRILLBITS_HOST takes precedence.
+
+   See [12]Building the Connection URL for more information about the
+   Drill JDBC connection URL. See [13]Drill JDBC for more information
+   about setting other options in your Drill JDBC connection string for
+   MapR Data Science Refinery.
 
 MapR-Specific Environment Variables
 
@@ -294,42 +436,55 @@ MapR-Specific Environment Variables
    detailed descriptions, including situations where you need to use each
    variable.
    Environment Variable Description Documentation Link
-   DEPLOY_MODE Set to kubernetes if running Zeppelin as a Kubernetes
-   service [10]Running Zeppelin as a Kubernetes Service
-   HOST_IP IP address of your docker host machine [11]Bridge Networking
+   HOST_IP IP address of your Docker host machine [14]Bridge Networking
    LIVY_RSC_PORT_RANGE Port range reserved for the Livy launcher
-   [12]Bridge Networking
+   [15]Bridge Networking
 
-   [13]Running Multiple Zeppelin Containers on a Single Host
-   MAPR_CLUSTER Name of your MapR cluster [14]MapR Cluster
-   MAPR_CLDB_HOSTS List of CLDB host IPs [15]MapR Cluster
-   MAPR_CONTAINER_GID GID of the container user [16]MapR Ticketing
-   MAPR_CONTAINER_GROUP Group name of the container user [17]MapR
+   [16]Running Multiple Zeppelin Containers on a Single Host
+   MAPR_CLUSTER Name of your MapR cluster [17]MapR Cluster
+   MAPR_CLDB_HOSTS List of CLDB host IPs [18]MapR Cluster
+   MAPR_CONTAINER_GID GID of the container user [19]MapR Ticketing
+   MAPR_CONTAINER_GROUP Group name of the container user [20]MapR
    Ticketing
    MAPR_CONTAINER_PASSWORD Password used to log in to the container UI
-   [18]MapR Ticketing
-   MAPR_CONTAINER_UID UID of the container user [19]MapR Ticketing
-   MAPR_CONTAINER_USER Name of the container user [20]MapR Ticketing
-   MAPR_HS_HOST IP address of your MapR cluster's HistoryServer [21]Pig,
+   [21]MapR Ticketing
+   MAPR_CONTAINER_UID UID of the container user [22]MapR Ticketing
+   MAPR_CONTAINER_USER Name of the container user [23]MapR Ticketing
+   MAPR_DRILLBITS_HOSTS Comma separated list of Drillbit servers for
+   connecting to Drill [24]Default Drill JDBC Connection URL
+   MAPR_HS_HOST IP address of your MapR cluster's HistoryServer [25]Pig,
    Livy, and Spark Interpreters
    MAPR_MOUNT_PATH Path of the mount point for MapR file system
-   [22]FUSE-Based POSIX Client
+   [26]FUSE-Based POSIX Client
    MAPR_TICKETFILE_LOCATION Location of MapR ticket file in your container
-   [23]MapR Ticketing
-   MAPR_TZ Time zone inside the container [24]Running the MapR PACC Using
+   [27]MapR Ticketing
+   MAPR_TZ Time zone inside the container [28]Running the MapR PACC Using
    Docker
+   MAPR_ZK_QUORUM Comma separated list of servers in your Zookeeper
+   cluster for connecting to Drill [29]Default Drill JDBC Connection URL
+   PYSPARK_PYTHON Location of Python 3 executable on your MapR cluster
+   [30]Python Version
    SPARK_PORT_RANGE Port range reserved for the Spark interpreter
-   [25]Bridge Networking
+   [31]Bridge Networking
 
-   [26]Running Multiple Zeppelin Containers on a Single Host
+   [32]Running Multiple Zeppelin Containers on a Single Host
    ZEPPELIN_ARCHIVE_PYTHON Path containing your archive with custom Python
-   2 packages [27]Installing Custom Packages for PySpark
-   ZEPPELIN_ARCHIVE_PYTHON3 Path containing your archive with custom
-   Python 3 packages [28]Installing Custom Packages for PySpark
+   packages [33]Installing Custom Packages for PySpark
+   ZEPPELIN_CONFIG_FS_DIR Path containing the following Zeppelin
+   configuration files:
+     * interpreter.json
+     * notebook-authorization.json
+
+   [34]Configuration Storage
+   ZEPPELIN_DEPLOY_MODE Set to kubernetes if running Zeppelin as a
+   Kubernetes service [35]Running Zeppelin as a Kubernetes Service
+   ZEPPELIN_INTERPRETER_LIFECYCLE_MANAGER_TIMEOUT_THRESHOLD Timeout
+   threshold that determines when to terminate idle interpreters [36]Idle
+   Interpreter Timeout Threshold
    ZEPPELIN_NOTEBOOK_DIR Location to store your Zeppelin notebooks
-   [29]Notebook Storage
+   [37]Notebook Storage
    ZEPPELIN_SSL_PORT Port number for connecting to the Zeppelin UI
-   [30]Connection Port
+   [38]Connection Port
 
 References
 
@@ -342,24 +497,32 @@ References
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_i4r_5c2_rbb
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#div1entry1
    9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#div1entry2
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinWithKubernetes.html#ZeppelinWithKubernetes
-  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_h1n_pc2_rbb
-  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_h1n_pc2_rbb
-  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/RunningMultipleZeppelinContainers.html#task_prz_kpl_wbb
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_qqy_cqb_1cb
-  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_qqy_cqb_1cb
-  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_p4h_154_sbb
-  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_p4h_154_sbb
-  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_p4h_154_sbb
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallCustomPySpark.html#task_nfn_qnc_ybb
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_i4r_5c2_rbb
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/building_the_connection_url.html#building_the_connection_url
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ConfigureJDBCInterpreter.html#concept_b5l_xdk_qbb__section_o3n_c2k_qbb
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_h1n_pc2_rbb
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_h1n_pc2_rbb
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/RunningMultipleZeppelinContainers.html#task_prz_kpl_wbb
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_qqy_cqb_1cb
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_qqy_cqb_1cb
   19. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_p4h_154_sbb
   20. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_p4h_154_sbb
-  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_kfb_k32_3db
-  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_i4r_5c2_rbb
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_p4h_154_sbb
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_p4h_154_sbb
   23. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_p4h_154_sbb
-  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/RunningtheMapRPACC.html#concept_dxr_4gj_vy
-  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_h1n_pc2_rbb
-  26. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/RunningMultipleZeppelinContainers.html#task_prz_kpl_wbb
-  27. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallCustomPySpark.html#task_nfn_qnc_ybb
-  28. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallCustomPySpark.html#task_nfn_qnc_ybb
-  29. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_fbc_zv2_5bb
-  30. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_xqj_mc2_rbb
+  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_px5_1gf_dfb
+  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_kfb_k32_3db
+  26. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_i4r_5c2_rbb
+  27. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_p4h_154_sbb
+  28. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/RunningtheMapRPACC.html#concept_dxr_4gj_vy
+  29. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_px5_1gf_dfb
+  30. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_fxv_rnb_x2b
+  31. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_h1n_pc2_rbb
+  32. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/RunningMultipleZeppelinContainers.html#task_prz_kpl_wbb
+  33. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallCustomPySpark.html#task_nfn_qnc_ybb
+  34. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_kjq_422_dfb
+  35. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinWithKubernetes.html#ZeppelinWithKubernetes
+  36. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_alx_dcj_cfb
+  37. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_fbc_zv2_5bb
+  38. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_xqj_mc2_rbb

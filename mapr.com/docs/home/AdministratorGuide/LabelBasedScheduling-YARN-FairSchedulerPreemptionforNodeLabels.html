@@ -1,34 +1,30 @@
 YARN Resource Calculation Based on Labels
 
-   Starting from 6.1.0 release, correct steady/instantaneous fair shares,
-   headroom, and maximum resource calculation for queues with label-based
-   scheduling (LBS) is implemented.
-   This feature is a new approach to YARN resource allocation (memory,
-   CPU, and disks). It takes into account the cluster LBS configuration to
-   compute resources that are allowed for each queue. It also takes into
-   account LBS configurations to make decisions of preempting containers.
-   This feature allows assignment of containers to the correct queues and
-   prevents additional resource usage than that provided by the LBS
-   configurations. The features implemented are:
+   MapR 6.1.0 implements correct steady/instantaneous Fair Scheduler
+   shares, headroom, and maximum resource calculation for queues with
+   label-based scheduling (LBS).
+   This new approach to YARN resource allocation enables the cluster LBS
+   configuration to compute the resources that are allowed for each queue.
+   It also uses LBS to assign configurations containers to the correct
+   queues to preempt containers, and to prevent resource overuse. The LBS
+   approach to YARN resource allocation relies on:
     1. Resource computation (memory, CPU, disks) based on labels for each
        queue.
     2. Per-label preemption threshold.
 
-   Note: These features are applicable only for Fair Scheduler.
+   Example of LBS Resource Computation
 
-   In the below example, the old fair share and new fair share
-   distributions are represented:
+   For example, imagine that you have the following resources:
    [YARN-73_1.png]
 
-   Old fair share distribution (all cluster resources are divided between
-   all queues):
+   Using the former fair-share resource distribution results in the
+   following:
    [YARN-73_2.png]
 
-   New fair shares (resources of a label are divided between queues that
-   use this label):
+   Using the new LBS resource distribution results in the following:
    [YARN-73_3.png]
 
-Per-label preemption threshold
+Understanding LBS preemption thresholds
 
    No preemptions are done until the cluster is 80% loaded (by default
    yarn.scheduler.fair.preemption.cluster-utilization-threshold=0.8f). By

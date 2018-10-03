@@ -10,28 +10,27 @@ Configuring the Livy Interpreter
    these parameters:
      * [1]Bridge Networking
      * [2]Pig, Livy, and Spark Interpreters
+     * [3]Python Version
 
 Spark Python
 
-   The Apache Livy interpreter supports both Python 2 and Python 3 You
-   must install the Python packages on your MapR cluster to use them
-   through Livy. You do not need to install them in your container. If the
-   versions installed in your MapR cluster nodes are different from the
-   versions included in the container, some functionality may not work.
-   To use Python 2, specify the following in your notebook:
+   The Apache Livy interpreter supports both Python 2 and Python 3, but
+   you can run only one or the other in your container. You must install
+   the Python packages on your MapR cluster to use them through Livy. You
+   do not need to install them in your container.
+   To use Python, specify the following in your notebook:
 %livy.pyspark
 
-   To use Python 3:
-%livy.pyspark3
+   By default, this invokes Python 2. To switch Python versions, see
+   [4]Python Version.
 
-   To install custom Python packages, see [3]Installing Custom Packages
+   To install custom Python packages, see [5]Installing Custom Packages
    for PySpark.
 
 SparkR
 
    You must install R on your MapR cluster to use Apache SparkR through
-   Livy. If the version installed in your cluster is different from the
-   version included in the container, some functionality may not work.
+   Livy.
 
    To install custom packages for SparkR, run the R interpreter and
    execute R commands to install the target package. You must install the
@@ -69,32 +68,32 @@ Spark Jobs
 Hive Tables
 
    To use Apache Spark SQL with Apache Hive, follow the steps described at
-   [4]Integrate Spark-SQL (Spark 2.0.1 and later) with Hive. As described
+   [6]Integrate Spark-SQL (Spark 2.0.1 and later) with Hive. As described
    on that page, to access Hive tables through Spark, you must make the
    hive-site.xml configuration file from your Hive cluster available to
    Spark running in your Zeppelin container.
 
    One way to make the file available is through a volume mount when you
-   start docker:
+   start Docker:
     1. Copy the file /opt/mapr/hive/hive-<version>/conf/hive-site.xml from
        your Hive cluster to the local host on which you are running the
-       docker container.
+       Docker container.
     2. Add a volume mount argument to your docker run command.
        In the following example, the local hive-site.xml file is in /tmp:
 docker run -it -p 9995:9995 -e MAPR_CLUSTER=<cluster-name> … \
--v /tmp/hive-site.xml:/opt/mapr/spark/spark-2.2.0/conf/hive-site.xml:ro \
-maprtech/data-science-refinery:v1.2_6.0.1_5.0.0_centos7
+-v /tmp/hive-site.xml:/opt/mapr/spark/spark-2.3.1/conf/hive-site.xml:ro \
+maprtech/data-science-refinery:v1.3_6.1.0_6.0.0_centos7
 
    Another way to make the file available is to copy it into your running
    container:
     1. Copy the file /opt/mapr/hive/hive-<version>/conf/hive-site.xml from
        your Hive cluster to the local host on which you are running the
-       docker container.
+       Docker container.
     2. Determine your container-id using the output from the following
        command:
 docker ps
-    3. Copy hive-site.xml from your local host into your docker container:
-docker cp /tmp/hive-site.xml <container-id>:/opt/mapr/spark/spark-2.2.0/conf
+    3. Copy hive-site.xml from your local host into your Docker container:
+docker cp /tmp/hive-site.xml <container-id>:/opt/mapr/spark/spark-2.3.1/conf
     4. Log in to your container as the user running the container using
        the container-id:
 docker exec -it --user <MAPR_CONTAINER_USER> <container-id> bash -l
@@ -106,5 +105,7 @@ References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_h1n_pc2_rbb
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_kfb_k32_3db
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallCustomPySpark.html#task_nfn_qnc_ybb
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/IntegrateSparkSQL_Hive.html#IntegrateSpark-IntegrateS_29656196-d3e85
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_fxv_rnb_x2b
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb__section_fxv_rnb_x2b
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/InstallCustomPySpark.html#task_nfn_qnc_ybb
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Spark/IntegrateSparkSQL_Hive.html#IntegrateSpark-IntegrateS_29656196-d3e85

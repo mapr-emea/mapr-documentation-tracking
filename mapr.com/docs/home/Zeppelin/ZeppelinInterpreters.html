@@ -42,9 +42,17 @@ Supported Zeppelin Interpreters
             to set idle timeouts in your Spark context to recapture
             wayward memory.
 
+          Starting in the 1.3 release, MapR Data Science Refinery uses a
+          shared Livy session to run all Spark variations. In prior
+          releases, it uses separate Livy sessions for Spark, PySpark, and
+          SparkR jobs.
+
           The Livy interpreter does not support [6]ZeppelinContext and
           [7]AngularBind. See the description of the [8]Spark interpreter
           for details about these features.
+
+          Although MapR Data Science Refinery includes Livy, you cannot
+          run the Livy UI inside your Zeppelin container.
 
           The following topics contain examples that use the Livy
           interpreter to access different backend engines:
@@ -72,16 +80,13 @@ Supported Zeppelin Interpreters
             returned from Spark and to pass variables from the Spark
             interpreter to the Angular interpreter
 
-          The Spark interpreter launches Spark jobs in YARN client mode.
-          In this mode, the interpreter launches the Spark driver process
-          on the host machine of the Zeppelin container. This can result
-          in high resource consumption. You also lose the other advantages
-          of running in YARN cluster mode described earlier for the
-          [15]Livy interpreter.
-
-          You can run only one version of Python in your container when
-          using the Spark interpreter. The Livy interpreter does not have
-          this limitation.
+          Starting in MapR Data Science Refinery 1.3, Spark jobs run in
+          YARN cluster mode. In prior releases, they run in YARN client
+          mode. Running in YARN cluster mode avoids heavy resource
+          consumption on your container host machine because the Spark
+          driver process does not run on the container host. It also
+          provides the advantages noted earlier for the [15]Livy
+          interpreter.
 
           The following topics contain examples that use the Spark
           interpreter to access different backend engines:
@@ -119,13 +124,10 @@ Supported Zeppelin Interpreters
 
    Livy vs Spark Interpreters
 
-   The following are general guidelines for choosing between the Livy and
-   Spark interpreters:
-     * Use Livy for jobs that are long running or resource intensive
-     * Use Livy if you need to run multiple Python versions
-     * Use Spark if you need to use visualization features that Livy does
-       not support
-
+   Starting in MapR Data Science Refinery 1.3, since both the Livy and
+   Spark interpreters run in YARN cluster mode, the primary reason for
+   choosing the Spark interpreter over the Livy interpreter is support for
+   visualization features in the former.
    Note: Neither interpreter supports Spark standalone mode.
 
 Zeppelin Interpreter Use Cases
@@ -160,6 +162,13 @@ Unsupported Zeppelin Interpreters
    Apache Zeppelin on MapR does not support the HBase interpreter. To
    access MapR Database binary tables, use the [26]MapR Database Binary
    Connector for Apache Spark with either the Livy or Spark interpreter.
+
+Sequential Execution of Notebook Paragraphs
+
+   Starting in the 1.3 release, MapR Data Science Refinery runs paragraphs
+   in a notebook sequentially rather than in parallel. This allows
+   paragraphs to run properly when they have dependencies on earlier
+   paragraphs in the same notebook.
 
 References
 

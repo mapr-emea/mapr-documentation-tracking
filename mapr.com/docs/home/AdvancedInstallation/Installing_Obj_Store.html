@@ -7,18 +7,17 @@ Installing MapR Object Store with S3-Compatible API
    repositories beginning with MEP 6.0.0. The MapR Object Store with
    S3-Compatible API is an object storage server that can be used with the
    Amazon S3 cloud storage service.
-   The MapR Object Store with S3-Compatible API uses two packages:
+   The MapR Object Store uses two packages:
    mapr-objectstore-client The binary package.
    mapr-objectstore-gateway The role package that includes Warden
    configuration information.
    To install the MapR Object Store packages, you must use the steps on
    this page.
-   Note: The MapR Object Store with S3-Compatible API cannot be installed
-   using the MapR Installer.
-   You can install the MapR Object Store with S3-Compatible API on an Edge
-   node or on a server node (for example, a MapR cluster node) that is
-   running MapR software. A POSIX client is required for both deployment
-   modes.
+   Note: The MapR Object Store cannot be installed using the MapR
+   Installer.
+   You can install the MapR Object Store on an Edge node or on a server
+   node (for example, a MapR cluster node) that is running MapR software.
+   A POSIX client is required for both deployment modes.
    This topic includes the following tasks:
      * [1]Installing the MapR Object Store with S3-Compatible API on an
        Edge Node
@@ -73,14 +72,14 @@ sudo mkdir -m 0777 /mapr
             /opt/mapr/bin/fusermount:
 sudo chmod u+s /opt/mapr/bin/fusermount
     7. Run configure.sh to configure the Edge node:
-sudo /./opt/mapr/server/configure.sh -N <clusterName> -C <clusterHostIp> -Z <clu
-sterHostIp> -c
+sudo /opt/mapr/server/configure.sh -N <clusterName> -C <clusterHostIp> -Z <clust
+erHostIp> -c
     8. Start the POSIX client service:
 sudo systemctl start mapr-posix-client-basic.service
     9. Check that the MapR file system was mounted at /mapr/*:
 ls /mapr/
        The command should return the <clusterName> directory.
-   10. Install the MapR Object Store with S3-Compatible API package:
+   10. Install the MapR Object Store package:
        On Ubuntu:
 sudo apt install mapr-objectstore-client
        On RedHat/CentOS:
@@ -89,7 +88,7 @@ sudo yum install mapr-objectstore-client
 sudo zypper install mapr-objectstore-client
    11. Run the
        /opt/mapr/objectstore-client/objectstore-client-x.x.x/bin/configure
-       .sh script to configure objectstore:
+       .sh script to configure the MapR Object Store:
 sudo /opt/mapr/objectstore-client/objectstore-client-1.0.0/bin/configure.sh -c -
 u <userName> -g <groupName> --path /path/to/filesystem/
        In this command:
@@ -98,10 +97,9 @@ u <userName> -g <groupName> --path /path/to/filesystem/
             objectstore-client.
           + -g(--group) is the group.
           + -p(--path) is the path for mounting the file system.
-   12. Start the MapR Object Store with S3-Compatible API by running the
-       script:
-sudo /./opt/mapr/objectstore-client/objectstore-client-1.0.0/bin/objectstore.sh
-start
+   12. Start the MapR Object Store by running the script:
+sudo /opt/mapr/objectstore-client/objectstore-client-1.0.0/bin/objectstore.sh st
+art
    13. Check that the minio process is running:
 ps aux | grep minio
 
@@ -109,9 +107,9 @@ Deleting the MapR Object Store with S3-Compatible API from an Edge Node
 
    To delete the MapR Object Store with S3-Compatible API, you must stop
    the service and then delete the packages from the Edge node:
-    1. Stop the MapR Object Store with S3-Compatible API service:
-sudo /./opt/mapr/objectstore-client/objectstore-client-1.0.0/bin/objectstore.sh
-stop
+    1. Stop the MapR Object Store service:
+sudo /opt/mapr/objectstore-client/objectstore-client-1.0.0/bin/objectstore.sh st
+op
     2. Delete the packages from the system:
        On Ubuntu:
 sudo apt remove mapr-objectstore-client --purge
@@ -161,16 +159,15 @@ ps aux | grep minio
 
 Configuring the MapR Object Store with S3-Compatible API on a Server
 
-   To start, restart, or stop the MapR Object Store with S3-Compatible
-   API:
+   To start, restart, or stop the MapR Object Store:
 maprcli node services -name objectstore -nodes <node_name> -action [ start | res
 tart | stop ]
 
    Note: After starting the service, wait at least 10 seconds before
    configuring the service.
 
-   To add, remove, or change tenants (MapR Object Store with S3-Compatible
-   API users), edit the tenants.json file:
+   To add, remove, or change tenants (MapR Object Store users), edit the
+   tenants.json file:
 /opt/mapr/objectstore-client/objectstore-client-1.0.0/conf/tenants.json
 
    For an example of the tenants.json file, see tenants-sample.json:
@@ -196,15 +193,13 @@ tart | stop ]
    minio.json file:
 /opt/mapr/objectstore-client/objectstore-client-1.0.0/conf/minio.json
 
-   The MapR Object Store with S3-Compatible API supports three deployment
-   modes:
+   The MapR Object Store supports three deployment modes:
      * fs_only - File permissions protection. This mode supports setting
        the file-system UID and GID.
      * s3_only - Protection only by s3 bucket policy. In this mode, all
        the files in the file system are owned by the user that runs the
-       MapR Object Store with S3-Compatible API processes (typically the
-       mapr user). Access is controlled by the secret access key and the
-       key ID.
+       MapR Object Store processes (typically the mapr user). Access is
+       controlled by the secret access key and the key ID.
      * mixed - File and bucketPolicy mixed protection. This is the default
        mode. In this mode, the access key is ignored, and file-system
        permissions determine access.
