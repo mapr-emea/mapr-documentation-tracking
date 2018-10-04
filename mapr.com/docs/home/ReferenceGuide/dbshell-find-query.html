@@ -36,6 +36,33 @@ Keywords for the --query Option
 
    For more details about these keywords, see [6]OJAI Query Syntax.
 
+   $options Keyword
+
+   The --query option also supports an $options keyword that enables you
+   to specify the query execution path:
+   Option Name and Syntax Description
+   hint-using-index
+"$options":{"ojai":{"mapr":{"query":{"hint-using-index":"<indexname>"}}}}
+
+   Forces the query either to use a specified secondary index or to avoid
+   using any index
+
+   This option is similar to the option available in the Java OJAI client.
+   See [7]Forcing Secondary Index Usage in Java OJAI for a more complete
+   description of the behavior.
+   force-drill
+"$options":{"ojai":{"mapr":{"query":{"force-drill":true}}}}
+
+   Forces the query to use the [8]OJAI Distributed Query Service execution
+   path
+
+   The following example forces the query to use a secondary index named
+   colIndex:
+find /apps/test --q {
+    "$where":{"$eq":{"col":10}},
+    "$options":{"ojai":{"mapr":{"query":{"hint-using-index":"colIndex"}}}}
+    }
+
 Sample JSON Document
 
    The examples in this topic use the following sample JSON document:
@@ -70,12 +97,12 @@ find /tbl --q {"$select":"a.c.d"}
 // Multiple field path projection example
 find /tbl --q {"$select":["a.c.d","a.c.e","m"]}
 
-   See [7]OJAI Query Projection for more information about $select.
+   See [9]OJAI Query Projection for more information about $select.
 
 $where Syntax and Example
 
-   When using the $where keyword, define the condition using [8]OJAI Query
-   Condition Syntax.
+   When using the $where keyword, define the condition using [10]OJAI
+   Query Condition Syntax.
 find <table path> --q {"$where":<condition>}
 
    The following example performs a find operation with a projection and a
@@ -112,7 +139,7 @@ find /tbl --q {"$select":["a.c.e","m"],
                "$limit":10
               }
 
-   See [9]OJAI Query Limit for more information about $limit.
+   See [11]OJAI Query Limit for more information about $limit.
 
 $offset Syntax and Example
 
@@ -128,7 +155,7 @@ find /tbl --q {"$select":["a.c.e","m"],
                "$offset":5
               }
 
-   See [10]OJAI Query Offset for more information about $offset.
+   See [12]OJAI Query Offset for more information about $offset.
 
 $orderby Syntax and Examples
 
@@ -169,7 +196,7 @@ find <table path> --q {"$orderby":[{"<field path1>":"<order>"},
 // and field path a.c.e in descending order
 find /tbl --q {"$orderby":["a.c.d",{"a.c.e":"desc"}]}
 
-   See [11]OJAI Query Order By for more information about $orderby.
+   See [13]OJAI Query Order By for more information about $orderby.
 
 References
 
@@ -179,8 +206,10 @@ References
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-query.html#dbshell-find-query__section_t3y_ljx_c2b
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-query.html#dbshell-find-query__section_u3y_ljx_c2b
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_k4z_hrg_b2b
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_r4z_hrg_b2b
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_t4z_hrg_b2b
-  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_q4z_hrg_b2b
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/SettingQueryOptions.html#SettingQueryOptions__section_xpf_hrf_d2b
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_k4z_hrg_b2b
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingJSONDocumentFields.html#QueryingJSONDocumentFields
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_r4z_hrg_b2b
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_t4z_hrg_b2b
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax__dl_q4z_hrg_b2b
