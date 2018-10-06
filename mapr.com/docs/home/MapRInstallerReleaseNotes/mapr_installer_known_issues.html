@@ -3,6 +3,31 @@ MapR Installer Known Issues
    This topic describes some MapR Installer known issues that you should
    be aware of while troubleshooting.
    Issue Description
+   IN-2065 /mapr sometimes does not get mounted after you enable NFS (v3
+   or v4) using the MapR Installer Incremental Install function. The
+   Incremental Install function is an online operation. Enabling NFS using
+   an Incremental Install can create a race condition between when the
+   mapr_fstab file gets created and NFS is started by Warden. If NFS is
+   started by Warden before the mapr_fstab file is created, /mapr does not
+   get mounted.
+
+   Workaround If /mapr is not mounted, check the time stamp of the
+   /opt/mapr/conf/mapr_fstab file to see if it is older than the time
+   stamp in the warden.log file for starting NFS. For example:
+[root@atsqa4-61 logs]# ls -ld /opt/mapr/conf/fstab
+rw-rr- 1 mapr mapr 39 Sep 26 11:31 /opt/mapr/conf/mapr_fstab
+
+[root@atsqa4-61 logs]# fgrep starting warden.log | fgrep nfs
+2018-09-26 11:29:33,407 INFO com.mapr.warden.service.baseservice.Service [Thread
+-34]: -------------Service is starting for: nfs4
+
+   If the time stamp of the mapr_fstab file is older than the Warden time
+   stamp:
+    1. Restart the NFS service:
+maprcli node services -nodes <node names> -nfs4 start
+    2. Run the mount_local_fs.pl script to mount /mapr:
+/opt/mapr/bin/mount_local_fs.pl
+
    INFO-420 The procedure for [1]Configuring Storage on a Node using
    disksetup does not work for new installations of DARE-enabled MapR 6.1
    clusters. With [2]DARE enabled, disksetup fails on any node that is not
