@@ -1,0 +1,44 @@
+Permissions and OJAI Queries
+
+   You need to understand permission requirements because they affect
+   filter conditions in your OJAI queries.
+
+   MapR Database enforces permissions when your application processes the
+   query result. In the basic application flow shown in the previous
+   section, this corresponds to step 5. In an application, if user1
+   performs the query while user2 processes the result, then the result
+   corresponds to user2's permissions.
+
+   You should create a separate OJAI connection for each unique user.
+   Sharing a connection across users can result in non-optimal queries or
+   invalid permission errors.
+
+   The following permissions are required to query documents:
+     * The readAce permission on the volumes where the JSON tables that
+       contain the documents are located. See [1]Setting Whole Volume
+       ACEs.
+     * The readperm permission on the JSON table's column families
+       containing fields being queried. See [2]Enabling Table and Stream
+       Authorizations with ACEs.
+
+   If the user does not have the readperm permission on a field, MapR
+   Database treats the field as non-existent for that user. When a query
+   selects a non-existent field, MapR Database ignores the field. If a
+   query filters on a non-existent field, the query behaves as follows:
+   Filter Condition on Non-existent Field Behavior
+   Filter for specific values in the field No documents qualify the filter
+   because a non-existent field does not match any value.
+   Filter for non-matches in the field All documents qualify the filter
+   because a non-match on a non-existent field is a no-op.
+
+   The exception is the rowkey field. Access control on the rowkey is not
+   available. Users can always select and filter on rowkey.
+
+   For information about setting permissions, see [3]Permission Types for
+   Fields and Column Families in JSON Tables.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/granting_or_denying_access_to_fields_with_aces.html

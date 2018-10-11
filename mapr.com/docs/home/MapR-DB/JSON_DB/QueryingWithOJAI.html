@@ -4,10 +4,7 @@ Querying in OJAI Applications
    the OJAI Query interface. The typical flow of your application involves
    creating a connection, obtaining a handle to the MapR Database JSON
    table you want to query, constructing the query, performing the query,
-   and then processing the results. When running queries with comparisons
-   and sorts, you need to be aware of how different data types behave. You
-   also need to understand permission requirements and how this affects
-   filter conditions.
+   and then processing the results.
    Note: The Node.js and Python OJAI clients are supported starting in MEP
    6.0.
 
@@ -145,96 +142,6 @@ connection.close()
 
    See [32]Examples: Querying JSON Documents for complete code examples.
 
-Comparisons and Ordering in OJAI
-
-   OJAI supports comparisons using the QueryCondition interface. For
-   information about how to use this interface, see [33]Query Conditions
-   in OJAI Applications.
-
-   When using the OJAI Query where and orderby, and comparing and sorting
-   across different data types, there are subtleties you should take into
-   consideration. See [34]Using Comparable JSON Document Data Types in
-   Comparisons and Sorts and [35]Using Noncomparable JSON Document Data
-   Types in Comparisons and Sorts for more information.
-
-   If you do not have a secondary index defined that can generate your
-   query's specified orderby, then your query requires an explicit sort.
-   If you have installed the [36]OJAI Distributed Query Service, the
-   service performs the sort. If you have not, the MapR client performs
-   the sort, but restricts the amount of data it can sort. The default
-   sort limit is 5000 documents. For example, if your query returns 10,000
-   documents, and you specify a query result limit of 5000 documents, the
-   MapR client can perform the sort.
-   Important: The MapR client returns an error if your query result size
-   exceeds the client's sort limit.
-
-   You can avoid errors due to the client sort limitation by adhering to
-   the following guidelines:
-     * If you know the largest possible query result size when your
-       queries specify an order by, you can increase your client's sort
-       limit to that maximum size. The manner in which you increase this
-       limit depends on the client you are using:
-          + [37]Java OJAI
-          + [38]MapR Database JSON REST API, Node.js OJAI, and Python OJAI
-       Increase the ojai.mapr.query.max-client-sort-limit parameter:
-query.setOption("ojai.mapr.query.max-client-sort-limit", 6000);
-       Update the following parameter in the file
-       /opt/mapr/data-access-gateway/conf/ojai-config.json:
-{
-    "ojai": {
-        "mapr": {
-            "query": {
-                "max-client-sort-limit": 6000
-            }
-        }
-    }
-}
-     * If you do not know the largest possible query result size or are
-       not using the Java OJAI API, specify a limit in your queries. If
-       your query result size exceeds that limit, the client sorts the
-       entire result set but returns only a subset of the rows up to the
-       specified limit. This avoids the error, but may result in
-       unintended behavior if your application is not expecting a
-       truncated result. You should take corrective action if necessary.
-       See [39]Querying with Order By for an example of how to set a query
-       limit.
-
-Permissions
-
-   MapR Database enforces permissions when your application processes the
-   query result. In the basic application flow shown in the previous
-   section, this corresponds to step 5. In an application, if user1
-   performs the query while user2 processes the result, then the result
-   corresponds to user2's permissions.
-
-   You should create a separate OJAI connection for each unique user.
-   Sharing a connection across users can result in non-optimal queries or
-   invalid permission errors.
-
-   The following permissions are required to query documents:
-     * The readAce permission on the volumes where the JSON tables that
-       contain the documents are located. See [40]Setting Whole Volume
-       ACEs.
-     * The readperm permission on the JSON table's column families
-       containing fields being queried. See [41]Enabling Table and Stream
-       Authorizations with ACEs.
-
-   If the user does not have the readperm permission on a field, MapR
-   Database treats the field as non-existent for that user. When a query
-   selects a non-existent field, MapR Database ignores the field. If a
-   query filters on a non-existent field, the query behaves as follows:
-   Filter Condition on Non-existent Field Behavior
-   Filter for specific values in the field No documents qualify the filter
-   because a non-existent field does not match any value.
-   Filter for non-matches in the field All documents qualify the filter
-   because a non-match on a non-existent field is a no-op.
-
-   The exception is the rowkey field. Access control on the rowkey is not
-   available. Users can always select and filter on rowkey.
-
-   For information about setting permissions, see [42]Permission Types for
-   Fields and Column Families in JSON Tables.
-
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div1entry1
@@ -269,13 +176,3 @@ References
   30. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html
   31. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_result_1_1_query_result.html
   32. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/APIexamples-querying-docs.html#APIexamples-querying-docs-withIndexes
-  33. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditions.html#OJAIQueryConditions
-  34. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/datatypes-comparable.html#datatypes-comparable
-  35. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/datatypes-nonComparable.html#datatypes-nonComparable
-  36. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
-  37. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div3entry1
-  38. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div3entry2
-  39. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b
-  40. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SetEditVolumeDataACE.html
-  41. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/EnablingTableAuthorizations.html
-  42. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/granting_or_denying_access_to_fields_with_aces.html

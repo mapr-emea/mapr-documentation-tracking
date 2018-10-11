@@ -1,0 +1,70 @@
+Comparisons and Sorts in OJAI Queries
+
+   When running OJAI queries with comparisons and sorts, you need to be
+   aware of how different data types behave. You also need to understand
+   how sorting works in MapR-DB queries. Depending on the component that
+   runs the sort, you may encounter unexpected behavior.
+
+   OJAI supports comparisons using the QueryCondition interface. For
+   information about how to use this interface, see [1]Query Conditions in
+   OJAI Applications.
+
+   When using the OJAI Query where and orderby, and comparing and sorting
+   across different data types, there are subtleties you should take into
+   consideration. See [2]Using Comparable JSON Document Data Types in
+   Comparisons and Sorts and [3]Using Noncomparable JSON Document Data
+   Types in Comparisons and Sorts for more information.
+
+   If you do not have a secondary index defined that can generate your
+   query's specified orderby, then your query requires an explicit sort.
+   If you have installed the [4]OJAI Distributed Query Service, the
+   service performs the sort. If you have not, the MapR client performs
+   the sort, but restricts the amount of data it can sort. The default
+   sort limit is 5000 documents. For example, if your query returns 10,000
+   documents, and you specify a query result limit of 5000 documents, the
+   MapR client can perform the sort.
+   Important: The MapR client returns an error if your query result size
+   exceeds the client's sort limit.
+
+   You can avoid errors due to the client sort limitation by adhering to
+   the following guidelines:
+     * If you know the largest possible query result size when your
+       queries specify an order by, you can increase your client's sort
+       limit to that maximum size by setting the
+       ojai.mapr.query.max-client-sort-limit parameter.
+       The following code snippets increase the limit to 6000:
+          + [5]Java
+          + [6]Node.js
+          + [7]Python
+query.setOption("ojai.mapr.query.max-client-sort-limit", 6000);
+const query = {"$select":"col","$options":{"ojai":{"mapr":{"query":{"max-client-
+sort:6000}}}}
+const stream = store.find(query)
+query = {"$select":"col","$options":{"ojai":{"mapr":{"query":{"max-client-sort:6
+000}}}}
+query_result = store.find(query)
+       You can also set this option across all your Node.js and Python
+       OJAI clients by modifying a MapR Data Access Gateway property. See
+       [8]Administering the MapR Data Access Gateway - Application
+       Properties for details.
+     * If you do not know the largest possible query result size, specify
+       a limit in your queries. If your query result size exceeds that
+       limit, the client sorts the entire result set but returns only a
+       subset of the rows up to the specified limit. This avoids the
+       error, but may result in unintended behavior if your application is
+       not expecting a truncated result. You should take corrective action
+       if necessary.
+       See [9]Querying with Order By for an example of how to set a query
+       limit.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditions.html#OJAIQueryConditions
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/datatypes-comparable.html#datatypes-comparable
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/datatypes-nonComparable.html#datatypes-nonComparable
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ComparisonSortsOJAI.html#div1entry1
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ComparisonSortsOJAI.html#div1entry2
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ComparisonSortsOJAI.html#div1entry3
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__sectiondiv_pjf_2vz_m2b
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b

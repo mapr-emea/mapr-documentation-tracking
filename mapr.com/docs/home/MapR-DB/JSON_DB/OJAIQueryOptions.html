@@ -1,0 +1,109 @@
+OJAI Query Options
+
+   OJAI supports query options that enable you to modify the behavior of
+   your queries. This includes an option to force secondary index usage
+   and options to influence the behavior of sorts.
+
+Available Query Options
+
+   The following table lists available query options. Some options may or
+   may not apply, depending on whether your query uses the OJAI
+   Distributed Query Service. The detailed descriptions make a note of
+   this.
+   Option Name Description Details
+   ojai.mapr.query.hint-using-index Forces the MapR client to use a
+   particular index, regardless of cost considerations [1]Forcing
+   Secondary Index Usage in OJAI
+   ojai.mapr.query.force-noncovering-sort Enables sort behavior to avoid
+   partial sorts due to secondary index lags [2]Avoiding Partial Sorts
+   with Secondary Indexes in OJAI
+   ojai.mapr.query.max-client-sort-limit Sets the MapR client sort limit
+   [3]Comparisons and Sorts in OJAI Queries
+   ojai.mapr.query.force-drill When set to true, forces the MapR client to
+   use the OJAI Distributed Query Service [4]Forcing Usage of the OJAI
+   Distributed Query Service
+   ojai.mapr.drill.<OJAI Distributed Query Service Property Name> Sets
+   options for the OJAI Distributed Query Service [5]Setting OJAI
+   Distributed Query Service Properties
+
+Setting Query Options
+
+   To set these options in your OJAI application, see the following
+   topics:
+     * [6]Java
+     * [7]Node.js
+     * [8]Python
+
+   [9]Setting Query Options in Java OJAI
+   [10]Setting Query Options in Node.js Using OJAI Query Syntax
+   [11]Setting Query Options in Python Using OJAI Query Syntax
+
+Forcing Secondary Index Usage in OJAI
+
+   To force the MapR client to use an index, specify the name of the index
+   with the ojai.mapr.query.hint-using-index option.
+
+   Regardless of cost considerations, the MapR client attempts to use the
+   specified index. To use the index, the index must benefit filter
+   conditions, the order by, or projections in the query as described at
+   [12]Queries that Benefit from Secondary Indexes. Otherwise, the MapR
+   client ignores the option.
+
+   To force the MapR client to not use any indexes, specify the table name
+   without the full path as the second parameter in the calls shown
+   earlier. For example, if the full path of your table is
+   /mapr/sanfrancisco/volume1/customer, pass the name customer as the
+   second parameter.
+   Note: Setting this option in your OJAI application has no effect if you
+   are using the OJAI Distributed Query Service.
+
+Avoiding Partial Sorts with Secondary Indexes in OJAI
+
+   Partial sorts can occur due to secondary index lags. To avoid these
+   lags, set the ojai.mapr.query.force-noncovering-sort option to TRUE.
+
+   This option forces the OJAI Distributed Query Service to explicitly
+   sort the data. Do not set this option if you do not expect to encounter
+   index lags. Otherwise, you lose the ordering advantage that secondary
+   indexes provide.
+
+   For more information about why partial sorts occur, see [13]Partial
+   Sorts with Non-Covering Indexes.
+
+Forcing Usage of the OJAI Distributed Query Service
+
+   When set to true, the MapR client uses the OJAI Distributed Query
+   Service execution path, rather than selecting an execution path that it
+   determines to be most optimal. See [14]OJAI Distributed Query Service
+   for more information about the different query execution paths.
+
+Setting OJAI Distributed Query Service Properties
+
+   OJAI queries may leverage the OJAI Distributed Query Service. To modify
+   OJAI Distributed Query Service property settings in your OJAI
+   application, prefix the OJAI Distributed Query Service property name
+   with ojai.mapr.drill.
+
+   For example, the option ojai.mapr.drill.planner.enable_index_planning
+   disables using secondary indexes when queries use the Query Service.
+
+   See [15]Index Planning and Execution Configuration Options for the list
+   of available OJAI Distributed Query Service properties.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryOptions.html#OJAIQueryOptions__section_xpf_hrf_d2b
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryOptions.html#OJAIQueryOptions__section_b5q_dbs_y1b
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ComparisonSortsOJAI.html#concept_xnf_qjn_kfb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryOptions.html#OJAIQueryOptions__section_ht4_lrs_kfb
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryOptions.html#OJAIQueryOptions__section_i2r_ckf_dbb
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryOptions.html#div1entry1
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryOptions.html#div1entry2
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryOptions.html#div1entry3
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/SettingQueryOptions.html#SettingQueryOptions
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/NodeJSQueryOptions.html#PythonQueryOptions__section_zzy_w5z_m2b
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/PythonQueryOptions.html#PythonQueryOptions__section_zzy_w5z_m2b
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-types.html#concept_u1y_r3n_p1b
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby-queries.html#reference_cfw_jwl_f1b__section_stl_cgs_y1b
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/ArchitectureOJAIQueryService.html#concept_pc2_4ws_p1b
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill-si-config-options.html#drill-si-config-options
