@@ -1,0 +1,108 @@
+Connecting MapR Data Science Refinery to MapR Sandbox
+
+   To connect MapR Data Science Refinery to MapR Sandbox, install MapR
+   Sandbox, configure resource settings in your virtual machine (if
+   needed), and then set the parameters corresponding to your virtual
+   machine environment in your docker run command.
+    1. Install the sandbox using a virtual machine player
+         a. You can use one of the following virtual machine players:
+               o [1]Installing the Sandbox on VirtualBox
+               o [2]Installing the Sandbox on VMware Player or VMware
+                 Fusion
+         b. If you are installing VirtualBox, you must configure a second
+            network adapter using either Host-only Adapter or Bridged
+            Adapter. For the VMware players, you can use the default
+            network configuration.
+         c. You may also need to increase the default processor and memory
+            configurations, depending on the workload you plan to run.
+    2. Determine the parameters you want to pass to Docker:
+         a. See [3]Understanding Zeppelin Docker Parameters to determine
+            your initial parameters.
+         b. Then determine the value of parameters that are specific to
+            connecting to MapR Sandbox:
+
+   Parameter Name Parameter Value
+   MAPR_CLDB_HOSTS IP address of your virtual machine
+   MAPR_HS_HOST IP address of your virtual machine
+   HOST_IP
+
+   Set this variable based on the network adapter and virtual machine
+   player you are using:
+               VirtualBox            VMware
+
+              Host-only Adapter
+                      IP address of the gateway interface to the virtual
+                      machine's internal network
+
+              Bridged Adapter
+                      Output from the following command:
+
+ip r get 8.8.8.8 | awk 'NR==1 {print $NF}'
+
+   Output from the following command:
+ip r get 8.8.8.8 | awk 'NR==1 {print $NF}'
+
+   --add-host "<hostname>":<IP address> of your virtual machine
+    3. Construct your docker run command based on Step 3.
+       The following are examples of docker run commands that use
+       VirtualBox with the different network adapters. Note the parameters
+       highlighted in bold:
+          + [4]Host-only Adapter
+          + [5]Bridged Adapter
+docker run -it -p 9995:9995 \
+    -e HOST_IP=192.168.192.1  \
+      -p 10000-10010:10000-10010 \
+      -p 11000-11010:11000-11010 \
+    -e MAPR_CLUSTER=demo.mapr.com \
+      -e MAPR_CLDB_HOSTS=192.168.192.100 \
+    -e MAPR_CONTAINER_USER=mapr \
+      -e MAPR_CONTAINER_PASSWORD=mapr \
+      -e MAPR_CONTAINER_GROUP=mapr \
+      -e MAPR_CONTAINER_UID=2000 \
+      -e MAPR_CONTAINER_GID=2000 \
+    -e MAPR_MOUNT_PATH=/mapr \
+      --cap-add SYS_ADMIN \
+      --cap-add SYS_RESOURCE \
+      --device /dev/fuse \
+    -e MAPR_HS_HOST=192.168.192.100 \
+    --add-host="maprdemo:192.168.192.100" \
+    --add-host="maprdemo.local:192.168.192.100" \
+    maprtech/data-science-refinery:v1.3_6.1.0_6.0.0_centos7
+docker run -it -p 9995:9995 \
+    -e HOST_IP=$(ip r get 8.8.8.8 | awk 'NR==1 {print $NF}')  \
+      -p 10000-10010:10000-10010 \
+      -p 11000-11010:11000-11010 \
+    -e MAPR_CLUSTER=demo.mapr.com \
+      -e MAPR_CLDB_HOSTS=10.2.13.163 \
+    -e MAPR_CONTAINER_USER=mapr \
+      -e MAPR_CONTAINER_PASSWORD=mapr \
+      -e MAPR_CONTAINER_GROUP=mapr \
+      -e MAPR_CONTAINER_UID=2000 \
+      -e MAPR_CONTAINER_GID=2000 \
+    -e MAPR_MOUNT_PATH=/mapr \
+      --cap-add SYS_ADMIN \
+      --cap-add SYS_RESOURCE \
+      --device /dev/fuse \
+    -e MAPR_HS_HOST=10.2.13.163 \
+    --add-host="maprdemo:10.2.13.163" \
+    --add-host="maprdemo.local:10.2.13.163" \
+    maprtech/data-science-refinery:v1.3_6.1.0_6.0.0_centos7
+
+   After following these steps, you can refer to other MapR Data Science
+   Refinery topics that describe how to use the resulting container.
+
+   If you encounter resource errors or hangs, you may need to increase the
+   processor and memory configuration settings in your virtual machine
+   player.
+   Important: Also, due to resource constraints, you cannot run both the
+   [6]Livy and [7]Spark interpreters.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SandboxHadoop/t_install_sandbox_vbox.html#task_kjv_45t_zs
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SandboxHadoop/t_install_sandbox_vmware.html#task_kjv_45t_zs
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinDockerRunParameters.html#concept_rhn_gb2_rbb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/DSRtoSandBox.html#div1entry1
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/DSRtoSandBox.html#div1entry2
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinInterpreters.html#concept_q41_m2r_4bb__dlentry_pfl_wlk_v2b
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/Zeppelin/ZeppelinInterpreters.html#concept_q41_m2r_4bb__dlentry_cv4_s55_52b
