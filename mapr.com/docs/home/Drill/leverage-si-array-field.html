@@ -17,6 +17,7 @@ WHERE _id IN ( SELECT _id
                FROM ( SELECT _id, FLATTEN(ADDRESSES) as f
           FROM CUSTOMERS) as t
                WHERE t.f.CITY = 'SAN JOSE' and t.f.STATE = 'CA')
+;
 
    The specific SQL syntax indicates (to the query planner in Drill) that
    the query is eligible for an index-based query plan.
@@ -271,9 +272,16 @@ s f2
 SELECT NAME, PHONE
 FROM CUSTOMERS
 WHERE _id IN ( SELECT _id
-               FROM ( SELECT _id, FLATTEN(ADDRESSES) as f
-          FROM CUSTOMERS) as t
-               WHERE t.f.ZIPCODE = 94020 AND  PHONE = '408-555-1212');
+                  FROM ( SELECT _id, FLATTEN(ADDRESSES) as f , PHONE
+                         FROM CUSTOMERS) as t
+                  WHERE t.f.ZIPCODE = 94020 AND  PHONE = '408-555-1212');
+
+   This query returns the following results:
++--------+---------------+
+|  NAME  |     PHONE     |
++--------+---------------+
+| ALICE  | 408-555-1212  |
++--------+---------------+
 
    Map field within nested array of maps ADDRESSES[].UNITS[].FLOOR < 5
 SELECT NAME, PHONE
