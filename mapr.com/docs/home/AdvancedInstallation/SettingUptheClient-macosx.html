@@ -17,30 +17,37 @@ sudo tar -C /opt -zxf mapr-client-<version>.tar.gz*
        /opt/mapr/conf/env.sh
        For example:
 $ export JAVA_HOME=$(/usr/libexec/java_home)
-    6. Run [1]configure.sh to configure the client.
+    6. To use this client with a secure cluster or clusters, copy the
+       ssl_truststore file from the /opt/mapr/conf directory on the
+       cluster to the /opt/mapr/conf directory on the client.
+       If this client will connect to multiple clusters, merge the
+       ssl_truststore files with the /opt/mapr/server/manageSSLKeys.sh
+       tool.
+    7. Run [1]configure.sh to configure the client. In the following
+       examples, the -N parameter specifies the cluster name, the -c
+       (lowercase) parameter specifies a client configuration, the -secure
+       parameter is added if the cluster is secure, the -C (uppercase)
+       parameter specifies the CLDB nodes, and the -HS parameter specifies
+       the HistoryServer node. To ensure that the client can connect in
+       the event of a CLDB node failure, all CLDB nodes are specified. For
+       more information about the syntax, parameters, and behavior of
+       configure.sh, see [2]configure.sh.
 
         Non-secure cluster example
-                In the following examples, the -N parameter specifies the
-                cluster name, the -c (lowercase) option specifies a client
-                configuration, the -C (uppercase) parameter specifies the
-                CLDB nodes, and -HS specifies the HistoryServer node:
 
-sudo /opt/mapr/server/configure.sh -N my.cluster.com -c -C mynode01:7222 -HS nod
-eA
+sudo /opt/mapr/server/configure.sh -N my.cluster.com -c -C mynode01:7222,mynode0
+2:7222,mynode03:7222 -HS nodeA
 
         Secure cluster example
-                In the following example, the -N parameter specifies the
-                cluster name, the -C (uppercase) parameter specifies the
-                CLDB nodes, the -c (lowercase) option specifies a client
-                configuration, and -secure indicates that the cluster is
-                secure:
 
 sudo /opt/mapr/server/configure.sh -N my.cluster.com -c -secure -C mynode01:7222
+,mynode02:7222,mynode03:7222
 
-       Note: If the cluster was configured with a cluster-admin user:group
-       that is different from the default mapr:mapr value, you must
-       include options to specify the cluster-admin user and group
-       information when you run configure.sh to configure the client.
+       Note:
+       If the cluster was configured with a cluster-admin user:group that
+       is different from the default mapr:mapr value, you must include
+       options to specify the cluster-admin user and group information
+       when you run configure.sh to configure the client.
        If the cluster-admin user ID is present on the client node, include
        these options:
           + -u
@@ -52,13 +59,6 @@ sudo /opt/mapr/server/configure.sh -N my.cluster.com -c -secure -C mynode01:7222
           + --create-user | -a
           + -U
           + -G
-    7. To use this client with a secure cluster or clusters, copy the
-       ssl_truststore file from the /opt/mapr/conf directory on the
-       cluster to the /opt/mapr/conf directory on the client.
-       If this client will connect to multiple clusters, merge the
-       ssl_truststore files with the /opt/mapr/server/manageSSLKeys.sh
-       tool. See [2]Managing Secure Clusters for details on how to connect
-       to a secure cluster.
 
    For information about running Hadoop commands on Mac OS X, see
    [3]Running Hadoop Commands on a Mac and Windows Client.
@@ -66,5 +66,5 @@ sudo /opt/mapr/server/configure.sh -N my.cluster.com -c -secure -C mynode01:7222
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Secure-cluster-administration.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient-hadoop.html#SettingUptheClient-hadoop
