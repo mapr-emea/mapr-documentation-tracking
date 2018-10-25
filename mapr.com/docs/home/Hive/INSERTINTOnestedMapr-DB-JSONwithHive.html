@@ -12,8 +12,8 @@ Understanding the INSERT INTO Statement
 
 Single-row insert
 
-   You can use the INSERT INTO statement to insert a single row into a
-   nested MapR Database table using one of two methods.
+   You can use the INSERT INTO statement to insert a single table row into
+   a nested MapR Database table using one of two methods.
 
    For example, imagine that you have the following Hive MapR Database
    JSON table, nested_data_insert:
@@ -55,59 +55,60 @@ SELECT '002',
             'Stiv',
             Named_struct ('user_id', '2', 'address', 'Schererville', 'zip', '463
 75', 'country', 'Efi'));
-     * After you insert data, you should verify that the data is inserted
-       in both Hive and MapR Database JSON tables:
-          + Verifying Hive table data:
+
+   After you insert data, you should verify that the data is inserted in
+   both Hive and MapR Database JSON tables:
+     * Verify the insertion into the Hive table by using the SELECT * FROM
+       syntax.
 SELECT * FROM nested_data_insert;
-            Sample output:
+       Sample output:
 
    CAPTION: Table 1. Result of the insert queries 1.1 and 1.2:
 
-            entry num                  postal_address
-                              USER_ID       ADDRESS        ZIP  COUNTRY
-             001  1   Adam    1       3205 Woodlake ct    45040 Usa
-                      Wilfred 2       777 Brockton Avenue 34000 Ita
-             002  2   Bill    1       328 Virginia Ave    54956 Bol
-                      Stiv    2       Schererville        46375 Efi
-          + Verifying MapR Database JSON table data:
+       entry num                  postal_address
+                         USER_ID       ADDRESS        ZIP  COUNTRY
+        001  1   Adam    1       3205 Woodlake ct    45040 Usa
+                 Wilfred 2       777 Brockton Avenue 34000 Ita
+        002  2   Bill    1       328 Virginia Ave    54956 Bol
+                 Stiv    2       Schererville        46375 Efi
+     * Verify the insertion into the MapR Database JSON table data using
+       the find statement:
 find '/nested_data_insert'
 
 {
   "Adam": {
-    "user_id": "1",
-    "address": "3205 Woodlake ct",
-    "zip": "45040",
-    "country": "Usa"
-  },
+      "user_id": "1",
+      "address": "3205 Woodlake ct",
+      "zip": "45040",
+      "country": "Usa"
+           },
   "Wilfred": {
-    "user_id": "2",
-    "address": "777 Brockton Avenue",
-    "zip": "34000",
-    "country": "Ita"
-  }
-}
+      "user_id": "2",
+      "address": "777 Brockton Avenue",
+      "zip": "34000",
+      "country": "Ita"
+           }
+        }
 {
-  "Bill": {
-    "user_id": "1",
-    "address": "328 Virginia Ave",
-    "zip": "54956",
-    "country": "Bol"
-  },
-  "Stiv": {
-    "user_id": "2",
-    "address": "Schererville",
-    "zip": "46375",
-    "country": "Efi"
-  }
-  }
+   "Bill": {
+      "user_id": "1",
+      "address": "328 Virginia Ave",
+      "zip": "54956",
+      "country": "Bol"
+        },
+   "Stiv": {
+      "user_id": "2",
+      "address": "Schererville",
+      "zip": "46375",
+      "country": "Efi"
+        }
+}
 
 Multiple-row insert
 
    Now imagine that you want to insert three rows of data into
    nested_data_insert.
-
-   You can:
-     * Use a dummy table:
+     * You can insert the new rows into your table by using a dummy table:
 WITH dummy_table AS
   (SELECT '003' AS KEY,
           '3' AS num,
@@ -127,7 +128,8 @@ enue', 'zip', '95111', 'country', 'CA')) AS postal_addresses
 INSERT INTO nested_data_insert
 SELECT *
 FROM dummy_table;
-     * Use a SELECT statement:
+     * Alternatively, you can insert the new rows into your table by using
+       a SELECT statement:
 INSERT INTO TABLE nested_data_insert
 SELECT '006',
        '6',
@@ -146,253 +148,265 @@ SELECT '008',
        MAP ('Davin',
             Named_struct ('user_id', '1', 'address', '81 Augusta Ave', 'zip', '9
 3905', 'country', 'CA'));
-     * After you insert data, you should verify that the data is inserted
-       in both Hive and MapR Database JSON tables:
-          + Verifying Hive table data:
+
+   After you insert data, you should verify that the data is inserted in
+   both Hive and MapR Database JSON tables:
+     * Verify the insertion into the Hive table by using the SELECT * FROM
+       syntax.
 SELECT * FROM nested_data_insert WHERE entry > '002' ;
-            Sample output:
+       Sample output:
 
    CAPTION: Table 2. Result of the insert queries 2.1 and 2.2:
 
-            entry num                 postal_address
-                              USER_ID      ADDRESS       ZIP  COUNTRY
-             003  3   Rony    1       4333 Backer str   12311 Hun
-             004  4   Ivan    1       833 Bridle Avenue 95111 CA
-             005  5   Ivan    1       664 Devon Ave.    92021 Tog
-             006  6   Rony    1       150 National City 91950 Hun
-             007  7   Tomason 1       272 Ocean Circle
+       entry num                 postal_address
+                         USER_ID      ADDRESS       ZIP  COUNTRY
+        003  3   Rony    1       4333 Backer str   12311 Hun
+        004  4   Ivan    1       833 Bridle Avenue 95111 CA
+        005  5   Ivan    1       664 Devon Ave.    92021 Tog
+        006  6   Rony    1       150 National City 91950 Hun
+        007  7   Tomason 1       272 Ocean Circle
 
    92801
-            CA
-             008  8   Davin   1       81 Augusta Ave    93905 CA
-          + Verifying MapR Database JSON table data:
+       CA
+        008  8   Davin   1       81 Augusta Ave    93905 CA
+     * Verify the insertion into the MapR Database JSON table data using
+       the find statement:
 find '/nested_data_insert'
 
 {
-  "_id": "003",
-  "num": {
-    "$numberInt": 3
-  },
-  "postal_addresses": {
-    "Rony": {
-      "address": "4333 Backer str",
-      "country": "Hun",
-      "user_id": "1",
-      "zip": "12311"
-    }
-  }
-}
+   "_id": "003",
+   "num": {
+     "$numberInt": 3
+          },
+   "postal_addresses": {
+        "Rony": {
+             "address": "4333 Backer str",
+             "country": "Hun",
+             "user_id": "1",
+             "zip": "12311"
+             }
+         }
+      }
 {
-  "_id": "004",
-  "num": {
-    "$numberInt": 4
-  },
-  "postal_addresses": {
-    "Ivan": {
-      "address": "833 Bridle Avenue",
-      "country": "CA",
-      "user_id": "1",
-      "zip": "95111"
+   "_id": "004",
+   "num": {
+       "$numberInt": 4
+          },
+   "postal_addresses": {
+          "Ivan": {
+              "address": "833 Bridle Avenue",
+              "country": "CA",
+              "user_id": "1",
+              "zip": "95111"
+            }
+       }
+ }
+ {
+   "_id": "005",
+   "num": {
+           "$numberInt": 5
+          },
+   "postal_addresses": {
+           "Ivan": {
+               "address": "664 Devon Ave",
+               "country": "Tog",
+               "user_id": "1",
+                "zip": "92021"
+          }
+       }
     }
-  }
-}
 {
-  "_id": "005",
-  "num": {
-    "$numberInt": 5
-  },
-  "postal_addresses": {
-    "Ivan": {
-      "address": "664 Devon Ave",
-      "country": "Tog",
-      "user_id": "1",
-      "zip": "92021"
+     "_id": "006",
+     "num": {
+           "$numberInt": 6
+            },
+     "postal_addresses": {
+          "Rony": {
+             "address": "150 National City",
+             "country": "Hun",
+             "user_id": "1",
+             "zip": "91950"
+           }
+        }
     }
-  }
-}
 {
-  "_id": "006",
-  "num": {
-    "$numberInt": 6
-  },
-  "postal_addresses": {
-    "Rony": {
-      "address": "150 National City",
-      "country": "Hun",
-      "user_id": "1",
-      "zip": "91950"
+    "_id": "007",
+    "num": {
+         "$numberInt": 7
+           },
+    "postal_addresses": {
+          "Tomason": {
+              "address": "272 Ocean Circle",
+              "country": "CA",
+              "user_id": "1",
+              "zip": "92801"
+           }
+       }
     }
-  }
-}
 {
-  "_id": "007",
-  "num": {
-    "$numberInt": 7
-  },
-  "postal_addresses": {
-    "Tomason": {
-      "address": "272 Ocean Circle",
-      "country": "CA",
-      "user_id": "1",
-      "zip": "92801"
-    }
-  }
+    "_id": "008",
+    "num": {
+         "$numberInt": 8
+           },
+    "postal_addresses": {
+           "Davin": {
+                "address": "81 Augusta Ave",
+                "country": "CA",
+                "user_id": "1",
+                "zip": "93905"
+            }
+         }
 }
-{
-  "_id": "008",
-  "num": {
-    "$numberInt": 8
-  },
-  "postal_addresses": {
-    "Davin": {
-      "address": "81 Augusta Ave",
-      "country": "CA",
-      "user_id": "1",
-      "zip": "93905"
-    }
-  }
-  }
 
 Overwriting data
 
-   Still using sample table: nested_data_insert, you can use the INSERT
+   Still using sample table nested_data_insert, you can use the INSERT
    statement on a dummy table to overwrite one or more complete rows.
-     * For example, to overwrite the first row in nested_data_insert (001)
-       with new values, use the following syntax:
+   For example, to overwrite the first row in nested_data_insert (001)
+   with new values, use the following syntax:
 WITH dummy_table AS
-            (SELECT '001' AS KEY,
-            '1' AS num,
-            MAP ('newAdam',
-            Named_struct ('user_id', '1', 'address', 'newAdress', 'zip', 'newZip
-', 'country', 'newCountry')) AS postal_addresses)
+(SELECT '001' AS KEY,
+'1' AS num,
+MAP ('newAdam',
+Named_struct ('user_id', '1', 'address', 'newAdress', 'zip', 'newZip', 'country'
+, 'newCountry')) AS postal_addresses)
 INSERT INTO nested_data_insert
 SELECT *
 FROM dummy_table;
-     * After you insert data, you should verify that the data is inserted
-       in both Hive and MapR Database JSON tables:
-          + Verifying Hive table data:
+
+   After you overwrite data, you should verify that the data is changed in
+   both Hive and MapR Database JSON tables:
+     * Verify the data into the Hive table by using the SELECT * FROM
+       syntax.
 hive> SELECT * FROM nested_data_insert WHERE entry = '001';
-            Sample output:
+       Sample output:
 
    CAPTION: Table 3. Result of the insert query 3.1:
 
-            entry num               postal_address
-                              USER_ID  ADDRESS    ZIP    COUNTRY
-             001  1   newAdam 1       newAddress newZip newCountry
-          + Verifying MapR Database JSON table data:
+       entry num               postal_address
+                         USER_ID  ADDRESS    ZIP    COUNTRY
+        001  1   newAdam 1       newAddress newZip newCountry
+     * Verify the data in the MapR Database JSON table data using the
+       findbyid statement:
 findbyid '/nested_data_insert' --id 001
 
 {
-  "_id": "001",
-  "num": {
-      "$numberInt": 1
-       },
-  "postal_addresses": {
-     "newAdam": {
-          "address": "newAdress",
-          "country": "newCountry",
-          "user_id": "1",
-          "zip": "newZip"
+   "_id": "001",
+   "num": {
+   "$numberInt": 1
+           },
+   "postal_addresses": {
+        "newAdam": {
+              "address": "newAdress",
+              "country": "newCountry",
+              "user_id": "1",
+              "zip": "newZip"
+           }
        }
-    }
-    }
-     * For another example, imagine that you want to overwrite 003 and 004
-       rows in nested_data_insert with new values:
+}
+
+   For another example, imagine that you want to overwrite 003 and 004
+   rows in nested_data_insert with new values:
 WITH dummy_table AS (
 SELECT '003' AS KEY,
-       '3' AS num,
-        MAP ('newName1',
-      Named_struct ('user_id', '1', 'address', 'newAdress1', 'zip', 'newZip1', '
-country', 'newCountry1')) AS postal_addresses
-        UNION ALL
-        SELECT '004' AS KEY,
-               '4' AS num,
-        MAP ('newName2',
-        Named_struct ('user_id', '1', 'address', 'newAdress2', 'zip', 'newZip2',
- 'country', 'newCountry2')) AS postal_addresses)
+'3' AS num,
+MAP ('newName1',
+Named_struct ('user_id', '1', 'address', 'newAdress1', 'zip', 'newZip1', 'countr
+y', 'newCountry1')) AS postal_addresses
+UNION ALL
+SELECT '004' AS KEY,
+'4' AS num,
+MAP ('newName2',
+Named_struct ('user_id', '1', 'address', 'newAdress2', 'zip', 'newZip2', 'countr
+y', 'newCountry2')) AS postal_addresses)
 INSERT INTO nested_data_insert
-SELECT *
-FROM dummy_table;
-     * After you insert data, you should verify that the data is inserted
-       in both Hive and MapR Database JSON tables.
-          + Verifying Hive table data:
+SELECT * FROM dummy_table;
+
+   After you overwrite the data, you should verify that the data is
+   changed in both Hive and MapR Database JSON tables.
+     * Verify the data in the Hive table by using the SELECT * FROM
+       syntax.
 hive> SELECT * FROM nested_data_insert WHERE entry IN ('003', '004');
-            Sample output:
+       Sample output:
 
    CAPTION: Table 4. Result of the insert query 3.3:
 
-            entry num                  postal_address
-                               USER_ID   ADDRESS     ZIP     COUNTRY
-             003  3   newName1 1       newAddress1 newZip1 newCountry1
-             004  4   newName2 1       newAddress2 newZip2 newCountry2
-          + MapR Database JSON table:
+       entry num                  postal_address
+                          USER_ID   ADDRESS     ZIP     COUNTRY
+        003  3   newName1 1       newAddress1 newZip1 newCountry1
+        004  4   newName2 1       newAddress2 newZip2 newCountry2
+       Verify the data in the MapR Database JSON table data using the
+       findbyid statement:
 findbyid '/nested_data_insert' --id 003
 {
   "_id": "003",
   "num": {
-  "$numberInt": 3
-        },
+       "$numberInt": 3
+          },
   "postal_addresses": {
   "newName1": {
-  "address": "newAdress1",
-  "country": "newCountry1",
-  "user_id": "1",
-  "zip": "newZip1"
-         }
+       "address": "newAdress1",
+       "country": "newCountry1",
+       "user_id": "1",
+       "zip": "newZip1"
+           }
+        }
      }
-}
 findbyid '/nested_data_insert' --id 004
-{
-  "_id": "004",
-  "num": {
-  "$numberInt": 4
-       },
-  "postal_addresses": {
-  "newName2": {
-  "address": "newAdress2",
-  "country": "newCountry2",
-  "user_id": "1",
-  "zip": "newZip2"
-         }
-     }
-}
-            Warning: If you exclude columns both from the SELECT statement
-            in your INSERT statement and from the table schema, the value
-            of this column changes to NULL.
-     * Finally, imagine that you want to overwrite the first row in
-       nested_data_insert (001) with new values and overwrite the num
-       column to NULL:
+     {
+       "_id": "004",
+       "num": {
+          "$numberInt": 4
+          },
+       "postal_addresses": {
+           "newName2": {
+              "address": "newAdress2",
+              "country": "newCountry2",
+              "user_id": "1",
+              "zip": "newZip2"
+           }
+        }
+    }
+       Warning: If you exclude columns both from the SELECT statement in
+       your INSERT statement and from the table schema, the value of this
+       column changes to NULL.
+
+   Finally, imagine that you want to overwrite the first row in
+   nested_data_insert (001) with new values and overwrite the num column
+   to NULL:
 WITH dummy_table AS
 (SELECT '001' AS KEY,
 MAP ('newAdam',
 Named_struct ('user_id', '1', 'address', 'newAdress', 'zip', 'newZip', 'country'
 , 'newCountry')) AS postal_addresses)
 INSERT INTO nested_data_insert (entry, postal_addresses)
-SELECT *
-FROM dummy_table;
-     * After you insert data, you should verify that the data is inserted
-       in both Hive and MapR Database JSON tables.
-          + Verifying Hive table data:
+SELECT * FROM dummy_table;
+
+   After you overwrite data, you should verify that the data is changed in
+   both Hive and MapR Database JSON tables.
+     * Verify the data in the Hive table by using the SELECT * FROM
+       syntax.
 hive> SELECT * FROM nested_data_insert WHERE entry = '001';
-            Sample output:
+       Sample output:
 
    CAPTION: Table 5. Result of the insert query 3.5:
 
-            entry num                postal_address
-                               USER_ID  ADDRESS    ZIP    COUNTRY
-             001  NULL newAdam 1       newAddress newZip newCountry
-          + MapR Database JSON table (num row is not present):
+       entry num                postal_address
+                          USER_ID  ADDRESS    ZIP    COUNTRY
+        001  NULL newAdam 1       newAddress newZip newCountry
+     * Verify the data in the MapR Database JSON table (num row is not
+       present):
 findbyid '/nested_data_insert' --id 001
 
 {
    "_id": "001",
    "postal_addresses": {
-        "newAdam": {
-        "address": "newAdress",
-        "country": "newCountry",
-        "user_id": "1",
-        "zip": "newZip"
-          }
+   "newAdam": {
+         "address": "newAdress",
+         "country": "newCountry",
+         "user_id": "1",
+         "zip": "newZip"
+        }
      }
 }
 

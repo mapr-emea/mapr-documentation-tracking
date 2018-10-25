@@ -17,6 +17,88 @@ Installation and Configuration Issues
 
 Upgrade Issues
 
+   MAPRYARN-129
+          Issue: For some clusters that are upgraded from MapR 6.0.1 to
+          6.1.0, using any Hadoop command generates the following
+          java.lang.ClassNotFoundException:
+
+hadoop fs -ls /
+log4j:ERROR Could not instantiate class [org.apache.hadoop.yarn.WorldWritableLog
+Appender].
+java.lang.ClassNotFoundException: org.apache.hadoop.yarn.WorldWritableLogAppende
+r
+at java.net.URLClassLoader.findClass(URLClassLoader.java:381)
+at java.lang.ClassLoader.loadClass(ClassLoader.java:424)
+at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:349)
+at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
+at java.lang.Class.forName0(Native Method)
+at java.lang.Class.forName(Class.java:264)
+at org.apache.log4j.helpers.Loader.loadClass(Loader.java:198)
+at org.apache.log4j.helpers.OptionConverter.instantiateByClassName(OptionConvert
+er.java:327)
+at org.apache.log4j.helpers.OptionConverter.instantiateByKey(OptionConverter.jav
+a:124)
+at org.apache.log4j.PropertyConfigurator.parseAppender(PropertyConfigurator.java
+:785)
+at org.apache.log4j.PropertyConfigurator.parseCategory(PropertyConfigurator.java
+:768)
+at org.apache.log4j.PropertyConfigurator.parseCatsAndRenderers(PropertyConfigura
+tor.java:672)
+at org.apache.log4j.PropertyConfigurator.doConfigure(PropertyConfigurator.java:5
+16)
+at org.apache.log4j.PropertyConfigurator.doConfigure(PropertyConfigurator.java:5
+80)
+at org.apache.log4j.helpers.OptionConverter.selectAndConfigure(OptionConverter.j
+ava:526)
+at org.apache.log4j.LogManager.<clinit>(LogManager.java:127)
+at org.apache.log4j.Logger.getLogger(Logger.java:104)
+at org.apache.commons.logging.impl.Log4JLogger.getLogger(Log4JLogger.java:262)
+at org.apache.commons.logging.impl.Log4JLogger.<init>(Log4JLogger.java:108)
+at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccess
+orImpl.java:62)
+at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstruct
+orAccessorImpl.java:45)
+at java.lang.reflect.Constructor.newInstance(Constructor.java:423)
+at org.apache.commons.logging.impl.LogFactoryImpl.createLogFromClass(LogFactoryI
+mpl.java:1025)
+at org.apache.commons.logging.impl.LogFactoryImpl.discoverLogImplementation(LogF
+actoryImpl.java:844)
+at org.apache.commons.logging.impl.LogFactoryImpl.newInstance(LogFactoryImpl.jav
+a:541)
+at org.apache.commons.logging.impl.LogFactoryImpl.getInstance(LogFactoryImpl.jav
+a:292)
+at org.apache.commons.logging.impl.LogFactoryImpl.getInstance(LogFactoryImpl.jav
+a:269)
+at org.apache.commons.logging.LogFactory.getLog(LogFactory.java:657)
+at org.apache.hadoop.fs.FsShell.<clinit>(FsShell.java:43)
+
+          This issue only affects clusters that use scheduler debug
+          logging as described in 31038 of [3]Known Issues at Release
+          (MapR 6.0.1). The issue occurs because the
+          hadoop-yarn-common-2.7.0-mapr-1808.jar in MapR 6.1.0 does not
+          contain the org.apache.hadoop.yarn.WorldWritableLogAppender Java
+          class.
+
+          Workaround: Remove the following lines from the
+          /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/log4j.properties file:
+
+yarn.debug.controller.logger = INFO, ED
+yarn.debug.controller.log.file=yarn-mapr-scheduling-debug.log
+yarn.debug.controller.log.maxfilesize=256MB
+yarn.debug.controller.log.maxbackupindex=20
+
+log4j.logger.org.apache.hadoop.yarn.server.resourcemanager.scheduler.
+DebugController=${yarn.debug.controller.logger}
+log4j.additivity.org.apache.hadoop.yarn.server.resourcemanager.scheduler.
+DebugController=false
+
+log4j.appender.ED=org.apache.hadoop.yarn.WorldWritableLogAppender
+log4j.appender.ED.File=${hadoop.log.dir}/${yarn.debug.controller.log.file}
+log4j.appender.ED.MaxFileSize=${yarn.debug.controller.log.maxfilesize}
+log4j.appender.ED.layout=org.apache.log4j.PatternLayout
+log4j.appender.ED.layout.ConversionPattern=%d{ISO8601} : %m%n
+
    30422
           Issue: Using the configure.sh -R command after an upgrade from
           5.2.x to 6.0 or later can return error messages for some MapR
@@ -99,7 +181,7 @@ MapR Database
           path more than once, and MapR Database uses an index to process
           the query, then the query may return incorrect results. You can
           workaround this problem by forcing MapR Database to not use
-          indexes. See [3]Forcing Secondary Index Usage in OJAI for
+          indexes. See [4]Forcing Secondary Index Usage in OJAI for
           details.
 
    27057
@@ -206,7 +288,7 @@ maprcli node services -action restart -name apiserver -nodes `hostname`
           the Services page. This is because starting from v6.0, the UI
           static files are in mapr-webserver and the mapr-apiserver runs
           the server that sends the queries. For more information on
-          webserver in v6.0, see [4]Setting Up the MapR Control System.
+          webserver in v6.0, see [5]Setting Up the MapR Control System.
 
    MON-3404
           Issue: The topic search field in the Stream (detail) > Topic tab
@@ -218,7 +300,7 @@ maprcli node services -action restart -name apiserver -nodes `hostname`
           Issue: The MapR Control System does not display NFS edge nodes
           and POSIX client nodes that are currently connected to the
           cluster when you sort the list of nodes by topology.
-          Workaround: Use the [5]node list command to retrieve the list of
+          Workaround: Use the [6]node list command to retrieve the list of
           client nodes currently connected to the cluster.
 
    MON-2409
@@ -350,7 +432,7 @@ des> -action restart
    SPYG-934
           Issue: On secure Ubuntu 14.04 or 16.04 clusters, Elasticsearch
           fails to generate a keystore password if the uuid-runtime
-          package is not installed. uuid-runtime is one of the [6]MapR
+          package is not installed. uuid-runtime is one of the [7]MapR
           Installer prerequisites.
           Workaround: Install the uuid-runtime package from the default
           Ubuntu repository:
@@ -359,7 +441,7 @@ apt-get install uuid-runtime
 
 MapR PACC
 
-   See [7]MapR PACC Known Issues.
+   See [8]MapR PACC Known Issues.
 
 NFSv4
 
@@ -377,7 +459,7 @@ Oozie
           timeline server for the Hive-on-Tez user interface is configured
           with MapR-SASL.
           Workaround: Restart the resource manager and timeline server.
-          For more information, see [8]Configuring the Timeline Server to
+          For more information, see [9]Configuring the Timeline Server to
           Use the Hive-on-Tez User Interface.
 
 PJDTest Suite Compliance
@@ -397,16 +479,17 @@ PJDTest Suite Compliance
 
 Timeline Server
 
-   See [9]Hive-on-Tez User Interface Known Issues.
+   See [10]Hive-on-Tez User Interface Known Issues.
 
 References
 
    1. https://mapr.com/support/s/knownissues
    2. http://maprdocs.mapr.com/home/MapRInstallerReleaseNotes/mapr_installer_known_issues.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryOptions.html#OJAIQueryOptions__section_xpf_hrf_d2b
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient-mcs.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html
-   6. https://maprdocs.mapr.com/home/AdvancedInstallation/c_install_prerequisites.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/MapR_PACC_Known_Issues.html#concept_n3p_pfc_tbb
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/Tez/ConfiguringHiveonTezUI.html#task_q4n_z23_nbb
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Tez/Timeline_server_known_issues.html#concept_oq4_3rx_vbb
+   3. https://mapr.com/docs/60/ReleaseNotes/c_known_issues.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryOptions.html#OJAIQueryOptions__section_xpf_hrf_d2b
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient-mcs.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html
+   7. https://maprdocs.mapr.com/home/AdvancedInstallation/c_install_prerequisites.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/MapR_PACC_Known_Issues.html#concept_n3p_pfc_tbb
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/Tez/ConfiguringHiveonTezUI.html#task_q4n_z23_nbb
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Tez/Timeline_server_known_issues.html#concept_oq4_3rx_vbb

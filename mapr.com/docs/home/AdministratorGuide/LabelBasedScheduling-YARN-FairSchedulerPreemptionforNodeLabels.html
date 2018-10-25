@@ -5,9 +5,9 @@ YARN Resource Calculation Based on Labels
    label-based scheduling (LBS).
    This new approach to YARN resource allocation enables the cluster LBS
    configuration to compute the resources that are allowed for each queue.
-   It also uses LBS to assign configurations containers to the correct
-   queues to preempt containers, and to prevent resource overuse. The LBS
-   approach to YARN resource allocation relies on:
+   It also uses LBS to assign containers to the correct queues to preempt
+   containers, and to prevent resource overuse. The LBS approach to YARN
+   resource allocation relies on:
     1. Resource computation (memory, CPU, disks) based on labels for each
        queue.
     2. Per-label preemption threshold.
@@ -26,28 +26,17 @@ YARN Resource Calculation Based on Labels
 
 Understanding LBS preemption thresholds
 
-   No preemptions are done until the cluster is 80% loaded (by default
-   yarn.scheduler.fair.preemption.cluster-utilization-threshold=0.8f). By
-   per-label preemption threshold, total resource usage and total
-   available resources for every label is calculated to make decisions on
-   preemption independently for every label.
-                            Old behavior                          New behavior
-   Preemption can happen only when a whole cluster is 80% loaded.
-   Preemption can happen when a label resource is 80% loaded in queues
-   that use this label.
-   Note: YARN resource allocation remains unchanged if LBS is not used.
+   Before LBS, preemption occurred by default when an entire cluster
+   became 80% full
+   (yarn.scheduler.fair.preemption.cluster-utilization-threshold=0.8f).
+   With LBS, preemption occurs per labeled resource, as that resource
+   becomes 80% full.
 
-New Properties
+Descriptions of New Properties When Using LBS
 
-    1. defaultQueueLabel
-       This label is assigned to all queues that do not have a label
-       (excluding the root queue) and for all new queues that are created
-       in runtime.
-       This differs from a label for the root queue in that if you specify
-       a label for the root queue then root and all child queues can use
-       resources only from nodes that are marked with this label. All
-       queues (excluding root) which do not have a label are assigned the
-       defaultQueueLabel label.
+     * defaultQueueLabel
+       Assigned to all new queues and existing queues that do not have a
+       label (excluding the root queue).
        For example, root.%username% queue is created if you submit a new
        job without queue information and property
        yarn.scheduler.fair.user-as-default-queue is true.
@@ -66,22 +55,20 @@ New Properties
 </allocations>
        See [1]Specifying Fair Scheduler Configuration Properties in
        yarn-site.xml for more information.
-    2. yarn.scheduler.fair.resources-based-on-labels-enabled
-       This property is used to enable or disable recomputing of fair
-       shares based on labels. It allows container allocation on all
-       nodes.
+     * yarn.scheduler.fair.resources-based-on-labels-enabled
+       Used to enable or disable recomputing of fair shares based on
+       labels. It allows container allocation on all nodes.
        You can specify this property in yarn-site.xml:
 <property>
   <name>yarn.scheduler.fair.resources-based-on-labels-enabled</name>
   <value>false</value>
 </property>
-    3. yarn.scheduler.fair.preemption.cluster-utilization-threshold.based-
+     * yarn.scheduler.fair.preemption.cluster-utilization-threshold.based-
        on-labels-enabled
-       This property allows enabling/disabling preemption of the threshold
-       per-label. Recomputing of resources and preemption threshold based
-       on labels is disabled by default. To change behavior and start
-       сontainers preemptions when the threshold of the label is exceeded,
-       change this property to true.
+       Allows enabling or disabling (default) preemption of the threshold
+       per-label. To overcome the default and start container preemption
+       when the threshold of the label is exceeded, change this property
+       to true.
        You can specify this property in yarn-site.xml:
 <property>
   <name>yarn.scheduler.fair.preemption.cluster-utilization-threshold.based-on-la
@@ -92,15 +79,13 @@ bels-enabled</name>
    See [2]Specifying Fair Scheduler Configuration Properties in
    yarn-site.xml for more information.
 
-Limitations
+LBS Requirements and Restrictions?
 
-   Here are some constraints for label configurations:
-    1. Multiple labels for a node and label expression at the queue level
+   Before you adopt LBS, you should be aware of two issues:
+     * Multiple labels for a node and label expression at the queue level
        are not supported.
-    2. All queues should have some label (own or inherited from parents)
-       except the root queue (label can be null) but including the default
-       queue (otherwise this queue would not get any resources). The
-       default label should be one of the existing labels.
+     * Except for root, all queues including the default, must be labeled,
+       either independent or through inheritance.
 
 References
 
