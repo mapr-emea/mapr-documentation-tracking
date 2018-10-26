@@ -1,19 +1,24 @@
 Configuring the Hive Storage Plugin
 
+   You can connect Drill to a Hive data source through the hive storage
+   plugin configuration in the Drill Web UI. Once configured, you can use
+   Drill to query data stored in Hive.
+
    Drill can work with only one version of Hive in a given cluster. To
    access Hive tables using custom SerDes or InputFormat/OutputFormat, all
    nodes running Drill must have the SerDes or InputFormat/OutputFormat
    JAR files in the following location:
    <drill_installation_directory>/jars/3rdparty.
-   To query across multiple versions of Hive from Drill, install each
-   version of Hive on a separate cluster. For example, you have Drill and
-   Hive 0.13 deployed in a production cluster, while a customer is testing
-   Hive 1.0 on a test cluster. Drill can query data from Hive tables on
-   the test cluster as well as Hive tables on the production cluster. You
-   must define separate storage plugins, each corresponding to a specific
-   Hive version of the metastore.
+   To query across multiple versions of Hive, install each version of Hive
+   on a separate Drill cluster. You must define separate storage plugins,
+   each corresponding to the specific Hive version of the metastore.
    Note: In [1]MEP 6.0, Drill requires Hive version 2.3.3-mapr or later to
    successfully query Hive data sources.
+   Note: You can update the hive storage plugin configuration through the
+   configuration script, configure.sh. If the hive storage plugin is
+   disabled, and the configuration in the Drill Web UI displays “null,”
+   you must rerun configure.sh with the -hiveMetastoreHost argument. See
+   [2]configure.sh for details.
 
    Configuring a Hive Remote Metastore
    A remote Hive metastore configuration runs as a separate service
@@ -21,7 +26,7 @@ Configuring the Hive Storage Plugin
    database over JDBC. Point Drill to the Hive metastore service address,
    and provide the connection parameters in the hive storage plugin
    configuration to configure a connection to Drill. The hive storage
-   plugin (located on the Storage tab in the Drill Web Console) has the
+   plugin (located on the Storage tab in the Drill Web UI) has the
    following default configuration when you install Drill:
 {
  "type": "hive",
@@ -43,11 +48,11 @@ ll_hive_db;create=true",
     2. Issue the following command to start the Hive metastore service on
        the system specified in the hive.metastore.uris: hive --service
        metastore
-    3. [2]Start the Drill Web Console.
-    4. Select the Storage tab. If [3]Web Console security is enabled, you
-       must have administrator privileges to perform this step.
-    5. In the list of disabled storage plugins in the Drill Web Console,
-       click Update next to hive.
+    3. [3]Start the Drill Web UI.
+    4. Select the Storage tab. If [4]Web UI security is enabled, you must
+       have administrator privileges to perform this step.
+    5. In the list of disabled storage plugins in the Drill Web UI, click
+       Update next to hive.
     6. Update the following hive storage plugin parameters to match the
        system environment:
           + "hive.metstore.uris"
@@ -69,18 +74,19 @@ ll_hive_db;create=true",
                o In a test environment with an embedded Hive metastore,
                  you can disable (set to false) this property after the
                  first query on the Hive data source that you submit from
-                 Drill. Alternatively, use the [4]Hive schema tool to
+                 Drill. Alternatively, use the [5]Hive schema tool to
                  initialize or upgrade the Hive metastore schema. Using
                  the Hive schema tool is recommended for queries on
                  transactional tables. Run the schematool command as an
                  initialization step, as shown:
 /opt/mapr/hive/hive-<version>/bin/schematool -dbType <databaseType> -initSchema
-    7. Click Enable in the Web Console to enable the Hive storage plugin
+    7. Click Enable in the Web UI to enable the Hive storage plugin
        configuration.
 
 References
 
    1. https://mapr.com/docs/61/InteropMatrix/Component_versions_all_MEPs.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/start_the_web_console.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/ConfigWebConsolSecurity.html#ConfigWebConsolSecurity
-   4. https://cwiki.apache.org/confluence/display/Hive/Hive+Schema+Tool#HiveSchemaTool-MetastoreSchemaVerification
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html#configure.sh
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/start_the_web_console.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/ConfigWebConsolSecurity.html#ConfigWebConsolSecurity
+   5. https://cwiki.apache.org/confluence/display/Hive/Hive+Schema+Tool#HiveSchemaTool-MetastoreSchemaVerification
