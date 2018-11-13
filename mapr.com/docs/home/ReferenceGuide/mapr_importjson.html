@@ -73,8 +73,27 @@ Parameters
 
 Example
 
-[user@hostname ~]$ mapr importJSON -idfield "acno" -src
-/temp/tate/collection/artworks/p/801/* -dst /collection/artworks
+   Suppose you have the following three JSON documents in the /tmp/users
+   directory in your MapR filesystem:
+$ hadoop fs -cat /tmp/users/bcummings.json
+{"_id":"bcummings","first_name":"Bettie","last_name":"Cummings"}
+
+$ hadoop fs -cat /tmp/users/gjones.json
+{"_id":"gjones","first_name":"Gilberto","last_name":"Jones"}
+
+$ hadoop fs -cat /tmp/users/jdoe.json
+{"_id":"jdoe","first_name":"John","last_name":"Doe"}
+
+   The following command imports the three documents into the JSON table
+   in the path /apps/users:
+$ mapr importJSON -idField _id -src /tmp/users/* -dst /apps/users
+
+   You can run mapr dbshell to see the imported documents:
+maprdb mapr:> find /apps/users
+{"_id":"bcummings","first_name":"Bettie","last_name":"Cummings"}
+{"_id":"gjones","first_name":"Gilberto","last_name":"Jones"}
+{"_id":"jdoe","first_name":"John","last_name":"Doe"}
+3 document(s) found.
 
 References
 
