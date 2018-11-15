@@ -1,10 +1,10 @@
 Configuring the Kafka Storage Plugin
 
    The Kafka storage plugin is not officially supported for Drill on MapR
-   Streams. However, if you choose to configure Kafka as a data source in
-   Drill, you must update the <drill_home>/jars/3rdParty directory so it
-   contains the required JAR files and then restart Drill before you
-   configure the kafka storage plugin in the Drill Web Console.
+   Streams; however, if you choose to configure Kafka as a data source in
+   Drill, you must update the <drill_home>/jars/3rdParty directory such
+   that it contains the required JAR files and then restart Drill before
+   you configure the kafka storage plugin in the Drill Web UI.
 
    Verify that the nodes in your cluster meet the requirements and then
    complete the steps listed.
@@ -12,54 +12,54 @@ Configuring the Kafka Storage Plugin
 Requirements
 
    The Kafka storage plugin requires:
-     * A MapR 6.0.1 cluster.
-     * Drill 1.13 installed on nodes.
-     * The MapR Kafka client package (mapr-kafka-1.0.1) installed on at
-       least one node. The Kafka client installation provides the kafka
-       JAR files that you copy into the <drill_home>/jars/3rdParty
-       directory (step 4).
+     * A MapR 6.1 cluster.
+     * Drill 1.14 installed on nodes.
+     * The MapR Kafka client package (kafka-1.1.1) installed on at least
+       one node. The Kafka client installation provides the following
+       kafka JAR files that you copy into the <drill_home>/jars/3rdParty
+       directory (step 4):
+          + kafka_2.11-1.1.1-mapr-1808.jar
+          + kafka-clients-1.1.1-mapr-1808.jar
 
 Steps
 
-   Complete the following steps to make Kafka a consumable resource for
-   Drill on MapR Streams:
+   Complete the following steps to query MapR Streams from Drill:
    Note: Do not perform step 2 if you installed Drill using the MapR RPM
-   or Debian packages. Drill contains symbolic links to the files in
-   /opt/mapr/lib. Step 2 is only required if you installed Drill using a
-   TAR file.
+   or Debian packages. Step 2 is only required if you installed Drill
+   using a TAR file.
     1. Remove the specified JAR files from the <drill_home>/jars/3rdParty
        directory based on the Drill installation method:
           + If you installed Drill using MapR RPM or Debian packages, only
             remove JAR files that start with kafka, such as
-            kafka_<version>-mapr.jar, from the <drill_home>/jars/3rdParty
-            directory. Drill contains symbolic links to the required mapr
-            JAR files in /opt/mapr/lib.
+            kafka-clients-<version>.jar and kafka_<version>.jar, from the
+            <drill_home>/jars/3rdParty directory.
           + If you installed Drill using a TAR file, remove all the JAR
             files that start with mapr and kafka, such as
-            maprdb-<version>-mapr.jar, maprfs-<version>-mapr.jar, and
-            kafka_<version>-mapr.jar, from the <drill_home>/jars/3rdParty
-            directory.
+            maprdb-<version>-mapr.jar, maprfs-<version>-mapr.jar,
+            kafka_<version>-mapr.jar, and kafka-clients-<version>.jar,
+            from the <drill_home>/jars/3rdParty directory.
     2. (Only perform this step if you installed Drill using a TAR file.)
        Copy the following mapr JAR files from the /opt/mapr/lib directory
        into <drill_home>/jars/3rdParty directory:
-          + maprdb-6.0.1-mapr.jar
-          + maprdb-6.0.1-mapr-tests.jar
-          + maprfs-6.0.1-mapr.jar
-          + maprfs-6.0.1-mapr-tests.jar
-          + mapr-hbase-6.0.1-mapr.jar
-          + mapr-hbase-6.0.1-mapr-tests.jar
-    3. Copy the mapr-streams-6.0.1-mapr.jar file from the /opt/mapr/lib
+          + maprdb-6.1.0-mapr.jar
+          + maprdb-6.1.0-mapr-tests.jar
+          + maprfs-6.1.0-mapr.jar
+          + maprfs-6.1.0-mapr-tests.jar
+          + mapr-hbase-6.1.0-mapr.jar
+          + mapr-hbase-6.1.0-mapr-tests.jar
+          + mapr-streams-6.1.0-mapr.jar
+    3. Copy the mapr-streams-6.1.0-mapr.jar file from the /opt/mapr/lib
        directory into the <drill_home>/jars/3rdParty directory.
     4. Copy the following kafka JAR files from the
-       /opt/mapr/kafka/kafka-1.0.1/libs directory into the
+       /opt/mapr/kafka/kafka-1.1.1/libs directory into the
        <drill_home>/jars/3rdParty directory:
-          + kafka_2.11-1.0.1-mapr-1803.jar
-          + kafka-clients-1.0.1-mapr-1803.jar
+          + kafka_2.11-1.1.1-mapr-1808.jar
+          + kafka-clients-1.1.1-mapr-1808.jar
     5. Issue the following command to restart Drill:
 $ maprcli node services -name drill-bits -action restart -nodes <node hostnames
 separated by a space>
-    6. Log in to the[1]Drill Web Console, and configure the kafka storage
-       plugin. See[2]Kafka Storage Plugin for instructions.
+    6. Log in to the [1]Drill Web UI, and configure the kafka storage
+       plugin. See [2]Kafka Storage Plugin for instructions.
        Note: When configuring the kafka storage plugin, you must also
        include the following parameter in the storage plugin
        configuration:

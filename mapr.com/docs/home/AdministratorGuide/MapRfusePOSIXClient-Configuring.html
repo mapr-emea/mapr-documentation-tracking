@@ -200,24 +200,29 @@ md64/server/:/opt/mapr/lib
    performance, this must be avoided.
    fuse.hb.interval 5 Specifies the heartbeat interval (in seconds) for
    the FUSE-based POSIX client.
-   fuse.export   Specifies the fully-qualified cluster path to the volume
-   or directory under the mount point, such as
-   /mapr/<cluster>/<volumepath>. For example:
-     * Cluster, the value is /<clustername>. The ls /mapr command displays
-       the contents under the cluster.
-     * Volume on a cluster, value is /<clustername>/volumename>. The ls
-       /mapr command displays the contents of the volume. If the value is
-       the path to a volume, user can also access the snapshots associated
-       with the volume.
+   fuse.export   Denotes the fully-qualified cluster path to the volume or
+   directory under the mount point.
 
-   If set as shown above, when the FUSE service is started, the user has
-   direct access to the specified volume or directory. The value cannot be
-   the path to a file.
+   When this property is not specified, all clusters found in
+   mapr-clusters.conf are mounted under the entity specified by the
+   fuse.mount.point property (/mapr by default). If mapr-clusters.conf
+   contains two clusters A and B, there will be directories /mapr/A and
+   /mapr/B pointing to the root directories of those two clusters.
 
-   If this is not set, the POSIX client has access to all the clusters in
-   the /opt/mapr/conf/mapr-clusters.conf file. If this property is
-   commented out, the ls /mapr displays the contents in the cluster.
-   Note: If the value is not a valid path to or name of volume or
+   When this property is specified, it overrides the default behavior, and
+   causes exactly one path from one cluster to be exposed at the entity
+   specified by the fuse.mount.point property. You can either fully expose
+   a single cluster, or expose only a subset of a single cluster.
+
+   If fuse.export is set to the name of a cluster, enclosed within /, then
+   that cluster is mounted at /mapr. For example if fuse.export=/A/ , then
+   the path /mapr shows the root directory of cluster A.
+
+   If fuse.export is set to a path within a cluster, then /mapr points to
+   that path. For example, if fuse.export=/A/var/, then /mapr displays the
+   directory contents of /var from the MapR cluster A.
+   Note: The value cannot be the path to a file.
+   Note: If the value is not a valid path to the name of a volume or
    directory, the FUSE service will not start.
    fuse.enforce.core.pattern false Specifies whether (true) or not (false)
    to write to /proc/sys/kernel/core_pattern file when the FUSE-based
