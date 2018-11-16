@@ -1,0 +1,36 @@
+Exposing MapR Data Science Refinery as a Service in Kubernetes
+
+   You can expose MapR Data Science Refinery as a Kubernetes service. For
+   example, if you run the service in a cloud Kubernetes deployment, you
+   can expose it as a Kubernetes LoadBalancer service. This topic provides
+   a sample that shows you how to do this. It also discusses the
+   alternative where you are running in a non-cloud Kubernetes deployment.
+
+   The following sample YAML file exposes a LoadBalancer service:
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsr-web-svc
+  namespace: dsr-ns
+spec:
+  type: LoadBalancer
+  ports:
+    - { name: dsr-ui, port: 9995, nodePort: 32000 }
+
+  selector:
+    app: dsr-app
+
+   If you are running in a cloud Kubernetes deployment, run the following
+   command to retrieve the external IP of the LoadBalancer service:
+kubectl get service -n dsr-ns
+
+   Use the value in the EXTERNAL-IP column as the IP to connect to the
+   MapR Data Science Refinery UI:
+https://<EXTERNAL-IP>:9995
+
+   If you are running in a non-cloud Kubernetes deployment, the
+   EXTERNAL-IP column returns <pending>, due to unavailability of a
+   LoadBalancer service. You can still connect to the MapR Data Science
+   Refinery UI by using the IP of any Kubernetes worker node and the
+   nodePort specified in your YAML file:
+https://<k8s-worker-ip>:32000

@@ -1,0 +1,78 @@
+Using ConfigMap to Define MapR Data Science Refinery Variables in Kubernetes
+
+   You can use a ConfigMap to define your MapR Data Science Refinery
+   environment variables. ConfigMaps enable you to decouple configuration
+   artifacts from image content, providing more portable containerized
+   applications. This topic describes the steps to define and deploy a
+   ConfigMap.
+    1. Define your environment variables in a ConfigMap
+       (dsrconfigmap.yaml):
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dsr-configmap
+data:
+  MAPR_CLUSTER: "my.cluster.com"
+  MAPR_CLDB_HOSTS: "1.1.1.1"
+  MAPR_HS_HOST: "2.2.2.2"
+  MAPR_CONTAINER_USER: "mapr"
+  MAPR_CONTAINER_UID: "5000"
+  MAPR_CONTAINER_GROUP: "mapr"
+  MAPR_CONTAINER_GID: "5000"
+  MAPR_MOUNT_PATH: /mapr
+    2. Create the configMap before deploying your MapR Data Science
+       Refinery container by running the following command:
+kubectl create -f dsrconfigmap.yaml
+    3. Modify your deployment YAML file and use configMapKeyRef to
+       reference variables from the ConfigMap defined in step 1, as shown
+       in the following sample:
+env:
+    - name: MAPR_MOUNT_PATH
+      valueFrom:
+        configMapKeyRef:
+          name: dsr-configmap
+          key: MAPR_MOUNT_PATH
+    - name: MAPR_CLUSTER
+      valueFrom:
+        configMapKeyRef:
+          name: dsr-configmap
+          key: MAPR_CLUSTER
+    - name: MAPR_CLDB_HOSTS
+      valueFrom:
+        configMapKeyRef:
+          name: dsr-configmap
+          key: MAPR_CLDB_HOSTS
+    - name: MAPR_CONTAINER_USER
+      valueFrom:
+        configMapKeyRef:
+          name: dsr-configmap
+          key: MAPR_CONTAINER_USER
+    - name: MAPR_CONTAINER_UID
+      valueFrom:
+        configMapKeyRef:
+          name: dsr-configmap
+          key: MAPR_CONTAINER_UID
+    - name: MAPR_CONTAINER_GID
+      valueFrom:
+        configMapKeyRef:
+          name: dsr-configmap
+          key: MAPR_CONTAINER_GID
+    - name: MAPR_CONTAINER_GROUP
+      valueFrom:
+        configMapKeyRef:
+          name: dsr-configmap
+          key: MAPR_CONTAINER_GROUP
+    - name: MAPR_CONTAINER_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: dsr-container-secret
+          key: password
+    - name: HOST_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.hostIP
+    - name: MAPR_HS_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: dsr-configmap
+          key: MAPR_HS_HOST

@@ -1,0 +1,79 @@
+Mapping MapR Data Science Refinery Ports for External Access
+
+   To access MapR Data Science Refinery through the internet, when it is
+   running as a Kubernetes service, you must map the ports using nodePort.
+   This topic provides a sample that shows you how to do this.
+
+   Assume you have the following configMap settings for ports:
+apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: dsr-confs
+    namespace: dsr-ns
+  data:
+    ZEPPELIN_SSL_PORT: "9995"
+    LIVY_RSC_PORT_RANGE: "30000~30009"
+    SPARK_PORT_RANGE: "30010~30019"
+
+   The following defines mappings for these ports:
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsr-svc
+  namespace: dsr-ns
+spec:
+  type: LoadBalancer
+  ports:
+    - { name: dsr-ui, port: 9995, nodePort: 32000 }
+
+  selector:
+    app: dsr-app
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dsr-svc-ports
+  namespace: dsr-ns
+spec:
+  type: NodePort
+  selector:
+    app: dsr-app
+  ports:
+    - { name: dsr-ui, port: 9995, nodePort: 32000 }
+
+    - { name: dsr-livy-0, port: 30000, nodePort: 30000 }
+    - { name: dsr-livy-1, port: 30001, nodePort: 30001 }
+    - { name: dsr-livy-2, port: 30002, nodePort: 30002 }
+    - { name: dsr-livy-3, port: 30003, nodePort: 30003 }
+    - { name: dsr-livy-4, port: 30004, nodePort: 30004 }
+    - { name: dsr-livy-5, port: 30005, nodePort: 30005 }
+    - { name: dsr-livy-6, port: 30006, nodePort: 30006 }
+    - { name: dsr-livy-7, port: 30007, nodePort: 30007 }
+    - { name: dsr-livy-8, port: 30008, nodePort: 30008 }
+    - { name: dsr-livy-9, port: 30009, nodePort: 30009 }
+
+    - { name: dsr-spark-0, port: 30010, nodePort: 30010 }
+    - { name: dsr-spark-1, port: 30011, nodePort: 30011 }
+    - { name: dsr-spark-2, port: 30012, nodePort: 30012 }
+    - { name: dsr-spark-3, port: 30013, nodePort: 30013 }
+    - { name: dsr-spark-4, port: 30014, nodePort: 30014 }
+    - { name: dsr-spark-5, port: 30015, nodePort: 30015 }
+    - { name: dsr-spark-6, port: 30016, nodePort: 30016 }
+    - { name: dsr-spark-7, port: 30017, nodePort: 30017 }
+    - { name: dsr-spark-8, port: 30018, nodePort: 30018 }
+    - { name: dsr-spark-9, port: 30019, nodePort: 30019 }
+
+   The example exposes the Livy and Spark ports through NodePort, using
+   the same port numbers inside and outside the container.
+
+   It exposes the MapR Data Science Refinery UI port through a
+   LoadBalancer service. To access the UI, use the following URL with port
+   32000, as defined in the mapping:
+https://<k8s-worker-ip>:32000
+
+   <k8s-worker-ip> is the public IP address of any Kubernetes worker node.
+   The worker node proxies the port into the MapR Data Science Refinery
+   service.
+   Note: You must map port 9995 to a number in the range of 30000-32767
+   because NodePort supports only that port range.
