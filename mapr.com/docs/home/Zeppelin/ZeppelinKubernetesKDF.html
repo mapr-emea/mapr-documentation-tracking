@@ -1,0 +1,122 @@
+Using MapR Data Fabric for Kubernetes with MapR Data Science Refinery
+
+   You can integrate MapR Data Fabric for Kubernetes with your MapR Data
+   Science Refinery deployment. This provides persistent storage to MapR
+   Filesystem, which you can use as an alternative to the MapR FUSE-Based
+   POSIX Client. You have two integration options: use the Kubernetes
+   Flexvolume driver, or use Kubernetes Persistent Volumes (PV) and
+   Persistent Volume Claims (PVC).
+
+   Regardless of your integration choice, you must follow the instructions
+   at [1]Installing MapR and Kubernetes Software on Separate Nodes to
+   install MapR Data Fabric for Kubernetes.
+   Note: If you decide to use MapR Data Fabric for Kubernetes, do not set
+   the MAPR_MOUNT_PATH variable. Otherwise, it enables the MapR FUSE-Based
+   POSIX Client, which you do not need.
+
+Using the Flexvolume Driver
+
+   The following sample shows you how to configure the Flexvolume driver:
+            volumeMounts:
+              - mountPath: /dev/fuse
+                name: fuse
+              - mountPath: /sys/fs/cgroup
+                name: cgroup
+              - mountPath: /tmp/maprticket_secret
+                name: maprticket-secret
+              - mountPath: /mapr-vol
+                name: maprflex-volume
+
+        volumes:
+          - name: fuse
+            hostPath:
+              path: /dev/fuse
+          - name: cgroup
+            hostPath:
+              path: /sys/fs/cgroup
+          - name: maprticket-secret
+            secret:
+              secretName: mapr-ticket-secret
+          - name: maprflex-volume
+            flexVolume:
+              driver: "mapr.com/maprfs"
+              readOnly: true
+              options:
+                cluster: "my.cluster.com"
+                cldbHosts: "cldb1 cldb2"
+                securityType: "secure"
+                ticketSecretName: "mapr-ticket-secret"
+                ticketSecretNamespace: "ns-mydsr"
+
+Using Persistent Volumes (PV) and Persistent Volume Claims (PVC)
+
+   The following defines the namespace used in subsequent configuration
+   snippets:
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ns-mydsr
+  labels:
+    name: ns-mydsr
+
+   The following defines your PV and PVC:
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dsr-pv
+  namespace: ns-mydsr
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  flexVolume:
+    driver: "mapr.com/maprfs"
+    readOnly: true
+    options:
+      cluster: "my.cluster.com"
+      cldbHosts: "cldb1 cldb2"
+      securityType: "secure"
+      ticketSecretName: "mapr-ticket-secret"
+      ticketSecretNamespace: "ns-mydsr"
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: dsr-pvc
+  namespace: ns-mydsr
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5G
+
+   The following references the previously defined PV and PVC:
+            volumeMounts:
+              - mountPath: /dev/fuse
+                name: fuse
+              - mountPath: /sys/fs/cgroup
+                name: cgroup
+              - mountPath: /tmp/maprticket_secret
+                name: maprticket-secret
+              - mountPath: /mapr-pvc
+                name: maprflex-pv-pvc
+        volumes:
+          - name: fuse
+            hostPath:
+              path: /dev/fuse
+          - name: cgroup
+            hostPath:
+              path: /sys/fs/cgroup
+          - name: maprticket-secret
+            secret:
+              secretName: mapr-ticket-secret
+          - name: maprflex-pv-pvc
+            persistentVolumeClaim:
+              claimName: dsr-pvc
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_installation_separate_nodes.html

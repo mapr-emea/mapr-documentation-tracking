@@ -3,19 +3,134 @@ Resolved Issues
    The following MapR issues, which were reported by customers, are
    resolved in Version 6.1.
    Component Number Description Resolution
+   CLDB 31346 Number of reysnc are large for an extended time after a
+   couple of nodes are stopped/restarted in the cluster
+
+   The issue occurs when there are a large number of snapshots on a
+   cluster. There are new alarms to warn about this issue, and are
+   configurable.
+   See the following resources:
+     * [1]https://mapr.com/docs/home/ReferenceGuide/Cluster-Alarms.html
+     * [2]https://mapr.com/docs/home/ReferenceGuide/cldb.conf.html
+     * [3]https://mapr.com/docs/home/ClusterAdministration/admin/cluster/C
+       onfigAlarmThreshold.html
+
+   31620 Volume mirroring floods log with misleading error The bug occurs
+   when mirroring happens between clusters that have both internal and
+   external IPs set in mapr-clusters.conf. The getIPTypeForCluster method
+   in CLDBRpcCommonUtils is unable to determine whether the IP type is
+   internal or external. The fix is to put in the internal IP in
+   mapr-clusters.conf and keep the external IP in the env.sh file.
+
+   See:
+   [4]https://mapr.com/docs/home/ClusterAdministration/data/volumes/Mirror
+   Vols-MirrorStart.html?hl=volume%2Cmirror
    Upgrade 31038 Prior to 6.1, the log4j.properties file was not
-   automatically updated in an upgrade. All files update automatically.
-   Upgrade 29752 Priort to 6.1, if Oozie was not upgraded to the MEP4.0.0
+   automatically updated in an upgrade All files update automatically.
+   Upgrade 29752 Prior to 6.1, if Oozie was not upgraded to the MEP4.0.0
    version, the Oozie process would fail following a manual upgrade from
-   MapR 5.2.x/MEP3.0.1 to MapR 6.0. The upgrade process works correctly.
+   MapR 5.2.x/MEP3.0.1 to MapR 6.0 The upgrade process works correctly.
    FileClient 31024 When hadoop fs -rmr command is run to remove a list of
    files/directories, if a file/directory is not present at the time of
-   remove, the command returns an error, 'no such file or directory’, and
+   removal, the command returns an error, 'no such file or directory’, and
    terminates without removing remaining files and/or directories from the
    given list. When hadoop fs -rmr command is run to remove a list of
    files and/or directories, if a file/directory from the list is not
    present on the system, the command now removes remaining files and/or
    directories from the list.
+   30987 Memory leak in DoPathWalk This leak is fixed.
+   31026 FileClient should use one source port to connect to any server
+   This issue occured because FileClient was using multiple source ports
+   to connect to file servers, thus exhausting all available ports. This
+   issue is now fixed to let FileClient connect on a single source port.
+
+   See Client Side Port Binding in
+   [5]https://mapr.com/docs/home/ReleaseNotes/whatsnew.html
+   31129 File Client crashed at mapr::fs::CidCache::GetBinding The issue
+   occured because the assumption was that the number of volume replicas
+   will not exceed 7. This issue is fixed.
+   31146 The SQL queries are failing intermittently The issue occured
+   because user impersonation was faulty. This issue is fixed.
+   31738 Create request should take setattr credentials from ticket To
+   avoid this issue, all requests should take the credentials from the
+   ticket, and not use the context user. This problem is fixed. See
+   [6]https://mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-Ma
+   naging.html
+   31804 FileClient hangs at WaitUntilEnqueued This is a backport of the
+   fix in [7]#24266, where the Idle Flusher needed to be disabled to
+   resolve hangs, for MapR version 5.2.2. This fix is backported.
+   FileServer 26792 createTTVolume.sh needs to reliably determine the MFS
+   state before deciding to recreate the local NM volume This bug caused
+   rolling updates to fail. This issue is fixed.
+   30063 FCR sent during disk I/O error causes all 3 copies of container
+   to be unavailable This bug occured because the file system master
+   reported incorrect replica chain managment information. This issue is
+   fixed.
+   30917 EIO on a read op of a local volume cid deletes/offlines the
+   container but local volume in not recreated This issue was caused
+   because Volume IDs were not being passed in HandleDamagedVolumes() when
+   called from the ContainerOffline case, causing the volumes to be
+   deleted and not recreated automatically. This bug is fixed.
+   31007 FUSE clients do not honor impersonation constraints in
+   servicewithimpersonation tickets This issue was caused when FUSE failed
+   to honor constraints for a servicewithimpersonation ticket which
+   includes impersonatedgids constraints. This issue is fixed, and FUSE
+   now enforces such constraints. A support advisory is available at
+   [8]https://mapr.com/support/s/article/FUSE-Clients-do-not-honor-imperso
+   nation-constraints-in-servicewithimpersonation-tickets?language=en_US
+   31301 Some snapcids on mirror volumes that are marked for delete never
+   get deleted This issue is fixed.
+   31361 Rename operation fails on tables and streams This issue occured
+   when a table or stream already existed in a rename operation... that
+   is, in mv x y -> y already exists. This issue is fixed.
+   31365 MFS Rpc thread on CLDB node is running out of CPU This issue
+   occured because the process that reads from, and writes data to the
+   key-value store, was not offloaded to the compression thread. This
+   issue is fixed.
+   31453 MFS on CLDB slaves crashed due to failure in kvstorerangedelete
+   (ENOENT) This bug occurred due to corruption of the structure that
+   holds information about volume containers. This issue occurred due to a
+   large number of containers being present in the volume. This issue is
+   fixed. Appropriate documentation that depicts how to set the alarm for
+   too many containers is available at
+   [9]https://mapr.com/docs/home/ClusterAdministration/admin/cluster/Confi
+   gAlarmThreshold.html (see CLUSTER_ALARM_TOO_MANY_SNAPSHOT_CONTAINERS),
+   and [10]https://mapr.com/docs/home/ReferenceGuide/cldb.conf.html.
+   31981 Disk failure on Master (A) container when reporting loss of B to
+   CLDB, can cause all copies to be unavailable The problem arose because
+   there was no sanity check to check for the validity of a replica, when
+   the reconnection timer expires. This check has been added.
+   FS::ACE 26280 "hadoop mfs -setace" does not accept groups with spaces
+   in the name Spaces in AD group names caused the issue. This issue is
+   fixed. Spaces in AD group names are correctly parsed.
+   30245 Permission denied error due to aceCache when readdir served by
+   master node of NC This issue occured due to a null character in the ACE
+   expression, as the ACE for execute file was null. This issue has been
+   resolved.
+   FS::Audit 30928 expandaudit does not resolve most of fids in a huge
+   volume This issue is fixed by making logging more explanatory.
+   FS::Fuse 31662 Fuse : OPEN with O_TRUNC fails with permission denied
+   error This issue is fixed.
+   31730 Fuse: mkdir fails with EBUSY The issue is caused by inode number
+   reuse. The work around is to set the fuse.use.compressed.inode.format
+   parameter to 1 as documented in
+   [11]https://mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-C
+   onfiguring.html
+   32030 Fuse Assert in fs/client/fuse/cc/fuse_special_ll.c This issue was
+   caused by Fuse reading debugs_assert() from the wrong location. This
+   issue is now fixed.
+   32050 Fuse needs to honor prod_build This issue was caused by Fuse
+   reading debugs_assert() from the wrong location. This issue is now
+   fixed.
+   32074 Memory leak in fuse cache This leak is fixed.
+   FS::Snapshot 31051 MCS & maprcli command are not showing correct Volume
+   size This issue occured because some snapshot containers might have had
+   a delayed deletion. This issue is fixed.
+   hoststats 31858 Hoststats process is not coming up after changing the
+   default value (5660) of "mfs.server.port" in /opt/mapr/conf/mfs.conf
+   The problem occured because the ports were hadcorded in MapR settings.
+   Using a port other than the default, causes the shared memory key to
+   fail. This issue is fixed.
    MCS MON-3325
 
    The MapR Control System does not display topologies with hostname (in
@@ -32,48 +147,83 @@ Resolved Issues
 
    The Grafana dashboard shows "No data points" for Volume metrics
    Dashboard entries are correct.
-   SPYG-916 MapR monitoring index is not loaded correctly. Loads
-   correctly.
+   SPYG-916 MapR monitoring index is not loaded correctly. The MapR
+   monitoring index loads correctly.
    MapR Event Store for Apache Kafka 31074 [Kafka 1.0] incorrect behavior
    for offsetsForTimes when streams.rpc.timeout.ms is configured Behavior
    corrected for offsetsForTimes when streams.rpc.timeout.ms
-   Elasticsearch ES-27 Elasticsearch fails to start correctly.
+   Elasticsearch ES-27 Elasticsearch fails to start correctly
    Elasticsearch starts correctly.
    MapR Database 29278 Puts to tablets that failed with out of space
    errors, continue to fail on the first put, even though there is
    sufficient space; subsequent puts succeed. When space becomes
    available, the very first put no longer returns an error.
    30489 Client rpc trace messages for slow operations are not printing
-   tablet fid. The messages include tablet fid.
+   tablet fid The messages include tablet fid.
    31092 MapR file system nodes are crashing when there is a burst of read
-   requests. Corrected batching of read requests to avoid the condition
+   requests Corrected batching of read requests to avoid the condition
    that was causing the crash.
    31297 Using Python happyhbase module to scan a MapR Database table via
-   HBase Thrift causes the Thrift server to hang. Addressed underlying
+   HBase Thrift causes the Thrift server to hang Addressed underlying
    issue that was causing the hang.
    31766 MapR file system node crash causes client RPC timeouts during get
-   and put operations. Corrected the underlying logic for notification
+   and put operations Corrected the underlying logic for notification
    calls when creating new MapR Database buckets.
    31901 Memory corruption occurs when deleting/freeing memory Corrected
    race conditions that were causing the corruption.
    32262 Incremental bulkload via MapReduce fails to load data, even
-   though it does not report an error. Corrected the underlying logic that
+   though it does not report an error Corrected the underlying logic that
    was causing the incremental load to fail without returning an error.
-   YARN 25473 Aggregated log is written with wrong ownership. Addressed
-   the underlying issue that was causing writing the aggregated log to the
+   NFS 31810 Unable to mount specific volume, when cldb.reject.root is
+   enabled Enabling cldb.reject.root caused NFS mounts to fail. This issue
+   is fixed.
+   security 31935 All versions of MapR have Serious Ticket Vulnerability
+   Enabling Authority Escalation This issue was caused by CLDB generating
+   tickets from falsified credentials. This issue is fixed. A security
+   bulletin is available at
+   [12]https://mapr.com/support/s/article/MapR-Ticket-Credentials-can-beco
+   me-compromised?language=en_US and the vulnerabilities list is updated
+   and available at
+   [13]https://mapr.com/docs/home/ReleaseNotes/c_security_vuln_intro.html?
+   hl=security%2Cvulnerabilities
+   Warden 31628 maprcli urls showthe wrong value for hbmaster after
+   shutdown of current HBmaster This issue occured because maprcli had
+   stale information on a HBase Master process that was killed. This issue
+   is fixed.
+   YARN 25473 Aggregated log is written with wrong ownership Addressed the
+   underlying issue that was causing writing the aggregated log to the
    wrong user.
    31082 ResourceManager address does not resolve after redirect via a
-   proxy request. Fixed incorrect condition that decides to update the
-   current ResourceManager address.
+   proxy request Fixed incorrect condition that updated the current
+   ResourceManager address.
    31174 In the application master log, the following error repeatedly
-   occurred: "Tez AM is trying to access Timeline server and it fails".
-   TEZ AM is released after job or session is completed.
-   31487 Containers fail in LOCALIZING state. Implemented clean up of
+   occurred: "Tez AM is trying to access Timeline server and it fails" TEZ
+   AM is released after job or session is completed.
+   31200 YARN job submission using server side uid resolution fails with
+   ownership exception The problem occurred because the username was not
+   read from the submitted ticket. This issue is fixed.
+   31487 Containers fail in LOCALIZING state Implemented clean up of
    subprocesses spawned by Shell when the process exits. Localization
    failures are available in the container diagnostics.
    31679 CVE-2016-6811 user who can escalate to Yarn user can possibly run
-   arbitrary commands as a root user. Fixed the underlying security
+   arbitrary commands as a root user Fixed the underlying security
    vulnerability.
-   32178 Thread leak when executing a Scoop job. Fixed thread leak.
-   32304 Fails to refresh labels for nodes in the cluster.
+   32178 Thread leak when executing a Scoop job Fixed thread leak.
+   32304 Fails to refresh labels for nodes in the cluster
    DefaultContainerExecutor sets proper permissions.
+
+References
+
+   1. https://mapr.com/docs/home/ReferenceGuide/Cluster-Alarms.html
+   2. https://mapr.com/docs/home/ReferenceGuide/cldb.conf.html
+   3. https://mapr.com/docs/home/ClusterAdministration/admin/cluster/ConfigAlarmThreshold.html
+   4. https://mapr.com/docs/home/ClusterAdministration/data/volumes/MirrorVols-MirrorStart.html?hl=volume%2Cmirror
+   5. https://mapr.com/docs/home/ReleaseNotes/whatsnew.html
+   6. https://mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-Managing.html
+   7. http://10.250.1.25/show_bug.cgi?id=24266
+   8. https://mapr.com/support/s/article/FUSE-Clients-do-not-honor-impersonation-constraints-in-servicewithimpersonation-tickets?language=en_US
+   9. https://mapr.com/docs/home/ClusterAdministration/admin/cluster/ConfigAlarmThreshold.html
+  10. https://mapr.com/docs/home/ReferenceGuide/cldb.conf.html
+  11. https://mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-Configuring.html
+  12. https://mapr.com/support/s/article/MapR-Ticket-Credentials-can-become-compromised?language=en_US
+  13. https://mapr.com/docs/home/ReleaseNotes/c_security_vuln_intro.html?hl=security%2Cvulnerabilities
