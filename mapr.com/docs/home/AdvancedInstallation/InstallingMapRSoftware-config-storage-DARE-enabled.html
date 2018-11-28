@@ -1,0 +1,44 @@
+Configuring Storage with DARE Enabled
+
+   This section describes how to format disks for cluster storage manually
+   using disksetup with data-at-rest encryption (DARE) enabled.
+
+Manually Running disksetup
+
+   You can create a text file that lists the disks and partitions for use
+   by MapR on a node. Each line should list either a single disk or all
+   applicable partitions on a single disk. When listing multiple
+   partitions on a line, separate each partition with a space. For
+   example:
+/dev/sdb
+/dev/sdc1 /dev/sdc2 /dev/sdc4
+/dev/sdd
+
+   In the following example, /tmp/disklist is a text file that lists the
+   disks and partitions:
+   Example
+/opt/mapr/server/disksetup /tmp/disklist
+
+Using disksetup with DARE-Enabled Nodes
+
+   In a DARE-enabled cluster, you must use a different set of steps to run
+   disksetup. disksetup will fail on some nodes if the DARE master key is
+   not available. CLDB nodes have a local copy of the DARE master key, so
+   disksetup works on CLDB nodes. Other nodes require a connection with a
+   running CLDB node in order to run disksetup.
+   Use these steps to run disksetup on the CLDB nodes and then start the
+   CLDB nodes so that you can then run disksetup on the remaining nodes
+   and start those nodes:
+    1. Format the disks on the CLDB nodes (the nodes that contain the
+       dare.master.key):
+/opt/mapr/server/disksetup /tmp/disklist
+    2. Start ZooKeeper and Warden so that other nodes can access the DARE
+       master key on the CLDB nodes:
+         a. Start ZooKeeper on all the ZooKeeper nodes:
+service mapr-zookeeper start
+         b. Start Warden on the CLDB nodes:
+service mapr-warden start
+    3. Format the remaining node disks:
+/opt/mapr/server/disksetup /tmp/disklist
+    4. Start Warden on the remaining nodes:
+service mapr-warden start
