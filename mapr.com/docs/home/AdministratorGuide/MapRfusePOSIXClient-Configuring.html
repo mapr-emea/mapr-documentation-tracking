@@ -306,6 +306,24 @@ md64/server/:/opt/mapr/lib
      * For posix basic: service mapr-posix-client-basic restart
      * For posix platinum: service mapr-posix-client-platinum restart
 
+Optimizing FUSE performance when running the Flexible I/O tester (fio tool)
+
+   Performance Tips
+     * With Linux kernels prior to version 4.8, size extending writes are
+       serialized by the kernel, and result in degraded write performance.
+       For optimized write performance, ensure that the Linux kernel in
+       use, is at least version 4.8.
+     * With kernel 4.8 and above, fio performance improves when using
+       larger block sizes and larger number of jobs (numjobs). Keep
+       numjobs constant and use larger blocksizes (>128k) for enhanced
+       performance.
+
+   For example, for optimised performance, the fio command could be as
+   follows:
+fio --ioengine=libaio --direct=1 --gtod_reduce=1 --name=perftest --filename=perf
+ile
+          --bs=16m --iodepth=64 --size=4G --rw=write --numjobs=4
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/t_MapRPOSIXfuseClient_install.html
