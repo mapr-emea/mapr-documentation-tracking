@@ -1,11 +1,11 @@
 Understanding the MERGE Statement
 
-   This section describes how to use the MERGE statement to efficiently
-   perform record-level INSERT and UPDATE operations within Hive tables.
+   You can use the MERGE statement to efficiently perform record-level
+   INSERT and UPDATE operations within Hive tables.
 
    The MERGE statement can be a key tool of MapR cluster data management.
    It is based on ANSI-standard SQL.
-   This feature is described by the following topics:
+   The MERGE statement is described by the following scenarios:
      * [1]Simple merge.maprdb.column.id is the join key
      * [2]Simple merge.maprdb.column.id is not the join key
      * [3]Deleting while merging
@@ -18,25 +18,22 @@ Understanding the MERGE Statement
 
 Simple merge.maprdb.column.id is the join key
 
-   Consider two tables customer_source and customer_db_json_target. See
-   Table 1 for source table customer_source:
+   Consider merging the following example source and target tables:
 
-   CAPTION: Table 1. Source table customer_source
+   CAPTION: Table 1. customer_source
 
    id  first_name last_name age
    001 Dorothi    Hogward   7777
    002 Alex       Bowee     7777
    088 Robert     Dowson    25
 
-   See Table 2 for target table customer_db_json_target:
-
-   CAPTION: Table 2. Target table customer_db_json_target
+   CAPTION: Table 2. customer_db_json_target
 
    id  first_name last_name age
    001 John       Smith     45
    002 Michael    Watson    27
    003 Den        Brown     33
-   The following SQL statement is an example of valid MERGE usage:
+   You can use the following SQL-standard MERGE statement:
 MERGE into customer_db_json_target trg
 USING customer_source src
 ON src.id = trg.id
@@ -44,10 +41,7 @@ WHEN MATCHED THEN UPDATE SET age = src.age
 WHEN NOT MATCHED THEN
 INSERT VALUES (src.id, src.first_name, src.last_name, src.age);
 
-   The result after merge into target is:
-
-   CAPTION: Table 3. Result of MERGE operator
-
+   The result is:
    id  first_name last_name age
    001 John       Smith     7777
    002 Michael    Watson    7777
@@ -57,54 +51,8 @@ INSERT VALUES (src.id, src.first_name, src.last_name, src.age);
 
 Simple merge.maprdb.column.id is not the join key
 
-   This type of join is not recommended. Consider two tables
-   client_mapr_db_json_target and client_source:
-
-   CAPTION: Table 4. Contents of client_mapr_db_json_target
-
-   id first_name last_name age
-   1  John       Robin     32
-   2  Martin     Maxx      40
-   3  Lee        Harwin    25
-
-   And:
-
-   CAPTION: Table 5. Contents of customer_source
-
-   id  first_name last_name age
-   111 FN1        LN1       32
-   222 FN2        LN2       40
-   3   FN3        LN3       11
-   Using the MERGE operator when maprdb.column.id is not the join key:
-MERGE INTO client_mapr_db_json_target trg
-USING client_source src
-ON trg.age = src.age
-WHEN MATCHED THEN UPDATE
-SET first_name = src.first_name,
-last_name  = src.last_name
-WHEN NOT MATCHED THEN INSERT VALUES
-(src.id, src.first_name, src.last_name, src.age);
-
-   The result after merge into target is:
-
-   CAPTION: Table 6. Result of MERGE operator
-
-   id first_name last_name age
-   1  FN1        LN1       32
-   2  FN2        LN2       40
-   3  FN3        FN3       11
-   Here the join key is column is age. Two values of age (32 and 40) are
-   the same in tables client_mapr_db_json_target and client_source. You
-   want to update columns first_name and last_name if age is the same, and
-   insert the row if age differs. You expect row (3, FN3, FN3, 11) to be
-   inserted into client_mapr_db_json_target table, but the table already
-   has a row with id 3:
-(3, Lee, Harwin, 25)
-
-   Since MapR Database JSON tables do not allow two rows with the same
-   merge.maprdb.column.id, row (3, Lee, Harwin, 25) is replaced with (3,
-   FN3, FN3, 11), even if the MERGE operator consists of WHEN NOT MATCHED
-   THEN INSERT VALUES and you may expect it to be inserted.
+   Merging when merge.maprdb.column is not the join key is not
+   recommended.
 
 Deleting while merging
 
@@ -119,9 +67,9 @@ t supported for MapR DB JSON tables (state=42000,code=40000)
 
 Multiple source rows match a given target row (cardinality violation)
 
-   Consider two tables customer_db_json and customer_new:
+   Consider merging the two tables customer_db_json and customer_new:
 
-   CAPTION: Table 7. Contents of customer_db_json
+   CAPTION: Table 3. customer_db_json
 
    id  first_name last_name age
    001 John       Smith     45
@@ -130,7 +78,7 @@ Multiple source rows match a given target row (cardinality violation)
 
    And:
 
-   CAPTION: Table 8. Contents of customer_new
+   CAPTION: Table 4. customer_new
 
    id  first_name last_name age
    001 Dorothi    Hogward   77
@@ -157,12 +105,12 @@ rdinality_violation(_col0)
 
 Merge on mixed data types
 
-   The MERGE operation also supports mixed data types, such as arrays,
+   The merge operation also supports mixed data types, such as arrays,
    maps, and structures.
 
    Consider two tables mixed_types_source and mixed_types_target:
 
-   CAPTION: Table 9. Contents of mixed_types_source
+   CAPTION: Table 5. mixed_types_source
 
    doc_id                           user_info
    1      {"name":"Brandon","surname":"Lee","age":31,"gender":"MALE"}
@@ -172,11 +120,11 @@ Merge on mixed data types
 
    And:
 
-   CAPTION: Table 10. Contents of mixed_types_target
+   CAPTION: Table 6. mixed_types_target
 
    id                           user_info
    1  {"name":"Lexx","surname":"Comfuzer","age":31,"gender":"MALE"}
-   To MERGE mixed_types_source and mixed_types_target:
+   To merge mixed_types_source and mixed_types_target:
 MERGE INTO mixed_types_target trg
 USING mixed_types_source src
 ON src.doc_id = old.doc_id
@@ -185,9 +133,9 @@ SET user_info = src.user_info
 WHEN NOT MATCHED THEN INSERT VALUES
 (src.doc_id, src.user_info);
 
-   The result after merge into target is:
+   The result is:
 
-   CAPTION: Table 11. Result of MERGE operator
+   CAPTION: Table 7. Result of MERGE operator
 
    id                          first_name
    1  {"name":"Brandon","surname":"Lee","age":31,"gender":"MALE"}
@@ -206,8 +154,8 @@ WHEN NOT MATCHED THEN INSERT VALUES
 Merge into external MapR Database JSON tables
 
    The MERGE operator is also available for external MapR Database JSON
-   tables. Use external tables as target tables for merge. No additional
-   syntax is needed.
+   tables. You can use the MERGE statement to insert and update values in
+   external MapR database JSON table targets.
 
 Merge into partitioned MapR Database JSON tables
 
