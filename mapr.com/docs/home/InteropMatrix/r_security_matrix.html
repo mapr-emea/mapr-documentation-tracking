@@ -2,11 +2,17 @@ MapR Security Support Matrix
 
    The tables in this section show component support for authentication,
    impersonation, and wire-level encryption.
+   Information is provided for the MapR 6.1 and MapR 6.0.1 releases. See
+   these sections:
+     * Table 1 - [1]Authentication in MapR 6.1
+     * Table 2 - [2]Impersonation and Wire-Level Encryption in MapR 6.1
+     * Table 3 - [3]Authentication in MapR 6.0.1
+     * Table 4 - [4]Impersonation and Wire-Level Encryption in MapR 6.0.1
 
-   Table 1 shows component support for authentication using MapR-SASL,
-   Kerberos, and PAM.
+   Tables 1 and 3 show component support for authentication using
+   MapR-SASL, Kerberos, and PAM.
 
-   Table 2 shows component support for impersonation and wire-level
+   Tables 2 and 4 show component support for impersonation and wire-level
    encryption.
 
 Table Symbols
@@ -265,3 +271,214 @@ Impersonation and Wire-Level Encryption in MapR 6.1
 
    ^1Includes a FUSE POSIX client, YARN client, and other client
    components.
+
+Authentication in MapR 6.0.1
+
+   CAPTION: Table 3. Component Support for Authentication
+
+   Main Component Subcomponent Authentication
+   MapR-SASL Kerberos PAM^1
+   CORE COMPONENTS
+   MapR Installer N/A — — Yes
+   JobClient to Resource Manager N/A Yes Yes —
+   MapR Filesystem FileClient C → MapR Filesystem Yes — —
+   FileClient Java → MapR Filesystem Yes Yes^2 —
+   MapR Filesystem ↔ MapR Filesystem^3 Yes — —
+   CLDB ↔ MapR Filesystem^4 Yes — —
+   FileClient → CLDB^4 Yes Yes^2 —
+   NFSv3 → MapR Filesystem Yes — —
+   NFSv3 → CLDB^5 Yes — —
+   MapR Database MapR Database Java Client → MapR Database^6 Yes Yes^2 —
+   MapR Database C Client → MapR Database^6 Yes — —
+   AsyncHBase Client → MapR Database^6 Yes Yes^2 —
+   Hive Job Using Connector to MapR Database^6 Yes — —
+   Spark Job Using Connector to MapR Database^6 Yes — —
+   Client → HBase Thrift Gateway^6 — — Yes
+   HBase Thrift Gateway for MapR Database (Binary)^7 Yes — —
+   Client → Data Access Gateway — — Yes
+   Data Access Gateway → MapR Database (JSON) Yes — —
+   Client → HBase REST Gateway — Yes Yes
+   HBase REST Gateway for MapR Database (Binary) Yes — —
+   MapR-Streams Java Client → MapR Event Store For Apache Kafka Yes Yes^2
+   —
+   librdkafka C/C#/Python Client → MapR Event Store For Apache Kafka Yes —
+   —
+   Client Kafka REST Gateway — — Yes
+   Kafka REST Gateway → MapR Event Store For Apache Kafka Yes — —
+   REST Client → Kafka Connect Gateway — — —
+   Kafka Connect Gateway → MapR Event Store For Apache Kafka Yes — —
+   MapR Control System^8 MCS CLI Command Yes Yes —
+   MCS Web Command (REST Interface) — Yes Yes
+   ZooKeeper^9 ZK client → ZK server Yes — —
+   ZK server ↔ ZK server — — —
+   ECOSYSTEM COMPONENTS
+   Drill^10 Web client → Drillbit — Partial (using SPNEGO WIP) Yes
+   Drillbit ↔ Drillbit Yes Yes —
+   Java/C++ Client/JDBC/ODBC → Drillbit Yes Yes Yes
+   Drill → Hive Storage Plugin Yes — —
+   Flume^11 Thrift Client → Flume Agent Yes Yes —
+   Avro Client → Flume Agent (Netty) — — —
+   Flume Agent → MapR Streams Yes — —
+   Flume Agent → MapR Database Yes — —
+   Flume Agent → Hive Metastore Yes Yes —
+   Hive HiveServer2 → Metastore Yes Yes —
+   JDBC Client → HiveServer2 Yes Yes Yes
+   ODBC Client → HiveServer2 — Yes Yes
+   WebHCat → Metastore Yes Yes —
+   Hive Shell → MetaStore Yes Yes —
+   Beeline → HiveServer2 Yes Yes Yes
+   REST API → WebHCat — Yes —
+   HttpFS Client (REST) → HttpFS — Yes Yes
+   HttpFS → MapR Filesystem Yes — —
+   Hue Hue → Oozie^12 Yes Yes —
+   Hue → YARN Yes Yes —
+   Hue → HbaseThrift Yes Yes —
+   Hue → Sqoop2 Yes Yes —
+   Hue → HttpFS Yes Yes —
+   Hue → HiveServer2 Yes Yes —
+   Oozie Oozie Client, REST API, Hue → Oozie Server^13 Yes Yes —
+   Oozie Server → Spark/Sqoop^14 Yes Yes —
+   Oozie Server → Beeline-HS2 Yes Yes Yes
+   Oozie Server → Hive Yes Yes —
+   Spark Web Clients → Spark Component UI No, but uses Spark's shared
+   secret with DIGEST-MD5
+   Spark Driver → Executor No, but uses Spark's shared secret with
+   DIGEST-MD5
+   Spark Job Using Connector → MapR Database Yes — —
+   Spark Job Using Connector → MapR-Streams Yes Yes —
+   Sqoop 2^15 REST API, Hue, Sqoop 2 Client → Sqoop 2 Server Yes Yes —
+   YARN REST/Browser → RM/JHS/ATS – Yes Yes
+   Internal communication (RM/NM/JHS) Yes Yes —
+   Containers → YARN Services (RM/NM) No, but uses YARN's shared secret
+   with DIGEST-MD5
+   Timeline Server Yes Yes —
+
+   ^1If LDAP is required, LDAP can be supported through PAM.
+
+   ^2 Kerberos support is provided by implicit conversion of Kerberos
+   tickets to MapR tickets.
+
+   ^3Payload not encrypted by default.
+
+   ^4All data exchanged with CLDB is in protobufs only and hence encrypted
+   in secure clusters.
+
+   ^5Only admin ops to CLDB are audited. NFSv3 communication with CLDB is
+   usually not admin-related.
+
+   ^6Accessed through the MapR client, which reads security settings from
+   /opt/mapr/conf/mapr-clusters.conf; hence, this interface follows the
+   secure-by-default model.
+
+   ^7MapR-SASL is supported but not enabled during installation.
+
+   ^8The MapR Control System is secure between client and webserver (API
+   Server). The server may invoke other commands through the maprcli
+   interface that themselves do not use secure communication.
+
+   ^9MapR uses MapR-SASL for communication with ZooKeeper.
+
+   ^10Support for Kerberos has not been verified, but SPNEGO can be used
+   in conjunction with HTTPS.
+
+   ^11Flume agents can't be started automatically after installation.
+   Manual configuration is required.
+
+   ^12Auditing user administration operations with Hue.
+
+   ^13A custom authentication filter can be configured.
+
+   ^14Oozie orchestrates Spark/Sqoop jobs using the Spark/Sqoop native
+   client, so security is the same as Spark/Sqoop.
+
+   ^15SSL added to Sqoop 1.99.7. Basic access authentication is enabled by
+   default.
+
+Impersonation and Wire-Level Encryption in MapR 6.0.1
+
+   CAPTION: Table 4. Component Support for Impersonation and Wire-Level
+   Encryption
+
+   Main Component Subcomponent Impersonation Wire-Level Encryption
+   MapR-SASL Kerberos SSL/TLS
+   CORE COMPONENTS
+   MapR Installer N/A — — — Yes
+   JobClient to Resource Manager N/A Yes Yes Yes —
+   MapR Filesystem FileClient C → MapR Filesystem Yes Yes — —
+   FileClient Java → MapR Filesystem Yes Yes — —
+   MapR Filesystem ↔ MapR Filesystem — Yes — —
+   CLDB ↔ MapR Filesystem — Yes — —
+   FileClient → CLDB Yes Yes — —
+   NFSv3 → MapR Filesystem Yes Yes — —
+   NFSv3 → CLDB Yes Yes — —
+   MapR Database MapR Database Java Client → MapR Database Yes Yes — —
+   MapR Database C Client → MapR Database Yes Yes — —
+   AsyncHBase Client → MapR Database Yes Yes — —
+   Hive Job Using Connector to MapR Database Yes Yes — —
+   Spark Job Using Connector to MapR Database Yes Yes — —
+   Client → HBase Thrift Gateway — — — Yes
+   HBase Thrift Gateway for MapR Database (Binary) Yes Yes — —
+   Client → Data Access Gateway — — — Yes
+   Data Access Gateway → MapR Database (JSON) Yes Yes — —
+   Client → HBase REST Gateway — — — Yes
+   HBase REST Gateway for MapR Database (Binary) Yes Yes — —
+   MapR-Streams Java Client → MapR Event Store For Apache Kafka Yes Yes —
+   —
+   librdkafka C/C#/Python Client → MapR Event Store For Apache Kafka — Yes
+   — —
+   Client → Kafka REST Gateway — — — Yes
+   Kafka REST Gateway → MapR Event Store For Apache Kafka Yes Yes — —
+   REST Client → Kafka Connect Gateway — — — —
+   Kafka Connect Gateway → MapR Event Store For Apache Kafka — Yes — —
+   MapR Control System MCS CLI Command — Yes — —
+   MCS Web Command (REST Interface) — — — Yes
+   ZooKeeper ZK client → ZK server — Yes — —
+     ZK server ↔ ZK server — — — —
+   ECOSYSTEM COMPONENTS
+   Drill Web client → Drillbit Yes — — Yes
+   Drillbit ↔ Drillbit Yes Yes Yes —
+   Java/C++ client → Drillbit Yes Yes Yes Yes
+   Drill → Hive storage plugin Yes Yes — —
+   Flume Thrift Client → Flume Agent Yes Yes — Yes
+   Avro Client → Flume Agent (Netty) — — — Yes
+   Flume Agent → MapR Streams — Yes — —
+   Flume Agent → MapR Database — Yes — —
+   Flume Agent → Hive Metastore — Yes Yes —
+   Hive HiveServer2 → Metastore Yes Yes Yes Yes
+   JDBC Client → HiveServer2 Yes Yes Yes Yes
+   ODBC Client → HiveServer2 Yes — Yes Yes
+   WebHCat → Metastore Yes — Yes —
+   Hive Shell → MetaStore Yes Yes Yes —
+   Beeline → HiveServer2 Yes Yes — Yes
+   REST API → WebHCat Yes — Yes —
+   HttpFS Client (REST) → HttpFS Yes — — Yes
+   HttpFS → MapR Filesystem Yes Yes — —
+   Hue Hue → Oozie Yes — — Yes
+   Hue → YARN Yes — — Yes
+   Hue → HBaseThrift Yes Yes — —
+   Hue → Sqoop2 Yes — — Yes
+   Hue → HttpFS Yes — — Yes
+   Hue → HiveServer2 Yes Yes Yes Yes
+   Oozie Oozie client, REST API, Hue → Oozie Server Yes Yes Yes Yes
+   Oozie Server → Spark/Sqoop Yes Yes Yes —
+   Oozie Server → Beeline-HS2 Yes Yes — Yes
+   Oozie Server → Hive Yes Yes Yes —
+   Spark Web clients → Spark Component UI — — — Yes
+   Spark Driver → Executor — When running Spark-on-YARN,
+   Driver-To-Executor communication is through YARN (Hadoop protocol), so
+   it is fully secured.
+   Spark Job Using Connector → MapR Database — Yes — —
+   Spark Job Using Connector → MapR Event Store For Apache Kafka — Yes —
+   Yes
+   Sqoop 2 REST API, Hue, Sqoop 2 Client → Sqoop 2 Server Yes Yes Yes Yes
+   YARN REST/Browser → RM/JHS/ATS Yes — — Yes
+   Internal communication (RM/NM/JHS) — Yes Yes —
+   Containers → YARN Services (RM/NM) — Yes Yes —
+   Timeline Server — Yes Yes —
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_security_matrix.html#reference_h5t_xrb_t5__section_authentication_6.1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_security_matrix.html#reference_h5t_xrb_t5__section_impersonation_6.1
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_security_matrix.html#reference_h5t_xrb_t5__section_authentication_6.0.1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_security_matrix.html#reference_h5t_xrb_t5__section_impersonation_6.0.1
