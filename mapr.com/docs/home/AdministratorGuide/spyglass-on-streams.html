@@ -1,8 +1,8 @@
 Spyglass on Streams
 
    The 6.0 release of the MapR Converged Data Platform introduces Spyglass
-   on Streams. When you install the the 6.0 version of MapR, Streams is
-   the default mechanism through which metrics flow from the collectd
+   on Streams. When you install the the 6.0 version of MapR Core, Streams
+   is the default mechanism through which metrics flow from the collectd
    service to OpenTSDB. Moving metrics through streams secures the data
    and provides a mechanism to perform real-time data analytics.
    Note: Currently, Spyglass on Streams is not available for logs. Fluentd
@@ -16,8 +16,8 @@ The Flow of Metrics via Streams
    stream and writes the metrics into topics in that stream.
 
    Collectd creates two streams per cluster, Stream (0) and Stream (1).
-   Each stream contains approximately 100+ topics. Topic names are of the
-   format <hostname>_<metricname>, for example mfs81.qa.lab_cpu.percent.
+   Each stream contains approximately 100+ topics. Topic names use the
+   format <hostname>_<metricname>. For example: mfs81.qa.lab_cpu.percent.
 
    Collectd maps the metric names to Stream (0) or Stream (1) using the
    djb2 hash algorithm, as shown:
@@ -25,11 +25,13 @@ static int hash(const char *str, int range)
 { int hash = 5381; int c; while ((c = *str++) != 0) hash = ((hash << 5) + hash)
 + c; /* hash * 33 + c */ return abs(hash%range); }
 
-   The algorithm hashes the metric name to an integer, either 0 or 1.
+   The algorithm hashes the metric name to an integer that is either 0 or
+   1.
    The Streams server distributes metrics through streams to the available
-   OpenTSDB nodes and OpenTSDB consumes the metrics.
+   OpenTSDB nodes, and OpenTSDB consumes the metrics.
    Note: Writing to an external OpenTSDB is not supported from release 6.0
-   onwards.
+   onwards. In addition, inserting non-MapR data into the MapR-provided
+   OpenTSDB is not supported.
 
 Spyglass on Streams Performance
 
@@ -39,10 +41,9 @@ Spyglass on Streams Performance
    metrics data from the collectd service to OpenTSDB.
 
    Default collectd and OpenTSDB settings work well for clusters with up
-   to one-hundred nodes and three OpenTSDB nodes. If the number of nodes
-   increases or you notice that performance is sluggish, you can improve
-   performance by adding OpenTSDB nodes and modifying the number of
-   streams.
+   to 100 nodes and three OpenTSDB nodes. If the number of nodes increases
+   or you notice that performance is sluggish, you can improve performance
+   by adding OpenTSDB nodes and modifying the number of streams.
 
    Evaluating Streams Performance
 
@@ -64,23 +65,23 @@ Determining How Many OpenTSDB Nodes to Install
    Each OpenTSDB node can consume one partition at a time. By default,
    metrics data is divided across five partitions in each topic and
    optimal parallelism is reached if there are five OpenTSDB nodes to
-   consume the partitions. See [5]Parallelism When Consuming Messages and
-   note that the term “consumer” in the topic equates to an OpenTSDB node
+   consume the partitions. See [5]Parallelism When Consuming Messages.
+   Note that the term “consumer” in the topic equates to an OpenTSDB node
    in Spyglass on Streams.
    A general guideline for the minimum number of OpenTSDB nodes in a
-   cluster is one for every 10x increase in nodes beyond ten, for example:
-     * 3 OpenTSDB nodes in a 10 node cluster
-     * 4 OpenTSDB nodes in a 100 node cluster
-     * 5 OpenTSDB nodes in a 1000 node cluster
+   cluster is one for every 10x increase in nodes beyond 10, for example:
+     * Three OpenTSDB nodes in a 10-node cluster
+     * Four OpenTSDB nodes in a 100-node cluster
+     * Five OpenTSDB nodes in a 1000-node cluster
      * ...
 
    Note: For every 10x nodes you install, you should increase the streams
    number by 2.
 
-   If your cluster has ten or more nodes, at least three OpenTSDB nodes
+   If your cluster has 10 or more nodes, at least three OpenTSDB nodes
    should be available to consume metrics. Typically, for every 10x
    increase in nodes, you should add another OpenTSDB node. For example,
-   if your cluster reaches a size of 100 nodes, have 4 OpenTSDB nodes
+   if your cluster reaches a size of 100 nodes, have four OpenTSDB nodes
    available for consumption. Note that an increase in the number of
    OpenTSDB nodes may require an increase in the number of streams and/or
    partitions.
@@ -93,17 +94,17 @@ Determining How Many OpenTSDB Nodes to Install
    OpenTSDB processes as they aggressively try to keep up with the
    metrics. You can reduce the number of AsynchHBase threads to reduce the
    CPU and memory usage. By default, AsynchHBase runs 128 threads. To
-   modify the number of threads, add/modify the following property in the
-   /opt/mapr/asynchbase/asynchbase-<version>/conf/asynchbase.conf file on
-   the OpenTSDB nodes:
+   modify the number of threads, add or modify the following property in
+   the /opt/mapr/asynchbase/asynchbase-<version>/conf/asynchbase.conf file
+   on the OpenTSDB nodes:
 "fs.mapr.async.worker.threads=<value>"
 
 Increasing the Number of Streams
 
    The default setting for the number of streams is two. As a general
    guideline, for every 10x increase in the number of cluster nodes, add
-   two additional streams. For example, if your cluster has one-hundred
-   nodes, add two more streams, for a total of four.
+   two additional streams. For example, if your cluster has 100 nodes, add
+   two more streams, for a total of four.
 
    To increase the number of streams, edit the streams-specific options in
    the collectd and OpenTSDB configuration files. The streams option in

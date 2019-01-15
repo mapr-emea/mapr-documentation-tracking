@@ -39,8 +39,11 @@ pem ssl_truststore ssl_truststore.p12 ssl_truststore.pem
  <CLDB_node_list> -N <cluster_name>
        where both <Zookeeper_node_list> and <CLDB_node_list> have the form
        hostname[:port_no][,hostname[:port_no]...] and -N <cluster_name>
-       specifies the cluster name. The -dare option is required only if
-       you wish to enable data at rest encryption at the cluster-level.
+       specifies the cluster name. For the hostname, specify a
+       fully-qualified domain name (FQDN) as described in [4]Connectivity.
+       Do not specify an alias or IP address. The -dare option is required
+       only if you wish to enable data at rest encryption at the
+       cluster-level.
        Important: You must run configure.sh -dare -genkeys only once on
        one CLDB node, since the resulting files must be copied to other
        nodes.
@@ -85,11 +88,11 @@ de_list> -N <cluster_name>
        files to any client nodes outside the cluster.
        Important: If you run configure.sh -secure on a node before you
        copy the necessary files to that node, the command fails.
-    9. Log in as the mapr superuser using the [4]maprlogin command:
+    9. Log in as the mapr superuser using the [5]maprlogin command:
        maprlogin password (in this command, password is literal text).
    10. If clients will connect to multiple secure clusters, merge the
        ssl_truststore files with the /opt/mapr/server/manageSSLKeys.sh
-       tool. See [5]Setting Up the Client for more information on MapR
+       tool. See [6]Setting Up the Client for more information on MapR
        clients.
 
 Advanced Procedure
@@ -114,7 +117,7 @@ Running on Hosts with no Configured Domain Name
    mycompany.com, then the CN of the certificate is *.mycompany.com. This
    certificate works for all machines within the mycompany.com domain and
    can therefore be copied to all cluster nodes as specified in Step 5 in
-   the [6]Basic Procedure.
+   the [7]Basic Procedure.
 
    Certificate generation fails if the host that you are running the
    script from is configured without a domain name. To fix this, modify
@@ -122,7 +125,7 @@ Running on Hosts with no Configured Domain Name
    string and then run the configure.sh script.
 
    Alternatively, re-run the script with the -certdomain option as shown
-   in Step 3 of the [7]Basic Procedure:
+   in Step 3 of the [8]Basic Procedure:
 /opt/mapr/server/configure.sh -secure -genkeys -certdomain <domain_name> -Z <Zoo
 keeper_node_list> -C <CLDB_node_list> [ -N <cluster_name> ]
 
@@ -132,16 +135,16 @@ Securing Clusters with Multiple Domain Names
    domain. In the unusual case where you have a cluster with different
    machines belonging to different domains, applications that perform
    hostname verification can fail if you run the configure.sh script (as
-   described in Step 3 of the [8]Basic Procedure) to generate a
+   described in Step 3 of the [9]Basic Procedure) to generate a
    single-domain wildcard certificate. In this case, you must provide your
    own multi-domain wildcard certificate and import the custom certificate
-   into the keystore as described in [9]Importing a Certificate Authority
+   into the keystore as described in [10]Importing a Certificate Authority
    Signed (CA Signed) SSL Certificate Into a MapR Cluster.
 
 Using Custom Certificates
 
    To import your own custom certificates into the keystore instead of
-   using the self-signed certificates, see [10]Importing a Certificate
+   using the self-signed certificates, see [11]Importing a Certificate
    Authority Signed (CA Signed) SSL Certificate Into a MapR Cluster.
 
 References
@@ -149,10 +152,11 @@ References
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/System-Behavior-Changes.html
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/ShutDownCluster.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient.html
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-Security.html#basic
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/PreparingEachNode-connectivity.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/SettingUptheClient.html
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-Security.html#basic
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-Security.html#basic
-   9. https://mapr.com/support/s/article/Importing-a-Certificate-Authority-Signed-CA-Signed-SSL-Certificate-Into-a-MapR-Clusters
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-Security.html#basic
   10. https://mapr.com/support/s/article/Importing-a-Certificate-Authority-Signed-CA-Signed-SSL-Certificate-Into-a-MapR-Clusters
+  11. https://mapr.com/support/s/article/Importing-a-Certificate-Authority-Signed-CA-Signed-SSL-Certificate-Into-a-MapR-Clusters

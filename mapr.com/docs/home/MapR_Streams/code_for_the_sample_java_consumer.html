@@ -26,23 +26,13 @@ public class SampleConsumer {
         long pollTimeout = 1000;
 
         boolean stop = false;
-        while (!stop) {
-            // Request unread messages from the topic.
-            ConsumerRecords<String, String> consumerRecords = consumer.poll(poll
-Timeout);
-            Iterator<ConsumerRecord<String, String>> iterator = consumerRecords.
-iterator();
-            if (iterator.hasNext()) {
-                while (iterator.hasNext()) {
-                    ConsumerRecord<String, String> record = iterator.next();
-                    // Iterate through returned records, extract the value
-                    // of each message, and print the value to standard output.
-                    System.out.println((" Consumed Record: " + record.toString()
-));
+        while (true){
+            ConsumerRecords<String, String> records = consumer.poll(pollTimeout)
+;
+            for (ConsumerRecord<String, String> record : records)
+            System.out.printf("offset = %d, key = %s, value = %s%n", record.offs
+et(), record.key(), record.value());
                 }
-            } else {
-                stop = true;
-            }
         }
         consumer.close();
         System.out.println("All done.");
