@@ -5,7 +5,7 @@ Configuring the ZooKeeper PStore Location
    the drill-override.conf file.
 
    When query profile data is stored on a distributed system, like MapR
-   File System, you can see a[1]global query list (view of query profiles
+   File System, you can see a [1]global query list (view of query profiles
    coordinated by all Drill nodes in one Web UI).
    To change the [2]ZooKeeper PStore location, update the drill.exec block
    in /opt/mapr/drill/drill-<version>/conf/drill-override.conf with the
@@ -16,6 +16,12 @@ drill.exec: {
         sys.store.provider.zk.blobroot: "maprfs:///new/storage/location/"
    }
 
+   Note: By default, the MapR File System replicates the data three times.
+   If you are concerned about storage consumption, you can create a new
+   volume specifically for query profile data, and set the replication
+   value to 1 for that volume. After you create the volume, update
+   sys.store.provider.zk.blobroot to point to the volume. See [3]volume
+   create or [4]Creating a Volume for additional information.
    After you modify drill-override.conf, restart Drill:
 maprcli node services -name drill-bits -action restart -nodes <drill-hostnames-s
 eparated-by-a-space>
@@ -24,3 +30,5 @@ References
 
    1. https://drill.apache.org/docs/global-query-list/
    2. https://drill.apache.org/docs/persistent-configuration-storage/
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html#volumecreate
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols_62.html#CreateVols

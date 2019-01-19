@@ -1,5 +1,14 @@
 Sample Java Consumer
 
+   You need to first add the following dependency to the POM file:
+<dependency>
+  <groupId>commons-logging</groupId>
+  <artifactId>commons-logging</artifactId>
+  <version>1.1.1</version>
+</dependency>
+/* This code is successfully tested for common-logging version 1.11 and 1.2.   *
+/
+
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
@@ -8,8 +17,8 @@ import java.io.IOException;
 import java.util.*;
 
 public class SampleConsumer {
-    // Set the stream and topic to read from.
-    public static String topic = "/<streamname>:<topicname>";
+    // Set the stream and topic to read from
+    public static String topic = "/demos/hl7demo/hl7stream:allMessages";
 
     // Declare a new consumer.
     public static KafkaConsumer consumer;
@@ -18,7 +27,7 @@ public class SampleConsumer {
         configureConsumer(args);
 
         // Subscribe to the topic.
-        List<String> topics = new ArrayList<>();
+        List < String > topics = new ArrayList < > ();
         topics.add(topic);
         consumer.subscribe(topics);
 
@@ -26,29 +35,28 @@ public class SampleConsumer {
         long pollTimeout = 1000;
 
         boolean stop = false;
-        while (true){
-            ConsumerRecords<String, String> records = consumer.poll(pollTimeout)
-;
-            for (ConsumerRecord<String, String> record : records)
-            System.out.printf("offset = %d, key = %s, value = %s%n", record.offs
-et(), record.key(), record.value());
-                }
+        while (true) {
+            ConsumerRecords < String, String > records = consumer.poll(pollTimeo
+ut);
+            for (ConsumerRecord < String, String > record: records)
+
+            {
+                System.out.printf("offset = %d, key = %s, value = %s%n", record.
+offset(), record.key(), record.value());
+            }
         }
-        consumer.close();
-        System.out.println("All done.");
     }
 
-    /* Set the value for a configuration parameter.
-       This configuration parameter specifies which class
-       to use to deserialize the value of each message.*/
-    public static void configureConsumer(String[] args) {
+    /* Set the value for a configuration parameter. This configuration parameter
+ specifies which class to use to deserialize the value of each message.*/
+    public static void configureConsumer(String[] args)
+
+    {
         Properties props = new Properties();
-        props.put("key.deserializer",
-                "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("value.deserializer",
-                "org.apache.kafka.common.serialization.StringDeserializer");
-
-
-        consumer = new KafkaConsumer<String, String>(props);
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.Str
+ingDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.S
+tringDeserializer");
+        consumer = new KafkaConsumer < String, String > (props);
     }
 }
