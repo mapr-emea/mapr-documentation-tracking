@@ -1,43 +1,77 @@
 Security Between ZooKeeper and Drillbits
 
-   When Drill 1.11 and later is installed on MapR 6.x clusters with the
-   default security enabled, authentication is enabled between the
-   Drillbits and ZooKeeper.
+   When Drill is installed on MapR clusters with the default security
+   enabled, authentication is enabled between the Drillbits and ZooKeeper.
    The ZooKeeper znode information is secured automatically through
-   authentication and [1]znode ACLs. The communication between Zookeeper
-   and the Drillbits is not encrypted.
+   authentication and znode ACLs. Communication between the Drillbits and
+   Zookeeper is not encrypted.
    Note: If you installed Drill on a MapR cluster that does not have the
    default security configuration, and you are configuring custom
-   security, you must enable authentication and [2]set ACLs on the znodes
-   manually. However, setting ACLs manually for Drill znodes is not
-   recommended. If you set ACLs manually, you must set them the same as a
-   Drillbit would have set them in a secure MapR cluster, as described
-   previously.
+   security, you must enable authentication and manually set ACLs on the
+   znodes.
 
-   Drill uses ZooKeeper to discover and coordinate Drillbits. Drillbits
-   use Zookeeper znodes to store coordination-related information, as well
-   as execution-related information. If the information stored in the
-   znodes is not properly secured, it can compromise the security and/or
-   privacy of the cluster.
+   Drill uses ZooKeeper to store certain cluster-level configuration and
+   query profile information in znodes. A znode is an internal data tree
+   in ZooKeeper that stores coordination and execution related
+   information. If information in the znodes is not properly secured,
+   cluster privacy and/or security is compromised.
 
-   The znode ACLs are set such that only the Drillbit user (the user that
-   started the Drillbits in the cluster) can access (create, delete, read,
-   write, administer) all of the Drillbit ZooKeeper nodes, with the
-   exception of the Drill ZooKeeper nodes that hold information about the
-   Drillbits in the cluster. Drill clients use these Drill ZooKeeper nodes
-   to discover and connect to the Drillbits in a cluster.
-   For additional information and instruction, refer to the following
-   pages:
-     * [3]https://zookeeper.apache.org/doc/trunk/zookeeperOver.html
-     * [4]https://zookeeper.apache.org/doc/r3.1.2/zookeeperProgrammers.htm
-       l#sc_ZooKeeperAccessControl
-     * [5]https://cwiki.apache.org/confluence/display/ZOOKEEPER/Zookeeper+
-       and+SASL
+   ZooKeeper uses ACLs to control access to znodes and secure the
+   information they store. Starting in Drill 1.15, you can create a custom
+   ACL (Access Control List) on the znodes to secure data. ACLs specify
+   sets of ids and permissions that are associated with the ids.
+   Prior to Drill 1.15, ZooKeeper ACLs in secure and unsecure clusters
+   were set to [world:all], meaning that all users had create, delete,
+   read, write, and administrator access to the zknodes. Starting in Drill
+   1.15, ACLs in unsecure clusters are set to [world:all]. ACLs in secure
+   clusters are set to [authid: all], which provides full access to the
+   authenticated user that created the znode only. Discovery znodes
+   (znodes with the list of Drillbits) have an additional ACL set to
+   [world:read] making the list of Drillbits readable by any user.
+   Note: View the [1]drill-override-example.conf file to see example ACL
+   configurations.
+
+Securing znodes
+
+   Complete the following steps to create a custom ACL and secure znodes:
+    1. Write a class that implements the ZKACLProvider interface. This
+       class will contain the ACLs that need to be set on the znodes. You
+       can use the [2]ZKSecureACLProvider class as a sample reference.
+    2. Add the following dependency to the pom file of the project module
+       created:
+<groupId>org.apache.drill.exec</groupId>
+<artifactId>drill-java-exec</artifactId>
+    3. Refer to the steps listed at
+       [3]https://drill.apache.org/docs/manually-adding-custom-functions-t
+       o-drill/ to create a JAR and then add the JAR to Drill's classpath.
+    4. In /opt/mapr/drill/drill-<version>/conf/drill-override.conf, set
+       zk.acl_provider to the ZKACLProviderTemplate type.
+    5. Restart Drill. When you restart Drill, the ACL, as mentioned in
+       your custom class, is applied to the znode created when Drill
+       starts.
+
+   Note: Existing ACLs for persistent znodes will not be affected if a
+   Drillbit is restarted with a different ACL setting. ACLs are applied
+   only at znode creation time. Drill does not recreate any znode that is
+   already present. If you want to change an ACL for existing znodes,
+   connect to the ZooKeeper server using zkCli and then use option a or b,
+   as described:
+     * a) Shutdown Drillbits, delete the persistent znodes, change the ACL
+       settings, and restart the Drillbit.
+     * b) Manually change the ACLs on the existing znodes to reflect the
+       new ACL settings, using the setAcl command in the zkCli.
+
+   For either option to work, an authenticated connection between the
+   zkCli and ZooKeeper Server must be established.
+
+   For additional information, refer to:
+     * [4]ZooKeeper access control using ACLs
+     * [5]ZooKeeper and SASL
 
 References
 
-   1. https://zookeeper.apache.org/doc/r3.1.2/zookeeperProgrammers.html#sc_ZooKeeperAccessControl
-   2. https://zookeeper.apache.org/doc/r3.1.2/zookeeperProgrammers.html#sc_ZooKeeperAccessControl
-   3. https://zookeeper.apache.org/doc/trunk/zookeeperOver.html
+   1. https://github.com/apache/drill/blob/master/distribution/src/resources/drill-override-example.conf
+   2. https://github.com/apache/drill/blob/master/exec/java-exec/src/main/java/org/apache/drill/exec/coord/zk/ZKSecureACLProvider.java
+   3. https://drill.apache.org/docs/manually-adding-custom-functions-to-drill/
    4. https://zookeeper.apache.org/doc/r3.1.2/zookeeperProgrammers.html#sc_ZooKeeperAccessControl
    5. https://cwiki.apache.org/confluence/display/ZOOKEEPER/Zookeeper+and+SASL

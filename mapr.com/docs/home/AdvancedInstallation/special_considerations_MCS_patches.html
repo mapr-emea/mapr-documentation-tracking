@@ -1,0 +1,33 @@
+Special Considerations for MCS Patches
+
+   Patches for the MapR Control System (MCS) are handled differently from
+   patches for MapR data nodes and CLDB nodes.
+
+   MCS software is updated as a package rather than a patch file. While
+   MapR Core patches typically include a prefix such as mapr-patch or
+   mapr-patch-client, or mapr-patch-posix-client-basic, MCS software is
+   updated as a new package and does not use the MapR Core patch
+   mechanism.
+
+   To identify an MCS patch package, look for mapr-apiserver or
+   mapr-webserver in the package name, and use these steps to update your
+   currently installed packages:
+    1. Stop the apiserver service on all MCS nodes:
+$ maprcli node services -filter [csvc==apiserver] -name apiserver -action stop
+    2. Upgrade the existing mapr-apiserver and mapr-webserver packages.
+       For example:
+          + On CentOS/Redhat or SUSE:
+$ rpm -Uvh <path to new mapr-apiserver>
+$ rpm -Uvh <path to new mapr-webserver>
+          + On Ubuntu:
+$ dpkg -i <path to new mapr-apiserver>
+$ dpkg -i <path to new mapr-webserver>
+    3. Run [1]configure.sh to update the configuration for the new
+       packages:
+$ /opt/mapr/server/configure.sh -R --noRecalcMem
+    4. Start the apiserver service on all MCS nodes:
+$ maprcli node services -filter [csvc==apiserver] -name apiserver -action start
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html

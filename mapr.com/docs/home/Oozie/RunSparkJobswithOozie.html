@@ -43,19 +43,26 @@ maprcli node services -name oozie -action restart -nodes
                  <space-delimited list of nodes>
        For MEP 2.x and later:
 
-    1. To add Spark configuration files (spark-defaults.conf,
+    1. For running a Spark action through Oozie, you should be able to
+       connect to Hive on a secure cluster. Make sure the hive-site.xml
+       file that is used by Oozie has the following property set:
+<property>
+  <name>hive.metastore.sasl.enabled</name>
+  <value>true</value>
+</property>
+    2. To add Spark configuration files (spark-defaults.conf,
        hive-site.xml, etc) to a Spark action, copy the files to the
        {OOZIE_HOME}/share/lib/spark/ directory.
-    2. If needed, update the Oozie shared libraries as described in
+    3. If needed, update the Oozie shared libraries as described in
        [2]Updating the Oozie Shared Libraries.
-    3. Run pySpark using Spark Action:
+    4. Run pySpark using Spark Action:
          a. Run pySpark using Spark Action by specifying pyspark and py4j
             zip files to the sharelib:
 cp /{SPARK_HOME}/python/lib/ pyspark*.zip {OOZIE_HOME}/share/lib/spark/
 cp /{SPARK_HOME}/python/lib/py4j*src.zip {OOZIE_HOME}/share/lib/spark/
          b. Update the Oozie shared libraries as described in [3]Updating
             the Oozie Shared Libraries.
-    4. When you configure a Spark action in the workflow.xml, specify the
+    5. When you configure a Spark action in the workflow.xml, specify the
        master and mode elements of the Spark job:
           + For Spark standalone mode, specify the Spark Master URL in the
             master element. For example, if your SparkMaster URL is
