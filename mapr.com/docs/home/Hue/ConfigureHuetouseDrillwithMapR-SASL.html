@@ -1,0 +1,36 @@
+Configure Hue to use Drill on MapR-SASL-Secured Cluster
+
+   You can configure Hue to use Drill on a MapR-SASL cluster.
+    1. Configure Hue to use Drill:
+         a. In the hue.ini, go to the Drill section, and set the
+            parameters. For example:
+[librdbms]
+  [[databases]]
+    ...
+    [[[drill]]]
+
+    # Name to show in the UI.
+    nice_name=”Drill”
+
+    # Database backend to use.
+    engine=drill
+
+    # Connection type. This can be:
+    # 1. direct
+    # 2. zookeeper
+    connection_type=direct
+
+    # Drillbit address for direct connection.
+    drillbits=<node>:31010
+
+    # Security mechanism of authentication none/GSSAPI/MAPR-SECURITY.
+    mechanism=MAPR-SECURITY
+
+    # Available options:
+    # "impersonation" to enable or disable outbound impersonation.
+    # "principal" of Drill service. Used when Kerberos authentication is enabled
+.
+    options='{"impersonation": true, "principal": "mapr/<node>@REALM"}'
+
+    2. Restart Hue to apply the updated configuration:
+maprcli node services -name hue -action restart -nodes <node>

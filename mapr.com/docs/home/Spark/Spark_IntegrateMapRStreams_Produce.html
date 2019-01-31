@@ -1,4 +1,4 @@
-Configure Spark to Produce MapR-ES Messages
+Configure Spark to Produce MapR Event Store For Apache Kafka Messages
 
    Using the Kafka 0.9 API, you can configure a Spark application to
    produce MapR Streams messages.
@@ -18,8 +18,12 @@ version = <spark_version>-mapr-<mapr_eco_version>
 sendToKafka(topic: String, conf: ProducerConf)
        In the code below, calling sendToKafka will send numMessages
        messages to the set of topics specified by the topics parameter.
-val producerConf = new ProducerConf(
-bootstrapServers = kafkaBrokers.split(",").toList)
+val producerConf = new ProducerConf(bootstrapServers = kafkaBrokers.split(",").t
+oList)
+   .withKeySerializer("org.apache.kafka.common.serialization.ByteArraySerializer
+")
+   .withValueSerializer("org.apache.kafka.common.serialization.StringSerializer"
+)
 
 val items = (0 until numMessages.toInt).map(i => Item(i, i).toString)
 val defaultRDD: RDD[String] = ssc.sparkContext.parallelize(items)
@@ -27,6 +31,11 @@ val dStream: DStream[String] = new ConstantInputDStream[String](ssc, defaultRDD)
 
 dStream.foreachRDD(_.sendToKafka(topics, producerConf))
 dStream.count().print()
+       The org.apache.kafka.common.serialization.ByteArraySerializer and
+       org.apache.kafka.common.serialization.StringSerializer properties
+       are used by default, and in case you do not want to use another
+       serializer, withKeySerializer and withValueSerializer methods are
+       not necessary.
 
    Source code for a sample producer program can be found at
    [1]https://github.com/mapr/spark/blob/2.2.1-mapr-1803/examples/src/main

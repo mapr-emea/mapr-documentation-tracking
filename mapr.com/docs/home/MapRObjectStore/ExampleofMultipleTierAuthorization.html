@@ -1,0 +1,42 @@
+Example of Multiple Tier Authorization
+
+   On the file system side, files can be protected either by using MapR
+   Access Control Expressions (ACEs) that allow you to grant
+   read/write/execute permissions for files or directories to a specific
+   user or by using the mixed mode.
+
+   On the S3 side, the owner of the bucket can leverage bucket policies to
+   grant access to other users.
+
+   Example Scenario
+
+   Tenant A creates bucket B1. The default bucket policy of
+   read/write/execute access to the owner and no access to other tenants
+   is applied to the bucket. This can be represented through UNIX
+   permissions as 0700.
+   Tenant A calls the REST API for bucket policy resulting in the
+   following policy to the B1:
+"Version": "2012-10-17",
+"Id": "ExamplePolicy01",
+"Statement": [
+   {
+     "Sid": "ExampleStatement01",
+     "Effect": "Allow",
+     "Principal": {
+           “AWS”: “B”
+        },
+      "Action": [
+        "s3:GetObject",
+      ],
+      "Resource": [
+        "arn:aws:s3:::B1/*",
+      ]
+    }
+  ]
+}
+
+   This policy is processed by the MapR Object Store allowing tenant B
+   access and it assumes that the ACE is set up for the objects, as
+   -readdir u:B | u:A ACE is applied to the bucket directory and -readfile
+   u:B | u:A ACE to all existing files. In the mixed mode, tenant B would
+   have access.

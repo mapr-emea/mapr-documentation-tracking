@@ -1,12 +1,12 @@
 Step 3: Configure YARN to Run Drill
 
    YARN default settings are optimized for MapReduce applications.
-   MapReduce applications use a limited amount of memory, however Drill is
-   long-running and consumes a significant amount of resources. Adjust the
-   YARN memory configuration to allow YARN to allocate containers large
-   enough to run Drill. Exclude the YARN container directory from tmpwatch
-   to prevent tmpwatch from removing Drill’s container files while Drill
-   runs.
+   MapReduce applications use a limited amount of memory; however, Drill
+   is long-running and consumes a significant amount of resources. Adjust
+   the YARN memory configuration to allow YARN to allocate containers
+   large enough to run Drill. Exclude the YARN container directory from
+   systemd-tmpfiles to prevent systemd-tmpfiles from removing Drill’s
+   container files while Drill runs.
 
 Increase Maximum Container Size
 
@@ -32,8 +32,8 @@ drillbit: {
    Edit yarn-site.xml to add the following:
 <property>
    <name>yarn.scheduler.maximum-allocation-mb</name>
-   <value>12288</value>
-   <description>Set to allow Drill containers 12GB.</description>
+   <value>14336</value>
+   <description>Set to allow Drill containers 14G.</description>
  </property>
 
    Note: You must update this configuration on every YARN node.
@@ -42,13 +42,23 @@ drillbit: {
    Resource Manager UI to verify that the maximum container size shows the
    new value.
 
-Exclude the YARN Container Directory from tmpwatch
+Exclude the YARN Container Directory from systemd-tmpfiles
 
    MapR puts the YARN Node Manager container files in the /tmp directory.
-   Most system administrators configure tmpwatch to periodically remove
-   files in /tmp. Since Drill-on-YARN is a long-running YARN application,
-   tmpwatch can remove Drill’s container files while Drill runs. If this
-   occurs, you must manually shut down the Drill cluster because tmpwatch
-   will have removed the pid file that YARN needs to manage Drill.
-   Configure tmpwatch to exclude the YARN Node Manager directory:
-tmpwatch --exclude=/tmp/hadoop-mapr/nm-local-dir
+   Most system administrators configure systemd-tmpfiles to periodically
+   remove files in /tmp. Since Drill-on-YARN is a long-running YARN
+   application, systemd-tmpfiles can remove Drill’s container files while
+   Drill runs. If this occurs, you must manually shut down the Drill
+   cluster because systemd-tmpfiles will have removed the pid file that
+   YARN needs to manage Drill.
+   You can prevent systemd-tmpfiles from cleaning up Drill's container
+   files by adding a new configuration file to /etc/tmpfiles.d/, for
+   example /etc/tmpfiles.d/exclude-nm-local-dir.conf, with the following
+   configuration:
+x /tmp/hadoop-mapr/nm-local-dir/*
+
+   Note: This configuration prevents systemd-tmpfiles from cleaning the
+   /nm-local-dir directory when cleaning /tmp.
+   Example
+$ cat /etc/tmpfiles.d/exclude-nm-local-dir.conf
+x /tmp/hadoop-mapr/nm-local-dir/*

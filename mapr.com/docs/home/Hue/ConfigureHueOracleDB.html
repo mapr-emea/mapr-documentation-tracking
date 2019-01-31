@@ -22,11 +22,14 @@ ln -s libclntsh.so.11.* libclntsh.so
 
     3. Install the Python cx_Oracle package in Hue:
 cd /opt/mapr/hue/hue-<version>
-source ./build/env/bin/activate
+source ./bin/activate
 pip install cx_Oracle
 deactivate
+       Note: Python cx_Oracle version 5.3 is supported.
     4. Configure database connection parameters in the
        [desktop][[database]] section of hue.ini:
+       Note: Make sure that you have the appropriate permissions to use
+       LOBs; for example, SQL GRANT on SYS.DBMS_LOB.
        Note: SID refers to the Oracle system ID, which is used to uniquely
        identify the database.
 [desktop]
@@ -64,12 +67,7 @@ deactivate
     name=node1:1521/hue
 
     5. Perform the initial data migration:
-cd /opt/mapr/hue/hue-<version>
-source ./build/env/bin/activate
-hue syncdb --noinput
-hue migrate
-deactivate
-
+sudo /opt/mapr/server/configure.sh -R
     6. Restart Hue:
 maprcli node services -name hue -action restart -nodes <node_with_hue>
 

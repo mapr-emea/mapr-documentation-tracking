@@ -2,29 +2,37 @@ Establish Communication between Hue and ResourceManagers
 
    If you run YARN applications, integrate Hue with the ResourceManager to
    view the status of applications in the Job Browser.
-   Note: If you installed Hue with the MapR Installer, steps 2-4 are not
-   required as they are performed automatically.
-    1. If high availability for the Resource Manager is not configured,
-       set the default_jobtracker_host to the ResourceManager host and
-       port in the desktop section.
-    2. In the hadoop section, set webhdfs_url to be the node that runs
+   Note: If you installed Hue with the MapR Installer, steps 2 is not
+   required as it is performed automatically.
+    1. Pick the version of MapReduce (MR) you want to use. Set
+       hadoop.yarn_clusters.default.submit_to=True and
+       hadoop.mapred_clusters.default.submit_to=False to use MRv2. Or vice
+       versa to use MRv1. This option is not used in Hue 4.2+, as support
+       of MRv1 was dropped in latest versions of Hue.
+    2. Set hadoop.yarn_clusters.default.resourcemanager_host and
+       hadoop.yarn_clusters.default.resourcemanager_port with RM host and
+       RM IPC ports, respectively. This value is only used to set the
+       <jobTracker> property in Oozie workflows that Hue generates.
+    3. There are 4 other properties in the hadoop.yarn_clusters.default
+       section of the hue.ini file that are in fact used by Hue to access
+       different RM-related REST APIs:
+          + resourcemanager_api_url
+          + proxy_api_url
+          + history_server_api_url
+          + spark_history_server_url
+       The above properties are determined by Hue at runtime by capturing
+       the output of maprcli -urls <service>. And in the case where Hue is
+       not able to get any data from some of these APIs, it reruns the
+       maprcli -urls <service> command to get the updated URL for some of
+       these services.
+    4. In the hadoop section, set webhdfs_url to be the node that runs
        HttpFS.
-    3. In the yarn_clusters section within the hadoop section, set the
+    5. In the yarn_clusters section within the hadoop section, set the
        submit_to value to True.
-    4. In the mapred_clusters section, set the submit_to value to False.
 
 YARN Example
 
 [desktop]
-
-        ...
-        # Set the default JobTracker host to maprfs to enable HA for JobTracker.
-        # If there is a standby JobTracker, it will be found automatically.
-        # In the event of failover, Hue will submit queries to the standby JobTr
-acker.
-        default_jobtracker_host=maprfs:///
-
-        ...
 
         [hadoop]
 

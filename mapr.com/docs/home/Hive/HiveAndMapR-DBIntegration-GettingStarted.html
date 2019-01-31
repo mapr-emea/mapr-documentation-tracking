@@ -1,18 +1,18 @@
-Getting Started with Hive and MapR-DB Integration
+Getting Started with Hive and MapR Database Integration
 
    In this tutorial we will:
      * Create a Hive table
      * Populate the Hive table with data from a text file
      * Query the Hive table
-     * Create a Hive-MapR-DB table
-     * Introspect the Hive-MapR-DB table from the HBase shell
-     * Populate the Hive-MapR-DB table with data from the Hive table
-     * Query the Hive-MapR-DB table from Hive
-     * Convert an existing MapR-DB table into a Hive-MapR table
+     * Create a Hive-MapR Database table
+     * Introspect the Hive-MapR Database table from the HBase shell
+     * Populate the Hive-MapR Database table with data from the Hive table
+     * Query the Hive-MapR Database table from Hive
+     * Convert an existing MapR Database table into a Hive-MapR table
 
    Be sure that you have successfully completed all of the steps in
-   [1]Installing Hive and review the MapR-DB topics before beginning this
-   Getting Started tutorial.
+   [1]Installing Hive and review the MapR Database topics before beginning
+   this Getting Started tutorial.
 
    This Getting Started tutorial is based on the Hive-HBase Integration
    section of the Apache Hive Wiki. However, please note that there are
@@ -67,9 +67,10 @@ Time taken: 18.059 seconds
    Warning:
 
    Hive tables can have multiple identical keys. As we will see shortly,
-   MapR-DB tables cannot have multiple identical keys, only unique keys.
+   MapR Database tables cannot have multiple identical keys, only unique
+   keys.
 
-   Create a Hive-MapR-DB table
+   Create a Hive-MapR Database table
 
    Enter these four lines of code at the Hive prompt:
 hive> CREATE TABLE mapr_table_1(key int, value string)
@@ -83,11 +84,12 @@ OK
 Time taken: 5.195 seconds
 
    Note: The TBLPROPERTIES command is not required, but those new to
-   Hive-MapR-DB integration may find it easier to understand what's going
-   on if Hive and MapR-DB use different names for the same table.
+   Hive-MapR Database integration may find it easier to understand what's
+   going on if Hive and MapR Database use different names for the same
+   table.
 
    In this example, Hive will recognize this table as "mapr_table_1" and
-   MapR-DB will recognize this table as "xyz".
+   MapR Database will recognize this table as "xyz".
 
    Start the HBase shell
 
@@ -107,7 +109,7 @@ TABLE
 /user/mapr/xyz
 1 row(s) in 0.8260 seconds
 
-   HBase recognizes the Hive-MapR-DB table named xyz in directory
+   HBase recognizes the Hive-MapR Database table named xyz in directory
    /user/mapr. This is the same table known to Hive as mapr_table_1.
 
    Display the description of the /user/mapr/xyz table in the HBase shell
@@ -123,15 +125,15 @@ DESCRIPTION                                          ENABLED
 1 row(s) in 0.0240 seconds
 
    From the Hive prompt, insert data from the Hive table pokes into the
-   Hive-MapR-DB table mapr_table_1
+   Hive-MapR Database table mapr_table_1
 hive> INSERT OVERWRITE TABLE mapr_table_1 SELECT * FROM pokes WHERE foo=98;
 ...
 2 Rows loaded to mapr_table_1
 OK
 Time taken: 13.384 seconds
 
-   Query mapr_table_1 to see the data we have inserted into the
-   Hive-MapR-DB table
+   Query mapr_table_1 to see the data we have inserted into the Hive-MapR
+   Database table
 hive> SELECT * FROM mapr_table_1;
 OK
 98      val_98
@@ -139,25 +141,26 @@ Time taken: 0.56 seconds
 
    Even though we loaded two rows from the Hive pokes table that had the
    same key of 98, only one row was actually inserted into mapr_table_1.
-   This is because mapr_table_1 is a MapR-DB table, and although Hive
-   tables support duplicate keys, MapR-DB tables only support unique keys.
-   MapR-DB tables arbitrarily retain only one key, and silently discard
-   all of the data associated with duplicate keys.
+   This is because mapr_table_1 is a MapR Database table, and although
+   Hive tables support duplicate keys, MapR Database tables only support
+   unique keys. MapR Database tables arbitrarily retain only one key, and
+   silently discard all of the data associated with duplicate keys.
 
-   Convert a pre-existing MapR-DB table to a Hive-MapR-DB table
+   Convert a pre-existing MapR Database table to a Hive-MapR Database
+   table
 
-   To convert a pre-existing MapR-DB table to a Hive-MapR-DB table, enter
-   the following four commands at the Hive prompt.
+   To convert a pre-existing MapR Database table to a Hive-MapR Database
+   table, enter the following four commands at the Hive prompt.
 
-   Note that in this example the existing MapR-DB table is my_mapr_table
-   in directory /user/mapr.
+   Note that in this example the existing MapR Database table is
+   my_mapr_table in directory /user/mapr.
 hive> CREATE EXTERNAL TABLE mapr_table_2(key int, value string)
     > STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
     > WITH SERDEPROPERTIES ("hbase.columns.mapping" = "cf1:val")
     > TBLPROPERTIES("hbase.table.name" = "/user/mapr/my_mapr_table");
 
-   Now we can run a Hive query against the pre-existing MapR-DB table
-   /user/mapr/my_mapr_table that Hive sees as mapr_table_2:
+   Now we can run a Hive query against the pre-existing MapR Database
+   table /user/mapr/my_mapr_table that Hive sees as mapr_table_2:
 hive> SELECT * FROM mapr_table_2 WHERE key > 400 AND key < 410;
 Total MapReduce jobs = 1
 Launching Job 1 out of 1
