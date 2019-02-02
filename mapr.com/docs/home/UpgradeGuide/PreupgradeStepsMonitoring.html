@@ -2,15 +2,35 @@ Pre-Upgrade Steps for MapR Monitoring
 
    Complete the following steps before you upgrade MapR Monitoring
    Components with or without the MapR Installer.
-   During an upgrade, a script backs up many of the configuration files.
-   However, it is a best practice to backup the files manually in case an
-   error occurs or if the specific file you customized is not
-   automatically backed up by the script.
-   Note: This upgrade sequence does not implement security in the MapR
-   Monitoring components. If security needs to be configured, you must
-   generate certain files and copy them to the appropriate nodes after
-   upgrading. The [1]Post-Upgrade Steps for MapR Monitoring provide links
-   to the installation procedures that provide this information.
+   During an upgrade using the MapR Installer, a script backs up many of
+   the configuration files. However, whether or not you are upgrading
+   manually or by using the MapR Installer, it is a best practice to back
+   up the files manually in case an error occurs or if the specific file
+   you customized is not automatically backed up by the script.
+   Before performing the pre-upgrade steps, note these important
+   considerations:
+     * The upgrade is an offline upgrade and not a rolling upgrade.
+     * This upgrade procedure is customized for the MapR implementation of
+       the monitoring components. Because the MapR implementation has a
+       narrow focus and there are numerous components, the upgrade steps
+       are designed for efficiency. MapR upgrade documentation does not
+       include all of the upgrade steps that are included in the vendor
+       documentation for each component. Before starting the upgrade
+       process, consider familiarizing yourself with the vendor-upgrade
+       steps to determine if your environment requires extra measures to
+       protect data and configurations.
+          + [1]Elasticsearch upgrade
+          + [2]Kibana upgrade
+          + [3]Search Guard upgrade
+          + [4]Grafana upgrade
+     * This upgrade sequence does not implement security in the MapR
+       Monitoring components. If the cluster you are upgrading is secure,
+       the security keys will be deleted when you upgrade the monitoring
+       packages. You must regenerate the keys and copy them to the
+       appropriate nodes after upgrading. The [5]Post-Upgrade Steps for
+       MapR Monitoring provide links to the installation procedures that
+       provide this information.
+
     1. Before backing up configuration files, ensure that your
        Elasticsearch and Kibana indexes are not affected by the upgrade:
        Note: This step assumes that log monitoring is configured. You can
@@ -19,14 +39,16 @@ Pre-Upgrade Steps for MapR Monitoring
          a. If you are using Elasticsearch version 2.x, upgrade your
             Elasticsearch index to version 6. For upgrade information,
             see:
-            [2]https://www.elastic.co/guide/en/elasticsearch/reference/cur
+            [6]https://www.elastic.co/guide/en/elasticsearch/reference/cur
             rent/reindex-upgrade.html
             You need to upgrade your Elasticsearch index if your cluster
-            is running a MEP in the range 1.1 through 3.0.4. See the
-            following table. MEPs 1.1 through 3.0.4 use Elasticsearch
+            is running a MEP in the range 1.1 through 3.0.x. See the
+            following table. MEPs 1.1 through 3.0.x use Elasticsearch
             version 2.3.3. If your cluster is running a MEP in the range
-            4.0.0 through 5.0.1, you are using Elasticsearch 5.4.1, and
-            you do NOT need to upgrade the index..
+            4.0.0 through 5.0.x, you are using Elasticsearch 5.4.1, and
+            you do NOT need to upgrade the index. For more information
+            about Elasticsearch / Search Guard version information, see
+            [7]this website.
 
                    MEP        Elasticsearch Version
             6.0.0             6.2.3
@@ -38,16 +60,16 @@ Pre-Upgrade Steps for MapR Monitoring
             4.0.0             5.4.1
             3.0.4 and earlier 2.3.3
             For more information about the MapR Monitoring component
-            versions included in each MEP, see [3]Component Versions for
+            versions included in each MEP, see [8]Component Versions for
             Released MEPs.
          b. Create a snapshot of the Kibana index to capture index
             information before the upgrade. This information will be
             restored after the upgrade. For snapshot information, see
-            [4]https://www.elastic.co/guide/en/elasticsearch/reference/5.6
+            [9]https://www.elastic.co/guide/en/elasticsearch/reference/5.6
             /modules-snapshots.html.
     2. Before you upgrade metric monitoring components, create a backup of
        the configuration files to a location outside your MapR
-       installation directory. The following configuration file lists
+       installation directory. The following configuration file-lists
        include files that are commonly used for configuration and may not
        include every file that you may have customized.
           + Collectd configuration files:
@@ -140,7 +162,12 @@ me/IPaddresses> -action stop
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PostUpgradeStepsMapRMonitoring.html#task_nqx_pyr_mz
-   2. https://www.elastic.co/guide/en/elasticsearch/reference/current/reindex-upgrade.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/Component_versions_all_MEPs.html#reference_d1t_x3v_32b
-   4. https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html
+   1. https://www.elastic.co/guide/en/elasticsearch/reference/current/restart-upgrade.html
+   2. https://www.elastic.co/guide/en/kibana/6.5/upgrade-standard.html
+   3. https://docs.search-guard.com/latest/upgrading-560
+   4. http://docs.grafana.org/installation/upgrading/
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PostUpgradeStepsMapRMonitoring.html#task_nqx_pyr_mz
+   6. https://www.elastic.co/guide/en/elasticsearch/reference/current/reindex-upgrade.html
+   7. https://docs.search-guard.com/latest/search-guard-versions#search-guard-versions
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/Component_versions_all_MEPs.html#reference_d1t_x3v_32b
+   9. https://www.elastic.co/guide/en/elasticsearch/reference/5.6/modules-snapshots.html

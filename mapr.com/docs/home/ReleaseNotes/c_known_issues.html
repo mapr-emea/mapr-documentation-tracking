@@ -220,6 +220,23 @@ maprcli config save -values {"mapr.smtp.provider":"smtp"}
 
 maprcli config save -values {"mapr.smtp.provider":"office"}
 
+   MON-4874
+          Description: When MAPR_EXTERNAL environment variable is set, the
+          MCS UI might not be accessible and might return the following
+          error:
+
+HTTP ERROR 503
+           Problem accessing /app/mcs/
+
+          Resolution: Remove entries for tsdbService and amazonS3Service
+          from the /opt/mapr/apiserver/conf/applicationContext.xml file.
+          For example:
+
+         1. Remove the following and save and close the file:
+<bean id="tsdbService" class="com.mapr.admin.service.impl.TsdbServiceImpl"/>
+<bean id="amazonS3Service" class="com.mapr.admin.service.AmazonS3Service"/>
+         2. Restart apiserver.
+
    MON-4862
           Description: The MCS does not start after an upgrade to MapR 6.1
           if the installed license does not have table support enabled.
