@@ -41,14 +41,20 @@ Configure High Availability for Oozie
      <name>oozie.zookeeper.connection.string</name>
      <value>zk1:5181,zk2:5181,zk3:5181</value>
 </property>
-    4. On each Oozie node, edit the oozie-site.xml file to specify the
+    4. On each Oozie node, edit the oozie-site.xml file to include the
+       Oozie server host name:
+<property>
+     <name>oozie.http.hostname</name>
+     <value><FQDN></value>
+</property>
+    5. On each Oozie node, edit the oozie-site.xml file to specify the
        namespace. Each Oozie server that communicates to other Oozie
        servers must use the same namespace:
 <property>
      <name>oozie.zookeeper.namespace</name>
      <value>oozie</value>
 </property>
-    5. On each Oozie node, change the value of the OOZIE_BASE_URL property
+    6. On each Oozie node, change the value of the OOZIE_BASE_URL property
        in the oozie-site.xml file to point to the load balancer or virtual
        IP.
 <property>
@@ -57,25 +63,20 @@ Configure High Availability for Oozie
 </property>
        The [3]<oozie_port_number> depends on whether your cluster is
        secure.
-    6. (Optional) On each Oozie node, change the value of the
-       OOZIE_INSTANCE_ID property in the oozie-env.sh file to make the
-       instance ID of each Oozie server unique. The default value for this
-       property is ${OOZIE_HTTP_HOSTNAME}.
-       export OOZIE_INSTANCE_ID="${OOZIE_HTTP_HOSTNAME}"
     7. On all nodes, update the services line in the warden.oozie.conf
-       file (stored at /opt/mapr/conf/conf.d) from:
+       file (stored at /opt/mapr/conf/conf.d; or for a fresh installation,
+       at /opt/mapr/oozie/oozie-<version>/conf/warden.oozie.conf) from:
 services=oozie:1:cldb
        to
 services=oozie:all:cldb
-    8. Start the Oozie servers. See [4]Starting, Stopping, and Restarting
-       Oozie Services.
+    8. Run the configure.sh -R command.
     9. Run Oozie share lib update command to make sure that all Oozie
        services use the latest and the same version:
-{OOZIE_HOME}/bin/oozie admin -sharelibupdate
+{OOZIE_HOME}/bin/oozie admin -oozie="http(s)://my.loadbalancer.hostname:<oozie_p
+ort_number>" -sharelibupdate
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Oozie/MySQLDataStoreforOozie.html#MySQLDataStoreforOozie
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallationGuide.html#InstallationGuide
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallOozie.html#InstallOozie__step_djg_dp4_qbb
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Oozie/ManageOozieServicesSrtStp.html

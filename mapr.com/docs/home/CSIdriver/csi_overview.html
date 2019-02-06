@@ -1,0 +1,46 @@
+MapR Container Storage Interface (CSI) Storage Plugin Overview
+
+   This page describes how the MapR Container Storage Interface (CSI)
+   Storage Plugin can be used to expose the MapR Data Platform to the
+   containerized workload on Kubernetes.
+
+   The MapR Container Storage Interface (CSI) Storage Plugin is an
+   industry standard interface that Container Orchestration systems can
+   use to expose MapR Data Platform to their containerized workloads.
+   Traditionally, storage vendors had to either write and support multiple
+   volume drivers for different Container Orchestration systems or choose
+   to not support Container Orchestration systems. Using CSI, the same
+   volume driver can be used with different Container Orchestration
+   systems. Also, CSI enables the volume plug-ins to be containerized to
+   make it agnostic to the host underneath, which might run other software
+   such as MapR, allowing both Kubernetes and MapR to co-exist on the same
+   node with CSI support.
+   The MapR Data Fabric for Kubernetes CSI driver:
+     * Allows other software to run on the same node.
+     * Does not require volume plug-ins to be built into the Kubernetes
+       binaries.
+     * Does not require direct access to the machine to deploy volume
+       plug-in.
+
+   The CSI Driver for MapR Data Fabric for Kubernetes consists of .yaml
+   configuration files for installation into Kubernetes. Once installed, a
+   Kubernetes Container Storage Interface (CSI) driver for MaprFS and a
+   Kubernetes Dynamic Volume Provisioner are available for both static and
+   dynamic provisioning of MapR storage.
+
+   The CSI driver uses sidecar containers, which are containers included
+   with the driver for handling Kubernetes events and for communicating
+   with CSI drivers for storage provisioning. Specifically:
+     * The csi-provisioner is used for provisioning and creating a volume
+       for MapR Data Platform.
+     * The csi-driver-registrar is used for registering the driver to the
+       kubelet
+     * The csi-attacher is used for attaching volumes to the node and
+       mounting the volume
+     * The livenessprobe container is used to probe the driver for health
+       and readiness check
+     * The csi-attacher is used for provisioning and creating a snapshot
+       on the MapR Data Platform
+
+   When you install the CSI driver, it creates a DaemonSet Pod for the CSI
+   node service and StatefulSet Pod for CSI controller service.

@@ -23,45 +23,47 @@ Oozie Server secured by default to use SSL
     2. If you want to use a custom SSL configuration, enable [4]custom
        secure on your cluster.
 
-Configuring the Oozie Server to use SSL
+Configuring the Oozie Server to use SSL (Oozie 5.1.0.0 and above)
 
-   Oozie traffic that uses HTTP is not encrypted by default for non-secure
-   clusters and clusters earlier than MEP 4.0. To enable Secure Sockets
-   Layer (SSL) encryption for Oozie, follow these steps:
-    1. Shut down Oozie.
-    2. For Oozie 4.3, specify the path to the keystore and password at
-       /opt/mapr/oozie/oozie-<version>/conf/oozie-env.sh:
-export OOZIE_HTTPS_KEYSTORE_PASS=password
-export OOZIE_HTTPS_KEYSTORE_FILE=${HOME}/.keystore
-    3. As the cluster admin, run the following command:
-# /opt/mapr/oozie/oozie-<version>/bin/oozie-setup.sh -hadoop <version> /opt/mapr
-/hadoop/hadoop-<version> -secure
-    4. Restart Oozie. After the restart, Oozie listens on port 11443
-       instead of 11000. Change the value of the OOZIE_URL environment
-       variable by running the following command:
-$ export OOZIE_URL="https://<fqdn>:11443/oozie"
-       Warning: Using localhost instead of the Oozie server's fully
-       qualified domain name may generate SSL handshake exceptions.
+   Configure the settings necessary for enabling SSL or TLS support in the
+   oozie-site.xml file.
+    1. Set the oozie.https.enabled property to true:
+<property>
+  <name>oozie.https.enabled</name>
+  <value>true</value>
+  <description>Controls whether SSL encryption is enabled.</description>
+</property>
 
-Configuring Oozie Clients to Use SSL (Oozie 4.2.0)
+<property>
+  <name>oozie.https.truststore.file</name>
+  <value>/opt/mapr/conf/ssl_truststore</value>
+  <description>Path to a TrustStore file.</description>
+</property>
 
-   To configure the Oozie clients, follow these steps:
-    1. Export the certificate from the Oozie server node:
-sudo -u mapr keytool -exportcert -alias <alias> -file /opt/mapr/conf/certificate
-.cert -keystore /opt/mapr/conf/ssl_keystore
-    2. Copy /opt/mapr/conf/certificate.cert to all Oozie client nodes.
-    3. On the Oozie client nodes, import the certificate:
-sudo keytool -importcert -alias my.cluster.com -file /opt/mapr/conf/certificate.
-cert -keystore
-${JRE_cacerts}
+<property>
+  <name>oozie.https.keystore.file</name>
+  <value>/opt/mapr/conf/ssl_keystore</value>
+  <description>Path to a KeyStore file.</description>
+</property>
+
+<property>
+  <name>oozie.https.keystore.pass</name>
+  <value><password></value>
+  <description>Password to the KeyStore.</description>
+</property>
+    2. Connect to the Oozie Web UI using SSL (HTTPS):
+https://oozie.server.hostname:11443/oozie
+
+   You can also encrypt the [5]Oozie keystore password. For more
+   information, refer to the [6]open source documentation.
 
 Configuring Oozie Clients to Use SSL (Oozie 4.3.0)
 
    To configure the Oozie clients, follow this step:
      * Specify the path to the keystore and password at
        /opt/mapr/oozie/oozie-<version>/conf/oozie-client-env.sh:
-export OOZIE_CLIENT_OPTS='-
-Djavax.net.ssl.trustStore=/path/to/oozie.truststore'
+export OOZIE_CLIENT_OPTS="${OOZIE_CLIENT_OPTS} -Djavax.net.ssl.trustStore=/opt/m
+apr/conf/ssl_truststore"
 
 Using Kerberos to Securely Authenticate Between the Oozie Client and Server
 
@@ -130,7 +132,7 @@ ncipal MUST start with 'HTTP/' per the Kerberos HTTP SPNEGO specification.
 </property>
      * Optional: If you plan to run Oozie actions that require talking to
        external services, add the oozie.credentials.credentialclasses to
-       oozie-site.xml. For more details, see the [5]Oozie documentation .
+       oozie-site.xml. For more details, see the [7]Oozie documentation.
 <property>
     <name>oozie.credentials.credentialclasses</name>
     <value>
@@ -160,4 +162,6 @@ References
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Oozie/UserImpersonationforOozie.html
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Custom-security-in-mapr.html
-   5. https://oozie.apache.org/docs/4.2.0/DG_ActionAuthentication.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Oozie/EncryptOozieKeystorePassword.html
+   6. https://oozie.apache.org/docs/5.0.0/AG_Install.html#Setting_Up_Oozie_with_HTTPS_SSL.html
+   7. https://oozie.apache.org/docs/5.0.0/DG_ActionAuthentication.html

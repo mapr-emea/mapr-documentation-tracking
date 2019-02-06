@@ -10,9 +10,11 @@ Querying with Select
      * [3]Node.js
      * [4]Python
      * [5]dbshell
+     * [6]C#
+     * [7]Go
 
    The following example shows how to retrieve the _id and address.zipCode
-   fields from all documents in a store using the [6]Query.select method.
+   fields from all documents in a store using the [8]Query.select method.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -161,12 +163,109 @@ for doc in query_result:
 connection.close()
 
    The following two dbshell commands are equivalent to the code examples.
-   See [7]dbshell find or findbyid for more details about the syntax
+   See [9]dbshell find or findbyid for more details about the syntax
    dbshell provides.
 # mapr dbshell
 maprdb root:> find /demo_table --query {"$select":["_id","address.zipcode"]}
 
 maprdb root:> find /demo_table --fields _id,address.zipcode
+
+   The following example shows how to retrieve the _id and address.zipCode
+   fields from all documents in a store using an OJAI query.
+using System;
+using MapRDB.Driver;
+using MapRDB.Driver.Ojai;
+
+public class FindQueryWithSelect
+{
+        public async void FindQueryWithSelect()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        //Create an OJAI query
+        var query = connection.NewQuery().Select("_id", "address.zipCode").Build
+();
+
+        // Options for find request
+        var options = new QueryOptions(1000, true);
+
+        // Fetch OJAI Documents by query
+        var queryResult = store.Find(query, options);
+
+        var documentStream = await queryResult.GetDocumentAsyncStream().GetAllDo
+cuments();
+        // Print OJAI Documents from document stream
+        foreach (var document in documentStream)
+        {
+            Console.WriteLine(document.ToDictionary());
+        }
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following example shows how to retrieve the _id and address.zipCode
+   fields from all documents in a store using an OJAI query.
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Options for find request
+        options := &client.FindOptions{ResultAsDocument: true}
+
+        // Create an OJAI query
+        query := map[string]interface{}{"$select": []interface{}{"_id", "address
+.zipCode"}}
+
+        // Fetch all OJAI Documents from table
+        findResult, err := store.FindQueryMap(query, options)
+
+        // Print OJAI Documents from document stream
+        for _, doc := range findResult.DocumentList() {
+                fmt.Println(doc)
+        }
+
+        // Close connection
+        connection.Close()
+}
 
 References
 
@@ -175,5 +274,7 @@ References
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select2.html#div1sect2
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select2.html#div1sect3
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select2.html#div1sect4
-   6. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select2.html#div1sect5
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select2.html#div1sect6
+   8. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html

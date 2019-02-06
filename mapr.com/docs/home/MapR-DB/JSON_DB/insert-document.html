@@ -7,12 +7,14 @@ Examples: Inserting JSON Documents
      * [2]Node.js
      * [3]Python
      * [4]dbshell
+     * [5]C#
+     * [6]Go
 
    The following code is available at
-   [5]OJAI_002_GetStoreAndInsertDocuments.java.
+   [7]OJAI_002_GetStoreAndInsertDocuments.java.
 
    After you create the JSON document from a JavaBean, call the
-   [6]DocumentStore.insertOrReplace method to insert the document into
+   [8]DocumentStore.insertOrReplace method to insert the document into
    MapR Database.
 /**
  * Copyright (c) 2017 MapR, Inc.
@@ -74,10 +76,10 @@ n
 }
 
    The following code is available at
-   [7]OJAI_002_GetStoreAndInsertDocuments.js.
+   [9]OJAI_002_GetStoreAndInsertDocuments.js.
 
    The following code creates a list of JSON objects and then calls the
-   [8]DocumentStore.insertOrReplace method to insert the document into
+   [10]DocumentStore.insertOrReplace method to insert the document into
    MapR Database.
 /*
  * Copyright (c) 2018 MapR, Inc.
@@ -172,10 +174,10 @@ ConnectionManager.getConnection(connectionString)
   });
 
    The following code is available at
-   [9]002_get_store_and_insert_documents.py.
+   [11]002_get_store_and_insert_documents.py.
 
    The following code creates a list of JSON dictionary objects, creates
-   [10]Document objects, and calls the [11]DocumentStore.insert_or_replace
+   [12]Document objects, and calls the [13]DocumentStore.insert_or_replace
    method to insert the documents into MapR Database.
 from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
 
@@ -249,7 +251,7 @@ for doc_dict in document_list:
 connection.close()
 
    The following shows the syntax to insert a document with MapR Database
-   Shell. See [12]dbshell insert for more information and examples.
+   Shell. See [14]dbshell insert for more information and examples.
 # mapr dbshell
 maprdb root:>
 
@@ -260,17 +262,238 @@ maprdb root:> insert <table path> --value '{"_id": "<row-key", < table field >}'
 maprdb root:> insert <table path> --id <row-key> --value '{"_id": "<row-key", <
 table field >}'
 
+   The following code is available at
+   [15]002_GetStoreAndInsertDocuments.cs.
+
+   The following code creates a list of JSON strings, creates Documents
+   from the list, and calls the DocumentStore.InsertOrReplace method to
+   insert the documents into the MapR Database.
+using System;
+using MapRDB.Driver;
+using System.Collections.Generic;
+
+public class GetStoreAndInsertDocuments
+{
+        public void GetStoreAndInsertDocuments()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        if (!connection.StoreExist("/demo_table"))
+            connection.CreateStore("/demo_table");
+        var store = connection.GetStore("/demo_table");
+
+        var documentList = new List<string>
+            {
+                @"{""_id"":""user0000""," +
+                @"""age"":{""$numberInt"":""35""}," +
+                @"""firstName"":""John""," +
+                @"""lastName"":""Doe""," +
+                @"""address"":{" +
+                    @"""street"":""350 Hoger Way""," +
+                    @"""city"":""San Jose""," +
+                    @"""state"":""CA""," +
+                    @"""zipCode"":{""$numberLong"":""95134""}" +
+                    @"}," +
+                @"""phoneNumbers"":[" +
+                    @"{""areaCode"":{""$numberInt"":""555""},""number"":{""$numb
+erLong"":""5555555""}}," +
+                    @"{""areaCode"":""555"",""number"":""555-5556""}]" +
+                @"}",
+                @"{""_id"":""user0001""," +
+                @"""age"":{""$numberInt"":""26""}," +
+                @"""firstName"":""Jane""," +
+                @"""lastName"":""Dupont""," +
+                @"""address"":{" +
+                    @"""street"":""320 Blossom Hill Road""," +
+                    @"""city"":""San Jose""," +
+                    @"""state"":""CA""," +
+                    @"""zipCode"":{""$numberLong"":""95196""}" +
+                    @"}," +
+                @"""phoneNumbers"":[" +
+                    @"{""areaCode"":{""$numberInt"":""555""},""number"":{""$numb
+erLong"":""5553827""}}," +
+                    @"{""areaCode"":""555"",""number"":""555-6289""}]" +
+                @"}",
+                @"{""_id"":""user0002""," +
+                @"""age"":{""$numberInt"":""45""}," +
+                @"""firstName"":""Simon""," +
+                @"""lastName"":""Davis""," +
+                @"""address"":{" +
+                    @"""street"":""38 De Mattei Court""," +
+                    @"""city"":""San Jose""," +
+                    @"""state"":""CA""," +
+                    @"""zipCode"":{""$numberLong"":""95142""}" +
+                    @"}," +
+                @"""phoneNumbers"":[" +
+                    @"{""areaCode"":{""$numberInt"":""555""},""number"":{""$numb
+erLong"":""5425639""}}," +
+                    @"{""areaCode"":""555"",""number"":""542-5656""}]" +
+                @"}"
+            };
+
+        foreach (var doc in documentList)
+        {
+            // Create new document from json string
+            var document = connection.NewDocument(doc);
+
+            // Print the OJAI Document
+            Console.WriteLine(document.ToJsonString());
+
+            // Insert the OJAI Document into the DocumentStore
+            store.InsertOrReplace(document);
+        }
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following code is available at
+   [16]002_get_store_and_insert_documents.go.
+
+   The following code creates a list of JSON dictionary objects, creates
+   [17]Document objects, and calls the
+   [18]DocumentStore.InsertOrReplaceDocument function to insert the
+   documents into MapR Database.
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        isExists, err := connection.IsStoreExists(storeName)
+        if err != nil {
+                panic(err)
+        }
+        var store *client.DocumentStore
+        if isExists {
+                store, err = connection.GetStore(storeName)
+                if err != nil {
+                        panic(err)
+                }
+        } else {
+                store, err = connection.CreateStore(storeName)
+                if err != nil {
+                        panic(err)
+                }
+        }
+
+        // Slice of maps from which the Document will be created
+        documentArray := []map[string]interface{}{
+                {
+                        "_id":       "user0000",
+                        "age":       35,
+                        "firstName": "John",
+                        "lastName":  "Doe",
+                        "address": map[string]interface{}{
+                                "street":  "350 Hoger Way",
+                                "city":    "San Jose",
+                                "state":   "CA",
+                                "zipCode": 95134,
+                        },
+                        "phoneNumbers": []interface{}{
+                                map[string]interface{}{"areaCode": 555, "number"
+: 5555555},
+                                map[string]interface{}{"areaCode": "555", "numbe
+r": "555-5556"},
+                        },
+                },
+                {
+                        "_id":       "user0001",
+                        "age":       26,
+                        "firstName": "Jane",
+                        "lastName":  "Dupont",
+                        "address": map[string]interface{}{
+                                "street":  "320 Blossom Hill Road",
+                                "city":    "San Jose",
+                                "state":   "CA",
+                                "zipCode": 95196,
+                        },
+                        "phoneNumbers": []interface{}{
+                                map[string]interface{}{"areaCode": 555, "number"
+: 5553827},
+                                map[string]interface{}{"areaCode": "555", "numbe
+r": "555-6289"},
+                        },
+                },
+                {
+                        "_id":       "user0002",
+                        "age":       45,
+                        "firstName": "Simon",
+                        "lastName":  "Davis",
+                        "address": map[string]interface{}{
+                                "street":  "38 De Mattei Court",
+                                "city":    "San Jose",
+                                "state":   "CA",
+                                "zipCode": 95142,
+                        },
+                        "phoneNumbers": []interface{}{
+                                map[string]interface{}{"areaCode": 555, "number"
+: 5425639},
+                                map[string]interface{}{"areaCode": "555", "numbe
+r": "542-5656"},
+                        },
+                },
+        }
+
+        for _, docMap := range documentArray {
+                // Create new document from json_document
+                newDocument := connection.CreateDocumentFromMap(docMap)
+                // Print the new OJAI Document
+                fmt.Println(newDocument.AsJsonString())
+                //Insert the OJAI Document into the DocumentStore
+                store.InsertOrReplaceDocument(newDocument)
+        }
+
+        // Close connection
+        connection.Close()
+}
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect1
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect2
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect3
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect4
-   5. https://github.com/mapr-demos/ojai-examples/blob/master/java/src/main/java/com/mapr/ojai/examples/OJAI_002_GetStoreAndInsertDocuments.java
-   6. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#insertOrReplace-org.ojai.Document-
-   7. https://github.com/mapr-demos/ojai-examples/blob/master/nodejs/OJAI_002_GetStoreAndInsertDocuments.js
-   8. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#insertorreplace
-   9. https://github.com/mapr-demos/ojai-examples/blob/master/python/002_get_store_and_insert_documents.py
-  10. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1_document_1_1_document.html
-  11. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#a581680ef41e95e166c58fec952bf5578
-  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-insert.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect5
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/insert-document.html#div1sect6
+   7. https://github.com/mapr-demos/ojai-examples/blob/master/java/src/main/java/com/mapr/ojai/examples/OJAI_002_GetStoreAndInsertDocuments.java
+   8. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#insertOrReplace-org.ojai.Document-
+   9. https://github.com/mapr-demos/ojai-examples/blob/master/nodejs/OJAI_002_GetStoreAndInsertDocuments.js
+  10. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#insertorreplace
+  11. https://github.com/mapr-demos/ojai-examples/blob/master/python/002_get_store_and_insert_documents.py
+  12. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1_document_1_1_document.html
+  13. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#a581680ef41e95e166c58fec952bf5578
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-insert.html
+  15. https://github.com/mapr-demos/ojai-examples/blob/master/csharp/002_GetStoreAndInsertDocuments.cs
+  16. https://github.com/mapr-demos/ojai-examples/blob/master/golang/002_get_store_and_insert_documents.go
+  17. https://mapr.com/docs/apidocs/61/ojai/go/#Document
+  18. https://mapr.com/docs/apidocs/61/ojai/go/#DocumentStore.InsertOrReplaceDocument

@@ -1,0 +1,69 @@
+Static and Dynamic Volume Provisioning Using MapR Container Storage Interface
+(CSI) Storage Plugin
+
+   Kubernetes makes a distinction between static and dynamic provisioning
+   of storage.
+     * [1]Static Provisioning
+     * [2]Dynamic Provisioning
+
+   In static provisioning, a MapR administrator first creates MapR volumes
+   (mount points) and then ensures that they are mounted, and a Kubernetes
+   administrator exposes those MapR mount points in Kubernetes through
+   Kubernetes PersistentVolumes. In a typical static-provisioning
+   scenario, a Pod author requests that a Kubernetes admin create a
+   PersistentVolume that references an existing MapR mount point with a
+   dataset that the Pod author is interested in. This PersistentVolume
+   references the CSI driver. The CSI Driver mounts and unmounts MapR
+   mount points for the requesting Pod. In addition, CSI supports the
+   creation of a PersistentVolume directly by creating a
+   PersistentVolumeClaim. The Pod author requests that a Kubernetes admin
+   to create a PersistentVolume that points to the CSI driver and
+   references an existing MapR mount point.
+
+   In dynamic provisioning, a Kubernetes administrator creates a set of
+   StorageClasses pointing to the CSI provisioner for MapR Data Fabric.
+   Each StorageClass has a predefined set of storage characteristics.
+   Examples of these characteristics include the CLDB hosts, REST server
+   hosts, provisioner secret name and namespace, MapR volume name prefix,
+   MapR volume mount path, and volume advisory quota size. The Pod creator
+   searches the predefined Storage Classes for the one that best matches
+   the creator’s requirements. When the Pod references this StorageClass
+   through a PersistentVolumeClaim, the StorageClass calls the CSI
+   Provisioner for MapR Data Fabric to allocate storage for the requesting
+   Pod dynamically and creates the volume.
+
+   To leverage MapR Filesystem with a Kubernetes cluster, you can create a
+   PersistentVolume in Kubernetes. This diagram shows the two ways in
+   which the PersistentVolume can be provisioned:
+   [StaticVsDynamicProvisioning.png]
+     * [3]Static Provisioning Implementation
+     * [4]Dynamic Provisioning Implementation
+
+   To accomplish static provisioning, the CSI Driver for MapR Data Fabric
+   for Kubernetes is deployed to all nodes in the Kubernetes cluster via a
+   Kubernetes [5]DaemonSet. The CSI Driver uses the Basic, which is the
+   default, or the optional Platinum [6]POSIX client to mount the MapR
+   file system. The information that the POSIX client uses to connect to
+   MapR is contained in a Kubernetes Volume or PersistentVolume. A MapR
+   ticket inside a Secret, referenced by the Kubernetes Volume or
+   PersistentVolume spec, is used by the POSIX client to pass secure data
+   to the filesystem.
+
+   To accomplish dynamic provisioning, the CSI provisioner is deployed as
+   a StatefulSet in the Kubernetes cluster.
+
+   A Kubernetes Administrator must configure at least one storage class
+   with MapR parameters (for example, mirroring, snapshots, quotas, and
+   other parameters) for use during creation of the MapR volume. The
+   storage class passes MapR administrative credentials to the provisioner
+   through a Kubernetes Secret. Security for the provisioner is handled
+   through role-based access control (RBAC) in Kubernetes.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_static_dynamic_provisioning.html#div1sect1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_static_dynamic_provisioning.html#div1sect2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_static_dynamic_provisioning.html#div2sect1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_static_dynamic_provisioning.html#div2sect2
+   5. https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/MapRPOSIXfuseClient-prerequirements.html#concept_ssm_5bm_s5

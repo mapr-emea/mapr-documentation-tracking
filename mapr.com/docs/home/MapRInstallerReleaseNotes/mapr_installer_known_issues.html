@@ -3,6 +3,98 @@ MapR Installer Known Issues
    This topic describes some MapR Installer known issues that you should
    be aware of while troubleshooting.
    Issue Description
+   IN-1940 In MapR Installer [1]versions 1.9 and earlier, the [2]probe
+   command can fail because of a runtime error if you have installed the
+   Operational Applications with MapR-DB [3]template. The error is caused
+   by the presence of the mapr-drill-internal package. Any node running
+   the MapR Data Access Gateway requires the mapr-drill-internal package
+   to be installed even though Drill is not installed as a service. The
+   mapr-drill-internal package provides a set of client libraries used by
+   the MapR Data Access Gateway.
+
+   Workaround Before using the probe command, [4]update the MapR
+   Installer. The probe command is fixed in versions 1.10 and later.
+   IN-1635 In MapR Installer Stanza [5]versions 1.9 and earlier, the
+   [6]probe command was hard coded with a cluster admin user of mapr. If
+   you configured a cluster admin user other than mapr, the
+   probe-generated YAML file could not be imported using the import
+   command.
+
+   Workaround Before using the probe command, [7]update the MapR Installer
+   to version 1.10 or later. Or, if you must use version 1.9 or earlier,
+   edit the probe-generated YAML file to specify the correct cluster admin
+   user.
+   IN-2123 In a secure cluster, the Extend Cluster operation fails if you
+   try to extend the control group. The new control node cannot join the
+   cluster because it inadvertently receives a new set of keys. This issue
+   affects versions 1.7 through 1.10 of the MapR Installer and is fixed in
+   MapR Installer 1.10.0.201812181130 and later [8]versions.
+
+   Workaround You can resolve the issue by manually copying mapruserticket
+   into the /opt/mapr/conf directory of the node to be added to the
+   cluster.
+   IN-2141 The following issue applies to MapR Installer versions 1.7
+   through 1.10 (not all 1.10 versions). The issue is fixed in MapR
+   Installer 1.10.0.201812181130 and later [9]versions.
+   An extend cluster (add node) operation can fail when you:
+    1. Install a MapR 6.x cluster manually with security enabled.
+    2. Run the MapR Installer Stanza probe command on the cluster or on a
+       node to be added to the cluster.
+    3. Use the import command to import the probe .yaml file into the
+       Installer.
+    4. Perform an extend cluster operation immediately after the import
+       operation.
+
+   The extend cluster operation fails because keystore, truststore, and
+   MapR server ticket (maprserverticket) files are not present on the
+   installer node.
+   Workaround Before attempting the extend cluster operation, copy the
+   keystore, truststore, and MapR server ticket (maprserverticket) files
+   from any CLDB node to /opt/mapr/installer/data/tmp on the installer
+   node. The files that need to be copied are:
+     * cldb.key
+     * dare.master.key*
+     * maprserverticket
+     * ssl_keystore
+     * ssl_keystore.p12
+     * ssl_keystore.pem
+     * ssl_truststore
+     * ssl_truststore.p12
+     * ssl_truststore.pem
+
+   *The DARE master key is required only if DARE is enabled.
+
+   If metrics monitoring is configured on the cluster, you must also copy
+   the tickets related to Fluentd, Kibana, and Elasticsearch to the same
+   location.
+   IN-2217 During an upgrade to MEP 6.1.0 using the MapR Installer, the
+   MapR Installer does not back up the Drill conf, log, and jar
+   directories into ${MAPR_HOME}/drill/OLD_DRILL_VERSIONS. This can happen
+   when you upgrade Drill from a fairly old version (for example, Drill
+   1.10 in MEP 3.0) to Drill 1.15.0.0 in MEP 6.1.0.
+
+   Recent packaging changes in Drill contribute to this issue. Drill 1.10
+   consists only of mapr-drill-1.10 (role and binaries), whereas Drill
+   1.15.0.0 consists of mapr-drill-1.15 (roles) and
+   mapr-drill-internal-1.15 (binaries). During the upgrade, the
+   mapr-drill-1.10 binaries are successfully uninstalled, but the
+   OLD_DRILL_VERSIONS directory that is needed to back up Drill 1.10 is
+   not created.
+   Workaround Before upgrading, perform the following steps:
+    1. Shut down the mapr-drill-1.10 Drillbits.
+    2. Create ${MAPR_HOME}/drill/OLD_DRILL_VERSIONS/drill-1.10.
+    3. Copy the following directories of mapr-drill-1.10 into the
+       OLD_DRILL_VERSIONS directory:
+         a. Copy the conf directory to
+            ${MAPR_HOME}/drill/OLD_DRILL_VERSIONS/drill-1.10.0/conf.
+         b. Copy the logs directory to
+            ${MAPR_HOME}/drill/OLD_DRILL_VERSIONS/drill-1.10.0/logs.
+         c. Copy the jars/3rdparty directory to
+            ${MAPR_HOME}/drill/OLD_DRILL_VERSIONS/drill-1.10.0/jars.
+    4. Proceed with the upgrade.
+    5. After successfully upgrading and starting mapr-drill-1.15.0.0, you
+       may remove the ${MAPR_HOME}/drill/drill-1.10.0 directory.
+
    IN-1915 During an upgrade using the MapR Installer, refreshing the
    browser page can cause the Installer to forget upgrade parameters that
    were specified before the refresh.
@@ -25,7 +117,7 @@ MapR Installer Known Issues
        safe to retry the upgrade at this point.
 
    For more information about the Reset Installer and Import State
-   commands, see [1]Resetting the Installer Database and [2]Importing or
+   commands, see [10]Resetting the Installer Database and [11]Importing or
    Exporting the Cluster State.
    IN-2065 /mapr sometimes does not get mounted after you enable NFS (v3
    or v4) using the MapR Installer Incremental Install function. The
@@ -52,9 +144,9 @@ maprcli node services -nodes <node names> -nfs4 start
     2. Run the mount_local_fs.pl script to mount /mapr:
 /opt/mapr/bin/mount_local_fs.pl
 
-   INFO-420 The procedure for [3]Configuring Storage using disksetup does
+   INFO-420 The procedure for [12]Configuring Storage using disksetup does
    not work for new installations of DARE-enabled MapR 6.1 clusters. With
-   [4]DARE enabled, disksetup fails on any node that is not a CLDB node
+   [13]DARE enabled, disksetup fails on any node that is not a CLDB node
    because there is no local copy of the dare.master.key file. When you
    use disksetup, non-CLDB nodes try to contact the CLDB, which must be
    running when the nodes attempt contact.
@@ -96,14 +188,14 @@ https://drill.apache.org/docs/rest-api-introduction/#delete-/storage/{name}.json
    to uninstall the node later when the node is reachable.
 
    Workaround Uninstall the MapR software on the node manually. See
-   [5]Decommissioning a Node and Uninstalling MapR Software from the
+   [14]Decommissioning a Node and Uninstalling MapR Software from the
    Command-line.
    IN-2015 A fresh install of MapR 6.0.0 with MEP 4.1.1 using MapR
    Installer 1.9 can fail with the following error message:
 file not found: /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg
 /admin-usr-clientCombo.pem
 
-   Workaround [6]Update the installer to version 1.10 or later, and retry
+   Workaround [15]Update the installer to version 1.10 or later, and retry
    the operation.
    IN-2018 Logging on to Kibana results in an authentication failure. This
    can happen on a CentOS cluster if you use MapR Installer 1.10 to
@@ -111,8 +203,8 @@ file not found: /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg
    6.0.0.
 
    Workaround Try using Mapr Installer 1.9 to install the MapR 6.0.1
-   cluster and MapR Installer 1.10 to upgrade the cluster. See [7]Updating
-   the MapR Installer.
+   cluster and MapR Installer 1.10 to upgrade the cluster. See
+   [16]Updating the MapR Installer.
    CORE-150 After using the Incremental Install function of the MapR
    Installer to apply security to an Azure-based MapR 6.1.0 cluster, the
    Hue and Spark-thrift server links are not accessible in the Installer
@@ -177,7 +269,7 @@ file not found: /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg
      * Uninstall
 
    Workaround: Do not use the Previous button during startup.
-   IN-1657 After [8]updating MapR Installer 1.7 or later, the Installer
+   IN-1657 After [17]updating MapR Installer 1.7 or later, the Installer
    can lose awareness that a cluster was previously installed. For
    example, the MapR Installer might indicate the need for a fresh
    install.
@@ -190,7 +282,7 @@ file not found: /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg
        safe to use the MapR Installer at this point.
 
    IN-1084 For MapR 6.0 or later clusters, enabling security by using the
-   [9]Incremental Install function can overwrite custom certificates in
+   [18]Incremental Install function can overwrite custom certificates in
    the ssl_truststore and ssl_keystore files. When you turn on security,
    the MapR Installer runs the configure.sh script on the CLDB master node
    to generate security keys and then distributes the keys to all the
@@ -206,7 +298,7 @@ file not found: /opt/mapr/elasticsearch/elasticsearch-5.4.1/etc/elasticsearch/sg
    merge or add them into the new ssl_keystore and ssl_truststore files.
 
    To merge the files, you can use the /opt/mapr/server/manageSSLKeys.sh
-   utility, as shown in [10]Configuring Secure Clusters for Running
+   utility, as shown in [19]Configuring Secure Clusters for Running
    Commands Remotely.
    IN-997 When using MapR Installer 1.9 with Ubuntu distributions, an
    upgrade of the MapR Installer definitions requires a restart of the
@@ -269,7 +361,7 @@ nValueError: need more than 1 value to unpack
 
    Workaround: Do not use an IP address for node configuration with the
    MapR Installer. If you already used an IP address, change the IP
-   address in the [11]yarn-site.xml file on all nodes. In the following
+   address in the [20]yarn-site.xml file on all nodes. In the following
    example, the 10.10.10.7 IP address must be changed to a host name, such
    as bld73.qa.lab:
 <property>
@@ -286,14 +378,14 @@ service mapr-installer restart
 
    IN-907 The MapR Installer service fails if the mapr user or root user
    already exist and they are configured to use a shell other than bash.
-   For more information about user requirements, see the [12]MapR
+   For more information about user requirements, see the [21]MapR
    Installer Prerequisites and Guidelines.
    IN-1079 Verification fails when the installed language pack is for a
    language other than English.
    Workaround: Remove the non-English language pack and install the
    English language pack. In the following example, the non-English
    language pack is shown as German. Also, make sure your system locale is
-   set to en_us, as described in [13]Infrastructure.
+   set to en_us, as described in [22]Infrastructure.
 sudo apt-get install language-pack-en language-pack-en-base manpages
 sudo apt-get remove language-pack-de language-pack-de-base manpages-de
 
@@ -302,7 +394,7 @@ sudo apt-get remove language-pack-de language-pack-de-base manpages-de
    This issue applies to MapR Installer versions 1.6 and earlier.
 
    Workaround: Update the MapR Installer to version 1.7 or later, and
-   retry the operation. See [14]Updating the MapR Installer.
+   retry the operation. See [23]Updating the MapR Installer.
    IN-1314 When you use the MapR Installer to install ecosystem components
    that require a MySQL component such as Hive, Oozie, or Hue, the
    passwords you provide to install the MySQL database are displayed in
@@ -326,16 +418,16 @@ sudo apt-get remove language-pack-de language-pack-de-base manpages-de
 
    Workaround: None.
    IN-870 If your cluster uses 2-digit MEPs, and you use the MapR
-   Installer [15]Extend Cluster button to add a node, the node can be
+   Installer [24]Extend Cluster button to add a node, the node can be
    added with a patch version that is different from the patch version of
-   other nodes in the cluster. See [16]Understanding Two-Digit and
+   other nodes in the cluster. See [25]Understanding Two-Digit and
    Three-Digit MEPs.
 
    A one-time change can prevent this issue. After updating the MapR
    Installer from version 1.5 to version 1.6 or later, but before
-   performing any MapR Installer operations, use an [17]Incremental
+   performing any MapR Installer operations, use an [26]Incremental
    Install to change your 2-digit MEP version to the equivalent 3-digit
-   MEP version. See [18]Updating the MapR Installer.
+   MEP version. See [27]Updating the MapR Installer.
    ES-27, IN‑1387 On a new installation of a secure cluster using the MapR
    Installer, Elasticsearch fails to start, and logs indicate that
    Elasticsearch key generation failed. When this happens, Kibana and
@@ -346,9 +438,9 @@ sudo apt-get remove language-pack-de language-pack-de-base manpages-de
    Elasticsearch could not be secured. Use the Incremental Install feature
    of the MapR Installer to retry installation of the MapR Monitoring
    logging components. Alternatively, you can configure security for the
-   logging components manually. See [19]Step 9: Install Log Monitoring.
+   logging components manually. See [28]Step 9: Install Log Monitoring.
    IN-1332 On clusters with less than the recommended memory configuration
-   (16 GB per node), services added during an [20]Incremental Install
+   (16 GB per node), services added during an [29]Incremental Install
    operation might fail to start because Warden allocated available memory
    to the MapR file system. The MapR Installer might not indicate a
    problem with the newly added services. If this issue occurs, the MapR
@@ -362,7 +454,7 @@ sudo apt-get remove language-pack-de language-pack-de-base manpages-de
    restart of the nodes to which the new services were added. The rolling
    restart will rebalance memory across the file system and services. One
    node at a time, restart Warden on each node following the group upgrade
-   order prescribed in [21]Manual Rolling Upgrade Description. Use the
+   order prescribed in [30]Manual Rolling Upgrade Description. Use the
    following steps:
     1. Change to the root user (or use sudo for the following commands).
     2. Stop Warden.
@@ -372,7 +464,7 @@ service mapr-warden start
 
    IN-1339 Installation fails with the MapR Installer reporting an
    Unexpected failure during module execution, and the following entry is
-   present in the [22]Logs for the MapR Installer:
+   present in the [31]Logs for the MapR Installer:
 os.write(self.sshpass_pipe[1], to_bytes(self._play_context.password) + b'\n')
 OSError: [Errno 9] Bad file descriptor
 
@@ -384,9 +476,9 @@ OSError: [Errno 9] Bad file descriptor
 
    Workaround: If you are installing on Ubuntu 14.04, you must install
    Java JDK 1.8 before running the MapR Installer. For more information,
-   see [23]this website. If you are installing on RHEL/CentOS or SUSE, the
+   see [32]this website. If you are installing on RHEL/CentOS or SUSE, the
    MapR Installer installs Java JDK 1.8 for you.
-   IN-405 MapR installation or [24]cluster import fails with the error
+   IN-405 MapR installation or [33]cluster import fails with the error
    message: "Failed to resolve remote temporary directory from
    ansible-tmp- ...."
 
@@ -414,7 +506,7 @@ ssh_args=-o ControlMaster=no -o ControlPath=none -o ControlPersist=no
    reinstall or rebuild the database by using Stanza commands. You can use
    the reset command, followed by probe, and then edit the versions in the
    resulting YAML file. The last step is to import the edited YAML using
-   the import command. See [25]Using probe and import to Generate the
+   the import command. See [34]Using probe and import to Generate the
    Installer Database.
    N/A The MapR Installer Web Interface can inadvertently deselect
    services that you have selected, preventing them from being installed.
@@ -441,7 +533,7 @@ ssh_args=-o ControlMaster=no -o ControlPath=none -o ControlPersist=no
    version.
 
    Workaround: Use the MapR Installer Stanzas probe and import commands to
-   update the installer database. See [26]Using probe and import to
+   update the installer database. See [35]Using probe and import to
    Generate the Installer Database.
    MapR-19727 On nodes running RedHat/CentOS 6.5 or older, JDK 1.7 may
    cause an SSL connection error when you attempt to access the MapR
@@ -522,29 +614,38 @@ p
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/ResettingInstallerDB.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/importing_or_exporting_cluster_state.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingMapRSoftware-config-node-storage.html#InstallingMapRSoftware-config-node-storage
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Encryption.html#concept_f4z_n2m_xt
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/t_decommissioning_node.html#RemovingNodesfromaCluster_26982476-d3e232
-   6. https://mapr.com/docs/home/UpgradeGuide/c_installer_update.html
+   1. https://mapr.com/docs/home/MapRInstallerReleaseNotes/maprinstallerupdates.html
+   2. https://mapr.com/docs/home/AdvancedInstallation/Stanzas/UsingProbeImport.html
+   3. https://mapr.com/docs/home/AdvancedInstallation/auto-provisioning-templates.html
+   4. https://mapr.com/docs/home/UpgradeGuide/c_installer_update.html
+   5. https://mapr.com/docs/home/MapRInstallerReleaseNotes/maprinstallerupdates.html
+   6. https://mapr.com/docs/home/AdvancedInstallation/Stanzas/UsingProbeImport.html
    7. https://mapr.com/docs/home/UpgradeGuide/c_installer_update.html
-   8. https://maprdocs.mapr.com/home/UpgradeGuide/c_installer_update.html
-   9. https://maprdocs.mapr.com/home/AdvancedInstallation/Using_incremental_install_function.html
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/RunningCommandsOnRemoteSecureClusters.html#RunningCommandsonRemoteSe_28220824-d3e79
-  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/yarn-site.xml.html#reference_eqn_dbx_pt
-  12. https://maprdocs.mapr.com/home/AdvancedInstallation/c_install_prerequisites.html
-  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/PreparingEachNode-infrastructure.html#PreparingEachNode-infrastructure
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/c_installer_update.html
-  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/ExtendCluster.html
-  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Understand_2_3_Digit_MEPs.html
-  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Using_incremental_install_function.html
-  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/c_installer_update.html
-  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallLogging.html#task_azg_llj_yv
-  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Using_incremental_install_function.html
-  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Manual-Rolling-Upgrade.html#ManualRollingUpgradeto5.0
-  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallerLogs.html
-  23. https://askubuntu.com/questions/464755/how-to-install-openjdk-8-on-14-04-lts
-  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/UsingProbeImport.html#concept_oct_r3y_jz
-  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/UsingProbeImport.html#concept_oct_r3y_jz
-  26. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/UsingProbeImport.html#concept_oct_r3y_jz
+   8. https://mapr.com/docs/home/MapRInstallerReleaseNotes/maprinstallerupdates.html
+   9. https://mapr.com/docs/home/MapRInstallerReleaseNotes/maprinstallerupdates.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/ResettingInstallerDB.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/importing_or_exporting_cluster_state.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingMapRSoftware-config-node-storage.html#InstallingMapRSoftware-config-node-storage
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Encryption.html#concept_f4z_n2m_xt
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/t_decommissioning_node.html#RemovingNodesfromaCluster_26982476-d3e232
+  15. https://mapr.com/docs/home/UpgradeGuide/c_installer_update.html
+  16. https://mapr.com/docs/home/UpgradeGuide/c_installer_update.html
+  17. https://maprdocs.mapr.com/home/UpgradeGuide/c_installer_update.html
+  18. https://maprdocs.mapr.com/home/AdvancedInstallation/Using_incremental_install_function.html
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/RunningCommandsOnRemoteSecureClusters.html#RunningCommandsonRemoteSe_28220824-d3e79
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/yarn-site.xml.html#reference_eqn_dbx_pt
+  21. https://maprdocs.mapr.com/home/AdvancedInstallation/c_install_prerequisites.html
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/PreparingEachNode-infrastructure.html#PreparingEachNode-infrastructure
+  23. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/c_installer_update.html
+  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/ExtendCluster.html
+  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Understand_2_3_Digit_MEPs.html
+  26. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Using_incremental_install_function.html
+  27. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/c_installer_update.html
+  28. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallLogging.html#task_azg_llj_yv
+  29. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Using_incremental_install_function.html
+  30. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/Manual-Rolling-Upgrade.html#ManualRollingUpgradeto5.0
+  31. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallerLogs.html
+  32. https://askubuntu.com/questions/464755/how-to-install-openjdk-8-on-14-04-lts
+  33. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/UsingProbeImport.html#concept_oct_r3y_jz
+  34. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/UsingProbeImport.html#concept_oct_r3y_jz
+  35. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/Stanzas/UsingProbeImport.html#concept_oct_r3y_jz

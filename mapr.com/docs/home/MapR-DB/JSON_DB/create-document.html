@@ -5,8 +5,10 @@ Sample OJAI Code for Creating JSON Documents
      * [1]Java
      * [2]Node.js
      * [3]Python
+     * [4]C#
+     * [5]Go
 
-   The code is available at [4]OJAI_001_GetConnectionCreateDocument.java.
+   The code is available at [6]OJAI_001_GetConnectionCreateDocument.java.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -63,7 +65,7 @@ n
 
 }
 
-   The code is available at [5]OJAI_001_GetConnectionCreateDocument.js.
+   The code is available at [7]OJAI_001_GetConnectionCreateDocument.js.
 /*
  * Copyright (c) 2018 MapR, Inc.
  *
@@ -112,7 +114,7 @@ n
     connection.close();
   });
 
-   The code is available at [6]001_get_connection_create_document.py.
+   The code is available at [8]001_get_connection_create_document.py.
 from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
 
 # Create a connection to data access server
@@ -140,11 +142,112 @@ print(new_document.as_json_str())
 # close the OJAI connection
 connection.close()
 
+   The code is available at [9]001_GetConnectionCreateDocument.cs.
+using System;
+using MapRDB.Driver;
+
+public class GetConnectionCreateDocument
+{
+    public void GetConnectionCreateDocument()
+    {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Json string
+        var jsonStr =
+            @"{" +
+                @"""_id"":""id001""," +
+                @"""name"":""Joe""," +
+                @"""age"":{""$numberInt"":""50""}," +
+                @"""address"":" +
+                    @"{" +
+                        @"""street"":""555 Moon Way""," +
+                        @"""city"":""Gotham""" +
+                    @"}" +
+            @"}";
+
+        // Create a document from jsonStr
+        var documentJson = connection.NewDocument(jsonStr);
+
+        // Print the OJAI Document
+        Console.WriteLine(documentJson.ToJsonString());
+
+        // Create new document with the same fields using constructor
+        var documentConstructed = connection.NewDocument()
+            .SetID("id001")
+            .Set("name", "Joe")
+            .Set("age", 50)
+            .Set("address.street", "555 Moon Way")
+            .Set("address.city", "Gotham");
+
+        // Print the OJAI Document
+        Console.WriteLine(documentConstructed.ToJsonString());
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The code is available at [10]001_get_connection_create_document.go.
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        // Create a connection to data access server
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Json string or map from which the Document will be created
+        newMap := map[string]interface{}{
+                "_id":  "id001",
+                "name": "Joe",
+                "age":  50,
+                "address": map[string]interface{}{
+                        "street": "555 Moon Way",
+                        "city":   "Gotham",
+                },
+        }
+
+        // Create new document from json_document
+        newDocument := connection.CreateDocumentFromMap(newMap)
+
+        // Print the new OJAI Document
+        fmt.Println(newDocument.AsJsonString())
+
+        // Close connection
+        connection.Close()
+}
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/create-document.html#div1sect1
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/create-document.html#div1sect2
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/create-document.html#div1sect3
-   4. https://github.com/mapr-demos/ojai-examples/blob/master/java/src/main/java/com/mapr/ojai/examples/OJAI_001_GetConnectionCreateDocument.java
-   5. https://github.com/mapr-demos/ojai-examples/blob/master/nodejs/OJAI_001_GetConnectionCreateDocument.js
-   6. https://github.com/mapr-demos/ojai-examples/blob/master/python/001_get_connection_create_document.py
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/create-document.html#div1sect4
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/create-document.html#div1sect5
+   6. https://github.com/mapr-demos/ojai-examples/blob/master/java/src/main/java/com/mapr/ojai/examples/OJAI_001_GetConnectionCreateDocument.java
+   7. https://github.com/mapr-demos/ojai-examples/blob/master/nodejs/OJAI_001_GetConnectionCreateDocument.js
+   8. https://github.com/mapr-demos/ojai-examples/blob/master/python/001_get_connection_create_document.py
+   9. https://github.com/mapr-demos/ojai-examples/blob/master/csharp/001_GetConnectionCreateDocument.cs
+  10. https://github.com/mapr-demos/ojai-examples/blob/master/golang/001_get_connection_create_document.go

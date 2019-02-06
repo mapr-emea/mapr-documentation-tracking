@@ -12,11 +12,13 @@ Querying with Select and Conditions
      * [4]Node.js
      * [5]Python
      * [6]dbshell
+     * [7]C#
+     * [8]Go
 
    The following example shows how to return the name, address.zipCode,
    age, and phoneNumber fields from documents that have address.zipCode
-   equal to 95196. It uses the [7]Query.select and [8]Query.where methods,
-   specifying the query condition as a JSON string.
+   equal to 95196. It uses the [9]Query.select and [10]Query.where
+   methods, specifying the query condition as a JSON string.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -178,7 +180,7 @@ for doc in query_result:
 connection.close()
 
    The following two dbshell commands are equivalent to the code examples.
-   See [9]dbshell find or findbyid for more details about the syntax
+   See [11]dbshell find or findbyid for more details about the syntax
    dbshell provides.
 find /demo_table --query {
    "$select":["name","address.zipCode","age","phoneNumber[0]"],
@@ -192,6 +194,115 @@ find /demo_table
    Note: The commands are shown split across multiple lines for
    readability. When using dbshell, you must enter them in a single line.
 
+   The following example shows how to return the name, address.zipCode,
+   age, and phoneNumber fields from documents that have address.zipCode
+   equal to 95196. It uses an OJAI query and condition.
+using System;
+using MapRDB.Driver;
+using MapRDB.Driver.Ojai;
+
+public class FindQueryWithSelectAndCondition
+{
+        public async void FindQueryWithSelectAndCondition()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        // Create an OJAI condition
+        var condition = connection
+            .NewQueryCondition()
+                .Is("address.zipCode", QueryOp.EQUAL, 95196)
+                .Close()
+            .Build();
+
+        // Create an OJAI query
+        var query = connection
+            .NewQuery()
+                .Select("name", "adress.zipCode", "age", "phoneNumbers[0]")
+                .Where(condition)
+            .Build();
+
+        // Fetch OJAI Documents by query
+        var queryResult = store.Find(query);
+
+        var documentStream = await queryResult.GetDocumentAsyncStream().GetAllDo
+cuments();
+        // Print OJAI Documents from document stream
+        foreach (var document in documentStream)
+        {
+            Console.WriteLine(document.ToJsonString());
+        }
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following example shows how to return the name, address.zipCode,
+   age, and phoneNumber fields from documents that have address.zipCode
+   equal to 95196. It uses an OJAI query and condition.
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Options for find request
+        options := &client.FindOptions{ResultAsDocument: true}
+
+        // Create an OJAI query
+        query := map[string]interface{}{"$select": []interface{}{"firstName", "a
+ddress.zipCode", "age", "phoneNumbers[0]"},
+                "$where": map[string]interface{}{
+                        "$eq": map[string]interface{}{"address.zipCode": 95196}}
+}
+
+        // Fetch all OJAI Documents from table
+        findResult, err := store.FindQueryMap(query, options)
+
+        // Print OJAI Documents from document stream
+        for _, doc := range findResult.DocumentList() {
+                fmt.Println(doc)
+        }
+
+        // Close connection
+        connection.Close()
+}
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQueryConditions.html#OJAIQueryConditions
@@ -200,6 +311,8 @@ References
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect2
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect3
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect4
-   7. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-   8. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect5
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-select-condition.html#div1sect6
+   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html

@@ -1,0 +1,269 @@
+Example: Mounting a PersistentVolume for Dynamic Provisioning Using MapR
+Container Storage Interface (CSI) Storage Plugin
+
+   This example also uses a PersistentVolume. However, unlike the previous
+   example, when you use the MapR dynamic provisioner, you do not need to
+   create a PersistentVolume manually. The PersistentVolume is created
+   automatically based on the parameters specified in the referenced
+   StorageClass.
+
+   Dynamic provisioning is useful in cases where you do not want MapR and
+   Kubernetes administrators to create storage manually to store the Pod
+   storage state.
+
+   The following example uses a PersistentVolumeClaim that references a
+   Storage Class. In this example, a Kubernetes Administrator has created
+   a storage class called test-secure-sc for Pod creators to use when they
+   want to create persistent storage for their Pods. In this example, it
+   is important for the created Pod storage to survive the deletion of a
+   Pod.
+
+   To dynamically provision a volume, you must do the following:
+    1. Generate a MapR service ticket and create and deploy a ticket
+       secret on the Pod.
+       See [1]maprlogin for information on generating a ticket and
+       [2]Configuring a Secret for information on creating and deploying a
+       ticket secret.
+    2. Create the REST secret and deploy the secret on the Pod.
+       See [3]maprlogin for information on creating and deploying a ticket
+       secret.
+    3. Create a StorageClass similar to the following:
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: test-secure-sc
+  namespace: test-csi
+provisioner: com.mapr.csi-kdf
+parameters:
+    csiProvisionerSecretName: "mapr-provisioner-secrets"
+    csiProvisionerSecretNamespace: "test-csi"
+    csiNodePublishSecretName: "mapr-ticket-secret"
+    csiNodePublishSecretNamespace: "test-csi"
+    restServers: "10.10.10.210"
+    cldbHosts: "10.10.10.210"
+    cluster: "clusterA"
+    securityType: "secure"
+    namePrefix: "csi-pv"
+    mountPrefix: "/csi"
+    advisoryquota: "100M"
+       The following table shows the properties defined in the sample
+       StorageClass:
+
+   Property Description
+   apiVersion The Kubernetes APi version for the StorageClass spec.
+   kind The kind of object being created. This is a StorageClass.
+   metadata: name The name of the StorageClass. Administrators should
+   specify the name carefully because it will be used by Pod authors to
+   help select the right StorageClass for their needs.
+   metadata: namespace The namespace in which the StorageClass runs. This
+   namespace can be different from the namespace used by the PVC and Pod,
+   since the StorageClass namespace can be a cross-namespace resource.
+   provisioner The provisioner being used. for the MapR provisioner,
+   specify mapr.com/maprfs.
+   csiNodePublishSecretName The name of the Secret that contains the
+   ticket to use when mounting to the MapR cluster. See [4]Configuring a
+   Secret.
+   csiNodePublishSecretNamespace The namespace that contains the Secret.
+   Use the same namespace as the namespace used by the Pod.
+   csiProvisionerSecretName (deprecated)
+
+   csi.storage.k8s.io/provisioner-secret-name
+   The name of the Kubernetes Secret that is used to store MapR
+   administrative credentials (user, password, and ticket information for
+   the MapR webserver). To use the provisioner, you must configure a
+   Secret. See [5]Configuring a Secret.
+   csiProvisionerSecretNamespace (deprecated)
+
+   csi.storage.k8s.io/provisioner-secret-namespace
+   The namespace for the Secret containing the MapR administrative
+   credentials (user name and password information for a MapR user that
+   has the privileges to create MapR volumes). This namespace can be
+   different from the namespace used by the Pod, since a Pod author or
+   namespace admin might not be trusted to create administration Secrets
+   for the MapR cluster.
+   restServers A space-separated list of MapR webservers. Specify the
+   hostname or IP address and port number of each REST server for the MapR
+   cluster. For fault tolerance, providing multiple REST server hosts is
+   recommended.
+   cldbHosts The hostname or IP addresses of the CLDB hosts for the MapR
+   cluster. You must provide at least one CLDB host. For fault-tolerance,
+   providing multiple CLDB hosts is recommended. To specify multiple
+   hosts, separate each name or IP address by a space.
+   cluster The MapR cluster name.
+   securityType A parameter that indicates whether MapR tickets are used
+   or not used. If MapR tickets are used, specify secure. Otherwise,
+   specify unsecure.
+   namePrefix A prefix for the MapR volume to be created. For example, if
+   you specify PV as the namePrefix, the first dynamically created volume
+   might be named PV.bevefsescr. The provisioner generates random names
+   using lower-case letters. If you do not specify a prefix, the
+   provisioner uses maprprovisioner as a prefix.
+   mountPrefix The parent path of the mount in MapR file system. If you do
+   not specify a mount prefix, the provisioner mounts your volume under
+   the MapR root.
+   advisoryquota The advisory storage quota for the MapR volume. The
+   advisoryquota is one of the MapR parameters that you can specify for
+   dynamic provisioning. For more information, see [6]Before You Begin.
+    4. Configure a PersistentVolumeClaim similar to the following:
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-secure-pvc
+  namespace: test-csi
+spec:
+  storageClassName: test-secure-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5G
+       The following table shows the properties defined in the sample
+       PersistentVolumeClaim:
+
+   Property Description
+   apiVersion The Kubernetes API version for the Pod spec.
+   kind The kind of object being created. This is a PersistentVolumeClaim
+   (PVC).
+   metadata: name The PVC name.
+   metadata: namespace The namespace in which the PVC runs. This should be
+   the same namespace used by the Pod.
+   storageClassName The name of the storage class requested by the
+   PersistentVolumeClaim. For more information, see [7]Dynamic
+   Provisioning and Storage Classes.
+   accessModes How the PersistentVolume is mounted on the host. For more
+   information, see [8]Access Modes.
+   requests: storage The storage resources being requested, or that were
+   requested and have been allocated. The Pod author can use this
+   parameter to tell MapR how much quota is needed for the MapR volume.
+   For the units, see [9]Resource Model.
+    5. Create the Pod spec similar to the following:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-secure-pod
+  namespace: test-csi
+spec:
+  containers:
+  - name: busybox
+    image: busybox
+    args:
+    - sleep
+    - "1000000"
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "500m"
+    volumeMounts:
+    - mountPath: /mapr
+      name: maprflex
+  volumes:
+    - name: maprflex
+      persistentVolumeClaim:
+        claimName: test-secure-pvc
+       The following table shows the properties defined in the sample Pod
+       spec:
+
+   Property Description
+   apiVersion The Kubernetes API version for the Pod spec.
+   kind The kind of object being created. For clarity, this example uses a
+   naked Pod. Generally, it is better to use a Deployment, DaemonSet, or
+   StatefulSet for high availability and ease of upgrade.
+   metadata: name The Pod name.
+   metadata: namespace The namespace in which the Pod runs. It should be
+   the same namespace in which the PVC runs.
+   volumeMounts: mountPath A directory inside the container that is
+   designated as the mount path.
+   volumeMounts: name A name that you assign to the Kubernetes
+   volumeMounts resource. The value should match Volumes: name.
+   Volumes: name A string to identify the name of the Kubernetes volumes
+   resource. The value should match volumeMounts: name.
+   persistentVolumeClaim: claimName The name of the PersistentVolumeClaim
+   (PVC). For more information, see [10]PersistentVolumeClaims.
+    6. Deploy the .yaml file on the pod by running the following command:
+kubectl apply -f <filename>.yaml
+       For each Pod mount request, the POSIX client starts with the Pod's
+       hostname and new generated hostid, which is tracked on the MapR
+       cluster. You can run the [11]node list command on the MapR cluster
+       to determine the number of POSIX clients. For example:
+# maprcli node list -clientsonly true
+clienttype clienthealth hostname ip lasthb id
+posixclientbasic Inactive 4f3d34fe-2007-11e9-8980-0cc47ab39644 10.10.102.94,172.
+17.0.1,192.168.28.0 11225 7407394893618656436
+posixclientbasic Inactive 7906d011-200f-11e9-84c0-0cc47ab39644 10.10.102.94,172.
+17.0.1,192.168.28.0 8174 7544602061076655421
+posixclientbasic Inactive 9ed61912-2004-11e9-8980-0cc47ab39644 10.10.102.92,172.
+17.0.1,192.168.184.128 11224 2540810767207593086
+posixclientbasic Inactive c35ab639-2010-11e9-84c0-0cc47ab39644 10.10.102.94,172.
+17.0.1,192.168.28.0 7568 7947067275504513691
+posixclientbasic Active e5dc10e8-2012-11e9-84c0-0cc47ab39644 10.10.102.94,172.17
+.0.1,192.168.28.0 18 5849529086453778130
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: test-secure-sc
+  namespace: test-csi
+provisioner: com.mapr.csi-kdf
+parameters:
+    csiProvisionerSecretName: "mapr-provisioner-secrets"
+    csiProvisionerSecretNamespace: "test-csi"
+    csiNodePublishSecretName: "mapr-ticket-secret"
+    csiNodePublishSecretNamespace: "test-csi"
+    restServers: "10.10.10.210"
+    cldbHosts: "10.10.10.210"
+    cluster: "clusterA"
+    securityType: "secure"
+    namePrefix: "csi-pv"
+    mountPrefix: "/csi"
+    advisoryquota: "100M"
+--
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-secure-pvc
+  namespace: test-csi
+spec:
+  storageClassName: test-secure-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5G
+--
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-secure-pod
+  namespace: test-csi
+spec:
+  containers:
+  - name: busybox
+    image: busybox
+    args:
+    - sleep
+    - "1000000"
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "500m"
+    volumeMounts:
+    - mountPath: /mapr
+      name: maprflex
+  volumes:
+    - name: maprflex
+      persistentVolumeClaim:
+        claimName: test-secure-pvc
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuring_secret.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_before_you_begin.html#concept_ogr_sxc_qcb
+   7. http://blog.kubernetes.io/2017/03/dynamic-provisioning-and-storage-classes-kubernetes.html
+   8. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+   9. https://github.com/kubernetes/community/blob/master/contributors/design-proposals/scheduling/resources.md
+  10. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html

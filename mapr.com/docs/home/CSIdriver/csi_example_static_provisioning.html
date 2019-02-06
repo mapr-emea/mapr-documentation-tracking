@@ -1,0 +1,278 @@
+Example: Mounting a PersistentVolume for Static Provisioning Using MapR
+Container Storage Interface (CSI) Storage Plugin
+
+   For static provisioning, configuring a PersistentVolume has some
+   advantages over annotating Kubernetes volume information in a Pod spec:
+     * The configuration file can be shared for use by multiple Pod specs.
+     * The configuration file enables the PersistentVolume to be mounted
+       and available even when the Pod spec that references it is removed.
+
+   For example, suppose a marketing volume exists in the secure MapR
+   filesystem under the path /Departments/Marketing. An administrator
+   wants to statically provision this volume and make it available to
+   multiple users. It is critical that data access is as fast as possible.
+   To make this work, the administrator must do the following:
+    1. Create a PersistentVolume (PV) (if you have already not statically
+       provisioned a MapR volume as described in this [1]example) and set
+       the following volumeAttributes:
+          + accessMode of the PV to ReadWriteOnce
+          + securityType parameter to secure because the volume is on a
+            secure MapR cluster
+          + volumePath in the CSI driver setting to the desired path, and
+            fill in the cldbHosts and cluster information
+          + platinum parameter to use the POSIX platinum client
+       For example:
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test-simplepv
+  namespace: test-csi
+  labels:
+    name: pv-simplepv-test
+spec:
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 5Gi
+  csi:
+    nodePublishSecretRef:
+      name: "mapr-ticket-secret"
+      namespace: "test-csi"
+    driver: com.mapr.csi-kdf
+    volumeHandle: test-simplepv
+    volumeAttributes:
+      volumePath: "/"
+      cluster: "clusterA"
+      cldbHosts: "10.10.102.96"
+      securityType: "secure"
+      platinum: "true"
+       The following table shows the properties defined in the sample
+       PersistentVolume:
+
+   Parameter Notes
+   metadata: name The Pod name.
+   metadata: namespace The namespace in which the Pod runs.
+   accessModes How the PersistentVolume is mounted on the host. All modes
+   work the same. The example uses ReadWriteOnce. Note that ReadOnlyMany
+   does not mount read-only.
+
+   Note: The PV and PVC modes should be the same so that they can bind.
+   For more information, see [2]Access Modes.
+   persistentVolumeReclaimPolicy Specifies what happens to the volume when
+   it is released by its claim. The Retain value keeps the PVC around for
+   manual cleanup. Delete deletes the PV from Kubernetes.
+
+   Note: If this volume was created using dynamic provisioning, Delete
+   causes the underlying volume to be deleted.
+   For more information, see [3]Reclaiming.
+   Capacity Specifies how big the allocated storage should be. This value
+   is not validated against the MapR quota or advisory quota. It is up to
+   the person creating the PV to specify this value accurately.
+   csi: nodePublishSecretRef The Ticket Secret for the CSI driver.
+   nodePublishSecretRef:name The name of the Ticket Secret that contains
+   the ticket to use when mounting to the MapR cluster. See [4]Configuring
+   a Secret.
+   nodePublishSecretRef:namespace The namespace that contains the Ticket
+   Secret. Use the same namespace as the namespace used by the Pod.
+   csi: driver The MapR CSI driver being used. Call it by specifying
+   driver: mapr.com/maprfs.
+   volumePath The mount point within the MapR filesystem. This parameter
+   specifies an existing MapR path. For example, you can specify the root
+   volume as "/", providing access to the entire filesystem.
+   cluster The MapR cluster name.
+   cldbHosts The hostname or IP addresses of the CLDB hosts for the MapR
+   cluster. You must provide at least one CLDB host. For fault-tolerance,
+   providing multiple CLDB hosts is recommended. To specify multiple
+   hosts, separate each name or IP address by a space.
+   securityType A parameter that indicates whether MapR tickets are used
+   or not used. If MapR tickets are used, specify secure. Otherwise,
+   specify unsecure.
+   platinum If set to platinum: "true", the POSIX client uses the platinum
+   driver for better performance. Note that the platinum driver consumes
+   more host resources and MapR Platinum licenses.
+       See [5]Example: Statically Provisioning a MapR Volume Using MapR
+       Container Storage Interface (CSI) Storage Plugin for more
+       information.
+    2. Create a PersistentVolumeClaim (PVC) spec and set the accessMode of
+       the PVC to ReadWriteOnce.
+       For example:
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-simplepvc
+  namespace: test-csi
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5G
+       The following table shows the properties used in the sample
+       PersistentVolumeClaim:
+
+   Parameter Notes
+   metadata: name The Pod name.
+   metadata: namespace The namespace in which the Pod runs.
+   accessMode How the requested PersistentVolume is mounted on the host.
+   All modes work the same. The example uses ReadWriteOnce. Note that
+   ReadOnlyMany does not mount read-only.
+
+   Note: The PV and PVC modes should be the same so that they can bind.
+   For more information, see [6]Access Modes.
+    3. Generate a MapR service ticket and create and deploy a ticket
+       secret on the Pod (if you have already not done it as described in
+       steps 1 and 2 of this [7]example).
+       See [8]maprlogin for information on generating a ticket and
+       [9]Configuring a Secret for information on creating and deploying a
+       ticket secret.
+    4. Create the Pod spec and set the runAsUser and the fsGroup
+       parameters to the UID and GID of the user that created the ticket.
+       For example:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pv
+  namespace: test-csi
+Spec:
+  securityContext:
+    runAsUser: 1000
+    fsGroup: 2000
+  containers:
+  - name: busybox
+    image: busybox
+    args:
+    - sleep
+    - "1000000"
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "500m"
+    volumeMounts:
+    - mountPath: /mapr
+      name: maprflex
+  volumes:
+    - name: maprflex
+      persistentVolumeClaim:
+        claimName: test-simplepvc
+       The following table shows the properties defined in the sample Pod
+       spec:
+
+   Parameter Notes
+   apiVersion The Kubernetes API version for the Pod spec.
+   kind The kind of object being created. The example uses a naked Pod for
+   clarity. Generally, it is better to use a Deployment, DaemonSet, or
+   StatefulSet for high availability and ease of upgrade.
+   metadata: name The Pod name.
+   metadata: namespace The namespace in which the Pod runs.
+   securityContext: runAsUser The user ID to run the container under. This
+   user ID must be the same as the user ID for which the ticket was
+   generated.
+   securityContext: fsGroup The group ID to run the container under. This
+   group ID must be the same as the group ID of the user for which the
+   ticket was generated.
+   volumeMounts: mountPath A directory inside the container that is
+   designated as the mount path.
+   volumeMounts: name A name that you assign to the Kubernetes
+   volumeMounts resource. Matches with Volumes: name.
+   Volumes: name A string to identify the name of the Kubernetes volumes
+   resource. The value should match volumeMounts: name.
+   persistentVolumeClaim: claimName The name of the PersistentVolumeClaim
+   (PVC). For more information, see [10]PersistentVolumeClaims.
+    5. Deploy the .yaml file on the Pod by running the following command:
+kubectl apply -f <filename>.yaml
+       For each Pod mount request, the POSIX client starts with the Pod's
+       hostname and new generated hostid, which is tracked on the MapR
+       cluster. You can run the [11]node list command on the MapR cluster
+       to determine the number of POSIX clients. For example:
+# maprcli node list -clientsonly true
+clienttype clienthealth hostname ip lasthb id
+posixclientbasic Inactive 4f3d34fe-2007-11e9-8980-0cc47ab39644 10.10.102.94,172.
+17.0.1,192.168.28.0 11225 7407394893618656436
+posixclientbasic Inactive 7906d011-200f-11e9-84c0-0cc47ab39644 10.10.102.94,172.
+17.0.1,192.168.28.0 8174 7544602061076655421
+posixclientbasic Inactive 9ed61912-2004-11e9-8980-0cc47ab39644 10.10.102.92,172.
+17.0.1,192.168.184.128 11224 2540810767207593086
+posixclientbasic Inactive c35ab639-2010-11e9-84c0-0cc47ab39644 10.10.102.94,172.
+17.0.1,192.168.28.0 7568 7947067275504513691
+posixclientbasic Active e5dc10e8-2012-11e9-84c0-0cc47ab39644 10.10.102.94,172.17
+.0.1,192.168.28.0 18 5849529086453778130
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test-simplepv
+  namespace: test-csi
+  labels:
+    name: pv-simplepv-test
+spec:
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 5Gi
+  csi:
+    nodePublishSecretRef:
+      name: "mapr-ticket-secret"
+      namespace: "test-csi"
+    driver: com.mapr.csi-kdf
+    volumeHandle: test-simplepv
+    volumeAttributes:
+      volumePath: "/"
+      cluster: "clusterA"
+      cldbHosts: "10.10.102.96"
+      securityType: "secure"
+      platinum: "true"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pv
+  namespace: test-csi
+Spec:
+  securityContext:
+    runAsUser: 1000
+    fsGroup: 2000
+  containers:
+  - name: busybox
+    image: busybox
+    args:
+    - sleep
+    - "1000000"
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "500m"
+    volumeMounts:
+    - mountPath: /mapr
+      name: maprflex
+  volumes:
+    - name: maprflex
+      persistentVolumeClaim:
+        claimName: test-simplepvc
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-simplepvc
+  namespace: test-csi
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5G
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_example_static_provisioning_volume.html
+   2. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+   3. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuring_secret.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_example_static_provisioning_volume.html
+   6. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_example_static_provisioning_volume.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuring_secret.html
+  10. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html

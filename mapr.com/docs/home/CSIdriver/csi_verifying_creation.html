@@ -1,0 +1,323 @@
+Verifying Creation of a Kubernetes PersistentVolumeClaim and Persistent
+Volume
+
+   Once the Pod spec is installed, you can verify the status of a
+   PersistentVolumeClaim and/or a PersistentVolume by using the kubectl
+   command. For example:
+    1. Run the Kubernetes get command to verify the status of the
+       PersistentVolumeClaim:
+          + [1]Static Provisioning
+          + [2]Dynamic Provisioning
+# kubectl describe pvc -n test-csi
+Name:          mapr-secure-claim
+Namespace:     test-csi
+StorageClass:
+Status:        Bound
+Volume:        pv-securepv-test
+Labels:        <none>
+Annotations:   kubectl.kubernetes.io/last-applied-configuration:
+                 {"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"
+annotations":{},"name":"mapr-secure-claim","namespace":"test-csi"},"spec":{...
+               pv.kubernetes.io/bind-completed: yes
+               pv.kubernetes.io/bound-by-controller: yes
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:      5Gi
+Access Modes:  RWO
+VolumeMode:    Filesystem
+Events:        <none>
+Mounted By:    test-secure-pv
+# kubectl get pvc -n test-csi -o yaml
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"annotatio
+ns":{},"name":"mapr-secure-claim","namespace":"test-csi"},"spec":{"accessModes":
+["ReadWriteOnce"],"resources":{"requests":{"storage":"5G"}}}}
+      pv.kubernetes.io/bind-completed: "yes"
+      pv.kubernetes.io/bound-by-controller: "yes"
+    creationTimestamp: "2019-01-24T18:19:42Z"
+    finalizers:
+    - kubernetes.io/pvc-protection
+    name: mapr-secure-claim
+    namespace: test-csi
+    resourceVersion: "1024139"
+    selfLink: /api/v1/namespaces/test-csi/persistentvolumeclaims/mapr-secure-cla
+im
+    uid: 9eddbddb-2004-11e9-8980-0cc47ab39644
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    dataSource: null
+    resources:
+      requests:
+        storage: 5G
+    volumeMode: Filesystem
+    volumeName: pv-securepv-test
+  status:
+    accessModes:
+    - ReadWriteOnce
+    capacity:
+      storage: 5Gi
+    phase: Bound
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+# kubectl describe pvc test-secure-pvc -n test-csi
+Name:          test-secure-pvc
+Namespace:     test-csi
+StorageClass:  test-secure-sc
+Status:        Bound
+Volume:        mapr-pv-4f494906-2007-11e9-8980-0cc47ab39644
+Labels:        <none>
+Annotations:   kubectl.kubernetes.io/last-applied-configuration:
+                 {"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"
+annotations":{},"name":"test-secure-pvc","namespace":"test-csi"},"spec":{"a...
+               pv.kubernetes.io/bind-completed: yes
+               pv.kubernetes.io/bound-by-controller: yes
+               volume.beta.kubernetes.io/storage-provisioner: com.mapr.csi-kdf
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:      5Gi
+Access Modes:  RWO
+VolumeMode:    Filesystem
+Events:
+  Type       Reason                 Age    From
+                                       Message
+  ----       ------                 ----   ----
+                                       -------
+  Normal     ExternalProvisioning   4m43s  persistentvolume-controller
+                                       waiting for a volume to be created, eithe
+r by external provisioner "com.mapr.csi-kdf" or manually created by system admin
+istrator
+  Normal     Provisioning           4m43s  com.mapr.csi-kdf_csi-controller-kdf-0
+_087074d9-2004-11e9-be6e-32d95d1dc62d  External provisioner is provisioning volu
+me for claim "test-csi/test-secure-pvc"
+  Normal     ProvisioningSucceeded  4m40s  com.mapr.csi-kdf_csi-controller-kdf-0
+_087074d9-2004-11e9-be6e-32d95d1dc62d  Successfully provisioned volume mapr-pv-4
+f494906-2007-11e9-8980-0cc47ab39644
+Mounted By:  test-secure-pod
+# kubectl get pvc test-secure-pvc -n test-csi -o yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"annotations
+":{},"name":"test-secure-pvc","namespace":"test-csi"},"spec":{"accessModes":["Re
+adWriteOnce"],"resources":{"requests":{"storage":"5G"}},"storageClassName":"test
+-secure-sc"}}
+    pv.kubernetes.io/bind-completed: "yes"
+    pv.kubernetes.io/bound-by-controller: "yes"
+    volume.beta.kubernetes.io/storage-provisioner: com.mapr.csi-kdf
+  creationTimestamp: "2019-01-24T18:38:57Z"
+  finalizers:
+  - kubernetes.io/pvc-protection
+  name: test-secure-pvc
+  namespace: test-csi
+  resourceVersion: "1025704"
+  selfLink: /api/v1/namespaces/test-csi/persistentvolumeclaims/test-secure-pvc
+  uid: 4f494906-2007-11e9-8980-0cc47ab39644
+spec:
+  accessModes:
+  - ReadWriteOnce
+  dataSource: null
+  resources:
+    requests:
+      storage: 5G
+  storageClassName: test-secure-sc
+  volumeMode: Filesystem
+  volumeName: mapr-pv-4f494906-2007-11e9-8980-0cc47ab39644
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  phase: Bound
+    2. Run the Kubernetes describe command to determine the status of the
+       PersistentVolume:
+          + [3]Static Provisioning
+          + [4]Dynamic Provisioning
+# kubectl describe pv pv-securepv-test -n test-csi
+Name:            pv-securepv-test
+Labels:          name=pv-securepv-test
+Annotations:     kubectl.kubernetes.io/last-applied-configuration:
+                   {"apiVersion":"v1","kind":"PersistentVolume","metadata":{"ann
+otations":{},"labels":{"name":"pv-securepv-test"},"name":"pv-securepv-test"},...
+                 pv.kubernetes.io/bound-by-controller: yes
+Finalizers:      [kubernetes.io/pv-protection]
+StorageClass:
+Status:          Bound
+Claim:           test-csi/mapr-secure-claim
+Reclaim Policy:  Delete
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        5Gi
+Node Affinity:   <none>
+Message:
+Source:
+    Type:              CSI (a Container Storage Interface (CSI) volume source)
+    Driver:            com.mapr.csi-kdf
+    VolumeHandle:      test-id
+    ReadOnly:          false
+    VolumeAttributes:      cldbHosts=10.10.10.210
+                           cluster=clusterA
+                           securityType=secure
+                           volumePath=/volume1
+Events:                <none>
+# kubectl get pv pv-securepv-test -n test-csi -o yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"PersistentVolume","metadata":{"annotations":{},
+"labels":{"name":"pv-securepv-test"},"name":"pv-securepv-test"},"spec":{"accessM
+odes":["ReadWriteOnce"],"capacity":{"storage":"5Gi"},"csi":{"driver":"com.mapr.c
+si-kdf","nodePublishSecretRef":{"name":"mapr-ticket-secret","namespace":"test-cs
+i"},"volumeAttributes":{"cldbHosts":"10.10.10.210","cluster":"clusterA","securit
+yType":"secure","volumePath":"/volume1"},"volumeHandle":"test-id"},"persistentVo
+lumeReclaimPolicy":"Delete"}}
+    pv.kubernetes.io/bound-by-controller: "yes"
+  creationTimestamp: "2019-01-24T18:19:42Z"
+  finalizers:
+  - kubernetes.io/pv-protection
+  labels:
+    name: pv-securepv-test
+  name: pv-securepv-test
+  resourceVersion: "1024135"
+  selfLink: /api/v1/persistentvolumes/pv-securepv-test
+  uid: 9ed086b3-2004-11e9-8980-0cc47ab39644
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: mapr-secure-claim
+    namespace: test-csi
+    resourceVersion: "1024131"
+    uid: 9eddbddb-2004-11e9-8980-0cc47ab39644
+  csi:
+    driver: com.mapr.csi-kdf
+    nodePublishSecretRef:
+      name: mapr-ticket-secret
+      namespace: test-csi
+    volumeAttributes:
+      cldbHosts: 10.10.10.210
+      cluster: clusterA
+      securityType: secure
+      volumePath: /volume1
+    volumeHandle: test-id
+  persistentVolumeReclaimPolicy: Delete
+  volumeMode: Filesystem
+status:
+  phase: Bound
+# kubectl describe pv mapr-pv-4f494906-2007-11e9-8980-0cc47ab39644 -n test-csi
+Name:            mapr-pv-4f494906-2007-11e9-8980-0cc47ab39644
+Labels:          <none>
+Annotations:     pv.kubernetes.io/provisioned-by: com.mapr.csi-kdf
+Finalizers:      [kubernetes.io/pv-protection]
+StorageClass:    test-secure-sc
+Status:          Bound
+Claim:           test-csi/test-secure-pvc
+Reclaim Policy:  Delete
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        5Gi
+Node Affinity:   <none>
+Message:
+Source:
+    Type:              CSI (a Container Storage Interface (CSI) volume source)
+    Driver:            com.mapr.csi-kdf
+    VolumeHandle:      csidynamic-securepv.admnqeepfu
+    ReadOnly:          false
+    VolumeAttributes:      cldbHosts=10.10.10.210
+                           cluster=clusterA
+                           mountOptions=
+                           platinum=false
+                           readOnly=false
+                           securityType=secure
+                           storage.kubernetes.io/csiProvisionerIdentity=15483537
+24702-8081-com.mapr.csi-kdf
+                           volumePath=/csidynamic/csidynamic-securepv-admnqeepfu
+Events:                <none>
+# kubectl get pv mapr-pv-4f494906-2007-11e9-8980-0cc47ab39644 -n test-csi -o yam
+l
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    pv.kubernetes.io/provisioned-by: com.mapr.csi-kdf
+  creationTimestamp: "2019-01-24T18:39:03Z"
+  finalizers:
+  - kubernetes.io/pv-protection
+  name: mapr-pv-4f494906-2007-11e9-8980-0cc47ab39644
+  resourceVersion: "1025707"
+  selfLink: /api/v1/persistentvolumes/mapr-pv-4f494906-2007-11e9-8980-0cc47ab396
+44
+  uid: 527271b6-2007-11e9-8980-0cc47ab39644
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: test-secure-pvc
+    namespace: test-csi
+    resourceVersion: "1025691"
+    uid: 4f494906-2007-11e9-8980-0cc47ab39644
+  csi:
+    driver: com.mapr.csi-kdf
+    fsType: ext4
+    nodePublishSecretRef:
+      name: mapr-ticket-secret
+      namespace: test-csi
+    volumeAttributes:
+      cldbHosts: 10.10.10.210
+      cluster: clusterA
+      mountOptions: ""
+      platinum: "false"
+      readOnly: "false"
+      securityType: secure
+      storage.kubernetes.io/csiProvisionerIdentity: 1548353724702-8081-com.mapr.
+csi-kdf
+      volumePath: /csidynamic/csidynamic-securepv-admnqeepfu
+    volumeHandle: csidynamic-securepv.admnqeepfu
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: test-secure-sc
+  volumeMode: Filesystem
+status:
+  phase: Bound
+    3. Run the [5]node list command on the MapR cluster to determine the
+       number of POSIX clients.
+       For each Pod mount request, the POSIX client starts with the Pod's
+       hostname and new generated hostid, which is tracked on the MapR
+       cluster. For example:
+# maprcli node list -clientsonly true
+clienttype clienthealth hostname ip lasthb id
+posixclientbasic Inactive 4f3d34fe-2007-11e9-8980-0cc47ab39644 10.10.102.94,172.
+17.0.1,192.168.28.0 11225 7407394893618656436
+posixclientbasic Inactive 7906d011-200f-11e9-84c0-0cc47ab39644 10.10.102.94,172.
+17.0.1,192.168.28.0 8174 7544602061076655421
+posixclientbasic Inactive 9ed61912-2004-11e9-8980-0cc47ab39644 10.10.102.92,172.
+17.0.1,192.168.184.128 11224 2540810767207593086
+posixclientbasic Inactive c35ab639-2010-11e9-84c0-0cc47ab39644 10.10.102.94,172.
+17.0.1,192.168.28.0 7568 7947067275504513691
+posixclientbasic Active e5dc10e8-2012-11e9-84c0-0cc47ab39644 10.10.102.94,172.17
+.0.1,192.168.28.0 18 5849529086453778130
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_verifying_creation.html#div1entry1
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_verifying_creation.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_verifying_creation.html#div2entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_verifying_creation.html#div2entry2
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html

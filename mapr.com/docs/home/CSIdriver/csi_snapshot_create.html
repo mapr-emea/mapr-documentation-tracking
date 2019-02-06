@@ -1,0 +1,491 @@
+Creating a Snapshot Using the MapR Container Storage Interface (CSI) Storage
+Plugin
+
+   You can create one or more snapshots of a dynamically provisioned MapR
+   volume using the MapR Container Storage Interface (CSI) Storage Plugin.
+
+Creating a Snapshot of a Dynamically Provisioned Volume on the MapR Cluster
+
+    1. Verify that the volume was successfully provisioned by checking the
+       PersistentVolume (PV) and PersistentVolumeClaim (PVC) for the
+       volume.
+       For example, run the describe kubectl command to verify the PV and
+       then the PVC.
+# kubectl describe pv -n test-csi
+Name:            mapr-pv-e46a50cd-2012-11e9-84c0-0cc47ab39644
+Labels:          <none>
+Annotations:     pv.kubernetes.io/provisioned-by: com.mapr.csi-kdf
+Finalizers:      [kubernetes.io/pv-protection]
+StorageClass:    test-secure-sc
+Status:          Bound
+Claim:           test-csi/test-secure-pvc
+Reclaim Policy:  Delete
+Access Modes:    RWO
+VolumeMode:      Filesystem
+Capacity:        5Gi
+Node Affinity:   <none>
+Message:
+Source:
+    Type:              CSI (a Container Storage Interface (CSI) volume source)
+    Driver:            com.mapr.csi-kdf
+    VolumeHandle:      csisc-securesc.txiqvsdxwu
+    ReadOnly:          false
+    VolumeAttributes:      cldbHosts=10.10.10.210
+                           cluster=clusterA
+                           mountOptions=
+                           platinum=false
+                           readOnly=false
+                           securityType=secure
+                           storage.kubernetes.io/csiProvisionerIdentity=15483590
+07307-8081-com.mapr.csi-kdf
+                           volumePath=/csisc/csisc-securesc-txiqvsdxwu
+Events:                <none>
+# kubectl describe pvc -n test-csi
+Name:          test-secure-pvc
+Namespace:     test-csi
+StorageClass:  test-secure-sc
+Status:        Bound
+Volume:        mapr-pv-e46a50cd-2012-11e9-84c0-0cc47ab39644
+Labels:        <none>
+Annotations:   kubectl.kubernetes.io/last-applied-configuration:
+                 {"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"
+annotations":{},"name":"test-secure-pvc","namespace":"test-csi"},"spec":{"a...
+               pv.kubernetes.io/bind-completed: yes
+               pv.kubernetes.io/bound-by-controller: yes
+               volume.beta.kubernetes.io/storage-provisioner: com.mapr.csi-kdf
+Finalizers:    [kubernetes.io/pvc-protection]
+Capacity:      5Gi
+Access Modes:  RWO
+VolumeMode:    Filesystem
+Events:
+  Type       Reason                 Age    From
+                                       Message
+  ----       ------                 ----   ----
+                                       -------
+  Normal     ExternalProvisioning   3m43s  persistentvolume-controller
+                                       waiting for a volume to be created, eithe
+r by external provisioner "com.mapr.csi-kdf" or manually created by system admin
+istrator
+  Normal     Provisioning           3m43s  com.mapr.csi-kdf_csi-controller-kdf-0
+_69805ad1-2010-11e9-88dc-d610076b9fb3  External provisioner is provisioning volu
+me for claim "test-csi/test-secure-pvc"
+  Normal     ProvisioningSucceeded  3m40s  com.mapr.csi-kdf_csi-controller-kdf-0
+_69805ad1-2010-11e9-88dc-d610076b9fb3  Successfully provisioned volume mapr-pv-e
+46a50cd-2012-11e9-84c0-0cc47ab39644
+Mounted By:  test-secure-pod
+    2. Deploy the REST secret .yaml file by running the following command:
+kubectl apply -f <secret filename>.yaml
+       The Secret file should look something similar to the following:
+# Copyright (c) 2009 & onwards. MapR Tech, Inc., All rights reserved
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mapr-snapshot-secrets
+  namespace: test-csi
+type: Opaque
+data:
+  MAPR_CLUSTER_USER: cm9vdA==
+  MAPR_CLUSTER_PASSWORD: bWFwcg==
+       See [1]Configuring a Secret for more information.
+    3. Create a snapshot class for provisioning a snapshot of the volume.
+       For example, the snapshot class file should look similar to the
+       following:
+apiVersion: snapshot.storage.k8s.io/v1alpha1
+kind: VolumeSnapshotClass
+metadata:
+  name: test-snapshotclass
+  namespace: test-csi
+snapshotter: com.mapr.csi-kdf
+parameters:
+    restServers: "10.10.10.210:8443"
+    cluster: "clusterA"
+    namePrefix: "test-snapshot"
+    csiSnapshotterSecretName: "mapr-snapshot-secrets"
+    csiSnapshotterSecretNamespace: "test-csi"
+       The sample snapshot class file shown above contains the following
+       properties:
+
+   Property Description
+   apiVersion The Kubernetes APi version for the StorageClass spec.
+   kind The kind of object being created. This is a StorageClass.
+   metadata: name The name of the snapshot calss. Administrators should
+   specify the name carefully because it will be used by Pod authors to
+   help select the right snapshot class for their needs.
+   metadata: namespace The namespace in which the snapshot class runs.
+   snapshotter The CSI volume plugin to use for provisioning the volume
+   snapshots. For example: com.mapr.csi-kdf.
+   restServers A space-separated list of MapR webservers. Specify the
+   hostname or IP address and port number of each REST server for the MapR
+   cluster. For fault tolerance, providing multiple REST server hosts is
+   recommended.
+   cluster The MapR cluster name.
+   namePrefix A prefix for the snapshot volume to be created.
+   csiSnapshotterSecretName (deprecated)
+
+   csi.storage.k8s.io/snapshotter-secret-name
+   The name of the Kubernetes Secret that is used to store MapR
+   administrative credentials (user, password, and ticket information for
+   the MapR webserver). To use the provisioner, you must configure a
+   Secret. See [2]Configuring a Secret.
+   csiSnapshotterSecretNamespace (deprecated)
+
+   csi.storage.k8s.io/snapshotter-secret-namespace
+   The namespace for the Secret containing the MapR administrative
+   credentials (user name and password information for a MapR user that
+   has the privileges to create MapR volumes). This namespace can be
+   different from the namespace used by the Pod, since a Pod author or
+   namespace admin might not be trusted to create administration Secrets
+   for the MapR cluster.
+    4. Deploy the snapshot class by running the following command:
+kubectl apply -f <snapshot class>.yaml
+    5. Verify whether the snapshot class was successfully deployed by
+       running one of the following commands:
+# kubectl get volumesnapshotclass -n test-csi
+NAME                 AGE
+test-snapshotclass   41s
+root@qa102-92:~/csi-kdf-3/csi-kdf/examples/snapshot# kubectl describe volumesnap
+shotclass -n test-csi
+Name:         test-snapshotclass
+Namespace:
+Labels:       <none>
+Annotations:  kubectl.kubernetes.io/last-applied-configuration:
+                {"apiVersion":"snapshot.storage.k8s.io/v1alpha1","kind":"VolumeS
+napshotClass","metadata":{"annotations":{},"name":"test-snapshotclass"},"p...
+API Version:  snapshot.storage.k8s.io/v1alpha1
+Kind:         VolumeSnapshotClass
+Metadata:
+  Creation Timestamp:  2019-01-24T21:13:35Z
+  Generation:          1
+  Resource Version:    1039219
+  Self Link:           /apis/snapshot.storage.k8s.io/v1alpha1/volumesnapshotclas
+ses/test-snapshotclass
+  UID:                 e94a1fc8-201c-11e9-84c0-0cc47ab39644
+Parameters:
+  Cluster:                           clusterA
+  Csi Snapshotter Secret Name:       mapr-snapshot-secrets
+  Csi Snapshotter Secret Namespace:  test-csi
+  Name Prefix:                       test-snapshot
+  Rest Servers:                      10.10.10.210:8443
+Snapshotter:                         com.mapr.csi-kdf
+Events:                              <none>
+# kubectl get volumesnapshotclass -n test-csi -o yaml
+apiVersion: v1
+items:
+- apiVersion: snapshot.storage.k8s.io/v1alpha1
+  kind: VolumeSnapshotClass
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"snapshot.storage.k8s.io/v1alpha1","kind":"VolumeSnapshotC
+lass","metadata":{"annotations":{},"name":"test-snapshotclass"},"parameters":{"c
+luster":"clusterA","csiSnapshotterSecretName":"mapr-snapshot-secrets","csiSnapsh
+otterSecretNamespace":"test-csi","namePrefix":"test-snapshot","restServers":"10.
+10.10.210:8443"},"snapshotter":"com.mapr.csi-kdf"}
+    creationTimestamp: "2019-01-24T21:13:35Z"
+    generation: 1
+    name: test-snapshotclass
+    resourceVersion: "1039219"
+    selfLink: /apis/snapshot.storage.k8s.io/v1alpha1/volumesnapshotclasses/test-
+snapshotclass
+    uid: e94a1fc8-201c-11e9-84c0-0cc47ab39644
+  parameters:
+    cluster: clusterA
+    csiSnapshotterSecretName: mapr-snapshot-secrets
+    csiSnapshotterSecretNamespace: test-csi
+    namePrefix: test-snapshot
+    restServers: 10.10.10.210:8443
+  snapshotter: com.mapr.csi-kdf
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+    6. Associate the snapshot class with the PersistentVolumeClaim (for
+       the volume to take a snapshot of) by creating a VolumeSnapshot.
+       For example, the VolumeSnapshot file should look similar to the
+       following:
+apiVersion: snapshot.storage.k8s.io/v1alpha1
+kind: VolumeSnapshot
+metadata:
+  name: test-snapshot
+  namespace: test-csi
+spec:
+  snapshotClassName: test-snapshotclass
+  source:
+    name: test-secure-pvc
+    kind: PersistentVolumeClaim
+       The sample VolumeSnapshot file shown above contains the following
+       properties:
+
+   Property Description
+   metadata: name The VolumeSnapshot name.
+   metadata: namespace The namespace in which the VolumeSnapshot runs.
+   snapshotClassName The name of the snapshot class to associate with the
+   PVC.
+   source: name The name of the PVC to associate the snapshot class with.
+    7. Deploy the VolumeSnapshot by running the following command:
+kubectl apply -f <volume snapshot>.yaml
+    8. Verify whether VolumeSnapshot was successfully deployed by doing
+       the following:
+         a. Run one of the following commands to retrieve the
+            VolumeSnapshot:
+# kubectl get volumesnapshot -n test-csi -o yaml
+apiVersion: v1
+items:
+- apiVersion: snapshot.storage.k8s.io/v1alpha1
+  kind: VolumeSnapshot
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"snapshot.storage.k8s.io/v1alpha1","kind":"VolumeSnapshot"
+,"metadata":{"annotations":{},"name":"test-snapshot","namespace":"test-csi"},"sp
+ec":{"snapshotClassName":"test-snapshotclass","source":{"kind":"PersistentVolume
+Claim","name":"test-secure-pvc"}}}
+    creationTimestamp: "2019-01-24T21:16:21Z"
+    finalizers:
+    - snapshot.storage.kubernetes.io/volumesnapshot-protection
+    generation: 5
+    name: test-snapshot
+    namespace: test-csi
+    resourceVersion: "1039445"
+    selfLink: /apis/snapshot.storage.k8s.io/v1alpha1/namespaces/test-csi/volumes
+napshots/test-snapshot
+    uid: 4c5293bc-201d-11e9-84c0-0cc47ab39644
+  spec:
+    snapshotClassName: test-snapshotclass
+    snapshotContentName: snapcontent-4c5293bc-201d-11e9-84c0-0cc47ab39644
+    source:
+      apiGroup: null
+      kind: PersistentVolumeClaim
+      name: test-secure-pvc
+  status:
+    creationTime: "2019-01-24T21:16:22Z"
+    readyToUse: true
+    restoreSize: null
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+# kubectl describe volumesnapshot -n test-csi
+Name:         test-snapshot
+Namespace:    test-csi
+Labels:       <none>
+Annotations:  kubectl.kubernetes.io/last-applied-configuration:
+                {"apiVersion":"snapshot.storage.k8s.io/v1alpha1","kind":"VolumeS
+napshot","metadata":{"annotations":{},"name":"test-snapshot","namespace":"...
+API Version:  snapshot.storage.k8s.io/v1alpha1
+Kind:         VolumeSnapshot
+Metadata:
+  Creation Timestamp:  2019-01-24T21:16:21Z
+  Finalizers:
+    snapshot.storage.kubernetes.io/volumesnapshot-protection
+  Generation:        5
+  Resource Version:  1039445
+  Self Link:         /apis/snapshot.storage.k8s.io/v1alpha1/namespaces/test-csi/
+volumesnapshots/test-snapshot
+  UID:               4c5293bc-201d-11e9-84c0-0cc47ab39644
+Spec:
+  Snapshot Class Name:    test-snapshotclass
+  Snapshot Content Name:  snapcontent-4c5293bc-201d-11e9-84c0-0cc47ab39644
+  Source:
+    API Group:  <nil>
+    Kind:       PersistentVolumeClaim
+    Name:       test-secure-pvc
+Status:
+  Creation Time:  2019-01-24T21:16:22Z
+  Ready To Use:   true
+  Restore Size:   <nil>
+Events:           <none>
+         b. Retrieve the VolumeSnapshot contents, which shows the
+            associated PersistentVolume, by running one of the following
+            commands:
+# kubectl get volumesnapshotcontents -n test-csi -o yaml
+apiVersion: v1
+items:
+- apiVersion: snapshot.storage.k8s.io/v1alpha1
+  kind: VolumeSnapshotContent
+  metadata:
+    creationTimestamp: "2019-01-24T21:16:22Z"
+    finalizers:
+    - snapshot.storage.kubernetes.io/volumesnapshotcontent-protection
+    generation: 1
+    name: snapcontent-4c5293bc-201d-11e9-84c0-0cc47ab39644
+    resourceVersion: "1039443"
+    selfLink: /apis/snapshot.storage.k8s.io/v1alpha1/volumesnapshotcontents/snap
+content-4c5293bc-201d-11e9-84c0-0cc47ab39644
+    uid: 4cab5cb5-201d-11e9-84c0-0cc47ab39644
+  spec:
+    csiVolumeSnapshotSource:
+      creationTime: 1548364582387786034
+      driver: com.mapr.csi-kdf
+      restoreSize: 0
+      snapshotHandle: mapr-snapshot-4c5293bc-201d-11e9-84c0-0cc47ab39644
+    deletionPolicy: Delete
+    persistentVolumeRef:
+      apiVersion: v1
+      kind: PersistentVolume
+      name: mapr-pv-e46a50cd-2012-11e9-84c0-0cc47ab39644
+      resourceVersion: "1033559"
+      uid: ea32c304-2012-11e9-84c0-0cc47ab39644
+    snapshotClassName: test-snapshotclass
+    volumeSnapshotRef:
+      apiVersion: snapshot.storage.k8s.io/v1alpha1
+      kind: VolumeSnapshot
+      name: test-snapshot
+      namespace: test-csi
+      resourceVersion: "1039439"
+      uid: 4c5293bc-201d-11e9-84c0-0cc47ab39644
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+# kubectl describe volumesnapshotcontents -n test-csi
+Name:         snapcontent-4c5293bc-201d-11e9-84c0-0cc47ab39644
+Namespace:
+Labels:       <none>
+Annotations:  <none>
+API Version:  snapshot.storage.k8s.io/v1alpha1
+Kind:         VolumeSnapshotContent
+Metadata:
+  Creation Timestamp:  2019-01-24T21:16:22Z
+  Finalizers:
+    snapshot.storage.kubernetes.io/volumesnapshotcontent-protection
+  Generation:        1
+  Resource Version:  1039443
+  Self Link:         /apis/snapshot.storage.k8s.io/v1alpha1/volumesnapshotconten
+ts/snapcontent-4c5293bc-201d-11e9-84c0-0cc47ab39644
+  UID:               4cab5cb5-201d-11e9-84c0-0cc47ab39644
+Spec:
+  Csi Volume Snapshot Source:
+    Creation Time:    1548364582387786034
+    Driver:           com.mapr.csi-kdf
+    Restore Size:     0
+    Snapshot Handle:  mapr-snapshot-4c5293bc-201d-11e9-84c0-0cc47ab39644
+  Deletion Policy:    Delete
+  Persistent Volume Ref:
+    API Version:        v1
+    Kind:               PersistentVolume
+    Name:               mapr-pv-e46a50cd-2012-11e9-84c0-0cc47ab39644
+    Resource Version:   1033559
+    UID:                ea32c304-2012-11e9-84c0-0cc47ab39644
+  Snapshot Class Name:  test-snapshotclass
+  Volume Snapshot Ref:
+    API Version:       snapshot.storage.k8s.io/v1alpha1
+    Kind:              VolumeSnapshot
+    Name:              test-snapshot
+    Namespace:         test-csi
+    Resource Version:  1039439
+    UID:               4c5293bc-201d-11e9-84c0-0cc47ab39644
+Events:                <none>
+    9. Log in to the MapR cluster and verify by running the [3]volume
+       snapshot list command.
+       For example:
+# maprcli volume snapshot list -path /csisc/csisc-securesc-txiqvsdxwu -cluster c
+lusterA -json
+{
+        "timestamp":1548365090744,
+        "timeofday":"2019-01-24 01:24:50.744 GMT-0800 PM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "ownername":"root",
+                        "ownertype":"1",
+                        "volumeid":"234021649",
+                        "volumename":"csisc-securesc.txiqvsdxwu",
+                        "volumepath":"/csisc/csisc-securesc-txiqvsdxwu",
+                        "snapshotid":"256000051",
+                        "snapshotname":"mapr-snapshot-4c5293bc-201d-11e9-84c0-0c
+c47ab39644",
+                        "creationtime":"Thu Jan 24 13:16:22 PST 2019",
+                        "cumulativeReclaimSizeMB":"0",
+                        "ownedsize":"0",
+                        "sharedSize":"0",
+                        "volumeSnapshotAces":{
+                                "readAce":"p",
+                                "writeAce":"p"
+                        }
+                }
+        ]
+}
+
+Creating Multiple Snapshots of a Dynamically Provisioned Volume
+
+    1. Perform steps 1 - 5 described in the [4]Creating a Snapshot of a
+       Dynamically Provisioned Volume on the MapR Cluster section.
+    2. Create a VolumeSnapshot similar to the one shown in step 6 of the
+       [5]Creating a Snapshot of a Dynamically Provisioned Volume on the
+       MapR Cluster section for each additional snapshot to create for the
+       volume.
+       For example:
+apiVersion: snapshot.storage.k8s.io/v1alpha1
+kind: VolumeSnapshot
+metadata:
+  name: test-snapshot1
+  namespace: test-csi
+spec:
+  snapshotClassName: test-snapshotclass
+  source:
+    name: test-secure-pvc
+    kind: PersistentVolumeClaim
+    3. Repeat step 7 in [6]Creating a Snapshot of a Dynamically
+       Provisioned Volume on the MapR Cluster for each additional volume
+       snaphots you have created.
+    4. Log in to the MapR cluster and verify by running the [7]volume
+       snapshot list command.
+       For example:
+# maprcli volume snapshot list -path /csisc/csisc-securesc-txiqvsdxwu -cluster c
+lusterA -json
+{
+        "timestamp":1548365359138,
+        "timeofday":"2019-01-24 01:29:19.138 GMT-0800 PM",
+        "status":"OK",
+        "total":2,
+        "data":[
+                {
+                        "ownername":"root",
+                        "ownertype":"1",
+                        "volumeid":"234021649",
+                        "volumename":"csisc-securesc.txiqvsdxwu",
+                        "volumepath":"/csisc/csisc-securesc-txiqvsdxwu",
+                        "snapshotid":"256000051",
+                        "snapshotname":"mapr-snapshot-4c5293bc-201d-11e9-84c0-0c
+c47ab39644",
+                        "creationtime":"Thu Jan 24 13:16:22 PST 2019",
+                        "cumulativeReclaimSizeMB":"0",
+                        "ownedsize":"0",
+                        "sharedSize":"0",
+                        "volumeSnapshotAces":{
+                                "readAce":"p",
+                                "writeAce":"p"
+                        }
+                },
+                {
+                        "ownername":"root",
+                        "ownertype":"1",
+                        "volumeid":"234021649",
+                        "volumename":"csisc-securesc.txiqvsdxwu",
+                        "volumepath":"/csisc/csisc-securesc-txiqvsdxwu",
+                        "snapshotid":"256000052",
+                        "snapshotname":"mapr-snapshot-19282d27-201f-11e9-84c0-0c
+c47ab39644",
+                        "creationtime":"Thu Jan 24 13:29:15 PST 2019",
+                        "cumulativeReclaimSizeMB":"0",
+                        "ownedsize":"0",
+                        "sharedSize":"0",
+                        "volumeSnapshotAces":{
+                                "readAce":"p",
+                                "writeAce":"p"
+                        }
+                }
+        ]
+}
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuring_secret.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuring_secret.html#concept_ogr_sxc_qcb
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-snapshot-list.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_snapshot_create.html#single
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_snapshot_create.html#single
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_snapshot_create.html#single
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-snapshot-list.html

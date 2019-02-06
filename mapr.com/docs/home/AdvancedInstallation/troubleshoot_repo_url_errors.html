@@ -1,0 +1,69 @@
+Troubleshooting Repository URL Errors
+
+   This page describes how to troubleshoot an issue in which an incorrect
+   repository URL is stored in the MapR Installer properties.json file.
+
+How Repository URL Errors Can Occur
+
+   The properties.json file stores information such as the user ID of the
+   cluster administrator, the user ID of the MapR Installer, the OS type,
+   Internet access information, and the repository URL. Once the
+   repository URL has been stored in properties.json, the MapR Installer
+   assumes that the URL will not change.
+
+   If you run mapr-setup.sh -r <url> and you make a mistake when typing
+   the URL, the incorrect URL is added into the MapR Installer
+   properties.json file. If you later run mapr-setup.sh -r <url> again but
+   with the correct URL, the properties.json is not updated. Even
+   upgrading the installer packages does not update the repository URL in
+   properties.json.
+
+   Some versions of the MapR Installer generate a warning if you try to
+   correct the URL by running mapr-setup.sh -r <url> again, but older
+   versions of the MapR Installer do not generate a warning. Whether or
+   not a warning is generated, you can correct the issue, but how you do
+   so depends on the version of the MapR Installer that is installed.
+
+Fix Using MapR Installer 1.11 or Later
+
+   MapR Installer 1.11 and later versions generate a warning if you run
+   mapr-setup.sh -r <url> and provide a new URL. The warning describes two
+   ways to change the URL currently stored in the properties.json file:
+     * You can use the reload or remove command, and then specify a new
+       URL:
+         1. Use one of the following commands:
+bash /tmp/mapr-setup.sh -R <new_url> reload
+            or
+bash /tmp/mapr-setup.sh remove
+            Using the remove command removes properties.json, the
+            installer database, and the installer packages, but not the
+            setup script.
+         2. Specify the new URL:
+bash /tmp/mapr-setup.sh -r <new_url>
+     * You can manually edit the properties.json file:
+         1. Edit the properties.json file to specify the new URL:
+edit /opt/mapr/installer/data/properties.json
+         2. Reload the MapR Installer:
+systemctl restart mapr-installer
+
+Fix Using MapR Installer 1.10 or Earlier
+
+   MapR Installer 1.10 and earlier do NOT generate a warning if you run
+   mapr-setup.sh -r <url> and provide a new URL. To pass a new repository
+   value into properties.json for MapR Installer versions 1.10 or earlier,
+   you must first remove the installer files:
+mapr-setup.sh remove
+
+   Using the remove command removes properties.json, the installer
+   database, and the installer packages, but not the setup script. After
+   the files are removed, you can rerun mapr-setup.sh to specify the new
+   repository URL:
+bash /tmp/mapr-setup.sh -r <new_url>
+
+   To run mapr-setup.sh, see [1]MapR Installer. For information about
+   options you can use with mapr-setup.sh, see [2]Using mapr-setup.sh.
+
+References
+
+   1. https://maprdocs.mapr.com/home/MapRInstaller.html
+   2. https://maprdocs.mapr.com/home/AdvancedInstallation/c_installer_how_it_works.html

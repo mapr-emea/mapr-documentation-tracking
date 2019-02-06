@@ -1,0 +1,45 @@
+Building and Deploying Kafka Schema Registry
+
+   To build and deploy Kafka Schema Registry with Maven, you must first
+   install development versions of Kafka common and rest-utils utilities.
+
+   You can run Kafka Schema Registry instances on several cluster nodes.
+   One node is the master node and the other ones are slave nodes.
+
+   Kafka Schema Registry requires ZooKeeper and MapR Event Store For
+   Apache Kafka.
+
+   The REST interface to schema registry includes a built-in Jetty server.
+   The wrapper scripts bin/schema-registry-start and
+   bin/schema-registry-stop are the recommended methods for starting and
+   stopping the service.
+   In Apache Kafka, a schema is produced when:
+     * A message is produced and there is no equivalent schema in the
+       schema registry
+     * A schema is created for key or value portion of the message
+
+   The associated schema subject is a “topic-key”:
+     * Each schema is associated with a version
+     * Every schema gets a globally unique ID
+
+   The consumer gets the messages’ schema using the schema ID:
+$ curl -X GET http://localhost:8087/schemas/ids/1
+        {"schema":"\"string\""}
+
+   You can also query a schema for a given topic using the associated
+   schema subject. For example, for topic1 (for either key or value),
+   schema, all, latest, or specific schema versions can be queried using
+   the following REST commands:
+$ curl -X GET http://localhost:8087/subjects/topic1-value/versions
+     [1]
+$ curl -X GET http://localhost:8087/subjects/Kafka-value/versions/1
+     {"subject":"Kafka-value","version":1,"id":1,"schema":"\"string\""}
+$ curl -X GET http://localhost:8087/subjects/Kafka-value/versions/latest
+     {"subject":"Kafka-value","version":1,"id":1,"schema":"\"string\""}
+
+   For a complete list of supported APIs, see [1]Confluent Schema Registry
+   API Reference.
+
+References
+
+   1. https://docs.confluent.io/current/schema-registry/docs/api.html

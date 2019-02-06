@@ -12,12 +12,16 @@ Examples: Updating JSON Documents
      * [5]Python - Update
      * [6]Python - Check and Update
      * [7]dbshell
+     * [8]C# - Update
+     * [9]C# - Check and Update
+     * [10]Go - Update
+     * [11]Go - Check and Update
 
-   The following code is available at [8]OJAI_012_UpdateDocument.java. It
+   The following code is available at [12]OJAI_012_UpdateDocument.java. It
    does the following:
-     * Finds a document using the [9]DocumentStore.findById method
-     * Creates a [10]DocumentMutation that updates a field
-     * Updates the document by calling the [11]DocumentStore.update method
+     * Finds a document using the [13]DocumentStore.findById method
+     * Creates a [14]DocumentMutation that updates a field
+     * Updates the document by calling the [15]DocumentStore.update method
 
 /**
  * Copyright (c) 2017 MapR, Inc.
@@ -89,11 +93,11 @@ n
 
 }
 
-   The following code is available at [12]OJAI_011_UpdateDocument.js. It
+   The following code is available at [16]OJAI_011_UpdateDocument.js. It
    does the following:
-     * Finds a document using the [13]DocumentStore.findById method
+     * Finds a document using the [17]DocumentStore.findById method
      * Creates an OJAI mutation that updates a field
-     * Updates the document by calling the [14]DocumentStore.update method
+     * Updates the document by calling the [18]DocumentStore.update method
 
 /*
  * Copyright (c) 2018 MapR, Inc.
@@ -157,12 +161,12 @@ ConnectionManager.getConnection(connectionString)
   });
 
    The following code is available at
-   [15]OJAI_012_CheckAndUpdateDocument.js. It does the following:
-     * Finds a document using the [16]DocumentStore.findById method
+   [19]OJAI_012_CheckAndUpdateDocument.js. It does the following:
+     * Finds a document using the [20]DocumentStore.findById method
      * Creates an OJAI mutation that updates a field
      * Creates an OJAI condition to apply in the check and update
      * Performs the check and update on the document by calling the
-       [17]DocumentStore.checkAndUpdate method
+       [21]DocumentStore.checkAndUpdate method
 
 /*
  * Copyright (c) 2018 MapR, Inc.
@@ -227,11 +231,11 @@ ConnectionManager.getConnection(connectionString)
     console.log(docAfterUpdate);
   });
 
-   The following code is available at [18]012_update_document.py. It does
+   The following code is available at [22]012_update_document.py. It does
    the following:
-     * Finds a document using the [19]DocumentStore.find_by_id method
+     * Finds a document using the [23]DocumentStore.find_by_id method
      * Creates an OJAI mutation that updates a field
-     * Updates the document by calling the [20]DocumentStore.update method
+     * Updates the document by calling the [24]DocumentStore.update method
 
 from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
 
@@ -263,12 +267,12 @@ print('Document with id {0} after update'.format(doc_id))
 print(document_after_update)
 
    The following code is available at
-   [21]013_check_and_update_document.py. It does the following:
-     * Finds a document using the [22]DocumentStore.find_by_id method
+   [25]013_check_and_update_document.py. It does the following:
+     * Finds a document using the [26]DocumentStore.find_by_id method
      * Creates an OJAI mutation that updates a field
      * Creates an OJAI condition to apply in the check and update
      * Performs the check and update on the document by calling the
-       [23]DocumentStore.check_and_update method
+       [27]DocumentStore.check_and_update method
 
 from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
 
@@ -308,10 +312,277 @@ print('Document with id {0} after update'.format(doc_id))
 print(document_after_update)
 
    The following dbshell command is equivalent to the code examples. See
-   [24]dbshell update for more information and examples.
+   [28]dbshell update for more information and examples.
 # mapr dbshell
 maprdb root:> update /demo_table --id user002 --m {"$set":{"address.zipCode":951
 96}}
+
+   The following code is available at [29]012_UpdateDocument.cs. It does
+   the following:
+     * Finds a document using the [30]DocumentStore.FindById method to
+       print the document before update.
+     * Creates an OJAI mutation that updates a field.
+     * Updates the document by calling the [31]DocumentStore.Update
+       method.
+
+using System;
+using MapRDB.Driver;
+
+public class UpdateDocument
+{
+        public void UpdateDocument()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        var docId = "user0002";
+
+        // Print the document before update
+        var documentBeforeUpdate = store.FindById(docId);
+        Console.WriteLine($"Document with id {docId} before update:");
+        Console.WriteLine(documentBeforeUpdate);
+
+        // Create mutation to update the zipCode field
+        var mutation = connection.NewDocumentMutation().Set("address.zipCode", (
+long)95196);
+
+        // Execute update
+        store.Update(docId, mutation);
+
+        // Print the document after update
+        var documentAfterUpdate = store.FindById(docId);
+        Console.WriteLine($"Document with id {docId} after update:");
+        Console.WriteLine(documentAfterUpdate);
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following code is available at [32]013_CheckAndUpdateDocument.cs.
+   It does the following:
+     * Finds a document using the [33]DocumentStore.FindById method to
+       print the document before update.
+     * Creates an OJAI mutation that updates a field.
+     * Creates an OJAI condition to apply in the check and update.
+     * Performs the check and update on the document by calling the
+       [34]DocumentStore.CheckAndUpdate method.
+
+using System;
+using MapRDB.Driver;
+using MapRDB.Driver.Ojai;
+
+public class CheckAndUpdateDocument
+{
+        public void CheckAndUpdateDocument()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        var docId = "user0001";
+
+        // Print the document before update
+        var documentBeforeUpdate = store.FindById(docId);
+        Console.WriteLine($"Document with id {docId} before update:");
+        Console.WriteLine(documentBeforeUpdate);
+
+        // Create mutation to update the zipCode field
+        var mutation = connection.NewDocumentMutation().SetOrReplace("address.zi
+pCode", 99999);
+
+        // Create condition
+        var condition = connection
+            .NewQueryCondition()
+                .Is("address.street", QueryOp.EQUAL, "320 Blossom Hill Road")
+                .Close()
+            .Build();
+
+        // Execute CheckAndUpdate.
+        // Returns True if condition True and document was updated
+        var updateResult = store.CheckAndUpdate(docId, condition, mutation);
+
+        Console.WriteLine(updateResult);
+
+        // Print the document after update
+        var documentAfterUpdate = store.FindById(docId);
+        Console.WriteLine($"Document with id {docId} after update:");
+        Console.WriteLine(documentAfterUpdate);
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following code is available at [35]012_update_document.go. It does
+   the following:
+     * Finds a document using the [36]DocumentStore.FindByIdString
+       function to print the document before update
+     * Creates an OJAI mutation that updates a field
+     * Updates the document by calling the [37]DocumentStore.Update
+       function
+
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+        documentId := "user0002"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Print the document before update
+        documentBeforeUpdate, err := store.FindByIdString(documentId)
+        if err != nil {
+                panic(err)
+        }
+        fmt.Printf("Document with id %v before update.\n %v", documentId, docume
+ntBeforeUpdate.AsJsonString())
+
+        // Create mutation to update the zipCode field
+        mutation := map[string]interface{}{"$set": map[string]interface{}{"addre
+ss.zipCode": 95196}}
+
+        // Execute update
+        err = store.Update(client.BosiFromString(documentId), client.MosmFromMap
+(mutation))
+        if err != nil {
+                panic(err)
+        }
+
+        // Print the document after update
+        documentAfterUpdate, err := store.FindByIdString(documentId)
+        if err != nil {
+                panic(err)
+        }
+        fmt.Printf("Document with id %v after update.\n %v", documentId, documen
+tAfterUpdate.AsJsonString())
+
+        // Close connection
+        connection.Close()
+}
+
+   The following code is available at
+   [38]013_check_and_update_document.go. It does the following:
+     * Finds a document using the [39]DocumentStore.FindByIdString
+       function to print the document before update
+     * Creates an OJAI mutation that updates a field
+     * Creates an OJAI condition to apply in the check and update
+     * Performs the check and update on the document by calling the
+       [40]DocumentStore.CheckAndUpdate function
+
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+        documentId := "user0001"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Print the document before update
+        documentBeforeUpdate, err := store.FindByIdString(documentId)
+        if err != nil {
+                panic(err)
+        }
+        fmt.Printf("Document with id %v before update.\n %v\n", documentId, docu
+mentBeforeUpdate.AsJsonString())
+
+        // Create mutation to update the zipCode field
+        mutation := map[string]interface{}{"$put": map[string]interface{}{"addre
+ss.zipCode": 99999}}
+
+        // Create condition
+        condition := map[string]interface{}{"$eq": map[string]interface{}{"addre
+ss.street": "320 Blossom Hill Road"}}
+
+        // Execute update
+        // Returns True if condition True and document was updated.
+        res, err := store.CheckAndUpdate(
+                client.BosiFromString(documentId),
+                client.MoscFromMap(condition),
+                client.MosmFromMap(mutation))
+        if err != nil {
+                panic(err)
+        }
+
+        // Print the document after update
+        documentAfterUpdate, err := store.FindByIdString(documentId)
+        if err != nil {
+                panic(err)
+        }
+        fmt.Printf("Update result: %v.\nDocument with id %v after update.\n %v\n
+",
+                res,
+                documentId,
+                documentAfterUpdate.AsJsonString())
+
+        // Close connection
+        connection.Close()
+}
 
 References
 
@@ -322,20 +593,36 @@ References
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect4
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect5
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect6
-   8. https://github.com/mapr-demos/ojai-examples/blob/master/java/src/main/java/com/mapr/ojai/examples/OJAI_012_UpdateDocument.java
-   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#findById-java.lang.String-
-  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentMutation.html
-  11. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#update-java.lang.String-org.ojai.store.DocumentMutation-
-  12. https://github.com/mapr-demos/ojai-examples/blob/master/nodejs/OJAI_011_UpdateDocument.js
-  13. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#findbyid
-  14. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#update
-  15. https://github.com/mapr-demos/ojai-examples/blob/master/nodejs/OJAI_012_CheckAndUpdateDocument.js
-  16. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#findbyid
-  17. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#checkandupdate
-  18. https://github.com/mapr-demos/ojai-examples/blob/master/python/012_update_document.py
-  19. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#ac9e4fce8f702565c259b61d8d5b93f63
-  20. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aeee152bc51514a553c4048b37bced64c
-  21. https://github.com/mapr-demos/ojai-examples/blob/master/python/013_check_and_update_document.py
-  22. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#ac9e4fce8f702565c259b61d8d5b93f63
-  23. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aa8a0c09444966ded966943cd90980444
-  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-update.html#dbshell-update
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect7
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect8
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect9
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/update-document.html#div1sect10
+  12. https://github.com/mapr-demos/ojai-examples/blob/master/java/src/main/java/com/mapr/ojai/examples/OJAI_012_UpdateDocument.java
+  13. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#findById-java.lang.String-
+  14. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentMutation.html
+  15. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#update-java.lang.String-org.ojai.store.DocumentMutation-
+  16. https://github.com/mapr-demos/ojai-examples/blob/master/nodejs/OJAI_011_UpdateDocument.js
+  17. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#findbyid
+  18. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#update
+  19. https://github.com/mapr-demos/ojai-examples/blob/master/nodejs/OJAI_012_CheckAndUpdateDocument.js
+  20. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#findbyid
+  21. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#checkandupdate
+  22. https://github.com/mapr-demos/ojai-examples/blob/master/python/012_update_document.py
+  23. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#ac9e4fce8f702565c259b61d8d5b93f63
+  24. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aeee152bc51514a553c4048b37bced64c
+  25. https://github.com/mapr-demos/ojai-examples/blob/master/python/013_check_and_update_document.py
+  26. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#ac9e4fce8f702565c259b61d8d5b93f63
+  27. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aa8a0c09444966ded966943cd90980444
+  28. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-update.html#dbshell-update
+  29. https://github.com/mapr-demos/ojai-examples/blob/master/csharp/012_UpdateDocument.cs
+  30. https://mapr.com/docs/apidocs/61/ojai/csharp/dd/d4d/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_document_store.html#a317276891018bacb7cc0f9bf1dfb3ce3
+  31. https://mapr.com/docs/apidocs/61/ojai/csharp/dd/d4d/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_document_store.html#a1f9f03a161045bce3bf742f094dd5877
+  32. https://github.com/mapr-demos/ojai-examples/blob/master/csharp/013_CheckAndUpdateDocument.cs
+  33. https://mapr.com/docs/apidocs/61/ojai/csharp/dd/d4d/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_document_store.html#a317276891018bacb7cc0f9bf1dfb3ce3
+  34. https://mapr.com/docs/apidocs/61/ojai/csharp/dd/d4d/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_document_store.html#a01c309ffab0ac9df813101d5ff729485
+  35. https://github.com/mapr-demos/ojai-examples/blob/master/golang/012_update_document.go
+  36. https://mapr.com/docs/apidocs/61/ojai/go/#DocumentStore.FindByIdString
+  37. https://mapr.com/docs/apidocs/61/ojai/go/#DocumentStore.Update
+  38. https://github.com/mapr-demos/ojai-examples/blob/master/golang/013_check_and_update_document.go
+  39. https://mapr.com/docs/apidocs/61/ojai/go/#DocumentStore.FindByIdString
+  40. https://mapr.com/docs/apidocs/61/ojai/go/#DocumentStore.CheckAndUpdate

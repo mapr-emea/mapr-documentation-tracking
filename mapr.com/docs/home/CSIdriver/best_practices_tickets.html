@@ -1,0 +1,32 @@
+Best Practices for Using Tickets
+
+   When using secure MapR clusters with the MapR Data Fabric for
+   Kubernetes, you must generate tickets for your containers. Here are
+   some best practices:
+     * Create a different user for each container.
+     * Use long-lived service tickets to avoid frequent renewals. If you
+       refresh or update a ticket, you will need to restart your
+       containers.
+     * If you use an impersonation ticket, it is CRITICAL that you use
+       security contexts in the Pod definitions to avoid a misbehaving
+       container impersonating all user IDs. For restrictions that apply
+       to the use of impersonation tickets, see [1]How Impersonation Works
+       and [2]maprlogin.
+     * Match the security context runAsUser: ID and fsGroup: group to the
+       ID or group used to create the ticket.
+
+   Here is an example of a Pod spec that specifies a security context:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-secure
+  namespace: mapr-examples
+spec:
+  securityContext:
+    runAsUser: 1000
+    fsGroup: 2000
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/c_how_impersonation_works.html#concept_gkg_wcz_dt
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ThemaprloginUtility.html#maprloginUtility

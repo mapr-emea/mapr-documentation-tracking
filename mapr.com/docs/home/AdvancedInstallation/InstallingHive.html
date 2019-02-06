@@ -49,6 +49,11 @@ ager-<X.X.X>-mapr-<YYYY>.jar
    Linux documentation for more details about setting system environment
    variables.
    Note: The MapR cluster must be up and running before installing Hive.
+
+   On Ubuntu, while configuring the new version of Hive, you could have an
+   issue caused by an incomplete removal of previously installed Hive
+   packages. To avoid this issue, use the purge command for complete
+   removal of all previously installed Hive packages.
    Execute the following commands as root or using sudo.
     1. On each planned Hive node, install Hive packages.
           + To install Hive:
@@ -95,33 +100,24 @@ zypper install mapr-hive mapr-hiveserver2 mapr-hivemetastore mapr-hivewebhcat
             On Ubuntu
 apt-get install mapr-hive mapr-hiveserver2 mapr-hivemetastore mapr-hivewebhcat
 
-       Note: If you are using derby as the underlying database to create
-       metastore, do not install mapr-hiveserver2 and mapr-hivemetastore
-       on the same node as mapr-hive. This configuration results in a java
-       run-time exception when you attempt to start the hive CLI. In order
-       to run Hive in embedded mode, do not start HiveServer2 and Hive
-       Metastore; instead, make sure the underlying database is consistent
-       using the schemaTool. In embedded mode, Metastore is used as
-       library with Hive CLI; Hive CLI opens connection and executes all
-       queries against the Metastore DB.
+       Note: Starting from MEP-5.0.2 and MEP-6.0.1+, you can use derby as
+       the underlying database (only for test purposes). To get Hive
+       configured on DerbyDB, install all Hive packages (mapr-hive,
+       mapr-hiveserver2 mapr-hivemetastore, and mapr-hivewebhcat) and run
+       the configure.sh command, see Step 3.
     2. Configure database for Hive Metastore.
        See [3]Configuring Database for Hive Metastore for more
        information.
     3. Run [4]configure.sh with the -R option.
 /opt/mapr/server/configure.sh -R
-       Starting in MEP 4.0, Hive should be configured by running the
-       $MAPR_HOME/server/configure.sh script with the -R  option
-       immediately after installing Hive. Hive demons will not start
-       automatically if Hive is not configured correctly. See [5]Hive
-       Security for more information.
 
    After Hive is installed, the executable is located at:
    /opt/mapr/hive/hive-<version>/bin/hive.
 
-   See [6]Hive User Impersonation for the steps to configure user
+   See [5]Hive User Impersonation for the steps to configure user
    impersonation for Hive and the MapR cluster.
 
-   To configure Hive on Tez, see [7]Configuring Hive 2.3 and Tez 0.9.
+   To configure Hive on Tez, see [6]Configuring Hive 2.3 and Tez 0.9.
 
 References
 
@@ -129,6 +125,5 @@ References
    2. http://maprdocs.mapr.com/home/EcosystemRN/HiveRN.html
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Config-HiveMetastore.html
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/HiveSecurity.html
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/HiveUserImpersonation.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Hive2.3andTez0.9_Config.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/HiveUserImpersonation.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Hive2.3andTez0.9_Config.html

@@ -1,0 +1,282 @@
+Drill 1.15.0.0-1901 (MEP 6.1.0) Release Notes
+
+   This section provides reference information, including new features,
+   improvements, resolved issues, known issues, and limitations for Drill
+   1.15.0.0-1901.
+
+   These release notes contain MapR-specific information and are not
+   necessarily cumulative in nature. For information about how to use the
+   release notes, see [1]Ecosystem Component Release Notes.
+
+   The following release notes apply to the 1.15.0.0 version of the Drill
+   component:
+   Version 1.15.0.0
+   Release Date February 2019
+   MapR Version Interoperability See [2]Component Versions for Released
+   MEPs.
+   Package Names Navigate to [3]https://package.mapr.com/releases/MEP/,
+   and select your MEP and OS to view the list of package names.
+   ODBC/JDBC Drivers
+   Drill 1.15.0.0 works with the following MapR Drill drivers:
+     * ODBC Drivers
+          + [4]Mac OS X
+          + Linux
+               o [5]32-bit (Unsupported)
+               o [6]64-bit
+          + Windows
+               o [7]32-bit (Unsupported)
+               o [8]64-bit
+     * [9]JDBC Driver
+
+   For additional driver information, see [10]Drill Drivers.
+
+New in this Release
+
+   Drill 1.15.0.0 includes the following new features and improvements in
+   the following areas:
+
+   Storage
+
+          + Ability to query data in S3 via the new cloud [11]storage
+            plugin for S3. (MD-4541)
+          + Credential Provider API support in the [12]S3 storage plugin.
+            (MD-4543, DRILL-6662)
+          + The INFORMATION_SCHEMA [13]FILES table provides information
+            about directories and files stored in [14]workspaces
+            configured within [15]S3 and [16]file system storage plugin
+            configurations. (MD-4544, DRILL-6680)
+
+   SQL
+
+          + [17]TIMESTAMPADD and [18]TIMESTAMPDIFF datetime functions.
+            (MD-342, DRILL-3610)
+          + [19]CROSS JOIN in the FROM clause. (MD-4359, DRILL-786)
+          + Support for column aliases and positional aliases in the
+            [20]GROUP BY, HAVING, and ORDER BY clauses. (MD-4825,
+            DRILL-1248)
+          + [21]Lateral join functionality is enabled by default.
+            (DRILL-6729)
+          + [22]Storage plugin names are case-insensitive. (MD-4589,
+            MD-4663, DRILL-6492, DRILL-6768)
+          + All [23]cast and data type conversion functions return null
+            for an empty string ('') when the
+            drill.exec.functions.cast_empty_string_to_null option is
+            enabled. (DRILL-6817)
+          + A new option, exec.query.return_result_set_for_ddl,
+            [24]prevents Drill from returning a result set for DDL
+            statements when set to "false." Useful for clients tools that
+            connect to Drill (via JDBC) if they do not expect a result
+            set. (MD-4757, DRILL-6834)
+
+   Query optimization
+
+          + MapR Database [25]secondary index support in Apache Drill.
+            (DRILL-6381)
+          + Improved query performance with [26]semi-join functionality
+            inside the Hash-Join operator. (MD-4877, DRILL-6735)
+
+   Parquet
+
+          + Parquet filter pushdown supports[27] VARCHAR and DECIMAL data
+            types (MD-1266, DRILL-6744)
+
+   Security
+
+          + [28]Secure znodes with custom Access Control Lists. (MD-4476,
+            DRILL-5671)
+
+   Web UI
+          Multiple [29]Web UI improvements that simplify use and
+          administrative tasks, including:
+
+          + The ability to cancel multiple queries at once via a check box
+            next to executing queries.
+          + The auto prompt in the Web UI SQL box now works on UDFs.
+          + An enhanced Options page that includes detailed descriptions
+            of each option.
+          + Categorized options via Quick Filters on the Options page.
+            (DRILL-5735)
+          + Default button (DRILL-6668)
+          + [30]Web display options and updated option names (MD-4835,
+            DRILL-6544, DRILL-6715)
+          + [31]Meta+Enter key combination to submit queries (DRILL-6611)
+
+   SQLLine (Drill shell)
+
+          + [32]Upgrade to SQLLine 1.6, includes the ability to add a
+            custom configuration. (MD-2682, MD-5151, DRILL-3853)
+          + Additional[33] SQLLine connection parameters. (DRILL-3933)
+
+   System tables
+
+          + [34]System options table includes option descriptions.
+            (DRILL-6684)
+          + [35]System functions table exposes the available SQL functions
+            in Drill and also detects UDFs that have been dynamically
+            loaded into Drill. (MD-4941, DRILL-3988)
+
+   For a list of additional features and improvements, see the [36]Apache
+   Drill 1.15 Release Notes.
+
+   For additional information, read the [37]MapR Drill 1.15 blog post.
+
+Default Configuration Changes
+
+   Starting in MEP 6.1.0, certain ecosystem components, including Drill,
+   have four digit version numbers. For example, when you install Drill,
+   the Drill version appears as 1.15.0.0.
+
+Resolved Issues
+
+   Drill 1.15.0.0 includes the following resolved issues:
+   MapR Tracking Number Resolved Issue
+   MD-5253 The TO_TIMESTAMP function no longer loses precision for
+   milliseconds.
+   MD-5226 DRILL-6918: Querying empty topics no longer fails with a
+   "NumberFormatException."
+   MD-5208 Semi-join queries on sf1 data no longer return an
+   UNSUPPORTED_OPERATION error.
+   MD-5149 DRILL-6869: Drill no longer allows views created outside of
+   workspaces.
+   MD-5147 DRILL-6865: Queries no longer return the wrong results when
+   filter pruning occurs.
+   MD-5142 DRILL-6857: Limit is pushed into the scan when selecting from a
+   Parquet file with multiple row groups.
+   MD-5138 DRILL-6863: Drop table works when the path is within a
+   workspace that starts with '/'.
+   MD-5105 DRILL-6818: Secondary index options have descriptions.
+   MD-5076 DRILL-6811: Type inference returns the correct data mode for
+   boolean functions.
+   MD-5062 DRILL-6664: Drill returns the same results for queries on the
+   same column of a Parquet table with the same predicate.
+   MD-5057 Queries against new files created on a volume that has reached
+   the name container data threshold no longer fail with I/O exceptions.
+   MD-5023 DRILL-6810: Drill does not support nullable complex types
+   (maps, arrays); therefore, UDFs cannot return null if @Output is of a
+   complex type. Null handling of complex types is disabled by default.
+   NullHandling.INTERNAL should be used instead of
+   NullHandling.NULL_IF_NULL in UDFs. When using NullHandling.INTERNAL,
+   the UDF must handle null input(s) on its own.
+   MD-5019 DRILL-6797: Drill aggregation queries that use custom UDF to
+   split column data in a Parquet file no longer fail with a compilation
+   error if the filter criteria results in no rows.
+   MD-5014 DRILL-6776: The Drill Web UI page source no longer has links to
+   external sites.
+   MD-5008
+
+   Drill can leverage indexes for queries with ORDER BY DESC on indexed
+   columns; for example, if a secondary index is defined on column a,
+   Drill leverages the index for the query:
+
+   SELECT a FROM t ORDER BY a DESC;
+   MD-5002 DRILL-6764: Queries no longer fail with IOB exception when
+   UNNEST references a deep nested field, like t.c_orders.o_lineitems.
+   MD-5001
+
+   DRILL-6766 : Queries with LATERAL UNNEST no longer return the following
+   system error when one batch of streaming aggregates is split across
+   multiple output batches :
+
+   IllegalStateException: Unexpected case where rowId [] in right batch of
+   lateral is smaller than rowId [] in left batch being processed.
+   MD-4968 DRILL-6762: Dynamic UDFs registered on one Drillbit are now
+   visible on other Drillbits.
+   MD-4956 DRILL-6755: Hash-Join does not build hash tables when the probe
+   side is empty.
+   MD-4938 The option planner.index.covering_selectivity_threshold takes
+   effect in execution plan when set to values < 1.0 for complex data.
+   MD-4936 DRILL-6773: Queries, with column aliases, that returned
+   inconsistent results after a Drill patch was applied no longer return
+   inconsistent results.
+   MD-4867 DRILL-6726: Drill can query views created before DRILL-6492
+   when impersonation is enabled.
+   MD-4852 DRILL-6819: The invisible "back" link on the query results page
+   in the Drill WebUI has been removed.
+   MD-4851 Drill queries on MapRDB JSON tables no longer fail on schema
+   change when the only distinct values are null and text.
+   MD-4801 DRILL-6724: Operator context is dumped to logs when errors
+   occur during query execution.
+   MD-4780 DRILL-6746: Queries no longer hang when one of the nodes
+   encounters a connection error.
+   MD-4755 DRILL-6709: The batch statistics logging utility has been
+   extended to mid-stream operators.
+   MD-4643 DRILL-6732: Disabled plugins no longer work as enabled.
+   MD-4617 "direct.used" metrics(jvm_direct_current) catches the direct
+   memory usage.
+   MD-4585 The drillbit.log file includes query user information.
+   MD-4567 DRILL-6517 : Hash-Join no longer accesses batches after query
+   cancellation.
+   MD-4499 DRILL-5365: File not found exception no longer results from
+   reading a Parquet file.
+   MD-4362 Drill no longer fails to generate a non-covering index plan for
+   queries on data with the reserved word 'date' as a column name.
+   MD-3879 DRILL-6039: Graceful shutdown waits for fragments to complete
+   before stopping the Drillbit.
+   MD-2979 DRILL-6410: The Parquet reader no longer leaks memory during
+   query cancellation.
+
+Known Issues
+
+   Drill 1.15.0.0 has the following known issues:
+   MapR Tracking Number Known Issue
+   MD-5390 Drill does not return an error message when impersonation
+   prevents access to a directory.
+   MD-5376 DRILL-6991: The Kerberos ticket is being dumped in the log if
+   the log level is "debug" for stdout.
+   MD-5348 TPCDS queries 56, 60, 83 are slower with plan change.
+   MD-5319 TPCDS query 95 slower with plan change.
+   MD-5250 TPCDS queries 56 and 60 have regressed.
+   MD-5232 TPCH query 4 has regressed for scale factor 1000.
+   MD-5231 DRILL-6896: TPCH 13 has "regressed".
+   MD-5204 DRILL-6845: TPCDS query 95 slower with semi-join enabled. You
+   can disable semi-join through the planner.enable_semijoin option.
+   MD-5063 TPCH queries hit an IndexOutOfBoundsException when
+   planner.enable_demux_exchange = true.
+
+Patches
+
+   None.
+
+Limitations
+
+   None.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/EcosystemRN.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/Component_versions_all_MEPs.html
+   3. https://package.mapr.com/releases/MEP/
+   4. https://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.22.1055/MapR%20Drill%201.3.dmg
+   5. https://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.22.1055/maprdrill-1.3.22.1055-1.i686.rpm
+   6. https://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.22.1055/maprdrill-1.3.22.1055-1.x86_64.rpm
+   7. https://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.22.1055/MapR%20Drill%201.3%2032-bit.msi
+   8. https://package.mapr.com/tools/MapR-ODBC/MapR_Drill/MapRDrill_odbc_v1.3.22.1055/MapR%20Drill%201.3%2064-bit.msi
+   9. https://package.mapr.com/tools/MapR-JDBC/MapR_Drill/MapRDrill_jdbc_v1.6.0.1001/MapRDrillJDBC-1.6.0.1001.zip
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/Drill/drill_connectors.html#drill_connectors
+  11. https://drill.apache.org/docs/s3-storage-plugin/#configuring-the-s3-storage-plugin
+  12. https://drill.apache.org/docs/s3-storage-plugin/#using-an-external-provider-for-credentials
+  13. https://drill.apache.org/docs/querying-the-information-schema/#files
+  14. https://drill.apache.org/docs/workspaces/
+  15. https://drill.apache.org/docs/s3-storage-plugin/#configuring-the-s3-storage-plugin
+  16. https://drill.apache.org/docs/file-system-storage-plugin/
+  17. https://drill.apache.org/docs/date-time-functions-and-arithmetic/#timestampadd
+  18. https://drill.apache.org/docs/date-time-functions-and-arithmetic/#timestampdiff
+  19. https://drill.apache.org/docs/from-clause/#join-types
+  20. https://drill.apache.org/docs/group-by-clause/
+  21. https://drill.apache.org/docs/lateral-join/
+  22. https://drill.apache.org/docs/lexical-structure/
+  23. https://drill.apache.org/docs/data-type-conversion/
+  24. https://drill.apache.org/docs/interfaces-introduction/
+  25. https://drill.apache.org/docs/querying-indexes/
+  26. https://drill.apache.org/docs/sort-based-and-hash-based-memory-constrained-operators/#disabling-the-hash-operators
+  27. https://drill.apache.org/docs/parquet-filter-pushdown/#parquet-filter-pushdown-for-varchar-and-decimal-data-types
+  28. https://drill.apache.org/docs/configuring-custom-acls-to-secure-znodes/
+  29. https://drill.apache.org/docs/planning-and-execution-options/#setting-options-from-the-drill-web-ui
+  30. https://drill.apache.org/docs/planning-and-execution-options/#setting-options-from-the-drill-web-ui
+  31. https://drill.apache.org/docs/starting-the-web-ui/
+  32. https://drill.apache.org/docs/configuring-the-drill-shell/
+  33. https://drill.apache.org/docs/configuring-the-drill-shell/#sqlline-connection-parameters
+  34. https://drill.apache.org/docs/querying-system-tables/#querying-the-options-table
+  35. https://drill.apache.org/docs/querying-system-tables/#querying-the-functions-table
+  36. https://drill.apache.org/docs/apache-drill-1-15-0-release-notes/
+  37. https://mapr.com/blog/mapr-announces-drill-1-15-with-s3-cloud-storage-plugin/

@@ -3,46 +3,6 @@ Run Spark Jobs with Oozie
    Complete the following steps to configure Oozie to run Spark jobs:
 
    Configure a Spark action:
-     * Only for Oozie 4.2.0 and below:
-       Update the Spark shared libraries.
-       By default, Oozie ships with shared libraries for a specific Spark
-       version. To update the shared libraries with the version of Spark
-       that you are running, complete the following steps:
-         1. Stop Oozie:
-maprcli node services -name oozie -action stop -nodes <space delimited list of n
-odes>
-         2. In the /opt/mapr/oozie/oozie-<version>/share2/lib/spark
-            directory, remove all *.jar files EXCEPT
-            oozie-sharelib-spark-<version>-mapr.jar.
-         3. In the /opt/mapr/oozie/oozie-<version>/share1/lib/spark
-            directory, also remove all *.jar files EXCEPT
-            oozie-sharelib-spark-<version>-mapr.jar.
-         4. Copy spark-assembly-*.jar to
-            /opt/mapr/oozie/oozie-<version>/share2/lib/spark/ directory.
-cp /opt/mapr/spark/spark-<version>/lib/spark-assembly-*.jar /opt/mapr/oozie/oozi
-e-<version>/share/lib/spark/
-         5. Copy spark-assembly-*.jar to
-            /opt/mapr/oozie/oozie-<version>/share1/lib/spark/ directory.
-cp /opt/mapr/spark/spark-<version>/lib/spark-assembly-*.jar /opt/mapr/oozie/oozi
-e-<version>/share/lib/spark/
-         6. Start Oozie:
-maprcli node services -name oozie -action start -nodes <space delimited list of
-nodes>
-         7. If needed, update the Oozie shared libraries as described in
-            [1]Updating the Oozie Shared Libraries.
-     * For MEP 1.x or a prior Oozie version:
-         1. Add Spark configuration files to the Spark action:
-              a. To add spark-default.conf to the Spark action, copy it to
-                 /opt/mapr/oozie/oozie-<version>/conf/spark-conf/
-                 directory:
-mkdir /opt/mapr/oozie/oozie-<version>/conf/spark-conf
-cp /opt/mapr/spark/spark-<version>/conf/spark-defaults.conf /opt/mapr/oozie/oozi
-e-<version>/conf/spark-conf/
-              b. Restart Oozie:
-maprcli node services -name oozie -action restart -nodes
-                 <space-delimited list of nodes>
-       For MEP 2.x and later:
-
     1. For running a Spark action through Oozie, you should be able to
        connect to Hive on a secure cluster. Make sure the hive-site.xml
        file that is used by Oozie has the following property set:
@@ -54,13 +14,13 @@ maprcli node services -name oozie -action restart -nodes
        hive-site.xml, etc) to a Spark action, copy the files to the
        {OOZIE_HOME}/share/lib/spark/ directory.
     3. If needed, update the Oozie shared libraries as described in
-       [2]Updating the Oozie Shared Libraries.
+       [1]Updating the Oozie Shared Libraries.
     4. Run pySpark using Spark Action:
          a. Run pySpark using Spark Action by specifying pyspark and py4j
             zip files to the sharelib:
 cp /{SPARK_HOME}/python/lib/ pyspark*.zip {OOZIE_HOME}/share/lib/spark/
 cp /{SPARK_HOME}/python/lib/py4j*src.zip {OOZIE_HOME}/share/lib/spark/
-         b. Update the Oozie shared libraries as described in [3]Updating
+         b. Update the Oozie shared libraries as described in [2]Updating
             the Oozie Shared Libraries.
     5. When you configure a Spark action in the workflow.xml, specify the
        master and mode elements of the Spark job:
@@ -69,9 +29,6 @@ cp /{SPARK_HOME}/python/lib/py4j*src.zip {OOZIE_HOME}/share/lib/spark/
             spark://ubuntu2:7077, you would replace the <master> [SPARK
             MASTER URL]</master> in the example below with <master>
             spark://ubuntu2:7077</master>.
-          + If you are using Oozie 4.2.0-1609 or earlier, you should
-            perform Step 1 (Update the the Spark shared libraries) to run
-            the Spark action in Spark on YARN mode.
           + For Spark on YARN mode, specify yarn-client or yarn-cluster in
             the master element. For example, for yarn-cluster mode, you
             would replace <master> [SPARK MASTER URL]</master> with
@@ -110,4 +67,3 @@ References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Oozie/UpdatingOozieSharedLibs.html#task_erj_jyr_3z
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Oozie/UpdatingOozieSharedLibs.html#task_erj_jyr_3z
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Oozie/UpdatingOozieSharedLibs.html#task_erj_jyr_3z

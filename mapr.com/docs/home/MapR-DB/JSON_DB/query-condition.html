@@ -14,10 +14,14 @@ Querying with Conditions
      * [6]Python - OJAI QueryCondition Object
      * [7]Python - OJAI Query Condition in JSON Format
      * [8]dbshell
+     * [9]C# - OJAI QueryCondition Object
+     * [10]C# - OJAI Query Condition in JSON Format
+     * [11]Go - OJAI QueryCondition Object
+     * [12]Go - OJAI Query Condition in JSON Format
 
    The following example shows how to return all documents from a store
-   where address.zipCode equals 95196, using the [9]Query.where method. It
-   uses an OJAI [10]QueryCondition to specify the condition.
+   where address.zipCode equals 95196, using the [13]Query.where method.
+   It uses an OJAI [14]QueryCondition to specify the condition.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -85,7 +89,7 @@ n
 }
 
    The following example shows how to return all documents from a store
-   where address.zipCode equals 95196, using the [11]Query.where method.
+   where address.zipCode equals 95196, using the [15]Query.where method.
    It specifies the query condition using a JSON string.
 /**
  * Copyright (c) 2017 MapR, Inc.
@@ -204,8 +208,8 @@ ConnectionManager.getConnection(connectionString)
   });
 
    The following example shows how to return all documents from a store
-   where address.zipCode equals 95196, using the [12]Query.where method.
-   It uses an OJAI [13]QueryCondition to specify the condition.
+   where address.zipCode equals 95196, using the [16]Query.where method.
+   It uses an OJAI [17]QueryCondition to specify the condition.
 from mapr.ojai.ojai_query.QueryOp import QueryOp
 from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
 
@@ -271,12 +275,228 @@ for doc in query_result:
 connection.close()
 
    The following two dbshell commands are equivalent to the code examples.
-   See [14]dbshell find or findbyid for more details about the syntax
+   See [18]dbshell find or findbyid for more details about the syntax
    dbshell provides.
 # mapr dbshell
 maprdb root:> find /demo_table --q {"$where":{"$eq":{"address.zipCode":95196}}}
 
 maprdb root:> find /demo_table --where {"$eq":{"address.zipCode":95196}}
+
+   The following example shows how to return all documents from a store
+   where address.zipCode equals 95196, using the [19]Query.Where method.
+   It uses an OJAI [20]QueryCondition to specify the condition.
+using System;
+using MapRDB.Driver;
+using MapRDB.Driver.Ojai;
+
+public class FindQueryWithCondition
+{
+        public async void FindQueryWithCondition()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        //Create an OJAI query
+        var query = connection
+            .NewQuery()
+                .Where(connection
+                        .NewQueryCondition()
+                            .Is("address.zipCode", QueryOp.EQUAL, 95196)
+                            .Close()
+                        .Build())
+                 .Build();
+
+        // Fetch the OJAI Documents by query
+        var queryResult = store.Find(query);
+
+        var documentStream = await queryResult.GetDocumentAsyncStream().GetAllDo
+cuments();
+        // Print OJAI Documents from document stream
+        foreach (var document in documentStream)
+        {
+            Console.WriteLine(document);
+        }
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following example uses an OJAI query condition specified in JSON
+   format to return all documents from a store where address.zipCode
+   equals 95196.
+using System;
+using MapRDB.Driver;
+using MapRDB.Driver.Ojai;
+
+public class FindQueryWithConditionJson
+{
+        public async void FindQueryWithConditionJson()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        // Create an OJAI query
+        var query =
+            @"{" +
+                @"""$where"":" +
+                    @"{" +
+                        @"""$eq"":{""address.zipCode"":{""$numberLong"":""95196"
+"}}" +
+                    @"}" +
+            @"}";
+
+        // Fetch OJAI Documents by query
+        var queryResult = store.FindQuery(query);
+
+        var documentStream = await queryResult.GetAllDocuments();
+        // Print OJAI Documents from document stream
+        foreach (var document in documentStream)
+        {
+            Console.WriteLine(document.ToDictionary());
+        }
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following example shows how to return all documents from a store
+   where address.zipCode equals 95196, using the [21]Query.WhereCondition
+   function. It uses an OJAI [22]Condition to specify the condition.
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Options for find request
+        options := &client.FindOptions{ResultAsDocument: true}
+
+        // Create a condition
+        condition, err := client.MakeCondition(client.Is("address.zipCode", clie
+nt.EQUAL, 95196), client.Close())
+        if err != nil {
+                panic(err)
+        }
+        condition.Build()
+
+        // Create an OJAI query
+        query, err := client.MakeQuery(client.WhereCondition(condition))
+        if err != nil {
+                panic(err)
+        }
+        query.Build()
+
+        // Fetch all OJAI Documents from table
+        findResult, err := store.FindQuery(query, options)
+
+        // Print OJAI Documents from document stream
+        for _, doc := range findResult.DocumentList() {
+                fmt.Println(doc)
+        }
+
+        // Close connection
+        connection.Close()
+}
+
+   The following example uses an OJAI query condition specified in JSON
+   format to return all documents from a store where address.zipCode
+   equals 95196.
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Options for find request
+        options := &client.FindOptions{ResultAsDocument: true}
+
+        // Create an OJAI query
+        query := map[string]interface{}{
+                "$where": map[string]interface{}{
+                        "$eq": map[string]interface{}{
+                                "address.zipCode": 95196}}}
+
+        // Fetch all OJAI Documents from table
+        findResult, err := store.FindQueryMap(query, options)
+
+        // Print OJAI Documents from document stream
+        for _, doc := range findResult.DocumentList() {
+                fmt.Println(doc)
+        }
+
+        // Close connection
+        connection.Close()
+}
 
 References
 
@@ -288,9 +508,17 @@ References
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect4
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect5
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect6
-   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
-  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/QueryCondition.html
-  11. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
-  12. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#aa1aacf4f5d425ac82b6a5371a95b2277
-  13. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_condition_1_1_query_condition.html
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect7
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect8
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect9
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#div1sect10
+  13. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+  14. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/QueryCondition.html
+  15. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+  16. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#aa1aacf4f5d425ac82b6a5371a95b2277
+  17. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_condition_1_1_query_condition.html
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+  19. https://mapr.com/docs/apidocs/61/ojai/csharp/d8/d06/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_query.html#a4fe9e3ef1a974cf67cfb216fe97181f9
+  20. https://mapr.com/docs/apidocs/61/ojai/csharp/dd/da0/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_query_condition.html
+  21. https://mapr.com/docs/apidocs/61/ojai/go/#WhereCondition
+  22. https://mapr.com/docs/apidocs/61/ojai/go/#Condition

@@ -1,0 +1,115 @@
+Upgrading from Hive 2.1 to Hive 2.3 with Oracle DB used in Metastore
+
+   This section describes how the different upgrade scenarios from Hive
+   2.1 to Hive 2.3.
+
+Column type verification
+
+   You need to first check your current Oracle DB schema and understand
+   your upgrade scenario.
+   All the examples below use the Oracle SQL*Plus tool to execute SQL
+   statements. Use the DESCRIBE <Table name>; to command to check the
+   Oracle table information for following Hive metastore tables:
+     * COLUMNS_V2
+     * SD_PARAMS
+     * TABLE_PARAMS
+     * SERDE_PARAMS
+
+   CAPTION: Table 1. The Oracle metastore column types and upgrade
+   scenario:
+
+      Table       Column    Possible value of column type
+                            Scenario I    Scenario II
+       (1)      (2)         (3)        (4)
+    COLUMNS_V2  TYPE_NAME   CLOB       VARCHAR2(4000)
+    SD_PARAMS   PARAM_VALUE CLOB       VARCHAR2(4000)
+   TABLE_PARAMS PARAM_VALUE CLOB       VARCHAR2(4000)
+   SERDE_PARAMS PARAM_VALUE CLOB       VARCHAR2(4000)
+
+   If column TYPE_NAME in the COLUMNS_V2 table has VARCHAR2(4000) as the
+   data type, then you have to perform upgrade scenario I. If column
+   TYPE_NAME in the COLUMNS_V2 table has a data type CLOB, then you have
+   to perform upgrade scenario II.
+
+   All columns types must belong to the same upgrade scenarios, in other
+   words all your columns types must be VARCHAR2 or CLOB.
+
+Use upgrade scenario I
+
+   Upgrading to Hive 2.3 (MEP-6.1.0 and above)
+
+   To upgrade from Hive-2.1 to Hive 2.3, first download Hive 2.3 from the
+   MEP 6.1.0 package repository and perform the upgrade according to the
+   [1]common upgrade instructions.
+
+   Upgrading to Hive 2.3 (before MEP 6.1.0)
+   To upgrade Hive 2.1 to Hive 2.3 (before MEP 6.1.0), edit the
+   upgrade-2.1.0-to-2.2.0.oracle.sql file:
+nano $HIVE_HOME/scripts/metastore/upgrade/oracle/upgrade-2.1.0-to-2.2.0.oracle.s
+ql
+
+   Remove the @039-HIVE-12274.oracle.sql; line from the upgrade script and
+   then perform the upgrade according to the [2]common upgrade
+   instructions.
+
+Use upgrade scenario II
+
+   Upgrade to Hive 2.3 (MEP 6.1.0 and above)
+    1. Replace the content of @039-HIVE-12274.oracle.sql; file to:
+-- change PARAM_VALUE to CLOBs
+ALTER TABLE COLUMNS_V2 ADD (TEMP CLOB);
+UPDATE COLUMNS_V2 SET TEMP=TYPE_NAME;
+ALTER TABLE COLUMNS_V2 DROP COLUMN TYPE_NAME;
+ALTER TABLE COLUMNS_V2 RENAME COLUMN TEMP TO TYPE_NAME;
+
+ALTER TABLE TABLE_PARAMS ADD (TEMP CLOB);
+UPDATE TABLE_PARAMS SET TEMP=PARAM_VALUE, PARAM_VALUE=NULL;
+ALTER TABLE TABLE_PARAMS DROP COLUMN PARAM_VALUE;
+ALTER TABLE TABLE_PARAMS RENAME COLUMN TEMP TO PARAM_VALUE;
+
+ALTER TABLE SERDE_PARAMS ADD (TEMP CLOB);
+UPDATE SERDE_PARAMS SET TEMP=PARAM_VALUE, PARAM_VALUE=NULL;
+ALTER TABLE SERDE_PARAMS DROP COLUMN PARAM_VALUE;
+ALTER TABLE SERDE_PARAMS RENAME COLUMN TEMP TO PARAM_VALUE;
+
+ALTER TABLE SD_PARAMS ADD (TEMP CLOB);
+UPDATE SD_PARAMS SET TEMP=PARAM_VALUE, PARAM_VALUE=NULL;
+ALTER TABLE SD_PARAMS DROP COLUMN PARAM_VALUE;
+ALTER TABLE SD_PARAMS RENAME COLUMN TEMP TO PARAM_VALUE;
+
+-- Expand the hive table name length to 256
+ALTER TABLE TBLS MODIFY (TBL_NAME VARCHAR2(256));
+ALTER TABLE NOTIFICATION_LOG MODIFY (TBL_NAME VARCHAR2(256));
+ALTER TABLE PARTITION_EVENTS MODIFY (TBL_NAME VARCHAR2(256));
+ALTER TABLE TAB_COL_STATS MODIFY (TABLE_NAME VARCHAR2(256));
+ALTER TABLE PART_COL_STATS MODIFY (TABLE_NAME VARCHAR2(256));
+ALTER TABLE COMPLETED_TXN_COMPONENTS MODIFY (CTC_TABLE VARCHAR2(256));
+
+-- Expand the hive column name length to 767
+ALTER TABLE COLUMNS_V2 MODIFY (COLUMN_NAME VARCHAR(767));
+ALTER TABLE PART_COL_PRIVS MODIFY (COLUMN_NAME VARCHAR2(767));
+ALTER TABLE TBL_COL_PRIVS MODIFY (COLUMN_NAME VARCHAR2(767));
+ALTER TABLE SORT_COLS MODIFY (COLUMN_NAME VARCHAR2(767));
+ALTER TABLE TAB_COL_STATS MODIFY (COLUMN_NAME VARCHAR2(767));
+ALTER TABLE PART_COL_STATS MODIFY (COLUMN_NAME VARCHAR2(767));
+    2. Add the following line to the
+       $HIVE_HOME/scripts/metastore/upgrade/oracle/upgrade-2.1.0-to-2.2.0.
+       oracle.sql file after the @038-HIVE-10562.oracle.sql; line:
+@039-HIVE-12274.oracle.sql;
+    3. Perform upgrade according to the [3]common upgrade instructions.
+
+   Upgrade to Hive 2.3 (before MEP 6.1.0)
+    1. Replace the content of @039-HIVE-12274.oracle.sql; file to the same
+       as in the previous scenario.
+    2. Make sure that the following line is present in the
+       $HIVE_HOME/scripts/metastore/upgrade/oracle/upgrade-2.1.0-to-2.2.0.
+       oracle.sql file:
+ @039-HIVE-12274.oracle.sql;
+    3. Perform upgrade according to the [4]common upgrade instructions.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingHive.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingHive.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingHive.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/UpgradingHive.html

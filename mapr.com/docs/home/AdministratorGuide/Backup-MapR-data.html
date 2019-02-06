@@ -1,0 +1,88 @@
+Best Practices for Backing Up MapR Information
+
+   To back up configuration information and data from your MapR cluster,
+   you must install the appropriate Linux backup client from your backup
+   software provider on your servers in your MapR cluster. Your backup
+   client user must have the proper file system, and volume permissions.
+   For details on how to configure MapR volume permissions see [1]Creating
+   Volume-level ACLs and [2]Managing Access Controls.
+
+Backup Configuration Data
+
+   By default, all installation files on the cluster, for each server in
+   the cluster, are stored in a single directory on each server in the
+   MapR cluster. To ensure that you backup all the configuration files,
+   MapR supported applications, as well as log files, back up the
+   /opt/mapr directory for all servers in the cluster.
+
+   Note that the /opt/mapr location includes all log files. Log files can
+   add a significant amount of data to your backup environment, so
+   evaluate if they are needed for your business continuity requirements.
+   To backup just the configuration files for the cluster, backup the
+   /opt/mapr/conf directory from all servers in the cluster.
+
+Backup Volume Data
+
+   MapR’s recommended way to backup and restore data, is to enable and
+   configure snapshots and volume mirroring for your data, to another MapR
+   cluster. This step ensures that your business continuity and disaster
+   recovery needs are met.
+
+   See the following links for setting up Snapshots, Mirroring, Table and
+   Streams replications.
+     * Snapshots: [3]Managing Snapshots
+     * Mirrors: [4]Mirror Volumes
+     * MapR-DB Table Replication: [5]Managing Table Replication
+     * MapR-ES Streams Replication: [6]Stream Replication
+
+   If you do not have a secondary cluster to mirror your data, back up
+   your volumes by specifying the following path in your Linux backup
+   agent: /mapr/cluster_name/ - For example: /mapr/my.cluster.com/.
+
+Performance Considerations When Backing Large Data Sets
+
+   You could run into bandwidth and performance limitations when you only
+   specify one path to your MapR cluster, where your data in your volumes
+   is stored on only one Linux host agent. The bottleneck can occur due to
+   the size of that data you are backing up (large file sizes), or due to
+   the number of files you have in your directory structure (millions of
+   files in one directory).
+   To mitigate performance issues, break up the volumes across multiple
+   Linux backup agents, with specific mount paths. For example:
+MapR Linux Host 1 (hostname1):
+          /mapr/my.cluster.com/volume1
+          /mapr/my.cluster.com/volume2
+          /mapr/my.cluster.com/volume3
+MapR Linux Host 2 (hostname2):
+          /mapr/my.cluster.com/volume4
+          /mapr/my.cluster.com/volume5
+          /mapr/my.cluster.com/volume6
+
+MapR Linux Host 3 (hostname3):
+          /mapr/my.cluster.com/volume7
+          /mapr/my.cluster.com/volume8
+          /mapr/my.cluster.com/volume9
+
+Preserve Metadata About the Volumes
+
+   To preserve metadata such as permssions and ACE rules, run a pre-script
+   process as the mapr user, in your backup agent. For example in your
+   pre-script configuration for your host agent for your cluster, you
+   would run:
+maprcli volume dump create
+        -name volume1 -dumpfile volume1_fulldump1 -e statefile1
+
+   You may need to write a quick bash script to dump the file to a
+   location of your choice and ensure that your backup agent is configured
+   to backup that directory. For information on creating volume dumps, see
+   [7]Create and Maintain Volume Dump File.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Creating-Volume-Level-ACLs.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Authorizaton-config.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Snapshots-WorkingWith.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapROverview/c_volumes.html#concept_f3c_bw5_xt__MirrorVolumes
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/ManageReplicas.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR_Streams/replicating_streams.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/VolumeDumpFile.html

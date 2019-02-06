@@ -88,7 +88,32 @@ Tez Upgrade Issues
           + MEP 4.0.0
           + MEP 4.1.0
 
+User Names, Group Names, and LDAP
+
+   LDAP configuration allows you to use group names and usernames with
+   spaces, so it is possible to name groups with spaces in them, for
+   example, domain users. The following structure is possible in the MapR
+   FileSystem:
+drwxr-xr-x   - afischer      domain users          0 2018-10-03 16:10 /user/abc
+drwxr-xr-x   - mapr          mapr                  0 2018-10-05 16:51 /user/def
+drwxr-xr-x   - dschexnayder  domain users          8 2018-10-10 13:30 /user/xyz
+drwxr-xr-x   - mapr          mapr                  1 2018-10-09 14:23 /user/hive
+drwxr-xr-x   - mapr          mapr                 11 2018-10-10 01:56 /user/mapr
+drwxr-xr-x   - mlitovsky     domain users          0 2018-10-06 11:08 /user/hjbs
+drwxr-xr-x   - pcurtis       domain users          5 2018-10-04 19:33 /user/jknd
+drwxr-xr-x   - mapr          mapr                  3 2018-10-08 16:29 /user/ewkd
+drwxr-xr-x   - talvarez      domain users          0 2018-10-04 17:02 /user/lkd
+
+   According to [3]HADOOP-12505, the Hadoop community does not allow
+   spaces in group names, and because of that so does Hive. Each time you
+   perform a query in Hive on a group name that has a space, you will see
+   the following exception:
+-chgrp: 'domain users' does not match expected pattern for group
+
+   The workaround is to not use spaces in group names or user names.
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/TroubleshootingHive.html#TroubleshootingHive-WebHCat
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/TroubleshootingHive.html#TroubleshootingHive-WebHCat
+   3. https://issues.apache.org/jira/browse/HADOOP-12505

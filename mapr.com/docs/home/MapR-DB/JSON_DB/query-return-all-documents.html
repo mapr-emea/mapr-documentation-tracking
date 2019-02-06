@@ -9,9 +9,13 @@ Querying and Returning All Documents
      * [5]Python - Example 1
      * [6]Python - Example 2
      * [7]dbshell
+     * [8]C# - Example 1
+     * [9]C# - Example 2
+     * [10]Go - Example 1
+     * [11]Go - Example 2
 
    The following example queries a document store and returns all
-   documents by using the [8]DocumentStore.find method.
+   documents by using the [12]DocumentStore.find method.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -69,8 +73,8 @@ n
 }
 
    The following example queries a document store and returns all
-   documents. It creates a [9]Query object and passes that to the
-   [10]DocumentStore.findQuery method.
+   documents. It creates a [13]Query object and passes that to the
+   [14]DocumentStore.findQuery method.
 /**
  * Copyright (c) 2017 MapR, Inc.
  *
@@ -131,7 +135,7 @@ n
 }
 
    The following example queries a document store and returns all
-   documents by using the [11]DocumentStore.find method.
+   documents by using the [15]DocumentStore.find method.
 /*
  * Copyright (c) 2018 MapR, Inc.
  *
@@ -181,7 +185,7 @@ ConnectionManager.getConnection(connectionString)
 
    The following example queries a document store and returns all
    documents. It creates an empty query and passes that to the
-   [12]DocumentStore.find method.
+   [16]DocumentStore.find method.
 /*
  * Copyright (c) 2018 MapR, Inc.
  *
@@ -241,7 +245,7 @@ ConnectionManager.getConnection(connectionString)
   });
 
    The following example queries a document store and returns all
-   documents by using the [13]DocumentStore.find method.
+   documents by using the [17]DocumentStore.find method.
 from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
 
 # Create a connection to data access server
@@ -265,8 +269,8 @@ for doc in query_result:
 connection.close()
 
    The following example queries a document store and returns all
-   documents. It creates a [14]Query object and passes that to the
-   [15]DocumentStore.find method.
+   documents. It creates a [18]Query object and passes that to the
+   [19]DocumentStore.find method.
 from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
 
 # Create a connection to data access server
@@ -304,16 +308,210 @@ for doc in doc_stream:
 connection.close()
 
    The following is the equivalent of the code examples using dbshell. See
-   [16]dbshell find or findbyid for more details about the syntax dbshell
+   [20]dbshell find or findbyid for more details about the syntax dbshell
    provides.
 # mapr dbshell
 maprdb root:> find /demo_table
+
+   The following example queries a document store and returns all
+   documents by using the [21]GetAllDocuments method.
+using System;
+using MapRDB.Driver;
+using MapRDB.Driver.Ojai;
+
+public class FindAllDocuments
+{
+        public async void FindAllDocuments()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        // Fetch all OJAI Documents from table
+        var queryResult = store.Find();
+        var documentStream = await queryResult.GetAllDocuments();
+
+        // Print OJAI Documents from document stream
+        foreach (var document in documentStream)
+        {
+            Console.WriteLine(document.ToJsonString());
+        }
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following example queries a document store and returns all
+   documents. It creates a [22]Query object and passes that to the
+   [23]DocumentStore.Find method.
+using System;
+using MapRDB.Driver;
+using MapRDB.Driver.Ojai;
+
+public class FindAllQuery
+{
+        public async void FindAllQuery()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        // Build an OJAI query
+        var query = connection.NewQuery().Build();
+
+        // Options for find request
+        var options = new QueryOptions()
+        {
+            IncludeQueryPlan = true,
+            Timeout = 1000
+        };
+
+        // Fetch all OJAI Documents from table
+        var queryResult = store.Find(query, options);
+
+        // Get query plan
+        Console.WriteLine(queryResult.GetQueryPlan());
+
+        var documentStream = await queryResult.GetDocumentAsyncStream().GetAllDo
+cuments();
+        // Print OJAI Documents from document stream
+        foreach (var document in documentStream)
+        {
+            Console.WriteLine(document.ToDictionary());
+        }
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following example queries a document store and returns all
+   documents by using the [24]DocumentStore.FindAll function.
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Fetch all OJAI Documents from table
+        findResult, err := store.FindAll(&client.FindOptions{IncludeQueryPlan: f
+alse, ResultAsDocument: true})
+
+        // Print OJAI Documents from document stream
+        for _, doc := range findResult.DocumentList() {
+                fmt.Println(doc)
+        }
+
+        // Close connection
+        connection.Close()
+}
+
+   The following example queries a document store and returns all
+   documents. It creates a [25]Query object and passes that to the
+   [26]DocumentStore.FindQuery function.
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Options for find request
+        options := &client.FindOptions{IncludeQueryPlan: true, ResultAsDocument:
+ true}
+
+        // Build an OJAI query
+        query, err := client.MakeQuery()
+        if err != nil {
+                panic(err)
+        }
+
+        // Fetch all OJAI Documents from table
+        findResult, err := store.FindQuery(query, options)
+
+        // Get query plan
+        fmt.Println(findResult.QueryPlan())
+
+        // Print OJAI Documents from document stream
+        for _, doc := range findResult.DocumentList() {
+                fmt.Println(doc)
+        }
+
+        // Close connection
+        connection.Close()
+}
 
 Paginating Your Result
 
    An alternative to returning all documents from a store is to specify a
    limit in the query. Another alternative is to paginate the result using
-   offset and limit. [17]Querying with Order By contains an example that
+   offset and limit. [27]Querying with Order By contains an example that
    shows you how to use offset and limit. Although the example also uses
    order by, you can use offset and limit independent of order by.
 
@@ -326,13 +524,23 @@ References
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect5
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect6
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect7
-   8. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#find-org.ojai.store.Query-
-   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html
-  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#findQuery-org.ojai.store.Query-
-  11. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#find
-  12. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#find
-  13. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aff397b232ff1595cdd2825803ee8f723
-  14. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html
-  15. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aff397b232ff1595cdd2825803ee8f723
-  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
-  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect8
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect9
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect10
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-return-all-documents.html#div1sect11
+  12. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#find-org.ojai.store.Query-
+  13. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html
+  14. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#findQuery-org.ojai.store.Query-
+  15. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#find
+  16. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#find
+  17. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aff397b232ff1595cdd2825803ee8f723
+  18. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html
+  19. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aff397b232ff1595cdd2825803ee8f723
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+  21. https://mapr.com/docs/apidocs/61/ojai/csharp/d9/d30/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_async_stream_utils.html#a174f948dee7495db93969cbfbcf646fa
+  22. https://mapr.com/docs/apidocs/61/ojai/csharp/d8/d06/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_query.html
+  23. https://mapr.com/docs/apidocs/61/ojai/csharp/dd/d4d/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_document_store.html#a38dc5233f1c406a13d2b53e7ddbec0cd
+  24. https://mapr.com/docs/apidocs/61/ojai/go/#DocumentStore.FindAll
+  25. https://mapr.com/docs/apidocs/61/ojai/go/#Query
+  26. https://mapr.com/docs/apidocs/61/ojai/go/#DocumentStore.FindQuery
+  27. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b

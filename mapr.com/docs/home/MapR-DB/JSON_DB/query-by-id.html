@@ -6,10 +6,12 @@ Querying By ID
      * [2]Node.js
      * [3]Python
      * [4]dbshell
+     * [5]C#
+     * [6]Go
 
    This example retrieves a single document identified by the ID user001.
    Note: To query for a range of document IDs, you must specify an OJAI
-   [5]QueryCondition. See [6]Querying with Conditions for examples of the
+   [7]QueryCondition. See [8]Querying with Conditions for examples of the
    syntax.
 /**
  * Copyright (c) 2017 MapR, Inc.
@@ -66,7 +68,7 @@ n
 
    This example retrieves a single document identified by the ID user0001.
    Note: To query for a range of document IDs, you must specify an OJAI
-   query condition. See [7]Querying with Conditions for examples of the
+   query condition. See [9]Querying with Conditions for examples of the
    syntax.
 /*
  * Copyright (c) 2018 MapR, Inc.
@@ -114,8 +116,8 @@ ConnectionManager.getConnection(connectionString)
 
    This example retrieves a single document identified by the ID user0001.
    Note: To query for a range of document IDs, you must specify an OJAI
-   [8]QueryCondition. See [9]Querying with Conditions for examples of the
-   syntax.
+   [10]QueryCondition. See [11]Querying with Conditions for examples of
+   the syntax.
 from mapr.ojai.storage.ConnectionFactory import ConnectionFactory
 
 # Create a connection to data access server
@@ -138,10 +140,92 @@ print(doc)
 connection.close()
 
    The following is the equivalent of the code examples using dbshell. See
-   [10]dbshell find or findbyid for more details about the syntax dbshell
+   [12]dbshell find or findbyid for more details about the syntax dbshell
    provides.
 # mapr dbshell
 maprdb root:> findbyid /demo_table --id user0001
+
+   This example retrieves a single document identified by the ID user0001.
+   Note: To query for a range of document IDs, you must specify an OJAI
+   [13]QueryCondition. See [14]Querying with Conditions for examples of
+   the syntax.
+using System;
+using MapRDB.Driver;
+
+public class FindById
+{
+    public void FindById()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        // Fetch the OJAI Document by its '_id' field
+        var document = store.FindById("user0001");
+
+        // Print the OJAI Document
+        Console.WriteLine(document);
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   This example retrieves a single document identified by the ID user0001.
+   Note: To query for a range of document IDs, you must specify an OJAI
+   [15]Condition. See [16]Querying with Conditions for examples of the
+   syntax.
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Fetch the OJAI Document by its '_id' field
+        doc, err := store.FindByIdString("id0001")
+        if err != nil {
+                panic(err)
+        }
+
+        // Print the OJAI Document
+        fmt.Println(doc.AsJsonString())
+
+        // Close connection
+        connection.Close()
+}
 
 References
 
@@ -149,9 +233,15 @@ References
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-by-id.html#div1sect2
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-by-id.html#div1sect3
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-by-id.html#div1sect4
-   5. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/QueryCondition.html
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
-   8. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_condition_1_1_query_condition.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-by-id.html#div1sect5
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-by-id.html#div1sect6
+   7. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/QueryCondition.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
    9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+  10. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_condition_1_1_query_condition.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+  13. https://mapr.com/docs/apidocs/61/ojai/csharp/da/dad/interface_map_r_d_b_1_1_driver_1_1_ojai_1_1_i_query_condition.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b
+  15. https://mapr.com/docs/apidocs/61/ojai/go/#Condition
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-condition.html#reference_am3_q5y_41b

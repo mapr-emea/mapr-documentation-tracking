@@ -1,0 +1,73 @@
+Kafka Schema Registry (Developer Preview)
+
+   Kafka Schema Registry provides a RESTful interface for storing and
+   retrieving Avro schemas. To fully benefit from the Kafka Schema
+   Registry, it is important to understand what the Kafka Schema Registry
+   is and how it works, how to deploy and manage it, and its limitations.
+   Note: This feature is presented as a developer preview. Developer
+   previews are not tested for production environments, and should be used
+   with caution.
+
+   You must implement Kafka Schema Registry for your data schemas to self
+   evolve along with being compatible with downstream consumers.
+
+   Kafka Schema Registry acts as a standalone serving layer for your
+   metadata, interacting with both the producer and consumer. It stores
+   schemas for keys and values of records.
+   [SchemaRegistry.png]
+
+   Kafka Schema Registry enables you to perform the following tasks:
+     * Store a versioned history of all schemas
+     * Provide multiple compatibility settings
+     * Support schema evolution according to the configured compatibility
+       settings and the expanded Avro support
+     * Provide serializers that interface with Kafka clients and manage
+       schema storage and retrieval for Kafka messages that are sent in
+       the Avro format
+
+   You can also perform these tasks:
+     * List schemas by subject and also list all versions of a subject
+       (schema)
+     * Retrieve a schema by version or ID
+     * Retrieve the latest version of a schema
+     * Verify that a schema is compatible with a certain version
+
+Architecture
+
+   Kafka Schema Registry is designed to be distributed with a single
+   master architecture and ZooKeeper coordinates the master election,
+   based on the configuration. Kafka-coordinated master election is not
+   currently supported.
+
+   MapR Event Store For Apache Kafka is designed to be the durable backend
+   for schema registry and a write-ahead change log for the state of
+   schema registry and the schemas it contains.
+
+Interoperability
+
+   Kafka Schema Registry can be used to interface with the following
+   components:
+     * Kafka Client (producer, consumer APIs)
+     * KStreams
+     * KSQL
+     * Kafka Connect
+
+Performance and Scalability Impact
+
+   Kafka Schema Registry improves performance by enabling you to decrease
+   the size of the message payload. Without Kafka Schema Registry, the
+   message payload contains the user data and the Avro schema metadata.
+   With the Kafka Schema Registry, the message payload contains the user
+   data and only the schema ID that is unique for each schema.
+
+   For scalability, you can launch Kafka Schema Registry on several nodes.
+
+For More Information
+
+     * [1]Installing Kafka Schema Registry
+     * [2]Confluent Schema Registry documentation
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/InstallingKafkaSchemaReg.html
+   2. https://docs.confluent.io/current/schema-registry/docs/index.html

@@ -1,0 +1,190 @@
+Hive 2.1.1-1901 (MEP 4.1.3 and MEP 5.0.2) Release Notes
+
+   This section provides reference information, including new features,
+   patches, known issues, and limitations for Hive 2.1-1901.
+
+   Below are release notes for the Hive component included in the MapR
+   Converged Data Platform. You may also be interested in the [1]Apache
+   Hive 2.1.1 Release Notes or the [2]Apache Hive homepage.
+
+   These release notes contain only MapR-specific information and are not
+   necessarily cumulative in nature. For information about how to use the
+   release notes, see [3]Ecosystem Component Release Notes.
+   Hive Version 2.1.1
+   Release Date February 2019
+   MapR Version Interoperability See [4]Hive and HCatalog Support Matrix
+   and [5]Ecosystem Support Matrix and [6]MEP Components and OS Support.
+   Source on GitHub [7]https://github.com/mapr/hive
+   GitHub Release Tag
+
+   2.1.1-mapr-1901
+   Maven Artifacts See [8]Maven Artifacts for MapR.
+   Package Names Navigate to [9]https://package.mapr.com/releases/MEP/,
+   and select your MEP and OS to view the list of package names.
+
+Feature Support
+
+     * MapR supports Hive-2.1.1 on Tez-0.8.4. For more information, see
+       [10]Tez 0.8.4-1901 (MEP 4.1.3 and MEP 5.0.2) Release Notes.
+     * MapR does not support Hive on Spark, so you cannot use Spark as an
+       execution engine for Hive. However, you can run Hive and Spark on
+       the same cluster. You can also use Spark SQL and Drill to query
+       Hive tables.
+     * MapR does not support HDFS encryption in Hive tables.
+     * MapR does not support HBase with Hive-2.1.1 starting from
+       mapr-core-6.0.0.
+     * MapR does not support LLAP with Hive-2.1.1 as Apache Slider is not
+       a MapR ecosystem component.
+     * Starting from Hive 2.1, Hive needs to run the schematool command as
+       an initialization step.
+
+New Features
+
+     * Implemented preserving warden configuration files during package
+       update.
+     * Backported FallbackHiveAuthorizerFactory in the scope of
+       [11]CVE-2018-11777.
+
+Changes in Security with Default Configuration
+
+     * Added the following properties to the hive-site.xml configuration
+       by default on a secured cluster:
+
+   CAPTION: Table 1. Properties added by default to hive-site.xml
+
+   Property Value
+   hive.users.in.admin.role mapr
+   hive.conf.restricted.list hive.security.authenticator.manager,
+   hive.security.authorization.manager,
+   hive.users.in.admin.role,hive.server2.xsrf.filter.enabled,
+   hive.exec.pre.hooks,hive.exec.post.hooks,
+   hive.exec.failure.hooks,hive.exec.query.redactor.hooks,
+   hive.semantic.analyzer.hook,hive.exec.driver.run.hooks,
+   hive.server2.session.hook
+   hive.security.authorization.enabled true
+   hive.security.authorization.manager
+   org.apache.hadoop.hive.ql.security.authorization.plugin.fallback.Fallba
+   ckHiveAuthorizerFactory
+
+   Because hive.users.in.admin.role and
+   hive.security.authorization.manager were added to default Hive
+   configuration, some actions in Hive are restricted according to
+   security best practices and [12]CVE-2018-11777
+
+   The new class FallbackHiveAuthorizerFactory will do the following to
+   mitigate the above-mentioned [13]CVE-2018-11777:
+     * Disallow local file location in SQL statements for all except the
+       administrator.
+     * Allow set only selected white list parameters.
+     * Disallow dfs commands for all except the administrator.
+     * Disallow ADD JAR statements for all except the administrator.
+     * Disallow COMPILE statements for all except the administrator.
+     * Disallow TRANSFORM statements.
+
+   For more information, see [14]Action Restrictions with Fallback Hive
+   Authorizer.
+
+Patches
+
+   This release by MapR includes the following patches on the base Apache
+   release. For complete details, refer to the commit log for this project
+   in GitHub.
+   Commit Date (YYYY-MM-DD) Comment
+   3209ad7 2018-08-20 MAPR-HIVE-304 : Hive configure.sh ignores
+   .customSecure file presence
+   41a6f32 2018-08-21 MAPR-32194 : Hardcoded reference to hdfs in Hive
+   8e228c8 2018-08-20 MAPR-31529: GenericUDFNamedStruct should constant
+   fold at compile time
+   e4f3809 2018-09-06 MAPR-31413: add "explain ast"
+   7817ec2 2018-10-01 MAPR-HIVE-294: Authorization issue while trying to
+   obtain logs in HS2 Web UI
+   bb5b17d 2018-10-03 MAPR-HIVE-329 : Incorrect verification of
+   customSecure parameter during hive configure.sh
+   27aec85 2018-10-04 MAPR-HIVE-311 : Set up hive.conf.restricted.list
+   configuration for clusters with MapR SASL security in scope of secure
+   by default
+   e8748f62 2018-10-08 MAPR-HIVE-331 : Refactor conftool. Use enum instead
+   of boolean for security variable
+   bc5dd15 2018-10-11 MAPR-HIVE-340 : configure.sh should keep custom
+   configs in warden.hs2/hivemeta.conf
+   603b40f 2018-11-12 MAPR-HIVE-379 : Warden services do not copy while
+   running configure.sh -R after update. Cannot run Hive after update
+   934573e 2018-11-23 MAPR-HIVE-346 : Use rename of files where it is
+   possible instead of full copy during moving data from staging dirs
+   50f7d8b 2018-11-31 MAPR-HIVE-367 : Extend hive.conf.restricted.list
+   configuration for clusters with MapR SASL security in scope of secure
+   by default
+   7f14674 2018-10-16 MAPR-HIVE-385 : CVE-2018-11777: Blocking local
+   resource access in HiveServer2
+   d68fc4c 2018-08-23 MAPR-HIVE-286: Error in
+   TestVectorStringExpressions.TestVectorStringExpressions while running
+   on Jenkins
+   aaa387e 2018-12-14 MAPR-HIVE-411 :
+   ConfToolTest.restrictedListSecurityOffTest is failed in Hive-2.1
+   2a9b793
+
+   2018-12-14
+   MAPR-HIVE-378 : Hive displays NULLS instead of Decimal values in
+   external table (MapRDb Binary)
+   b87873d 2018-12-18 MAPR-HIVE-413 : Remove duplicates from ConfTool
+   Junit tests
+   b680056 2018-12-20 MAPR-HIVE-389 : Develop the logic for preserving
+   custom configuration in Hive warden.conf files
+   f2b21ca 2018-12-24 MAPR-HIVE-414 : Hive Metastore schema upgrade fails
+   on MS SQL Database
+   3001d6d 2018-12-28 MAPR-HIVE-323 : Hive Metastore failed to start on
+   Derby DB after running fresh configure.sh -R
+   1f22ff5 2019-01-08 MAPR-HIVE-416: unable to apply custom security.
+   .customSecure is ignored by Hive configure.sh
+   d86903a 2019-01-09 MAPR-HIVE-395 : hive.warehouse.subdir.inherit.perms
+   and hive.optimize.insert.dest.volume don't work on CTAS query
+
+   This release by MapR also includes the following backported issues. For
+   complete details, refer to the commit log for this project in GitHub.
+   Commit Date (YYYY-MM-DD) Comment
+   78665cef 2018-08-16 HIVE-15422:
+   HiveInputFormat::pushProjectionsAndFilters paths comparison generates
+   huge number of objects for partitioned dataset
+   652ad1c 2018-08-31 HIVE-16788: ODBC call SQLForeignKeys leads to NPE if
+   you use PK arguments rather than FK arguments
+   3931127 2018-11-23 HIVE-20420: Provide a fallback authorizer when no
+   other authorizer is in use
+   7686e68 2018-11-30 HIVE-14007. Replace hive-orc module with ORC 1.3.1
+   b0f8fb6 2018-12-17 HIVE-15841: Upgrade Hive to ORC 1.3.3
+   cda4352 2018-12-17 HIVE-17631 : upgrade orc to 1.4.1
+   6c7dc72 2018-12-17 HIVE-18558: Upgrade orc version to 1.4.2
+   5e70406 2018-12-17 HIVE-18674 : update Hive to use ORC 1.4.3
+   82dffa1 2018-12-17 HIVE-19465: Upgrade ORC to 1.5.0
+   f8b0139 2018-12-17 HIVE-19226: Extend storage-api to print timestamp
+   values in UTC
+   04d746b 2018-12-17 HIVE-19669: Upgrade ORC to 1.5.1
+   6f31bba 2018-10-08 HIVE-18007 : Address maven warnings
+   f920681 2018-10-25 HIVE-18778: Needs to capture input/output entities
+   in explain
+   4c176fe 2018-12-20 HIVE-17272: when hive.vectorized.execution.enabled
+   is true, query on empty partitioned table fails with NPE
+
+Known Issues
+
+     * None.
+
+Resolved Issues
+
+     * None.
+
+References
+
+   1. https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12335838&styleName=Text&projectId=12310843
+   2. http://hive.apache.org/
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/EcosystemRN.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_hive_hcat_matrix.html#reference_zfq_nsb_t5
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/InteropMatrix/r_eco_matrix.html#reference_kyp_kfv_s5
+   6. https://maprdocs.mapr.com/home/InteropMatrix/r_MEP_52.html
+   7. https://github.com/mapr/hive
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/DevelopmentGuide/MavenArtifacts.html#MavenArtifactsforMapR
+   9. https://package.mapr.com/releases/MEP/
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/EcosystemRN/TezRN-0.8.4-1901.html
+  11. https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-11777
+  12. https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-11777
+  13. https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-11777
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/ActionRestrictionsFallbackAuthorizer.html

@@ -1,0 +1,100 @@
+Troubleshooting the MapR Container Storage Interface (CSI) Storage Plugin
+
+   This section describes how to resolve common problems you might
+   encounter when installing and using the MapR Container Storage
+   Interface (CSI) Storage Plugin.
+
+Troubleshooting CSI Driver installation
+
+   Run the following command to get the Pods deployed for CSI plugin and
+   provisioner:
+kubectl get pods -n mapr-csi
+
+   The installation is considered successful if the above command shows
+   the Pods in "Running" state. For example, your output should look
+   similar to the following when CSI plugin is deployed on 3 Worker nodes:
+mapr-csi       csi-controller-kdf-0         5/5     Running     0          4h25m
+mapr-csi       csi-nodeplugin-kdf-2kfrf     3/3     Running     0          4h25m
+mapr-csi       csi-nodeplugin-kdf-lq5nw     3/3     Running     0          4h25m
+mapr-csi       csi-nodeplugin-kdf-pkrzt     3/3     Running     0          4h25m
+
+   The above output shows the following:
+     * csi-nodeplugin-kdf-*: Daemonset pods deployed on all the kubernetes
+       worker nodes
+     * csi-controller-kdf-0: StatefulSet Pod deployed on a single
+       kubernetes worker node
+
+Troubleshoot MapR CSI plugin Deployment failures
+
+   If the pods shows failure in the deployment, run the following kubectl
+   command to see the container logs:
+kubectl logs <csi-nodeplugin-*> -n mapr-csi -c <Nodeplugin-Pod-container>
+
+   Here, replace <Nodeplugin-Pod-container> with the container which is
+   failing. You can also run the following kubectl command to see the
+   controller logs:
+kubectl logs csi-controller-kdf-0 -n mapr-csi -c <Controller-Pod-Container>
+
+   Here, replace <Controller-Pod-Container> with the container which is
+   failing.
+
+Troubleshooting a volume provisioning
+
+   See the provisioner log and check for any provisioner errors:
+tail -100f /var/log/csi-maprkdf/csi-provisioner-1.0.0.log
+
+Troubleshooting mount operation
+
+   see the CSI Storage plug-in log and check for any mount/unmount errors:
+tail -100f /var/log/csi-maprkdf/csi-plugin-1.0.0.log
+
+   If you don’t see any errors, see the kubelet logs on the node where the
+   pod is scheduled to run. Check for the MapR CSI Storage plugin logs for
+   specific errors.
+
+Troubleshooting MapR CSI Storage Plugin discovery with kubelet
+
+   Check the kubelet path for kubernetes deployment from the kubelet
+   process running with --root-dir. The --root-dir is a string that
+   contains the directory path for managing kubelet files (such as volume
+   mounts, etc.,) and defaults to /var/lib/kubelet. If the kubernetes
+   environment has a different kubelet path, modify the CSI driver
+   deployment .yaml file with the new path and redeploy the MapR CSI
+   Storage Plugin again.
+
+Troubleshooting snapshot provisioning
+
+   See the provisioner log and check for any provisioner errors:
+tail -100f /var/log/csi-maprkdf/csi-provisioner-1.0.0.log
+
+   If there are no errors, run the following kubectl command to check the
+   snapshot:
+kubectl describe volumesnapshot.snapshot.storage.k8s.io <snapshot-name> -n <name
+space-name>
+
+   Here:
+     * <snapshot-name>: Name of the VolumeSnapshot Object defined in yaml
+     * <namespace-name>: Namespace where the VolumeSnapshot object is
+       created
+
+Troubleshooting no space on disk error
+
+   The devicemapper storage driver used for Docker allows only 10GB by
+   default resulting in "no space left on device" errors when writing to
+   new directories for a new volume mount request. If --maxvolumepernode
+   is configured to be greater than 20 and underlying docker is using
+   devicemapper storagedriver, do the following to increase the storage
+   size:
+    1. Change storagedriver to be other than devicemapper, which restricts
+       container storage to 10GB by default.
+    2. Increase default container storage to more than the default of 10GB
+       for devicemapper storagedriver for the Docker container running on
+       Kubernetes worker node.
+
+   For example, do the following to increase the storage size to 50GB:
+    1. In /etc/sysconfig/docker-storage file, add --storage-opt
+       dm.basesize=50G under DOCKER_STORAGE_OPTIONS section.
+    2. Restart Docker.
+    3. Confirm that the setting is correctly applied by running the
+       following command:
+docker info | grep "Base Device Size"

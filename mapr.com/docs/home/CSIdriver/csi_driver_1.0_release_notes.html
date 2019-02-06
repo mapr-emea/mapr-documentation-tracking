@@ -1,0 +1,108 @@
+MapR Container Storage Interface (CSI) Storage Plugin Release Notes
+
+   These notes describe the first release of the MapR Container Storage
+   Interface (CSI) Storage Plugin.
+
+   You may also be interested in the [1]Kubernetes Release Notes.
+   Version 1.0
+   Release Date February 2019
+   MapR Version Interoperability Compatible with MapR 6.1.0 or later.
+   OS Compatibility The operating system (OS) on a node where the CSI
+   Plugin is installed must be a supported OS for the MapR version. For a
+   list of supported OS versions, see [2]Hardware and Software
+   Requirements.
+   Kubernetes Compatibility Kubernetes 1.13.0 and later.*
+   CSI Driver Downloads See [3]Downloads for more information.
+   Documentation [4]MapR Container Storage Interface (CSI) Storage Plugin
+   Overview
+   Related Resources [5]https://mapr.com/solutions/data-fabric/kubernetes/
+
+   * Kubernetes alpha features are not supported.
+
+New in this Release
+
+   This first release of the MapR Container Storage Interface (CSI)
+   Storage Plugin includes .yaml configuration files that can be installed
+   onto a Kubernetes cluster. Once installed, these containers provide a
+   CSI Driver for MapR Filesystem volume plug-in and a Kubernetes Dynamic
+   Volume Provisioner that permit static and dynamic provisioning of MapR
+   storage from Kubernetes.
+
+Patches
+
+   None.
+
+Limitations
+
+   Note the following limitations:
+     * CSI Driver version 1.0 does not support coexistence with FlexVolume
+       Driver on the same Kubernetes cluster.
+     * All nodes in the Kubernetes cluster must use the same Linux OS.
+       Configuration files are available to support these Linux
+       distributions:
+          + CentOS
+          + Red Hat (use CentOS configuration file)
+          + Ubuntu
+     * The Basic POSIX client package is included by default when you
+       install the MapR Container Storage Interface (CSI) Storage Plugin.
+       The Platinum POSIX client can be enabled by specifying a parameter
+       in the Pod spec. Only the FUSE-based POSIX client is supported.
+       NFSv3 and NFSv4 are not supported.
+     * The CSI Driver does not include support for inline volumes in pods.
+       It only supports PersistentVolumes.
+
+Known Issues
+
+   Note the following known issues:
+     * On nodeplugin Pod restart or upgrade scenario, the existing POSIX
+       client(s) running in the CSI Driver container are killed. The
+       workaround is to move/stop the container workload using MapR CSI
+       Storage Plugin, restart/update the MapR CSI Storage Plugin and
+       start using the MapR CSI Storage Plugin again.
+     * On Provisioner restart, Provisioner loses the information about the
+       REST server where volume or snapshot should be deleted for existing
+       volume and snapshots provisioned. The administrator must manually
+       remove the volume and/or snapshot for provisioned volumes from the
+       MapR Data Platform.
+     * Provisioned snapshot information is written to the provisioner log,
+       but not available in the Kubernetes objects such as
+       volumeSnapshots, VolumesnapshotContents etc.
+     * If you want read-only behavior, specify readOnly in the
+       volumeAttributes. For example, the following is supported:
+csi:
+    nodePublishSecretRef:
+      name: "mapr-ticket-secret"
+      namespace: "test-csi"
+    driver: com.mapr.csi-kdf
+    volumeHandle: pv-securepv-test-read-only-id
+    volumeAttributes:
+      volumePath: "/user/root"
+      cluster: "clusterA"
+      cldbHosts: "10.10.10.210"
+      securityType: "secure"
+      readOnly: "true"
+       The following is not supported:
+csi:
+    nodePublishSecretRef:
+      name: "mapr-ticket-secret"
+      namespace: "test-csi"
+    driver: com.mapr.csi-kdf
+    volumeHandle: pv-securepv-test-read-only-id
+    readOnly: true
+    volumeAttributes:
+      volumePath: "/user/root"
+      cluster: "clusterA"
+      cldbHosts: "10.10.10.210"
+      securityType: "secure"
+
+Resolved Issues
+
+   None.
+
+References
+
+   1. https://kubernetes.io/docs/setup/release/notes/
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_prereqs.html#csi_prereqs__pre-reqs
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_downloads.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_overview.html
+   5. https://mapr.com/solutions/data-fabric/kubernetes/

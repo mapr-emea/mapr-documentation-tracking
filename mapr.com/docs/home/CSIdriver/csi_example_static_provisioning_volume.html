@@ -1,0 +1,150 @@
+Example: Statically Provisioning a MapR Volume Using MapR Container Storage
+Interface (CSI) Storage Plugin
+
+   You can designate a MapR volume for use with Kubernetes by specifying
+   the MapR volume parameters directly inside the PersistentVolume spec.
+
+   Suppose a developer who wants to get an application container up and
+   running quickly with MapR. The developer already has a MapR path that
+   the developer wants to use for the application. The developer only
+   needs the data accessible to read. To make this work, the developer
+   must do the following:
+    1. Generate a MapR service ticket and set the securityType parameter
+       in the PersistentVolume spec to secure if the MapR volume to mount
+       is on a secure MapR cluster.
+       See [1]Generating a Service Ticket for more information. For
+       example:
+kind: PersistentVolume
+metadata:
+  name: pv-securepv-test
+  namespace: test-csi
+  labels:
+    name: pv-securepv-test
+  spec:
+    accessModes:
+    …
+    csi:
+      …
+      volumeAttributes:
+        …
+        securityType: "secure"
+    2. Configure a Ticket Secret and include the base64-encoded contents
+       of the ticket file in the Ticket Secret if the MapR volume to mount
+       is on a secure MapR cluster.
+       See [2]Configuring a Secret for more information. The following
+       table describes the properties in the Secret file:
+
+   Property Notes
+   apiVersion The Kubernetes API version.
+   kind The type of object being created.
+   name A string to identify the Secret.
+   namespace The namespace in which the Secret runs.
+   type The type of Secret being created. For type Opaque, clients must
+   treat these values as opaque and pass them unmodified back to the
+   server.
+   CONTAINER_TICKET The contents of the MapR ticket encoded in base64. If
+   you specified secure for the securityType, you must provide the ticket.
+   To encode the ticket, see [3]Converting a String to Base64. You may
+   remove the ticket if the MapR cluster is not secure.
+    3. Set the runAsUser and the fsGroup parameters in the Pod spec to the
+       UID and GID of the user that created the ticket.
+       For example:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pv1
+  namespace: test-csi
+spec:
+  ...
+  securityContext:
+    runAsUser: 1000
+    fsGroup:2000
+  ...
+       The following table lists the properties specified in the sample
+       Pod spec:
+
+   Parameter Notes
+   apiVersion The Kubernetes API version for the Pod spec.
+   kind The kind of object being created. For clarity, the example uses a
+   naked Pod. Generally, it is better to use a Deployment, DaemonSet, or
+   StatefulSet for high availability (HA) and ease of upgrade.
+   metadata: name The Pod name.
+   metadata: namespace The namespace in which the Pod runs.
+   securityContext: runAsUser The user ID to run the container under. This
+   user ID must be the same as the user ID for which the ticket was
+   generated.
+   securityContext: fsGroup The group ID to run the container under. This
+   group ID must be the same as the group ID of the user for which the
+   ticket was generated.
+    4. Point the volumePath in the CSI driver setting to the desired path,
+       and fill in the cldbHosts and cluster information.
+       For the complete list of MapR volume attributes, see [4]volume
+       create; however, note that volume attributes like mount, quota,
+       createparent, path, and name are ignored when provisioning a MapR
+       volume. See [5]MapR Parameters for Static and Dynamic Provisioning
+       for more information.
+       For example:
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test-simplepv
+  namespace: test-csi
+  labels:
+    name: pv-simplepv-test
+spec:
+  accessModes:
+  - ReadWriteOnce
+  - ReadWriteMany
+  - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 5Gi
+  csi:
+    driver: com.mapr.csi-kdf
+    volumeHandle: test-simplepv
+    volumeAttributes:
+      volumePath: "/"
+      cluster: "clusterA"
+      cldbHosts: "10.10.10.210"
+      securityType: "secure"
+      platinum: "true"
+       The following table lists the properties shown in the sample
+       PersistentVolume spec:
+
+   Parameter Notes
+   apiVersion The Kubernetes API version for the Pod spec.
+   kind The kind of object being created. For clarity, the example uses a
+   naked Pod. Generally, it is better to use a Deployment, DaemonSet, or
+   StatefulSet for high availability (HA) and ease of upgrade.
+   metadata: name The Pod name.
+   metadata: namespace The namespace in which the Pod runs.
+   accessModes How the PersistentVolume is mounted on the host. All modes
+   work the same.
+
+   Note: It's important that the PV and PVC modes are the same so that
+   they can bind.
+   For more information, see [6]Access Modes.
+   csi: driver The MapR CSI Driver being used. Call it using this driver:
+   com.mapr.csi-kdf.
+   volumeHandle Specifies existing volume name or unique volume name for
+   static provisioning.
+   volumePath The mount point within the MapR filesystem. This parameter
+   specifies an existing MapR path. For example, you can specify the root
+   volume as "/", providing access to the entire filesystem.
+   cluster The MapR cluster name.
+   cldbHosts The DNS names or IP addresses of the CLDB hosts for the MapR
+   cluster. You must provide at least one CLDB host. For fault-tolerance,
+   providing multiple CLDB hosts is recommended. To specify multiple
+   hosts, separate each name or IP address by a space.
+   securityType A parameter that indicates whether MapR tickets are used
+   or not used. If MapR tickets are used, specify secure. Otherwise,
+   specify unsecure.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingServiceTicket.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_configuring_secret.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/PersistentStorage/kdf_converting_a_string.html#concept_ogr_sxc_qcb
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/CSIdriver/csi_before_you_begin.html#csi_before_you_begin__mapr_props
+   6. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes

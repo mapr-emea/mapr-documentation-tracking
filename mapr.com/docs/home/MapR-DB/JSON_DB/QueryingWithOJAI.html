@@ -6,7 +6,7 @@ Querying in OJAI Applications
    table you want to query, constructing the query, performing the query,
    and then processing the results.
    Note: The Node.js and Python OJAI clients are supported starting in MEP
-   6.0.
+   6.0. The C# and Go OJAI clients are supported starting in MEP 6.1.0.
 
 Description
 
@@ -15,68 +15,94 @@ Description
      * [1]Java
      * [2]Node.js
      * [3]Python
+     * [4]C#
+     * [5]Go
 
    To construct an OJAI query, call the following methods in the Query
    interface:
-     * [4]Query.select
-     * [5]Query.where
-     * [6]Query.orderBy
-     * [7]Query.offset
-     * [8]Query.limit
+     * [6]Query.select
+     * [7]Query.where
+     * [8]Query.orderBy
+     * [9]Query.offset
+     * [10]Query.limit
 
-   To run the query, pass the Query object to the [9]DocumentStore.find
+   To run the query, pass the Query object to the [11]DocumentStore.find
    method.
    Note: Beginning with MapR version 6.0, the MapR Database Table
    interface is deprecated and replaced by the OJAI version 2.0
    DocumentStore interface.
 
-   To construct an OJAI query, create a Node.js JSON object using [10]OJAI
+   To construct an OJAI query, create a Node.js JSON object using [12]OJAI
    Query Syntax.
-
-   To run the query, pass the Query object to the [11]DocumentStore.find
-   method.
-
-   To construct an OJAI query, create a Python dictionary object using
-   [12]OJAI Query Syntax.
 
    To run the query, pass the Query object to the [13]DocumentStore.find
    method.
+
+   To construct an OJAI query, create a Python dictionary object using
+   [14]OJAI Query Syntax.
+
+   To run the query, pass the Query object to the [15]DocumentStore.find
+   method.
    Note: The following Query methods are available in the Python OJAI API,
    but creating a Python dictionary is the preferred approach:
-     * [14]Query.select
-     * [15]Query.where
-     * [16]Query.order_by
-     * [17]Query.offset
-     * [18]Query.limit
+     * [16]Query.select
+     * [17]Query.where
+     * [18]Query.order_by
+     * [19]Query.offset
+     * [20]Query.limit
+
+   To construct an OJAI query, create a C# object.
+
+   To run the query, pass the Query object to the [21]DocumentStore.Find
+   method.
+   Note: The following Query methods are available in the C# OJAI API:
+     * [22]Query.Select
+     * [23]Query.Where
+     * [24]Query.OrderBy
+     * [25]Query.Offset
+     * [26]Query.Limit
+
+   To construct an OJAI query, create a Go object.
+
+   To run the query, pass the Query object to the
+   [27]DocumentStore.FindQuery function.
+   Note: The following Query functions are available in the Go OJAI API:
+     * [28]Query.Select
+     * [29]Query.WhereCondition
+     * [30]Query.OrderBy
+     * [31]Query.Offset
+     * [32]Query.Limit
 
 Basic Application Flow
 
    The following steps describe the basics in developing client
    applications that query MapR Database JSON tables using the OJAI API.
-     * [19]Java
-     * [20]Node.js
-     * [21]Python
+     * [33]Java
+     * [34]Node.js
+     * [35]Python
+     * [36]C#
+     * [37]Go
 
-    1. Create a [22]Connection instance to your MapR cluster using the
-       [23]DriverManager class:
+    1. Create a [38]Connection instance to your MapR cluster using the
+       [39]DriverManager class:
 Connection connection = DriverManager.getConnection("ojai:mapr:");
        Note: Do not omit the ending colon in the connection string.
-    2. Obtain a [24]DocumentStore handle to a MapR Database JSON table
+    2. Obtain a [40]DocumentStore handle to a MapR Database JSON table
        using the connection object:
 DocumentStore store = connection.getStore(tablePath);
-    3. Create a [25]Query object using the connection object:
+    3. Create a [41]Query object using the connection object:
 Query query = connection.newQuery();
     4. Perform the query operation on the table:
 QueryResult result = store.find(query);
     5. Process the results.
-       The following code snippet iterates through the [26]QueryResult and
+       The following code snippet iterates through the [42]QueryResult and
        prints each document as a JSON string:
 for (final Document userDocument : result) {
     // Print the OJAI Document
     System.out.println(userDocument.asJsonString());
 }
        To process individual fields within a document, use the
-       [27]DocumentReader interface. The following code snippet iterates
+       [43]DocumentReader interface. The following code snippet iterates
        through the fields in a document and prints the fields that are
        strings:
 Iterable it = result.documentReaders();
@@ -121,58 +147,133 @@ stream.on('end', () => {
   connection.close();
 });
 
-    1. Create a [28]Connection instance to your MapR cluster using the
+    1. Create a [44]Connection instance to your MapR cluster using the
        ConnectionFactory class:
 connection_str = 'localhost:5678?;user=mapr;password=mapr;ssl=false'
 connection = ConnectionFactory.get_connection(connection_str=connection_str)
-    2. Obtain a [29]DocumentStore handle to a MapR Database JSON table
+    2. Obtain a [45]DocumentStore handle to a MapR Database JSON table
        using the connection object:
 store = connection.get_store(table_path)
-    3. Create a [30]Query object using the connection object:
+    3. Create a [46]Query object using the connection object:
 query = connection.new_query().build()
     4. Perform the query operation on the table:
 query_result = store.find(query)
     5. Process the results.
-       The following code snippet iterates through the [31]QueryResult and
+       The following code snippet iterates through the [47]QueryResult and
        prints each document as a Python dictionary:
 for doc in query_result:
     print(doc)
     6. Close the connection to MapR:
 connection.close()
 
-   See [32]Examples: Querying JSON Documents for complete code examples.
+    1. Create a [48]Connection instance to your MapR cluster using the
+       ConnectionFactory class:
+var connectionStr = $"localhost:5678?auth=basic;" +
+                $"user=mapr;" +
+                $"password=mapr;" +
+                $"ssl=true;" +
+                $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                $"sslTargetNameOverride=node1.mapr.com";
+var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+    2. Obtain a [49]DocumentStore handle to a MapR Database JSON table
+       using the connection object:
+var store = connection.GetStore(storePath);
+    3. Create a [50]Query object using the connection object:
+var query = connection.NewQuery().Build();
+    4. Perform the query operation on the table:
+var queryResult = store.Find(query);
+    5. Process the results.
+       The following code snippet iterates through the [51]QueryResult and
+       prints each document as a JSON:
+var documentStream = await queryResult.GetDocumentAsyncStream().GetAllDocuments(
+);
+foreach (var document in documentStream)
+{
+        Console.WriteLine(document.ToJsonString());
+}
+
+    6. Close the connection to MapR:
+connection.Close();
+
+    1. Create a [52]Connection instance to your MapR cluster:
+connectionString := "localhost:5678?auth=basic;user=mapr;password=mapr;ssl=false
+"
+connection, error := client.MakeConnection(connectionString)
+    2. Obtain a [53]DocumentStore handle to a MapR Database JSON table
+       using the connection object:
+store, error := connection.CreateStore("/store_path")
+    3. Create a [54]Query object:
+query, err := client.MakeQuery()
+query.Build()
+    4. Perform the query operation on the table:
+queryResult, err := store.FindQuery(query, &client.FindOptions{})
+    5. Process the results.
+       The following code snippet iterates through the [55]QueryResult and
+       prints each document as a JSON:
+        for _, doc := range queryResult.DocumentList() {
+                fmt.Println(doc)
+        }
+    6. Close the connection to MapR:
+connection.Close()
+
+   See [56]Examples: Querying JSON Documents for complete code examples.
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div1entry1
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div1entry2
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div1entry3
-   4. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-   5. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
-   6. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
-   7. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#offset-long-
-   8. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#limit-long-
-   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#find-org.ojai.store.Query-
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax
-  11. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#find
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div1entry4
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div1entry5
+   6. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+   7. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#where-org.ojai.store.QueryCondition-
+   8. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
+   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#offset-long-
+  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#limit-long-
+  11. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html#find-org.ojai.store.Query-
   12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax
-  13. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aff397b232ff1595cdd2825803ee8f723
-  14. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#ada88ea7b60dd8d4dd041b83bd504f323
-  15. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#aa1aacf4f5d425ac82b6a5371a95b2277
-  16. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#a09f81a41380ef9efc57365f9336d36a6
-  17. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#a0d61175e1e22895c962c4fb90049e6f0
-  18. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#a87e32376b30fa0b7de38bff67805e526
-  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div2entry1
-  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div2entry2
-  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div2entry3
-  22. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Connection.html
-  23. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DriverManager.html
-  24. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html
-  25. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html
-  26. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/QueryResult.html
-  27. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/DocumentReader.html
-  28. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_connection_1_1_connection.html
-  29. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html
-  30. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html
-  31. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_result_1_1_query_result.html
-  32. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/APIexamples-querying-docs.html#APIexamples-querying-docs-withIndexes
+  13. https://mapr.com/docs/apidocs/61/ojai/nodejs/classes/documentstore.html#find
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/OJAIQuerySyntax.html#OJAIQuerySyntax
+  15. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html#aff397b232ff1595cdd2825803ee8f723
+  16. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#ada88ea7b60dd8d4dd041b83bd504f323
+  17. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#aa1aacf4f5d425ac82b6a5371a95b2277
+  18. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#a09f81a41380ef9efc57365f9336d36a6
+  19. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#a0d61175e1e22895c962c4fb90049e6f0
+  20. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html#a87e32376b30fa0b7de38bff67805e526
+  21. https://mapr.com/docs/apidocs/61/ojai/csharp/dd/d4d/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_document_store.html#a38dc5233f1c406a13d2b53e7ddbec0cd
+  22. https://mapr.com/docs/apidocs/61/ojai/csharp/d3/da6/interface_map_r_d_b_1_1_driver_1_1_ojai_1_1_i_query.html#a952d8ffc1413a7a3cf8b7935ed9ffe52
+  23. https://mapr.com/docs/apidocs/61/ojai/csharp/d3/da6/interface_map_r_d_b_1_1_driver_1_1_ojai_1_1_i_query.html#a06507346d37e37aeb541903dd3b6c983
+  24. https://mapr.com/docs/apidocs/61/ojai/csharp/d3/da6/interface_map_r_d_b_1_1_driver_1_1_ojai_1_1_i_query.html#a496e5c3b2a175cae3dec044fb3cbf96b
+  25. https://mapr.com/docs/apidocs/61/ojai/csharp/d3/da6/interface_map_r_d_b_1_1_driver_1_1_ojai_1_1_i_query.html#a1cefac81d6a5b8664c65fbc3ef26167a
+  26. https://mapr.com/docs/apidocs/61/ojai/csharp/d3/da6/interface_map_r_d_b_1_1_driver_1_1_ojai_1_1_i_query.html#a420529becb96db7938150130284130d0
+  27. https://mapr.com/docs/apidocs/61/ojai/go/#DocumentStore.FindQuery
+  28. https://mapr.com/docs/apidocs/61/ojai/go/#Select
+  29. https://mapr.com/docs/apidocs/61/ojai/go/#WhereCondition
+  30. https://mapr.com/docs/apidocs/61/ojai/go/#OrderBy
+  31. https://mapr.com/docs/apidocs/61/ojai/go/#Offset
+  32. https://mapr.com/docs/apidocs/61/ojai/go/#Limit
+  33. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div2entry1
+  34. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div2entry2
+  35. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div2entry3
+  36. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div2entry4
+  37. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/QueryingWithOJAI.html#div2entry5
+  38. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Connection.html
+  39. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DriverManager.html
+  40. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/DocumentStore.html
+  41. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html
+  42. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/QueryResult.html
+  43. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/DocumentReader.html
+  44. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_connection_1_1_connection.html
+  45. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_document_store_1_1_document_store.html
+  46. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_1_1_query.html
+  47. https://mapr.com/docs/apidocs/61/ojai/python/classojai_1_1store_1_1_query_result_1_1_query_result.html
+  48. https://mapr.com/docs/apidocs/61/ojai/csharp/d9/dd0/interface_map_r_d_b_1_1_driver_1_1_i_connection.html
+  49. https://mapr.com/docs/apidocs/61/ojai/csharp/dd/d4d/class_map_r_d_b_1_1_driver_1_1_ojai_1_1_ojai_document_store.html
+  50. https://mapr.com/docs/apidocs/61/ojai/csharp/d3/da6/interface_map_r_d_b_1_1_driver_1_1_ojai_1_1_i_query.html
+  51. https://mapr.com/docs/apidocs/61/ojai/csharp/dc/d43/interface_map_r_d_b_1_1_driver_1_1_ojai_1_1_i_query_result.html
+  52. https://mapr.com/docs/apidocs/61/ojai/go/#Connection
+  53. https://mapr.com/docs/apidocs/61/ojai/go/#DocumentStore
+  54. https://mapr.com/docs/apidocs/61/ojai/go/#Query
+  55. https://mapr.com/docs/apidocs/61/ojai/go/#QueryResult
+  56. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/APIexamples-querying-docs.html#APIexamples-querying-docs-withIndexes

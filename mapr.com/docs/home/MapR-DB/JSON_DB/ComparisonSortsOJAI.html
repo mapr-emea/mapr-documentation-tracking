@@ -36,6 +36,8 @@ Comparisons and Sorts in OJAI Queries
           + [5]Java
           + [6]Node.js
           + [7]Python
+          + [8]C#
+          + [9]Go
 query.setOption("ojai.mapr.query.max-client-sort-limit", 6000);
 const query = {"$select":"col","$options":{"ojai":{"mapr":{"query":{"max-client-
 sort:6000}}}}
@@ -43,9 +45,24 @@ const stream = store.find(query)
 query = {"$select":"col","$options":{"ojai":{"mapr":{"query":{"max-client-sort:6
 000}}}}
 query_result = store.find(query)
+            var query = connection.NewQuery()
+                .Select("col")
+                .SetMaxClientSortLimit(6000)
+                .Build();
+
+            var queryResult = store.Find(query);
+query := map[string]interface{}{
+    "$select":"col",
+    "$options":map[string]interface{}{
+        "ojai":map[string]interface{}{
+            "mapr":map[string]interface{}{
+                "query":map[string]interface{}{
+                    "max-client-sort":6000}}}}}
+queryResult, err :=  store.FindQueryMap(query, &client.FindOptions{})
        You can also set this option across all your OJAI clients by
-       modifying a MapR Data Access Gateway property. See [8]Administering
-       the MapR Data Access Gateway - Application Properties for details.
+       modifying a MapR Data Access Gateway property. See
+       [10]Administering the MapR Data Access Gateway - Application
+       Properties for details.
      * If you do not know the largest possible query result size, specify
        a limit in your queries. If your query result size exceeds that
        limit, the client sorts the entire result set but returns only a
@@ -53,7 +70,7 @@ query_result = store.find(query)
        error, but may result in unintended behavior if your application is
        not expecting a truncated result. You should take corrective action
        if necessary.
-       See [9]Querying with Order By for an example of how to set a query
+       See [11]Querying with Order By for an example of how to set a query
        limit.
 
 References
@@ -65,5 +82,7 @@ References
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ComparisonSortsOJAI.html#div1entry1
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ComparisonSortsOJAI.html#div1entry2
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ComparisonSortsOJAI.html#div1entry3
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__sectiondiv_pjf_2vz_m2b
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ComparisonSortsOJAI.html#div1entry4
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/ComparisonSortsOJAI.html#div1entry5
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/AdminMapRDataAccessGateway.html#AdminMapRDataAccessGateway__sectiondiv_pjf_2vz_m2b
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#reference_xvq_fn2_p1b

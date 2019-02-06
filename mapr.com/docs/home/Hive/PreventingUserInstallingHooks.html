@@ -1,7 +1,10 @@
 Preventing a Non-Administrative User from Installing Hooks
 
-   You need to modify the Hive configuration to prevent a malicious user
-   from using Hive hooks to install malware on your MapR cluster.
+   For a fresh install of MEP 6.1, a non-administrative user is prevented
+   from installing hooks by default. For a minor version update (for
+   example, MEP 6.0.0 to MEP 6.1.0 or MEP 5.0.1 to MEP 5.0.2), you need to
+   modify the Hive configuration to prevent a malicious user from using
+   Hive hooks to install malware on your MapR cluster.
    In general, a hook is a mechanism for intercepting events, messages, or
    function calls during processing. Hive hooks are a mechanism to tie
    into the internal workings of Hive without the need of re-compiling
@@ -9,14 +12,52 @@ Preventing a Non-Administrative User from Installing Hooks
    integrate external functionality with Hive.
     1. Add all hook-related properties to the default value of
        hive.conf.restricted.list in the hive-site.xml file:
+          + [1]Hive 2.3
+          + [2]Hive 2.1
           + hive.exec.pre.hooks
           + hive.exec.post.hooks
           + hive.exec.failure.hooks
           + hive.exec.query.redactor.hooks
-    2. Add the default values already present in hive.conf.restricted.list
+          + hive.semantic.analyzer.hook
+          + hive.query.lifetime.hooks
+          + hive.exec.driver.run.hooks
+          + hive.server2.session.hook
+          + hive.exec.pre.hooks
+          + hive.exec.post.hooks
+          + hive.exec.failure.hooks
+          + hive.exec.query.redactor.hooks
+          + hive.semantic.analyzer.hook
+          + hive.exec.driver.run.hooks
+          + hive.server2.session.hook
+    2. Make sure hive.conf.restricted.list configuration parameter already
+       has a default value which contains:
+          + [3]Hive 2.3
+          + [4]Hive 2.1
+hive.security.authenticator.manager
+hive.security.authorization.manager
+Hive.security.metastore.authorization.manager
+hive.security.metastore.authenticator.manager
+Hive.users.in.admin.role,hive.server2.xsrf.filter.enabled
+hive.security.authorization.enabled
+hive.server2.authentication.ldap.baseDN
+hive.server2.authentication.ldap.url
+hive.server2.authentication.ldap.Domain
+hive.server2.authentication.ldap.groupDNPattern
+hive.server2.authentication.ldap.groupFilter
+hive.server2.authentication.ldap.userDNPattern
+hive.server2.authentication.ldap.userFilter
+hive.server2.authentication.ldap.groupMembershipKey
+hive.server2.authentication.ldap.userMembershipKey
+hive.server2.authentication.ldap.groupClassKey
+hive.server2.authentication.ldap.customLDAPQuery
+hive.security.authenticator.manager
+hive.security.authorization.manager
+hive.users.in.admin.role
+hive.server2.xsrf.filter.enabled
+    3. Add the default values already present in hive.conf.restricted.list
        to the hive-site.xml file:
-          + [1]Hive 2.3
-          + [2]Hive 2.1
+          + [5]Hive 2.3
+          + [6]Hive 2.1
 <property>
   <name>hive.conf.restricted.list</name>
   <value>
@@ -40,7 +81,11 @@ Preventing a Non-Administrative User from Installing Hooks
      hive.exec.pre.hooks,
      hive.exec.post.hooks,
      hive.exec.failure.hooks,
-     hive.exec.query.redactor.hooks
+     hive.exec.query.redactor.hooks,
+     hive.semantic.analyzer.hook,
+     hive.query.lifetime.hooks,
+     hive.exec.driver.run.hooks,
+     hive.server2.session.hook,
   </value>
 </property>
 <property>
@@ -53,7 +98,10 @@ Preventing a Non-Administrative User from Installing Hooks
      hive.exec.pre.hooks,
      hive.exec.post.hooks,
      hive.exec.failure.hooks,
-     hive.exec.query.redactor.hooks
+     hive.exec.query.redactor.hooks,
+     hive.semantic.analyzer.hook,
+     hive.exec.driver.run.hooks,
+     hive.server2.session.hook,
   </value>
 </property>
        Note: Values of the hive.conf.restricted.list are split into
@@ -64,3 +112,7 @@ References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/PreventingUserInstallingHooks.html#div1entry1
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/PreventingUserInstallingHooks.html#div1entry2
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/PreventingUserInstallingHooks.html#div2entry1
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/PreventingUserInstallingHooks.html#div2entry2
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/PreventingUserInstallingHooks.html#div3entry1
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/PreventingUserInstallingHooks.html#div3entry2

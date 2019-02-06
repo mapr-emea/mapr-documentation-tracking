@@ -13,10 +13,14 @@ Querying with Order By
      * [6]Python - Order By
      * [7]Python - Order By with Offset and Limit
      * [8]dbshell
+     * [9]C# - Order By
+     * [10]C# - Order By with Offset and Limit
+     * [11]Go - Order By
+     * [12]Go - Order By with Offset and Limit
 
    The following example shows how to return the _id, firstName, lastName,
    and address.zipCode fields from documents in a store, sorting the
-   documents by _id. It uses the [9]Query.select and [10]Query.orderBy
+   documents by _id. It uses the [13]Query.select and [14]Query.orderBy
    methods.
    Note: The example sorts in the default ascending order. To sort in
    descending order, modify the orderby method call as follows:
@@ -86,9 +90,9 @@ n
 
    The following example shows how to return the _id, firstName, lastName,
    and address.zipCode fields from documents in a store, sorting the
-   documents by _id. It uses the [11]Query.select and [12]Query.orderBy
+   documents by _id. It uses the [15]Query.select and [16]Query.orderBy
    methods. In addition, the returned documents are offset and limited by
-   using the [13]Query.offset and [14]Query.limit methods.
+   using the [17]Query.offset and [18]Query.limit methods.
    Note: The example sorts in the default ascending order. To sort in
    descending order, modify the orderBy method call as follows:
 orderBy("_id", SortOrder.DESC)
@@ -357,7 +361,7 @@ for doc in query_result:
 connection.close()
 
    The following dbshell commands are equivalent to the code examples. See
-   [15]dbshell find or findbyid for more details about the syntax dbshell
+   [19]dbshell find or findbyid for more details about the syntax dbshell
    provides.
 find /demo_table --query {
   "$select":["_id","firstName","lastName","address.zipCode"],
@@ -384,6 +388,227 @@ find /demo_table
    Note: The commands are shown split across multiple lines for
    readability. When using dbshell, you must enter them in a single line.
 
+   The following example uses an OJAI query to return the _id and name
+   fields from documents in a store and to sort the documents by _id.
+   Note: The example sorts in the default ascending order. To sort in
+   descending order, modify the OrderBy specification as follows:
+.OrderBy("_id", SortOrder.DESC)
+
+using System;
+using MapRDB.Driver;
+using MapRDB.Driver.Ojai;
+
+public class FindQueryWithOrderBy
+{
+        public async void FindQueryWithOrderBy()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        // Create an OJAI query
+        var query = connection
+            .NewQuery()
+                .Select("_id", "name")
+                .OrderBy("_id", SortOrder.ASC)
+            .Build();
+
+        // Fetch OJAI Documents by query
+        var queryResult = store.Find(query);
+
+        var documentStream = await queryResult.GetDocumentAsyncStream().GetAllDo
+cuments();
+        // Print OJAI Documents from document stream
+        foreach (var document in documentStream)
+        {
+            Console.WriteLine(document);
+        }
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following example uses an OJAI query to return the _id, firstName,
+   lastName, and address.zipCode fields from documents in a store, sort
+   the documents by _id, offset the result by two documents, and limit the
+   result to a single document.
+   Note: The example sorts in the default ascending order. To sort in
+   descending order, modify the OrderBy method call as follows:
+.OrderBy("_id", SortOrder.DESC)
+
+using System;
+using MapRDB.Driver;
+using MapRDB.Driver.Ojai;
+
+public class FindQueryWithOrderByLimitOffset
+{
+        public async void FindQueryWithOrderByLimitOffset()
+        {
+        // Create a connection to data access server
+        var connectionStr = $"localhost:5678?auth=basic;" +
+            $"user=mapr;" +
+            $"password=mapr;" +
+            $"ssl=true;" +
+            $"sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+            $"sslTargetNameOverride=node1.mapr.com";
+        var connection = ConnectionFactory.CreateConnection(connectionStr);
+
+        // Get a store and assign it as a DocumentStore object
+        var store = connection.GetStore("/demo_table");
+
+        // Create an OJAI query
+        var query = connection
+            .NewQuery()
+                .Select("_id", "firstName", "lastName", "address.zipCode")
+                .Offset(2)
+                .Limit(1)
+                .OrderBy("_id", SortOrder.ASC)
+            .Build();
+
+        // Fetch OJAI Documents by query
+        var queryResult = store.Find(query);
+
+        var documentStream = await queryResult.GetDocumentAsyncStream().GetAllDo
+cuments();
+        // Print OJAI Documents from document stream
+        foreach (var document in documentStream)
+        {
+            Console.WriteLine(document.ToJsonString());
+        }
+
+        // Close the OJAI connection
+        connection.Close();
+    }
+}
+
+   The following example uses an OJAI query to return the _id and
+   firstName fields from documents in a store and to sort the documents by
+   _id.
+   The example sorts in the default ascending order. To sort in descending
+   order, modify the orderby specification as follows:
+"$orderby": map[string]interface{}{"_id": "desc"}}
+
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Options for find request
+        options := &client.FindOptions{ResultAsDocument: true}
+
+        // Create an OJAI query
+        query := map[string]interface{}{"$select": []interface{}{"_id", "firstNa
+me"},
+                "$orderby": map[string]interface{}{"_id": "asc"}}
+
+        // Fetch all OJAI Documents from table
+        findResult, err := store.FindQueryMap(query, options)
+
+        // Print OJAI Documents from document stream
+        for _, doc := range findResult.DocumentList() {
+                fmt.Println(doc)
+        }
+
+        // Close connection
+        connection.Close()
+}
+
+   The following example uses an OJAI query to return the _id, firstName,
+   lastName, and address.zipCode fields from documents in a store, sort
+   the documents by _id, offset the result by two documents, and limit the
+   result to a single document.
+   The example sorts in the default ascending order. To sort in descending
+   order, modify the orderby function call as follows:
+"$orderby": map[string]interface{}{"_id": "desc"}}
+
+package main
+
+import (
+        "fmt"
+        client "github.com/mapr/private-maprdb-go-client"
+)
+
+func main() {
+        // Create connection string
+        connectionString := "192.168.33.11:5678?" +
+                "auth=basic;" +
+                "user=mapr;" +
+                "password=mapr;" +
+                "ssl=true;" +
+                "sslCA=/opt/mapr/conf/ssl_truststore.pem;" +
+                "sslTargetNameOverride=node1.cluster.com"
+
+        storeName := "/demo_table"
+
+        // Create a connection to DAG
+        connection, err := client.MakeConnection(connectionString)
+        if err != nil {
+                panic(err)
+        }
+
+        // Get a store and assign it as a DocumentStore struct
+        store, err := connection.GetStore(storeName)
+        if err != nil {
+                panic(err)
+        }
+
+        // Options for find request
+        options := &client.FindOptions{ResultAsDocument: true}
+
+        // Create an OJAI query
+        query := map[string]interface{}{"$select": []interface{}{"_id", "firstNa
+me", "lastName", "address.zipCode"},
+                "$offset":  2,
+                "$limit":   1,
+                "$orderby": map[string]interface{}{"_id": "asc"}}
+
+        // Fetch all OJAI Documents from table
+        findResult, err := store.FindQueryMap(query, options)
+
+        // Print OJAI Documents from document stream
+        for _, doc := range findResult.DocumentList() {
+                fmt.Println(doc)
+        }
+
+        // Close connection
+        connection.Close()
+}
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby-queries.html#reference_cfw_jwl_f1b
@@ -394,10 +619,14 @@ References
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect5
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect6
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect7
-   9. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-  10. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
-  11. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
-  12. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
-  13. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#offset-long-
-  14. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#limit-long-
-  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect8
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect9
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect10
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/JSON_DB/query-orderby2.html#div1sect11
+  13. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+  14. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
+  15. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#select-org.ojai.FieldPath...-
+  16. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#orderBy-org.ojai.FieldPath...-
+  17. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#offset-long-
+  18. https://mapr.com/docs/apidocs/61/ojai/java/org/ojai/store/Query.html#limit-long-
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/dbshell-find-findbyid.html

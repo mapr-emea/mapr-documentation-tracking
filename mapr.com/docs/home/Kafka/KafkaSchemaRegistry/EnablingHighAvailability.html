@@ -1,0 +1,25 @@
+Enabling High Availability for Kafka Schema Registry
+
+   You can enable high availability by installing multiple instances of
+   schema registry on the same cluster.
+
+   One node in the cluster acts as the master. Only the master can publish
+   writes to the underlying Kafka log. The master node can also manage
+   read requests.
+
+   All other slave nodes manage only read requests. These nodes serve
+   registration requests indirectly by forwarding them to the current
+   master node and returning any response supplied by the master.
+    1. Install schema registry on several nodes. For installation
+       instructions, see Installing Kafka Schema Registry.
+    2. Configure high availability for the ensemble of ZooKeeper nodes.
+       You can find the steps for this in the [1]open source
+       documentation, section Clustered (Multi-Server) Setup.
+    3. Modify the schema registry configuration file on each node to
+       specify the kafkastore.connection.url property with the ZooKeeper
+       nodes that form the HA ensemble.
+    4. Run the configure.sh -R command on each schema registry node.
+
+References
+
+   1. https://zookeeper.apache.org/doc/r3.4.11/zookeeperAdmin.html
