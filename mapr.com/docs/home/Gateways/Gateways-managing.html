@@ -73,42 +73,13 @@ maprcli cluster gateway set -dstcluster newyork -gateways "gw1.bigcompany.com gw
 
 Adding a DNS record to your DNS server's zone file for your domain
 
-   In your DNS server’s zone file for your domain, add a record for the
-   cluster where gateways are located, listing the nodes to use as
+   In your DNS server’s zone file for your domain, you can add a record
+   for the cluster where gateways are located, listing the nodes to use as
    gateways. You can use the MapR Control System (MCS) to create a record
    that you can copy into a DNS configuration file, run a maprcli command
    to generate the record, or create a record manually.
 
-   To create a record with the MCS, follow these steps:
-    1. Log into MCS on the cluster where the gateways are located.
-    2. In the Navigation pane, select MapR Database Tables.
-    3. In the MapR Database Tables section, click the button Generate
-       Gateway DNS. A window opens with the generated DNS entry.
-    4. Copy and paste the record into your zone file.
-
-   To generate a record by using the maprcli, follow these steps:
-    1. On the cluster where the gateways are located, run the command
-       maprcli cluster gateway local -format dns. If you want to run the
-       command from a different cluster and point to the cluster that
-       hosts the gateways, use the -cluster parameter to provide the name
-       of the latter cluster.
-    2. Copy and paste the output of this command into your zone file.
-
-   If you want to create a record manually, use the following format:
-gateway.<clustername> IN TXT "<space-delimited list of hostnames>"
-
-   You can also specify IP addresses, though using hostnames is
-   recommended so that it is easier to locate gateways if their IP
-   addresses change. Combinations of hostnames and IP addresses are also
-   supported. The default port is 7660. If a gateway is using a different
-   port, append a colon to the address and then specify the port number.
-   Here is an example entry:
-gateway.newyork.bigcompany.com gw1ny.bigcompany.com gw2ny.bigcompany.com
-
-   Multi-homing is also supported. Simply separate the entries for a
-   single node with semicolons, as in this example that uses IP addresses:
-gateway.newyork.bigcompany.com 10.10.34.20 10.10.34.22 10.10.34.24;173.194.79.12
-1
+   For details, see [9]Specifying the Location of Gateways.
 
 If a Gateway Fails
 
@@ -134,11 +105,12 @@ If a Gateway Fails
    these procedures:
 
    If you are replicating to a MapR Database binary table:
-    1. Run the [9]maprcli table replica remove command to stop replicating
-       to the replica. This action deletes the pending updates.
+    1. Run the [10]maprcli table replica remove command to stop
+       replicating to the replica. This action deletes the pending
+       updates.
     2. Resolve the gateway outage.
     3. Recreate the replica and start replicating to it by running the
-       [10]maprcli table replica autosetup command.
+       [11]maprcli table replica autosetup command.
 
    If you are replicating to a MapR Event Store For Apache Kafka stream:
     1. Run the maprcli stream replica remove command to stop replicating
@@ -161,7 +133,7 @@ MapR Database Lookup Order
    MapR Database uses the following order to locate the gateways that are
    running in a destination cluster.
      * Look up the destination cluster's name and gateway addresses in the
-       information specified by the [11]maprcli cluster gateway set
+       information specified by the [12]maprcli cluster gateway set
        command. If a list of gateways, then a DNS lookup is performed.
      * Perform a DNS lookup of the destination cluster and the addresses
        of the gateways. If no DNS record for the destination cluster is
@@ -180,6 +152,7 @@ References
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-set.html
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-list.html
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-local.html
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-remove.html
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-autosetup.html
-  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-set.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/admin/cluster/GenerateGatewayDNS.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-remove.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-autosetup.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/cluster-gateway-set.html
