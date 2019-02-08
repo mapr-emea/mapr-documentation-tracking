@@ -51,13 +51,16 @@ spec:
        PersistentVolume:
 
    Parameter Notes
-   metadata: name The Pod name.
-   metadata: namespace The namespace in which the Pod runs.
+   metadata: name The PersistentVolume name.
+   metadata: namespace The namespace in which the PersistentVolume is
+   stored.
    accessModes How the PersistentVolume is mounted on the host. All modes
    work the same. The example uses ReadWriteOnce. Note that ReadOnlyMany
    does not mount read-only.
 
-   Note: The PV and PVC modes should be the same so that they can bind.
+   Note: The accessMode is not used to set the access mode bit on the
+   volume. The accessMode of the PV and PVC should be the same so that
+   they can bind.
    For more information, see [2]Access Modes.
    persistentVolumeReclaimPolicy Specifies what happens to the volume when
    it is released by its claim. The Retain value keeps the PVC around for
@@ -74,7 +77,8 @@ spec:
    the ticket to use when mounting to the MapR cluster. See [4]Configuring
    a Secret.
    nodePublishSecretRef:namespace The namespace that contains the Ticket
-   Secret. Use the same namespace as the namespace used by the Pod.
+   Secret. Use the same namespace as the namespace used by the
+   PersistentVolume.
    csi: driver The MapR CSI driver being used. Call it by specifying
    driver: mapr.com/maprfs.
    volumePath The mount point within the MapR filesystem. This parameter
@@ -112,8 +116,9 @@ spec:
        PersistentVolumeClaim:
 
    Parameter Notes
-   metadata: name The Pod name.
-   metadata: namespace The namespace in which the Pod runs.
+   metadata: name The PersistentVolumeClaim name.
+   metadata: namespace The namespace in which the PersistentVolumeClaim is
+   configured.
    accessMode How the requested PersistentVolume is mounted on the host.
    All modes work the same. The example uses ReadWriteOnce. Note that
    ReadOnlyMany does not mount read-only.
@@ -198,6 +203,7 @@ posixclientbasic Inactive c35ab639-2010-11e9-84c0-0cc47ab39644 10.10.102.94,172.
 posixclientbasic Active e5dc10e8-2012-11e9-84c0-0cc47ab39644 10.10.102.94,172.17
 .0.1,192.168.28.0 18 5849529086453778130
 
+   Full example, which includes PV, PVC, and Pod configuration
 apiVersion: v1
 kind: PersistentVolume
 metadata:
