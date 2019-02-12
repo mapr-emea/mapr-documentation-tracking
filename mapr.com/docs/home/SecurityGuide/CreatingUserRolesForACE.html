@@ -4,48 +4,152 @@ Creating User Roles for ACEs
    possible, for centralized maintainence. Use Roles only when you are
    unable to modify LDAP or AD groups easily.
 
-   Roles are a label attached to a set of users that defines a common task
-   or set of behaviors for those users. Roles enable you to use
-   functionality similar to Unix groups for your users without requiring
-   you to alter your system's existing group hierarchy. A role's name can
-   be up to 64 characters long and cannot use the :, &, |, or !
-   characters. User roles are defined in the
-   /opt/mapr/conf/m7_permissions_roles_refimpl.conf file, which must be
-   identical across all nodes in the cluster. The
-   m7_permissions_roles_refimpl.conf file has the following format:
-# The # character indicates comments. Role names must end with a : character.
-rolename1:
-# Usernames or user IDs are specified on a line after the role name. You can mix
- user names and user IDs.
-username1|userid1
-username2|userid2
-...
-usernameN|useridN
-rolename2:
-...
-# The m7_security_ref_impl.conf file can have any number of blank lines.
-rolenameN:
+   A role is a label attached to a set of users, which defines a common
+   task, or set of behaviors for those users. Roles enable you to use
+   functionality similar to Unix groups for your users, without requiring
+   you to alter the existing group hierarchy of your system. Role names
+   can be up to 64 characters long, and cannot use the :, &, |, or !
+   characters.
+
+Standard Reference Implementation
+
+   User Information
+
+   The standard reference implementation is a library called
+   libmapr_roles_refimpl.so. This library is located at
+   /opt/mapr/server/permissions. This library opens a configuration file
+   named m7_permissions_roles_refimpl.conf, which should contain a list of
+   all the roles, and the users associated with those given roles. This
+   configuration file is located at /opt/mapr/conf, and should be
+   identical across all clusters.
+
+   The structure of the configuration file is as follows. Roles end with
+   :, while user names are written on each subsequent line. For example:
+Role_1:
+            user_a
+            user_b
+Role_2:
+            user_b
+            user_c
+            user_d
+            #comment
+
+   This example file states that there are two roles to choose from when
+   assigning permissions - Role_1 and Role_2. The users located under
+   Role_1 are user_aand user_b. Role_2 contains user_b, user_c, and
+   user_d. Blank lines, and lines beginning with # are ignored.
+
+   Assume a table has permissions r:Role_2. user_b has access to this
+   table, while user_a does not have access.
 
    After adding a new role to the m7_permissions_roles_refimpl.conf file,
    you must issue the following command to enable the MapR Filesystem
-   layer to pick up the new role:
-$ /opt/mapr/server/mrconfig dbrolescache invalidate
+   layer to pick up the new role: $ /opt/mapr/server/mrconfig dbrolescache
+   invalidate
 
-   Note: This command must be run on all the nodes whenever there is a
-   change in the roles configuration file.
+   Run this command on all the nodes, whenever there is a change in the
+   roles configuration file.
+   Developer Information
+
+   The functions that the libmapr_roles_refimpl.so exposes, are found in
+   the extensibility implementation. When the library is called initially
+   through GetSecurityMembership, it parses the
+   m7_permissions_roles_refimpl.conf file, and loads it into memory. All
+   user names are read, and parsed into user IDs (uid_t). If a user ID is
+   not found, the ID is skipped.
+
+   The library uses a HashTable. The roles are the keys. The values are a
+   Binary tree of user IDs.
+
+   Each call checks the given user ID and role. The HashTable keys off the
+   role, and then searches the Binary Tree for the user ID. If the
+   HashTable finds a user ID, it sets that role boolean value to true. If
+   the HashTable does not find a userI D, or if any errors occur, such as
+   Role not found, it sets the boolean value to false.
+
+   There is also a cleanup method which frees the memory allocated to the
+   HashTable, along with all of its children. If the GetSecurityMembership
+   method is called again, the library reloads the configuration file, and
+   loads all the values into memory.
+
+Extensible Implementation
+
+   If users decide not to use the reference implementation, they can
+   replace the shared library with their own. In the mfs.conf file, add a
+   parameter that specifies the name of the file. If the name of the file
+   is changed, then MFS searches /opt/mapr/server/permissions for the new
+   file. If the file is found, it is loaded into memory. If not, then all
+   roles evaluate to false.
+
+   The user's shared library should contain two functions specified under
+   the mapr::fs namespace:
+extern "C"
+            void GetSecurityMembership(uid_t uid, const char *roles[], int numRo
+les, bool truthValue[]) {
+            }
+extern "C"
+            void cleanup() {
+            }
+
+   GetSecurityMembership takes the given user ID along with a list of all
+   the roles, the amount of roles in the array, and an array of all the
+   results, as booleans.
+
+   Users must code their own implementation of populating the truthValue
+   array with either true or false. The truthValue array has the same
+   length as numRoles, and is initialized. Do not modify any other
+   variables.
+
+   Use the cleanup method to reset the shared library to an initialized
+   state. This method resets all values, and frees memory, since the
+   shared library is not closed, till the class calling it, gets
+   destructed.
+
+Invoke Shared Library from MFS
+
+   The TablePermissions class handles opening, and closing the shared
+   library. During class initialization, the name of the shared library,
+   which is read from the mfs.conf, file is passed to the constructor. The
+   constructor loads the shared library into memory, using the LoadSO
+   method from filterutils.cc. The constructor also loads the
+   GetSecurityMembership method, along with the cleanup method, as
+   variables that can be called.
+   TablePermissions contains two methods that can be called, to access the
+   shared library:
+     * The GetSecurityMembership method takes 3 arguments - the user ID,
+       the array of roles, and the amount of roles in the array. This
+       method returns a RolePermission structure, which contains all the
+       same data, as well as the boolean of the successful roles for that
+       given user ID. To evaluate the user roles, pass this RolePermission
+       structure to the TablePermission::checkTablePermissions method.
+     * The cleanup method calls the cleanup method in the shared library.
+       This method takes no arguments.
+
+   The entity that allocates the RolePermission structure into memory,
+   also needs to deallocate this structure.
+
+   Deallocating the TablePermissions class, calls the cleanup method, and
+   closes the shared library.
+
+Shared Library Security
+
+   The /opt/mapr/server/permissions folder is initialized with 755
+   permissions. This implies that only the user who installed mapr has
+   access to writing to that folder. These permissions prevent a user from
+   replacing a shared library with a malicious file.
+
+   The m7_permissions_roles_refimpl.conf file has 755 permission, which
+   means that only an administrator can make changes to this file.
 
 The Roles Library Shared Object and Access Control Expressions
 
-   By default, the roles library shared object libmapr_roles_refimpl.so is
-   located in the /opt/mapr/server/permissions/ directory. This shared
-   object uses the C++ syntax and contains the GetSecurityMembership
-   class. Each time an object secured by an ACE is accessed, the MapR
-   Filesystem layer calls the roles library shared object and checks the
-   permissions of the entity requesting access against the contents of the
-   roles file. The roles library shared object reads the roles file every
-   600 seconds. You can specify your own roles library shared object and
-   specify the location of that object using the parameter
-   mfs.dbroles.sopath in the [1]/opt/mapr/conf/mfs.conf file.
+   When an object secured by ACE is accessed, the MapR Filesystem layer
+   calls the roles library shared object, and checks the permissions of
+   the entity requesting access, against the contents of the roles file.
+   The roles library shared object reads the roles file every 600 seconds.
+   You can specify your own roles library shared object, and specify the
+   location of that object, using the parameter mfs.dbroles.sopath in the
+   [1]/opt/mapr/conf/mfs.conf file.
 
 References
 

@@ -1,17 +1,39 @@
 Consuming Audit Logs
 
    Audit Streaming (available from v6.0.1) provides a way to process the
-   audit data real-time.
+   audit data in real-time.
 
-   When audit streaming is enabled, MapR Filesystem, MapR Database, and
-   MapR Event Store For Apache Kafka operation related audit logs and CLDB
-   and auth audit logs are sent as audit stream as the audit data is
-   generated, opening the possibility for real-time processing of the
-   audit data. See [1]Streaming Audit Logs for more information. The
-   following sections provide information you need to use the sample
-   cached and/or uncached consumer applications or build your custom
-   consumer application to consume the audit logs that are available as
-   stream topic when audit streaming is enabled.
+   When audit streaming is enabled,the MapR Data Platform generates audit
+   logs that are sent as an audit stream, opening the possibility of
+   real-time processing of the audit data. See [1]Streaming Audit Logs for
+   more information.
+
+   Use the sample consumer application, or build your custom consumer
+   application, to consume the audit logs that are available as a stream
+   topic, when audit streaming is enabled.
+
+   The sample application uses Filesystem APIs to get the file path and
+   name from the FID, and the volume name from the volume ID.
+
+Determine When to use Cached or Uncached Version of the Filesystem API
+
+   Caching the file path and file name, along with the volume name at the
+   initial API call, reduces the load on CLDB for subsequent API calls.
+
+   However, there could be cases when the uncached version of the
+   application is more suitable for use. Consider the following example:
+
+   For the initial API call, File1 is returned as the file name for FID 1.
+   The result is cached.
+
+   The file is then renamed to File2. For subsequent API calls, to get the
+   file name for FID 1, the result from the cache is used. The cache,
+   unaware of the rename operation, returns the name as File1, which is
+   incorrect, as the file is already renamed to File2. For such a case,
+   use the uncached version.
+
+   Evaluate your use case, and then use the cached, or the uncached
+   version, as appropriate.
 
 References
 
