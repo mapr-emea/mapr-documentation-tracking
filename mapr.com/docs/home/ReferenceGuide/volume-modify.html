@@ -30,6 +30,7 @@ maprcli volume modify
     [ -ecenable true|false ]
     [ -ecscheme <ec_scheme> ]
     [ -ectopology <path> ]
+
     [ -enforceminreplicationforio true|false ]
     [ -forceauditenable true|false ]
     [ -group <list of group:allowMask> ]
@@ -50,6 +51,7 @@ maprcli volume modify
     [ -replication <replication> ]
     [ -rereplicationtimeoutsec <timeout in seconds> ]
     [ -schedule <schedule ID> ]
+
     [ -source <source volume> ]
     [ -tierencryption true|false ]
     [ -tieringrule <rule name> ]
@@ -174,8 +176,8 @@ Parameters
    tiering if it was enabled when the volume was being created.
    ecscheme The number of data chunks and the number of partify chunks
    separated by a plus (+) sign. The default scheme is 4+2. For
-   information on the supported schemes, see [5]Selecting an Erasure
-   Coding Scheme.
+   information on the supported schemes, see [5]Using an Erasure Coding
+   Scheme.
    ectopology The topology of the erasure coded volume if it is already
    not set. You cannot change the topology of an erasure coded volume
    using this command. To change the topology of an erasure coded volume,
@@ -259,8 +261,10 @@ Parameters
    the CLDB manages the namespace container replication separate from the
    data container replication. This capability is used when you have low
    volume replication but want to have higher namespace replication.
-   Note: This parameter must be the same or larger than the equivalent
-   data replication parameter, replication.
+   Note: By default, the value of this parameter is the same or larger
+   than the value of the equivalent data replication parameter,
+   replication. However, to set the value of this parameter lower than the
+   replication value, first set engg.manual.override to true in cldb.conf.
    See also: [11]Understanding Replication.
    name The name of the volume to modify.
    offloadschedule The ID of the schedule to associate with the volume for
@@ -499,6 +503,26 @@ curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=sampleVol&offloa
 dschedule=3&recallexpirytime=3' --user mapr:mapr
 {"timestamp":1526569653267,"timeofday":"2018-05-17 08:07:33.267 GMT-0700 AM","st
 atus":"OK","total":0,"data":[]}
+
+   The –securitypolicy option in the maprcli volume modify command sets
+   the volume to be tagged with the specified policies, replacing any
+   security policies that exist before the command. This command works as
+   follows, depending on the security policies that are associated with
+   this volume prior to invoking this command.
+     * If the volume initially has no security policy tags before invoking
+       this command, then it is tagged with the specified security policy
+       (Lab_Security_Policy in our example).
+     * If the volume initially has two security policy tags before
+       invoking this command, say Lab_Security_Policy and Sensitive_Data,
+       then the Sensitive_Data Policy security policy is disassociated
+       from this volume, and the volume now has only the
+       Lab_Security_Policy tag.
+     * If the volume initially has one security policy tag, say
+       Sensitive_Data, then the Sensitive_Data security policy is removed
+       and replaced with the security policy Lab_Security_Policy.
+     * If the volume has one security policy tag, say Lab_Security_Policy,
+       which is the same as the security policy specified in the comand,
+       then modifications are not made.
 
 References
 

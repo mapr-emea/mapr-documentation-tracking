@@ -1,34 +1,64 @@
-Selecting an Erasure Coding Scheme
+Using an Erasure Coding Scheme
 
    Erasure coding (EC) is a data protection method in which data is broken
    into fragments, then expanded and encoded with redundant data pieces,
-   and stored across a set of different locations or storage media. An
-   erasure coding scheme is the stripe layout m+n. Each stripe in an
-   erasure coded volume is created by the same number of data fragments
-   from all containers in the group of EC containers.
+   and stored across a set of different locations or storage media.
+
+   EC ensures that should data become corrupted at some point on the disk,
+   it can be reconstructed using information about the data that is stored
+   in a different location, or storage media.
+
+   The time taken to restore data depends on the number of data fragments
+   in the chosen EC scheme, and on the number of failures that have
+   occured. For example, rebuild of EC scheme 10+2 will take longer
+   compared to the rebuild of EC scheme 3+2, since a larger number of data
+   blocks must be read.
+
+Considerations When Selecting an EC scheme
+
+   As an administrator, consider the following points when using an EC
+   scheme:
+     * How many nodes can you afford to have?
+     * How many failures do you want to recover from?
+     * How long are you willing to wait when recovering from a failure?
+     * What are the number of failures that you anticipate might occur? Is
+       it just a single failure, or are you anticpating multiple failures?
+
+   The answers to these questions will help you determine the right EC
+   scheme for your environment.
+
+EC Schemes Without Local Parity
+
+   An erasure coding scheme without local parity, is the stripe layout
+   m+n. Each stripe in an erasure coded volume is created by the same
+   number of data fragments from all containers in the group of EC
+   containers.
 
    Containers for erasure coded volumes are created in groups of m+n and
    each container is placed on a different physical node. The stripe is an
    array of m data fragments and n parity fragments with a fragment size
-   of 4MB. In the event of disk failure, any m piece can be used to get
-   back the original file. That is:
+   of 4 MB.
      * m is the number of data fragments
      * n is the number of redundant fragments (referred to as parity
-       fragments)
+       fragments). The parity is calculated using data from all data
+       fragments.
      * m/(m+n) is the encoding rate
      * m+n is the number of encoded fragments
+     * For a m+n scheme, you need to read a minimum of m blocks to recover
+       data
+     * You can recover data from a maximum of n failures
 
-   For example, suppose m=4 and n=2, stripe depth=4MB. Here:
+   For example, assume m=4 and n=2, stripe depth=4 MB. Here:
      * The number of data fragments is 4 and the number of parity
        fragments is 2.
      * The number of encoded fragments is 6.
      * The stripe size is 16MB (4x4MB) of user data and 8MB (2x4MB) of
        parity fragments.
-     * MapR can handle 2 failures and any chunk can be recovered from any
-       4 chunks.
+     * MapR can handle 2 failures and any chunk can be recovered from 4
+       other chunks.
 
    The following illustration shows the distribution of data and parity
-   fragments for the above example:
+   fragments for the example previously mentioned:
    [EC-Scheme.png]
 
    When specifying an erasure coding scheme without local parity, keep the
@@ -42,39 +72,17 @@ Selecting an Erasure Coding Scheme
      * The number of nodes must be greater than or equal to the sum of
        data and parity fragments.
 
-   Choose from the following schemes for erasure-coded volumes:
-   EC Scheme Description
+   Select from the following schemes for erasure-coded volumes:
+   EC Scheme Number of Data Nodes Number of Parity Nodes Total Number of
+   Nodes Needed Number of Failures Recoverable Number of Nodes to Read to
+   Recover Data
    CLI MCS
-   3+<x> 3, 2 Specifies 3 data fragments, and parity fragments less than
-   the number of data fragments. Ensure that the required number of nodes,
-   which is calculated by adding the number of data fragments and parity
-   fragments, are available on the cluster.
+   3+2 3, 2 3 2 5 2 3
+   4+2 4, 2 4 2 6 2 4
+   5+2 5, 2 5 2 7 2 5
+   6+3 6, 3 6 3 9 3 6
+   10+<x> N/A 10 x 10+x x 10
 
-   For example, MCS allows a setting of 3 data fragments and 2 parity
-   fragments. For this scheme, a minimum of 5 nodes (3+2) is required.
-   MapR can tolerate up to 2 failures.
-   4+2 4, 2 (Default) Specifies 4 data fragments and 2 parity fragments. A
-   minimum of 6 nodes is required for this option. MapR can tolerate up to
-   2 failures.
-   5+2 5, 2 Specifies 5 data fragments and 2 parity fragments. A minimum
-   of 7 nodes is required for this option. MapR can tolerate up to 2
-   failures.
-   6+3 6, 3 Specifies 6 data fragments and 3 parity fragments. A minimum
-   of 9 nodes is required for this option. MapR can tolerate up to 3
-   failures.
-   10+<x> N/A Specifies 10 data fragments, and parity fragments less than
-   the number of data fragments. Ensure that the required number of nodes,
-   which is calculated by adding the number of data fragments and parity
-   fragments, are available on the cluster.
-
-   For example, assume a scheme of 10 data fragments and 2 parity
-   fragments. A minimum of 12 nodes (10+2) is required for this scheme.
-   MapR can tolerate up to 2 failures.
-   Note: In the event of a node failover, the amount of time to rebuild
-   the objects (stripes) on another node depends on the number of data
-   fragments in the chosen erasure coding scheme. For example, rebuild of
-   erasure-coding scheme 10+2 could take more time compared to the
-   erasure-coding scheme 3+2.
-   Note: Although you can create a volume even without the required number
-   of nodes for a specific scheme, volume offload will fail if the
-   required number of nodes are not present.
+   Although you can create a volume even without the required number of
+   nodes for a specific scheme, volume offload will fail if the required
+   number of nodes are not present.

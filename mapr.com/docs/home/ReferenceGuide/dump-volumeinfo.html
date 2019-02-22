@@ -53,38 +53,6 @@ Output
    Field
 
    Description
-   VolumeName The name of the volume.
-   VolumeId The unique ID number of the volume.
-   VolumeTopology The volume topology corresponds to the node topology of
-   the rack or nodes where the volume resides. By default, new volumes are
-   created with a topology of / (root directory). For more information,
-   see [3]Volume Topology.
-   VolumeUsedSizeMB The size on disk (in MB) of the volume.
-   VolumeReplication The desired replication factor, the number of copies
-   of a volume. The default value is 3. The maximum value is 6.
-   VolumeMinReplication
-
-   The minimum replication factor, the number of copies of a volume
-   (including the original) that should be maintained by the MapR cluster
-   for normal operation. When the replication factor falls below this
-   minimum, writes to the volume are disabled. The default value is 2. A
-   replication factor of 2 indicates that the number of copies of a volume
-   is 2 (original +1 copy). A replication factor of 3 indicates that the
-   number of copies of a volume is 3 (original + 2 copies).
-   NameSpaceReplication The desired replication factor or the number of
-   copies of the name container associated with the volume. The default
-   value is 3. The maximum value is 6.
-   NameSpaceMinReplication The minimum replication factor or the number of
-   copies the name container associated with the volume that should be
-   maintained by the MapR cluster for normal operation. When the
-   replication factor falls below this minimum, writes to the volume are
-   disabled. The default value is 2.
-   ReReplicationTimeOutSec The timeout (in seconds) period until CLDB
-   starts re-replicating the containers on the node of the volume when
-   CLDB stops receiving a heartbeat from the node.
-   MirrorThrottle Specifies whether mirror throttling is enabled (true) or
-   disabled (false). Throttling is set on the source volume and applies to
-   all its mirrors. This property was introduced in version 4.0.2.
    AccessTime A value that can be used to determine which volumes are
    accessed regularly. This value is updated every 6 hours with the last
    time that an operation occurred on the volume. The access time is not
@@ -93,74 +61,107 @@ Output
    access time is updated the first time you upgrade to a MapR version
    that includes this property. This property was introduced in version
    4.0.2.
-   AuditVolume A value that can be used to determine whether (1) or not
-   (0) volume accommodates audit logs.
+   ActiveServers The physical IP address and port number of each active
+   node on which the container resides.
+   allowGrant A value that can be used to determine whether (true) or not
+   (false) a parent volume grants permission for a child volume to inherit
+   its properties.
    Audited A value that can be used to determine whether 1 or not (0)
    auditing is enabled for the volume.
-   ForceAudit A value that can be used to determine whether (1) or not (0)
-   to force audit of operations on all files, tables, and streams in the
-   volume.
+   AuditVolume A value that can be used to determine whether (1) or not
+   (0) the volume accommodates audit logs.
    CoalesceInterval The interval of time to elapse after the first
    instance of an operation on a node is recorded in audit logs, if
    auditing is enabled. Subsequent identical operations performed on the
    same node from the same client are ignored during the interval.
-   EnabledDataAuditOperations The list of operations selected for
-   auditing.
-   DisabledDataAuditOperations The list of operations excluded from
-   auditing.
-   WireSecurityEnabled A value that can be used to determine whether (1)
-   or not (0) wire-level security is enabled.
-   limitSpread An internal flag for MapR volumes to control the growth of
-   volume in terms of number of containers. When this flag is set, cldb
-   tries to limit the number of new containers created depending on the
-   present size of volume. If volume size (data in volume) is small, cldb
-   tries to reuse space in existing containers to avoid the creation of
-   new containers. This helps reduce the wasting of containers IDs in an
-   environment that has small volumes.
-   allowGrant A value that can be used to determine whether (true) or not
-   (false) a parent volume grants permission for a child volume to inherit
-   its properties.
-   fixCreatorId An internal flag for MapR volumes to fix the creator
-   container ID.
-   MetricsEnabled A value that can be used to determine whether (1) or not
-   (0) metrics collection is enabled for the volume.
+   ContainerId The unique ID number of the container.
+   CreatorContainerId The container ID of the read-write container. The
+   container ID is retained in all mirrors of those containers (in all
+   mirrors of the volume). The container ID enables the identification of
+   the correct containers to source from, when mirror sources are changed
+   in a mirror chain.
+   CreatorVolumeUuid A randomly generated unique ID that is shared by all
+   mirrors of a volume, and all containers of them. It is used to avoid
+   undesirable chaining of containers when mirror sources are changed in a
+   mirror chain.
    dareEnabled A value that can be used to determine whether (1) or not
    (0) data-at-rest encryption (DARE) is enabled for the volume.
-   ContainerId The unique ID number of the container.
+   DisabledDataAuditOperations The list of operations excluded from
+   auditing.
+   EnabledDataAuditOperations The list of operations selected for
+   auditing.
    Epoch A sequence number that indicates the most recent copy of the
    container. The CLDB uses the epoch to ensure that an out-of-date copy
    cannot become the master for the container.
-   Master The physical IP address and port number of the master copy. The
-   master copy is part of the original copy of the volume.
-   ActiveServers The physical IP address and port number of each active
-   node on which the container resides.
+   fixCreatorId An internal flag for MapR volumes to fix the creator
+   container ID.
+   ForceAudit A value that can be used to determine whether (1) or not (0)
+   to force audit of operations on all files, tables, and streams in the
+   volume.
    InactiveServers The physical IP address and port number of each
    inactive node on which the container resides.
-   UnusedServers The physical IP address and port number of servers from
-   which no "heartbeat" has been received for quite some time.
-   OwnedSizeMB The size on disk (in MB) dedicated to the container.
-   SharedSizeMB The size on disk (in MB) shared by the container.
+   limitSpread An internal flag for MapR volumes to control the growth of
+   volume in terms of number of containers. When this flag is set, CLDB
+   tries to limit the number of new containers created, depending on the
+   present size of volume. If volume size (data in volume) is small, CLDB
+   tries to reuse space in existing containers to avoid the creation of
+   new containers. This reuse helps reduce wastage of containers IDs in an
+   environment that has small volumes.
    LogicalSizeMB The logical size on disk (in MB) of the container.
+   Master The physical IP address and port number of the master copy. The
+   master copy is part of the original copy of the volume.
+   MetricsEnabled A value that can be used to determine whether (1) or not
+   (0) metrics collection is enabled for the volume.
+   MirrorThrottle Specifies whether mirror throttling is enabled (true) or
+   disabled (false). Throttling is set on the source volume and applies to
+   all its mirrors. This property was introduced in version 4.0.2.
+   Mtime Indicates the time when the last modification was made to the
+   contents of the container.
+   NameContainer Indicates if the container is the name container for the
+   volume. If true, the container is the volume's first container.
+   Replication then occurs simultaneously from the master to the
+   intermediate and tail containers.
+   NameSpaceMinReplication The minimum replication factor or the number of
+   copies of the name container associated with the volume that should be
+   maintained by the MapR cluster for normal operation. When the
+   replication factor falls below this minimum value, writes to the volume
+   are disabled. The default value is 2.
+   NameSpaceReplication The desired replication factor or the number of
+   copies of the name container associated with the volume. The default
+   value is 3. The maximum value is 6.
+   OwnedSizeMB The size on disk (in MB) dedicated to the container.
+   ReReplicationTimeOutSec The timeout (in seconds) period until CLDB
+   starts re-replicating the containers on the node of the volume, when
+   CLDB stops receiving a heartbeat from the node.
+   SharedSizeMB The size on disk (in MB) shared by the container.
    TotalSizeMB The total size on disk (in MB) allocated to the container.
    Combines the Owned Size and Shared Size.
-   Mtime Indicates the time of the last modification to the contents of
-   the container.
-   NameContainer Indicates if the container is the name container for the
-   volume. If true, the container is the volume's first container and
-   replication occurs simultaneously from the master to the intermediate
-   and tail containers.
-   CreatorContainerId The container ID of the read-write container. The
-   container Id is retained in all mirrors of that containers (in all
-   mirrors of volume). The container ID enables the identification of the
-   correct containers to source from when mirror sources are changed in a
-   mirror chain.
-   CreatorVolumeUuid A randomly generated unique ID that is shared by all
-   mirrors of a volume and all containers of them. It is used to avoid
-   undesirable chaining of containers when mirror sources are changed in a
-   mirror chain.
+   UnusedServers The physical IP address and port number of servers from
+   which no "heartbeat" has been received for quite some time.
+   VolumeId The unique ID number of the volume.
+   VolumeMinReplication
+
+   The minimum replication factor, the number of copies of a volume
+   (including the original) that should be maintained by the MapR cluster
+   for normal operation. When the replication factor falls below this
+   minimum value, writes to the volume are disabled. The default value is
+   2. A replication factor of 2 indicates that the number of copies of a
+   volume is 2 (original +1 copy). A replication factor of 3 indicates
+   that the number of copies of a volume is 3 (original + 2 copies).
+   VolumeName The name of the volume.
+   VolumeReplication The desired replication factor, the number of copies
+   of a volume. The default value is 3. The maximum value is 6.
+   VolumeTopology The volume topology corresponds to the node topology of
+   the rack or nodes where the volume resides. By default, new volumes are
+   created with a topology of / (root directory). For more information,
+   see [3]Volume Topology.
+   VolumeUsedSizeMB The size on disk (in MB) of the volume.
+   WireSecurityEnabled A value that can be used to determine whether (1)
+   or not (0) wire-level security is enabled.
 
 Example
 
+   Dump volume information
      * [4]CLI
      * [5]REST
 
@@ -196,6 +197,8 @@ erjobabort",
             "DisabledDataAuditOperations":"getattr,filetieroffloadevent,filetier
 recallevent",
             "WireSecurityEnabled":"1",
+
+
             "limitSpread":true,
             "allowGrant":false,
             "fixCreatorId":false,
@@ -240,18 +243,21 @@ ation":2,"NameSpaceReplication":3,"NameSpaceMinReplication":2,"ReReplicationTime
 OutSec":0,"MirrorThrottle":true,"AccessTime":"July 7, 2018","AuditVolume":"0","A
 udited":"0","ForceAudit":"0","CoalesceInterval":60,"EnabledDataAuditOperations":
 "setattr,chown,chperm,chgrp,getxattr,listxattr,setxattr,removexattr,read,write,c
-reate,delete,mkdir,readdir,rmdir,createsym,lookup,rename,createdev,truncate,tabl
-ecfcreate,tablecfdelete,tablecfmodify,tablecfScan,tableget,tableput,tablescan,ta
-blecreate,tableinfo,tablemodify,getperm,getpathforfid,hardlink,filescan,fileoffl
-oad,filerecall,filetierjobstatus,filetierjobabort","DisabledDataAuditOperations"
-:"getattr,filetieroffloadevent,filetierrecallevent","WireSecurityEnabled":"1","l
-imitSpread":true,"allowGrant":false,"fixCreatorId":false,"MetricsEnabled":"0"},{
-"ContainerId":2068,"Epoch":3,"Master":"10.10.82.24:5660--3-VALID","ActiveServers
-":{"IP":"10.10.82.24:5660--3-VALID"},"InactiveServers":{},"UnusedServers":{},"Ow
-nedSizeMB":"0 MB","SharedSizeMB":"0 MB","LogicalSizeMB":"0 MB","TotalSizeMB":"0
-MB","NumInodesInUse":256,"Mtime":"July 7, 2018","NameContainer":"true","CreatorC
-ontainerId":2068,"CreatorVolumeUuid":"-8225749748229459176:-4287758954200211096"
-,"UseActualCreatorId":true}]}
+reate,delete,mkdir,readdir,rmdir,createsym,lookup,rename,
+createdev,truncate,tablecfcreate,tablecfdelete,tablecfmodify,tablecfScan,tablege
+t,tableput,tablescan,tablecreate,tableinfo,tablemodify,getperm,
+getpathforfid,hardlink,filescan,fileoffload,filerecall,filetierjobstatus,filetie
+rjobabort","DisabledDataAuditOperations":"getattr,filetieroffloadevent,filetierr
+ecallevent","WireSecurityEnabled":"1",
+
+"limitSpread":true,
+"allowGrant":false,"fixCreatorId":false,"MetricsEnabled":"0"},{"ContainerId":206
+8,"Epoch":3,
+"Master":"10.10.82.24:5660--3-VALID","ActiveServers":{"IP":"10.10.82.24:5660--3-
+VALID"},"InactiveServers":{},"UnusedServers":{},"OwnedSizeMB":"0 MB","SharedSize
+MB":"0 MB","LogicalSizeMB":"0 MB","TotalSizeMB":"0 MB","NumInodesInUse":256,"Mti
+me":"July 7, 2018","NameContainer":"true","CreatorContainerId":2068,"CreatorVolu
+meUuid":"-8225749748229459176:-4287758954200211096","UseActualCreatorId":true}]}
 
 References
 
