@@ -202,8 +202,9 @@ assword'
     6. Run configure.sh on each node in the MapR cluster with the -R and
        -ES parameters, adding parameters to configure the
        Fluentd/Elasticsearch/Kibana password as needed. Optionally, you
-       can include the -ESDB parameter. You must have a warden service
-       running during configure.sh -R.
+       can include the -ESDB parameter to specify the location for writing
+       index data. A Warden service must be running when you use
+       configure.sh -R.
 /opt/mapr/server/configure.sh -R -ES <comma-separate list of Elasticsearch nodes
 > [-ESDB <filepath>]
 
@@ -228,8 +229,15 @@ assword'
    .
 
    Note: Elasticsearch requires a lot of disk space. Therefore, a separate
-   file system for the index is recommend. It is not recommended to store
-   index data under the / or the /var file system.
+   file system for the index is strongly recommended. It is not
+   recommended to store index data under the / or the /var file system.
+
+   Upgrading to a new version of MapR Monitoring removes the
+   /opt/mapr/elasticsearch/elasticsearch-<version>/var/lib/MaprMonitoring/
+   directory. If you want to retain Elasticsearch index data through an
+   upgrade, you must use the -ESDB parameter to specify a separate file
+   system or back up the default directory before upgrading. The
+   [3]Pre-Upgrade Steps for MapR Monitoring include this step.
        For example, to configure MapR Monitoring components you can run
        one of the following commands:
           + In this example, a location is specified for the Elasticsearch
@@ -242,8 +250,8 @@ cation
             Elasticsearch index directory:
 /opt/mapr/server/configure.sh -R -ES NodeA:9595,NodeB:9595,NodeC:9595
        After you run configure.sh -R, if errors are displayed see
-       [3]Troubleshoot MapR Monitoring Installation Errors.
-    7. If you installed Kibana, perform the following steps: :
+       [4]Troubleshoot MapR Monitoring Installation Errors.
+    7. If you installed Kibana, perform the following steps:
          a. Use one of the following methods to load the Kibana URL:
                o From the MCS, select the Kibana view. After you select
                  the Kibana view, you may also need to select the Pop-out
@@ -264,4 +272,5 @@ References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReleaseNotes/c_known_issues.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingMapRUserTicket.html#TicketsandCertificates-Ge_26281159-d3e202
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/TroubleshootMonitoringInstall.html#concept_k4r_y2h_qw
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/PreupgradeStepsMonitoring.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdvancedInstallation/TroubleshootMonitoringInstall.html#concept_k4r_y2h_qw

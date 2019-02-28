@@ -1,5 +1,7 @@
 Tuning the Cache for FUSE-Based POSIX Client
 
+   Describes performance tuning measures for FUSE clients.
+
    The FUSE kernel and the FUSE userspace process caches both data and
    metadata. When an application performs a read of a file using the
    FUSE-based POSIX client, data is generally returned from the local FUSE
@@ -131,6 +133,30 @@ Data Cache
           in the fuse.conf file. Caching can be disabled at a file-level
           by opening the file in O_DIRECT mode.
 
+Caching Negative Lookup Results
+
+   FUSE issues thousands of lookup calls for the file, even when the
+   initial lookup call has returned ENOENT, indicating that the file that
+   does not exist, This behaviour is in contrast to NFS, which caches the
+   lookup result for a specified time. For example, when running a git
+   clone operation on the mapr-core repository, testing indicated that
+   FUSE issued 870k calls, while NFS issued 82K calls, for files that are
+   non-existent.
+
+   To reduce the number of these negative lookups, and optimize
+   performance, the fuse.negative.timeout parameter has been added to the
+   FUSE configuration. For MapR 6.0.1, install EBF patch version
+   6.0.1.20180404222005.GA‌-20190208030353 or above, to use this cache.
+
+   By default, this parameter is set to 3 seconds. Negative lookup results
+   that are returned when a file does not exist (lookup retuned ENOENT),
+   are cached for 3 seconds. The lookup is performed again, only after
+   this period elapses. The file is deemed to be non-existent till this
+   period elapses.
+
+   For more information on this parameter, check the [10]FUSE
+   configuration.
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div1entry1
@@ -142,3 +168,4 @@ References
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div2entry2
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div3entry1
    9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-TuneCache.html#div3entry2
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/MapRfusePOSIXClient-Configuring.html

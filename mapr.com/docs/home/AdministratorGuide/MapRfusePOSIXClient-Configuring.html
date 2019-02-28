@@ -278,13 +278,24 @@ md64/server/:/opt/mapr/lib
 
    Note: Even when set to 1, EBUSY errors are returned if client accesses
    more than 32k volumes at the same time.
-   fuse.negative.timeout 3.0 Applicable for POSIX clients (both Basic and
-   Platinum) from version 6.0.1.20180404222005.GA‌-20190208030353 and
-   above.
+   fuse.negative.timeout 3.0
+
+   Applicable for both Basic and Platinum POSIX clients.
+
+   For MapR 6.0.1, install EBF patch version
+   6.0.1.20180404222005.GA‌-20190208030353 or above, to use this cache.
 
    Indicates the duration in seconds to cache negative lookup results.
 
-   Set this value to 0 to disable the cache.
+   Negative lookup results that are returned when a file does not exist
+   (lookup retuned ENOENT), are cached for the specified number of
+   seconds. The lookup is performed again, only after this period elapses.
+   The file is deemed to be non-existent till this period elapses.
+
+   The default value of 3.0 indicates that negative lookup results are
+   cached for 3 seconds.
+
+   Set this value to 0 to disable the negative lookup cache.
    When patching or upgrading the client from an older release, this
    parameter is automatically applied. However, new parameters are not
    automatically written to fuse.conf. Make sure to copy this parameter
@@ -294,7 +305,8 @@ md64/server/:/opt/mapr/lib
    You must start/restart the FUSE-based POSIX client for the changes to
    take effect. See [4]Starting and Stopping the POSIX Client for more
    information.
-   Note:
+
+Elucidation on Configuration Backup When Installing/Upgrading POISX Clients
 
    When you install a patch, the /opt/mapr/conf/fuse.conf.new file
    contains the new settings. You can copy the new parameters (with

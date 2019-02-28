@@ -7,87 +7,69 @@ Using ODBC to Connect to HiveServer2
 
    For details on how to install and use ODBC to connect to Hive, see
    [1]Using ODBC to Connect to HiveServer2.
-   Note: The client must have a Kerberos ticket.
+   Note: The client must have a valid MapR or Kerberos ticket.
 
 Using JDBC or Beeline to Connect to HiveServer2
 
+   The default port for HiveServer2 is 10000.
    HiveServer2 Authentication Connection Requirements
    No Authentication
 
-   Connection String: jdbc:hive2://<hostname>:10000/default
+   Connection String: jdbc:hive2://<hs2_hostname>:10000<database>; You
+   must enter a valid user name.
 
    For encryption, JDBC requires a truststore and an optional truststore
    password.
-     * Connection String with
-       Encryption:jdbc:hive2://<host>:<port>/<database>;ssl=true;sslTrustS
-       tore=<path-to-truststore>;sslTrustStorePassword=<password>
+     * Connection String with Encryption:
+       jdbc:hive2://<hs2_hostname>:10000/<database>;ssl=true;sslTrustStore
+       =<path-to-truststore>;sslTrustStorePassword=<password>
      * Connection String with Encryption (truststore passed in JVM
-       arguments): jdbc:hive2://<host>:<port>/<database>;ssl=true
-       Note: Prior to connecting to an application that uses JDBC,such as
+       arguments): jdbc:hive2://<hs2_hostname>:<port>/<database>;ssl=true
+       Note: Prior to connecting to an application that uses JDBC, such as
        Beeline, you can run the following command to pass the truststore
-       parameters as java arguments: export
-       HADOOP_OPTS="-Djavax.net.ssl.trustStore=<path-to-trust-store-file>
-       -Djavax.net.ssl.trustStorePassword=<password>"
+       parameters as Java arguments:
+export HADOOP_OPTS="-Djavax.net.ssl.trustStore=<path-to-trust-store-file>
+-Djavax.net.ssl.trustStorePassword=<password>"
 
-   MapR-SASL
+   MapR-SASL (this is included as part of the secure by default
+   configuration)
 
-   Connection String: jdbc:hive2://<hostname>:10000/default;auth=maprsasl
+   Connection String:
+   jdbc:hive2://<hs2_hostname>:10000/<database>;auth=maprsasl;ssl=true;
 
-   Connection String with Encryption (Hive 0.13
-   version):jdbc:hive2://<hostname>:10000/default;auth=maprsasl;sasl.qop=a
-   uth-conf
+   MapR-SASL encryption is enabled by default. For more information, see
+   [2]Configuring JDBC Connection String with SSL Encryption Enabled or
+   Disabled.
 
-   Connection String with Encryption (Hive 1.0
-   version):jdbc:hive2://<hostname>:10000/default;auth=maprsasl;saslQop=au
-   th-conf
-
-   Connection for Java Application:Use the -D flag to append the JVM
-   argument: -Dhadoop.login=maprsasl
+   Connection for Java Application: Use the -D flag to append the JVM
+   argument: -Dhadoop.login=maprsasl.
    PAM
 
    Connection String:
-   jdbc:hive2://hs2node:10000/default;user=<userid>;password=<password>
-   PAM + MapR-SASL
+   jdbc:hive2://<hs2_hostname>:10000/<database>;user=<user>;password=<pass
+   word>
+   PAM + SSL (this is included as part of the secure by default
+   configuration)
 
-   Connection String for MapR-SASL (Hive 2.3 and 2.1 version): !connect
-   jdbc:hive2://<hostname>:10000/default;auth=maprsasl; (MapRSASL
-   encryption enabled)
-
-   Connection String for PAM connection + SSL on MapR-SASL cluster (Hive
-   2.3 and 2.1 version): !connect
-   jdbc:hive2://<hostname>:10000/default;ssl=true;sslTrustStore=/opt/mapr/
-   conf/ssl_truststore username password
-   For example:
-beeline> !connect jdbc:hive2://node4:10000/default;ssl=true;
-
-Connecting to jdbc:hive2://node4:10000/default;ssl=true;
-Enter username for jdbc:hive2://node4:10000/default: test
-Enter password for jdbc:hive2://node4:10000/default: ****
-Connected to: Apache Hive (version 2.3.3-mapr)
-Driver: Hive JDBC (version 2.3.3-mapr)
-Transaction isolation: TRANSACTION_REPEATABLE_READ
-
+   Connection String:
+   jdbc:hive2://<hs2_hostname>:10000/<database>;ssl=true;user=<user>;passw
+   ord=<password>. For more information, see [3]Configuring JDBC
+   Connection String with SSL Encryption Enabled or Disabled.
    Kerberos
 
-   Connection
-   String:jdbc:hive2://<hostname>:10000/default;principal=mapr/<FQDN@REALM
-   >
+   Connection String:
+   jdbc:hive2://<hostname>:10000/default;principal=mapr/<FQDN@REALM>
 
-   Connection String with Encryption (Hive 0.13
-   version):jdbc:hive2://<hostname>:10000/default;principal=mapr/<FQDN@REA
-   LM>;sasl.qop=auth-conf
-
-   Connection String with Encryption (Hive 1.0 version):
-   jdbc:hive2://<hostname>:10000/default;principal=mapr/<FQDN@REALM>;saslQ
-   op=auth-conf
-
-   Connection for Java Application:Use the -D flag to append the JVM
+   Connection for Java Application: Use the -D flag to append the JVM
    argument: -Dhadoop.login=hybrid
    Note: The client nodes must also have a Kerberos ticket and be
-   configured to connect to HiveServer2 to using Kerberos.
+   configured to connect to HiveServer2 to use Kerberos.
    LDAP Connection String:
-   jdbc:hive2://hs2node:10000/default;user=<userid>;password=<password>
+   jdbc:hive2://<hs2_hostname>:10000/<database>;user=<ldap_user>;password=
+   <ldap _password>
 
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/Hive-ODBC-Connector.html#HiveODBCConnector
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/ConfiguringJDBCConnectionStringSSLencryption.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/ConfiguringJDBCConnectionStringSSLencryption.html

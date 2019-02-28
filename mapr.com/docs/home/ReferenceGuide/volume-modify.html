@@ -89,8 +89,9 @@ Parameters
    any directories, files, tables, or streams that are already enabled for
    auditing. If none are yet so enabled, enabling auditing on any of them
    causes auditing of them to start.
-   Note: This must be set to true to enable auditing on directories,
-   files, tables, and streams in the volume.
+
+   Set auditenabled to true to enable auditing on directories, files,
+   tables, and streams in the volume.
    You must have the fc permission on the cluster to use this parameter.
    See [2]acl for details about this permission.
    autooffloadthresholdgb The size of the volume in GB (threshold). When
@@ -145,12 +146,13 @@ Parameters
    dataauditops The comma separated list of filesystem operations to
    include (specified with a preceding plus sign (+)) or exclude
    (specified with a preceding minus sign (-)) from auditing.
-   Note: If the first operation in the list (of operations) is to be
-   excluded from auditing, it must be preceded by two minus (--) signs.
-   Subsequent operations to exclude must be preceded by only a single
-   minus (-) sign, whether or not the first operation was included (using
-   a plus (+) sign) or excluded (using two minus (--) signs). If neither
-   sign is specified, the given operation is included for auditing.
+
+   If the first operation in the list (of operations) is to be excluded
+   from auditing, it must be preceded by two minus (--) signs. Subsequent
+   operations to exclude must be preceded by only a single minus (-) sign,
+   whether or not the first operation was included (using a plus (+) sign)
+   or excluded (using two minus (--) signs). If neither sign is specified,
+   the given operation is included for auditing.
    The operations that can be included (+) or excluded (-) from auditing
    are listed [3]here. You can, alternatively, group all the operations
    using the keyword all, which:
@@ -160,8 +162,7 @@ Parameters
        operations.
 
    You can specify a mixed list of included and excluded operations. There
-   will be no change to operations that are not specified with the
-   command.
+   is no change to operations that are not specified with the command.
    Tip: For more information, see [4]Selective Auditing of Filesystem and
    Table Operations.
    dbindexlagsecalarmthresh Specifies the threshold (in seconds) to raise
@@ -172,8 +173,9 @@ Parameters
    already not enabled. If this is specified, you cannot specify tiername
    to use an existing warm-tier; when the command runs, a new tier is
    created for the volume.
-   Note: You cannot enable warm tiering if it was disabled or disable warm
-   tiering if it was enabled when the volume was being created.
+
+   You cannot enable warm tiering if it was disabled, or disable warm
+   tiering if it was enabled, when the volume was being created.
    ecscheme The number of data chunks and the number of partify chunks
    separated by a plus (+) sign. The default scheme is 4+2. For
    information on the supported schemes, see [5]Using an Erasure Coding
@@ -184,18 +186,20 @@ Parameters
    use [6]volume move.
    enforceminreplicationforio Specifies whether (true) or not (false) to
    enforce minimum number of replicas for the (read-write) volume during
-   IO. This ensures that further updates (writes) to volume are successful
-   only when minimum number of copies of the container is available.
-   Setting this to true ensures that if writes succeed, then it has been
-   applied to at least the minimum number of copies and if writes fail, it
-   may have been applied to zero or more copies.
-   Note: If this is enabled, volume dump and volume snapshot create
-   operations may stall if the minimum number of copies of the container
-   are not available.
-   If this parameter was not set on a volume or if this parameter was
+   IO. This flag ensures that further updates (writes) to volume are
+   successful only when the minimum number of copies of the container is
+   available. Setting this to true ensures that if writes succeed, then it
+   has been applied to at least the minimum number of copies and if writes
+   fail, it may have been applied to zero or more copies.
+
+   Enabling this parameter, may stall volume dump and volume snapshot
+   create operations, if the minimum number of copies of the container are
+   not available.
+   If this parameter was not set on a volume, or if this parameter is
    modified from false to true, restart all the nodes where the containers
    associated with the volume exist for the changes to take effect.
-   Note: This flag, if set on Mirror Volumes, is ignored.
+
+   This flag, if set on Mirror Volumes, is ignored.
    forceauditenable Specifies whether (1) or not (0) to force audit of
    operations on all files, tables, and streams in the volume if auditing
    is enabled at the cluster level and at the volume level, irrespective
@@ -248,8 +252,9 @@ Parameters
    the CLDB manages the namespace container replication separate from the
    data container replication. This capability is used when you have low
    volume replication but want to have higher namespace replication.
-   Note: This parameter must be the same or larger than the equivalent
-   data replication parameter, minreplication.
+
+   This parameter must be the same or larger than the equivalent data
+   replication parameter, minreplication.
    See also: [10]Understanding Replication.
    nsreplication The desired namespace container replication level.
    Default: 3. When the number of copies falls below the desired
@@ -261,10 +266,11 @@ Parameters
    the CLDB manages the namespace container replication separate from the
    data container replication. This capability is used when you have low
    volume replication but want to have higher namespace replication.
-   Note: By default, the value of this parameter is the same or larger
-   than the value of the equivalent data replication parameter,
-   replication. However, to set the value of this parameter lower than the
-   replication value, first set engg.manual.override to true in cldb.conf.
+
+   By default, the value of this parameter is the same or larger than the
+   value of the equivalent data replication parameter, replication.
+   However, to set the value of this parameter lower than the replication
+   value, first set engg.manual.override to true in cldb.conf.
    See also: [11]Understanding Replication.
    name The name of the volume to modify.
    offloadschedule The ID of the schedule to associate with the volume for
@@ -277,8 +283,9 @@ Parameters
    readAce Specifies [12]Access Control Expressions (ACEs) that grant
    permissions at the volume level to read files and tables in the volume.
    The default value is p, which grants access to all users.
-   Note: An ACE (up to 2KB in length) is a combination of users, groups,
-   and/or roles for whom access (to volume data) is defined using boolean
+
+   An ACE (up to 2KB in length) is a combination of users, groups, and/or
+   roles for whom access (to volume data) is defined using boolean
    expressions and subexpressions within single quotes. When you pass in
    an access type that has already been set, the new value will replace
    the existing value for that access type. There will be no change to
@@ -316,8 +323,9 @@ Parameters
    encrypted before written to the object and HTTPs protocol is used for
    communication with the object store to ensure data is encrypted both on
    the wire and on the tier.
-   Note: This can be set only if a tier name is also specified and cannot
-   be modified once set.
+
+   This can be set only if a tier name is also specified and cannot be
+   modified once set.
 
    If true, you can also specify a custom key using the tierkey parameter.
    If true, MAST Gateway uses HTTPS to upload data to the cold-tier. If
@@ -332,7 +340,8 @@ Parameters
    tierkey (For cold tier only) The 32 character HEX string to use for
    encryption. If this is not specified, CLDB generates a 32 character HEX
    string to use for encrypting the data to offload to the tier.
-   Note: You cannot modify the tierkey that is already associated with the
+
+   You cannot modify the tierkey that is already associated with the
    volume.
    tiername The name of the tier to use for offloading data. This can be
    set only once and after it is set, it cannot be modified.
@@ -355,8 +364,9 @@ Parameters
    writeAce Specifies [14]Access Control Expressions (ACEs) that grant
    permission at the volume level to write to files and tables in the
    volume. The default value is p, which grants access to all users.
-   Note: An ACE (up to 2KB in length) is a combination of users, groups,
-   and/or roles for whom access is defined using boolean expressions and
+
+   An ACE (up to 2KB in length) is a combination of users, groups, and/or
+   roles for whom access is defined using boolean expressions and
    subexpressions within single quotes. When you pass in an access type
    that has already been set, the new value will replace the existing
    value for that access type. There will be no change to access types
@@ -503,26 +513,6 @@ curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=sampleVol&offloa
 dschedule=3&recallexpirytime=3' --user mapr:mapr
 {"timestamp":1526569653267,"timeofday":"2018-05-17 08:07:33.267 GMT-0700 AM","st
 atus":"OK","total":0,"data":[]}
-
-   The –securitypolicy option in the maprcli volume modify command sets
-   the volume to be tagged with the specified policies, replacing any
-   security policies that exist before the command. This command works as
-   follows, depending on the security policies that are associated with
-   this volume prior to invoking this command.
-     * If the volume initially has no security policy tags before invoking
-       this command, then it is tagged with the specified security policy
-       (Lab_Security_Policy in our example).
-     * If the volume initially has two security policy tags before
-       invoking this command, say Lab_Security_Policy and Sensitive_Data,
-       then the Sensitive_Data Policy security policy is disassociated
-       from this volume, and the volume now has only the
-       Lab_Security_Policy tag.
-     * If the volume initially has one security policy tag, say
-       Sensitive_Data, then the Sensitive_Data security policy is removed
-       and replaced with the security policy Lab_Security_Policy.
-     * If the volume has one security policy tag, say Lab_Security_Policy,
-       which is the same as the security policy specified in the comand,
-       then modifications are not made.
 
 References
 

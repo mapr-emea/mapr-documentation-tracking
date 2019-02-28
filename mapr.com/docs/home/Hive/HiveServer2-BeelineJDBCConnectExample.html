@@ -1,99 +1,114 @@
 Examples
 
+Example: Using Beeline with no Encryption and no Authentication
+
+hive --service beeline
+Beeline version 2.3.3-mapr-1901 by Apache Hive
+beeline> !connect jdbc:hive2://<hs2_hostname>:10000/default;
+Connecting to jdbc:hive2://<hs2_hostname>:10000/default;
+Enter username for jdbc:hive2://<hs2_hostname>:10000/default;: <username>
+0: jdbc:hive2://<hs2_hostname>:10000/defau>
+
+Example: Using Beeline with Encryption and no Authentication
+
+hive --service beeline
+Beeline version 2.3.3-mapr-1901 by Apache Hive
+beeline> !connect jdbc:hive2://<hs2_hostname>:10000/default;ssl=true;sslTrustSto
+re=truststore.jks;sslTrustStorePassword=tsp
+Connecting to jdbc:hive2://<hs2_hostname>:10000/default;ssl=true;sslTrustStore=t
+ruststore.jks;sslTrustStorePassword=tsp
+Enter username for jdbc:hive2://<hs2_hostname>:10000/default;ssl=true;sslTrustSt
+ore=truststore.jks;sslTrustStorePassword=tsp: <user>
+
+Example: Connecting to HiveServer2 with MapR-SASL Authentication
+
+hive --service beeline
+Beeline version 2.3.3-mapr-1901 by Apache Hive
+beeline> !connect jdbc:hive2://<hs2_hostname>:10000/default;auth=maprsasl;ssl=tr
+ue
+Connecting to jdbc:hive2://<hs2_hostname>:10000/default;auth=maprsasl;ssl=true
+19/01/31 12:15:33 [main]: WARN maprsasl.MaprSaslClient: SASL Server qopProperty:
+ auth-confis different from Client: auth-conf,auth-int,auth.Using Server one
+Connected to: Apache Hive (version 2.3.3-mapr-1901)
+Driver: Hive JDBC (version 2.3.3-mapr-1901)
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+0: jdbc:hive2://<hs2_hostname>:10000/defau>
+
+   Starting from MEP 6.0.0, with secure by default configuration, it is a
+   default connection string for a secure cluster. For more information,
+   see [1]Configuring JDBC Connection String with SSL Encryption Enabled
+   or Disabled.
+
+Example: Using Beeline with PAM Authentication
+
+hive --service beeline
+Beeline version 2.3.3-mapr-1901 by Apache Hive
+beeline> !connect jdbc:hive2://<hs2_hostname>:10000/default;
+Connecting to jdbc:hive2://<hs2_hostname>:10000/default;
+Enter username for jdbc:hive2://<hs2_hostname>:10000/default;: mapr
+Enter password for jdbc:hive2://<hs2_hostname>:10000/default;: *******
+Connected to: Apache Hive (version 2.3.3-mapr-1901)
+Driver: Hive JDBC (version 2.3.3-mapr-1901)
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+
+Example: Connecting to HiveServer2 with PAM Authentication and SSL Encryption
+
+hive --service beeline
+Beeline version 2.3.3-mapr-1901 by Apache Hive
+beeline> !connect jdbc:hive2://<hs2_hostname>:10000/default;ssl=true;
+Connecting to jdbc:hive2://<hs2_hostname>:10000/default;ssl=true;
+Enter username for jdbc:hive2://<hs2_hostname>:10000/default: mapr
+Enter password for jdbc:hive2://<hs2_hostname>:10000/default: ****
+Connected to: Apache Hive (version 2.3.3-mapr)
+Driver: Hive JDBC (version 2.3.3-mapr)
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+0: jdbc:hive2://<hs2_hostname>:10000/default>
+
+   Starting from MEP 6.0.0, with secure by default configuration, it is a
+   default connection string for a secure cluster. For more information,
+   see [2]Configuring JDBC Connection String with SSL Encryption Enabled
+   or Disabled.
+
 Example: Using Beeline with Kerberos
 
    Beeline must pass the Kerberos principal for HiveServer2 in the JDBC
    connection string. The connection strings you pass to Beeline must use
    the principal name that you configured for HiveServer2.
-   Note: Ignore the prompts for the username and password.
 
    See below for a sample Beeline authentication with Kerberos:
-Beeline version 0.11-mapr by Apache Hive
-beeline> !connect jdbc:hive2://<hostname>:10000/default;principal=mapr/<FQDN@REA
+hive --service beeline
+Beeline version 2.3.3-mapr-1901 by Apache Hive
+beeline> !connect jdbc:hive2://<hs2_hostname>:10000/default;principal=mapr<FQDN@
+REALM>
+Connecting to jdbc:hive2://<hs2_hostname>:10000/default;principal=mapr/<FQDN@REA
 LM>
-scan complete in 3ms
-Connecting to jdbc:hive2://<hostname>:10000/default;principal=mapr/<FQDN@REALM>
-Enter username for jdbc:hive2://<hostname>:10000/default;principal=mapr/<FQDN@RE
-ALM>:
-Enter password for jdbc:hive2://<hostname>:10000/default;principal=mapr/<FQDN@RE
-ALM>:
-Connected to: Hive (version 0.11-mapr)
-Driver: Hive (version 0.11-mapr)
 Transaction isolation: TRANSACTION_REPEATABLE_READ
-0: jdbc:hive2://<hostname>:10000/def> show tables;
-+-----------+
-| tab_name  |
-+-----------+
-| hcatkv    |
-| kv        |
-+-----------+
-2 rows selected (1.348 seconds)
-
-Example: Using Beeline with Encryption but no Authentication
-
-$ beeline
-Beeline version 0.11-mapr by Apache Hive
-beeline> !connect jdbc:hive2://127.0.0.1:10000/default;ssl=true;sslTrustStore=tr
-uststore.jks;sslTrustStorePassword=tsp
-scan complete in 4ms
-Connecting to jdbc:hive2://127.0.0.1:10000/default;ssl=true;sslTrustStore=trusts
-tore.jks;sslTrustStorePassword=tsp
-Enter username for jdbc:hive2://127.0.0.1:10000/default;ssl=true;sslTrustStore=t
-ruststore.jks;sslTrustStorePassword=tsp: qa-user1
-Enter password for jdbc:hive2://127.0.0.1:10000/default;ssl=true;sslTrustStore=t
-ruststore.jks;sslTrustStorePassword=tsp: ****
-Connected to: Hive (version 0.11-mapr)
-Driver: Hive (version 0.11-mapr)
+0: jdbc:hive2://<hs2_hostname>:10000/def>
+Connected to: Apache Hive (version 2.3.3-mapr)
+Driver: Hive JDBC (version 2.3.3-mapr)
 Transaction isolation: TRANSACTION_REPEATABLE_READ
-0: jdbc:hive2://127.0.0.1:10000/default> show tables;
-+-------------------+
-|     tab_name      |
-+-------------------+
-| table1            |
-| table2            |
-+-------------------+
+0: jdbc:hive2://<hs2_hostname>:10000/default>
 
 Example: Using Beeline with Encryption but no Authentication (truststore
 parameters passed as JVM arguments)
 
-$ beeline
-Beeline version 0.11-mapr by Apache Hive
-beeline> !connect jdbc:hive2://127.0.0.1:1000/default;ssl=true
-scan complete in 4ms
-Connecting to jdbc:hive2://127.0.0.1:10000/default;ssl=true
-Enter username for jdbc:hive2://127.0.0.1:10000/default;ssl=true: qa-user1
-Enter password for jdbc:hive2://127.0.0.1:10000/default;ssl=true: ****
-Connected to: Hive (version 0.11-mapr)
-Driver: Hive (version 0.11-mapr)
+Hive --service beeline
+Beeline version 2.3.3-mapr-1901 by Apache Hive
+beeline> !connect jdbc:hive2://<hs2_hostname>:1000/default;ssl=true
+Connecting to jdbc:hive2://<hs2_hostname>:10000/default;ssl=true
+Enter username for jdbc:hive2://<hs2_hostname>:10000/default;ssl=true: <username
+>
+Enter password for jdbc:hive2://<hs2_hostname>:10000/default;ssl=true: ****
+Connected to: Apache Hive (version 2.3.3-mapr)
+Driver: Hive JDBC (version 2.3.3-mapr)
 Transaction isolation: TRANSACTION_REPEATABLE_READ
-0: jdbc:hive2://127.0.0.1:10000/default> show tables;
-+-------------------+
-|     tab_name      |
-+-------------------+
-| table1            |
-| table2            |
-+-------------------+
-
-Example: Using Beeline with PAM Authentication
-
-~$ beeline
-Beeline version 0.11-mapr by Apache Hive
-beeline> !connect jdbc:hive2://<HiveServer2Host>:<port>/default
-scan complete in 4ms
-Connecting to jdbc:hive2://<HiveServer2Host>:<port>/default
-Enter username for jdbc:hive2://<HiveServer2Host>:<port>/default: mapr
-Enter password for jdbc:hive2://<HiveServer2Host>:<port>/default: *******
-Hive history file=/tmp/mapr/hive_job_log_97d1cf06-bbf5-4abf-9bbb-d9ce56667fdf_94
-1674138.txt
-Connected to: Hive (version 0.11-mapr)
-Driver: Hive (version 0.11-mapr)
-Transaction isolation: TRANSACTION_REPEATABLE_READ
+0: jdbc:hive2://<hs2_hostname>:10000/default>
 
 Example: Generating a Kerberos Ticket
 
    You use the kinit utility to generate the ticket and then use klist to
    verify that a ticket exists.
-# kinit username/<FQDN@REALM>
+# kinit <username>/<FQDN@REALM>
 # klist
 
 Credentials cache: API:501:9
@@ -110,25 +125,7 @@ Renew till: Jun 18 10:01:48 2014
 Ticket flags: pre-authent, initial, renewable, forwardable
 Addresses: addressless
 
-Example: Connecting to HiveServer2 with MapR-SASL Authentication
+References
 
-beeline> !connect jdbc:hive2://node1:10000/default;auth=maprsasl;
-Connecting to jdbc:hive2://node1:10000/default;auth=maprsasl;
-18/06/19 08:53:20 [main]: WARN maprsasl.MaprSaslClient:
-SASL Server qopProperty: auth-confis different from Client: auth-conf,auth-int,a
-uth.Using Server one
-Connected to: Apache Hive (version 2.3.3-mapr)
-Driver: Hive JDBC (version 2.3.3-mapr)
-Transaction isolation: TRANSACTION_REPEATABLE_READ
-0: jdbc:hive2://node1:10000/default>
-
-Example: Connecting to HiveServer2 with PAM Authentication and SSL Encryption
-
-beeline> !connect jdbc:hive2://node1:10000/default;ssl=true;
-Connecting to jdbc:hive2://node1:10000/default;ssl=true;
-Enter username for jdbc:hive2://node1:10000/default: mapr
-Enter password for jdbc:hive2://node1:10000/default: ****
-Connected to: Apache Hive (version 2.3.3-mapr)
-Driver: Hive JDBC (version 2.3.3-mapr)
-Transaction isolation: TRANSACTION_REPEATABLE_READ
-0: jdbc:hive2://node1:10000/default>
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/ConfiguringJDBCConnectionStringSSLencryption.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/Hive/ConfiguringJDBCConnectionStringSSLencryption.html
