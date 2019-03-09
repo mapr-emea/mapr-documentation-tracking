@@ -1,23 +1,22 @@
 Configure the OpenTSDB Service Heap Size
 
-   By default, OpenTSDB service is configured to use a default heap size
-   of 2 gigabytes (recommended size is 6 gigabytes). You can edit the
-   warden.opentsdb.conf file on each node to override the default value.
-    1. Configure the following properties in the
-       opt/mapr/conf/conf.d/warden.opentsdb.conf file on each node:
-
-        service.heapsize.min
-                The minimum heap size in megabytes. For example,
-                service.heapsize.min=256.
-
-        service.heapsize.max
-                The maximum heap size in megabytes. For example,
-                service.heapsize.max=6000. This value must match the value
-                of JVMXMX.
-
-    2. Restart the OpenTSDB service.
-maprcli node services -name opentsdb -nodes <space separated list of OpenTSDB no
+   By default, the OpenTSDB service is configured to use a default heap
+   size of 6 gigabytes. In earlier releases, the default was configured to
+   be 2 gigabytes. You can edit the configuration files on each node to
+   override the default value.
+    1. Edit the /opt/mapr/conf/conf.d/warden.opentsdb.conf file to change:
+service.heapsize.max=2000
+service.heapsize.min=2000
+       to
+service.heapsize.max=6000
+service.heapsize.min=6000
+    2. Edit the /opt/mapr/opentsdb/opentsdb-*/etc/init.d/opentsdb file to
+       change:
+$
+{JVMXMX:=-Xmx2000m -Xss1m -XX:MaxMetaspaceSize=128m}
+       to
+$
+{JVMXMX:=-Xmx6000m -Xss1m -XX:MaxMetaspaceSize=128m}
+    3. Restart the OpenTSDB service:
+maprcli node services -name opentsdb -nodes <space-separated list of OpenTSDB no
 des> -action restart
-
-   Note: These values only control the OpenTSDB service heap size, not the
-   entire amount of memory used by the OpenTSDB service.

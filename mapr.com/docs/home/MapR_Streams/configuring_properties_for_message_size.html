@@ -1,0 +1,47 @@
+Configuring Properties for Message Size
+
+   Describes the message.max.bytes and receive.message.max.bytes
+   properties for configuring message size.
+
+   message.max.bytes
+          For a C producer, the message.max.bytes value is 1000000 B by
+          default.
+
+          The minimum value is 1000 B and maximum value is 32000000 B. The
+          maximum message size produced by a C API is decided by the
+          message.max.bytes value set on the C producer.
+
+          From C, Python, and C# APIs, the maximum message size that can
+          be produced is 32000000 B. If a C consumer needs to consume a
+          message that is greater than 32000000 B in size, which may be
+          produced by a Java client, the consumer needs to update the
+          message.max.bytes or receive.message.max.bytes properties to a
+          higher value to consume it.
+
+          If the message.max.bytes property is set to greater than
+          32000000 B, it is by default capped at 32000000 B. Though a
+          consumer can consume messages greater than 32000000 B (produced
+          say by a Java client), only up to 32000000 B is produced from
+          the MapR C client. The maximum message size consumed by a C API
+          is limited by the value that is higher among the
+          message.max.bytes and receive.message.max.bytes values.
+
+   receive.message.max.bytes
+          For a C consumer, the receive.message.max.bytes is 1000000 B by
+          default. The minimum value is 1000 B and maximum value is
+          1000000000 B.
+
+   Using a Java API, a larger message size can be produced if the
+   cluster-side property is changed using the following maprcli config
+   save command:
+Cluster side:
+
+maprcli config save -values
+{"mfs.db.max.rowsize.kb":<value in KB>}
+
+   In this case, the row size is 32 MB by default and the maximum is a
+   little less than 2 GB.
+
+   The mfs.db.max.rowsize.kb setting is a cluster-wide setting that
+   applies to MapR Database (Binary+JSON) and MapR Event Store for Apache
+   Kafka, and it is not configurable per stream or topic.

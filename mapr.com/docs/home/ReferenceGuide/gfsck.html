@@ -1,42 +1,41 @@
 gfsck
 
-   The gfsck (global filesystem check) command performs a consistency
-   check and repair operation on a volume or volume snapshot, including
-   the following entities:
-     * All cross container links (for example, from file to filelets, or
+   Describes how you can use the gfsck command, under the supervision of
+   MapR Support or Engineering, to perform consistency checks and
+   appropriate repairs on a volume, or a volume snapshot.
+
+   You can use the gfsck (global file system check) command to perform a
+   consistency check and repair operation on a volume or volume snapshot,
+   including the following entities:
+     * All cross-container links (for example, from file to filelets, or
        from table to tablets)
      * The tabletmap key range
      * The attributes of filelets (uid/gid/mode)
 
    This command identifies the unreachable files, directories, and tables
-   in the volume and moves them to /lost+found to be repaired. It also
+   in the volume, and moves them to /lost+found to be repaired. It also
    identifies and fixes any unreachable DB inodes or dangling pointers to
    lost inodes.
 
-   Use the gfsck utility when local fsck repairs some containers at the
-   highest epoch or when some containers are lost (either when a lower
-   epoch container was promoted as master or when a container was
-   permanently lost) at the highest epoch.
+   You can use the gfsck command when the local fsck either repairs or
+   loses some containers at the highest epoch.
 
 Permissions Required
 
-   You need root user permissions to run , unless you are checking
-   tiering-enabled volumes, which requires you to be the mapr user.
+   Although you need to be the root user to run this command, checking
+   tiering-enabled volumes requires you to be the mapr user.
 
-Typical process flow
+Process Flow to Use gfsck
 
-    1. Take the affected storage pools offline with the [1]mrconfig sp
-       offline command.
-    2. Execute the [2]fsck command on the storage pools (or disks).
-    3. Bring the storage pools back online with the [3]mrconfig sp online
-       command.
-    4. Run the gfsck command on the cluster, volumes, or snapshots
-       affected.
-       Warning: If there are alarms, such as DataUnavailableAlarm or
+    1. Take the affected storage pools offline: [1]mrconfig sp offline
+    2. Execute the [2]fsck command on the storage pools or disks.
+    3. Bring the storage pools back online: [3]mrconfig sp online
+    4. Run the gfsck command on the affected volumes, or snapshots.
+       If there are alarms, such as DataUnavailableAlarm or
        DataUnderReplicatedAlarm, do not run the gfsck command with the -r
        (--repair) option. Running the gfsck command with the -r (--repair)
        option, might result in data loss. If necessary, first run gfsck
-       without the -r (--repair) option and attempt to repair only after
+       without the -r (--repair) option, and attempt to repair only after
        analyzing the command output.
 
 Syntax
@@ -51,7 +50,7 @@ Syntax
     [ -Gquick|--check-gateway-consistency-only ]
     [ -Gfull|--check-gateway-vcd-consistency ]
     [ -Dquick|--check-object-presence ]
-    [ -DFull --check-object-data ]
+
     [ -GdelLog|--delete-Gateway-Log ]
     [ cluster=<cluster name> ]
     [ rwvolume=<volume name> ]
@@ -64,32 +63,34 @@ Parameters
    Parameter
 
    Description
-   -b|--dbcheck Checks that every key in a tablet is within that tablet's
-   startKey and endKey range. Use this option only if you suspect database
-   inconsistency, as this option is very I/O intensive.
+   User who must use this option
+   -h|--help Prints usage text. root, as well as mapr
    -c|--clear Clears previous warnings before performing the global
-   filesystem check.
-   -d|--debug Provides information for debugging.
-   -Gquick|--check-gateway-consistency-only (mapr user). Checks if the
-   entries in the metadata tables maintained internally for objects and
-   tiers are consistent. If inconsistent, reports the error.
-   -Gfull|--check-gateway-vcd-consistency (mapr user). Checks if the
-   entries in the metadata tables maintained internally for objects and
-   containers are consistent. If inconsistent, reports the error.
-   -Dquick|--check-object-presence (mapr user). Specified with either
-   -Gquick or -Gfull. Checks and reports if the object in the metadata
-   tables exists in the tier or not.
-   -GdelLog|--delete-Gateway-Log (mapr user). Deletes the metalog created
-   by MAST Gateway if it crashes.
-   -h|--help Prints usage text.
-   -y --assume-yes Assumes that containers without valid copies (as
-   reported by CLDB) can be deleted automatically. If this option is not
-   specified, gfsck pauses for user input to verify that containers can be
-   deleted. Enter yes to delete, no to exit gfsck, or ctrl-C to quit.
-   cluster Name of the cluster (default: default cluster)
-   rwvolume Name of the volume (default: null)
-   snapshot Name of the snapshot (default: null)
-   snapshotid The snapshot ID (default: 0)
+   filesystem check. root
+   -d|--debug Provides information for debugging. root
+   -b|--dbcheck Checks that every key in a tablet is within that tablet's
+   startKey and endKey range. As this option is I/O intensive, use this
+   option only if you suspect database inconsistency. root
+   -y --assume-yes If specified, assumes that containers without valid
+   copies (as reported by CLDB) will be deleted automatically. If not
+   specified, gfsck pauses for user input: yes to delete, no to exit
+   gfsck, or ctrl-C to quit. root
+   -Gquick|--check-gateway-consistency-only Checks if the entries in the
+   metadata tables maintained internally for objects and tiers, are
+   consistent and reports an error if not. mapr
+   -Gfull|--check-gateway-vcd-consistency Checks if the entries in the
+   metadata tables maintained internally for objects and containers, are
+   consistent and reports an error if not. mapr
+   -Dquick|--check-object-presence Specified with either -Gquick or
+   -Gfull, checks and reports if the object in the metadata tables exists
+   in the tier or not. mapr
+   -GdelLog|--delete-Gateway-Log Deletes the metalog created by MAST
+   Gateway if it crashes. mapr
+   cluster Specifies the name of the cluster (default: default cluster)
+   root
+   rwvolume Specifies the name of the volume (default: null) root
+   snapshot Specifies the name of the snapshot (default: null) root
+   snapshotid Specifies the snapshot ID (default: 0) root
 
 Example (Debug mode)
 

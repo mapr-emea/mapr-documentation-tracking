@@ -1,36 +1,40 @@
 Configuring Secure Clusters for Cross-Cluster Mirroring and Replication
 
+   Describes configuring clusters for cross-cluster operations such as
+   mirroring and replication.
    Cross-cluster tickets are required on secure clusters that need to pull
    data from another secure cluster and on secure clusters that need to
    push data to another secure cluster. For example:
      * Volume mirroring is a pull operation. The volume data is pulled by
-       the destination cluster from the source cluster. Because the
-       destination cluster is performing the operation, the destination
-       cluster receives a ticket that is generated on the source cluster.
+       the destination cluster from the source cluster. Since the
+       destination cluster performs the operation, the destination cluster
+       receives a ticket that is generated on the source cluster.
      * Table and streams replication is a push operation. The table or
        stream data is pushed from the source cluster to the destination
-       cluster. Because the source cluster is performing the operation,
-       the source cluster receives a ticket that is generated on the
+       cluster. Since the source cluster performs the operation, the
+       source cluster receives a ticket that is generated on the
        destination cluster.
 
    You can configure secure clusters for cross-cluster mirroring and
-   replication manually (as described below) or automatically by running
-   the configure-crosscluster.sh utility. If you choose to run the
-   utility, the utility configures the clusters for both mirroring and
+   replication manually (as described in [1]Setting up Secure Clusters
+   Manually for Cross-Cluster Mirroring and [2]Setting up Secure Clusters
+   Manually for Cross-Cluster Replication). You can configure secure
+   clusters automatically, by running the configure-crosscluster.sh
+   utility. This utility configures the clusters for both mirroring and
    replication in both directions. For more information, see
-   [1]configure-crosscluster.sh.
+   [3]configure-crosscluster.sh.
 
 Setting up Secure Clusters Manually for Cross-Cluster Mirroring
 
    To set up secure clusters for cross-cluster mirroring:
-    1. Verify that the user for whom you are configuring access exists in
+    1. Verify that the user for whom you are configuring access, exists in
        the registry on both the clusters and has the following
        permissions:
           + Permissions to mirror volumes on the source cluster.
           + Permissions to create volumes on the destination cluster.
        You can set up access for the mapr user, who already has
        permissions to create volumes and mirror volumes.
-    2. Log in to any node on source cluster and perform the following
+    2. Log in to any node on the source cluster and perform the following
        steps:
          a. Generate a cross-cluster ticket for the destination cluster
             for this user.
@@ -38,33 +42,35 @@ Setting up Secure Clusters Manually for Cross-Cluster Mirroring
             cluster, run the following command on the source cluster:
 source$ /opt/mapr/bin/maprlogin generateticket -type crosscluster -out /tmp/cros
 sclusterticket -user destinationclusteruser
-         b. Copy the cross-cluster ticket file to any node on destination
-            cluster.
+         b. Copy the cross-cluster ticket file to any node on the
+            destination cluster.
             For example:
 source$ scp /tmp/crossclusterticket mapr@<dest-ip>:/tmp/sourceClusterTicketFile
-    3. Log in to the node in destination cluster where the cross-cluster
-       ticket was copied and perform the following steps:
+    3. Log in to the node on the destination cluster where the
+       cross-cluster ticket was copied, and perform the following steps:
          a. Merge the cross-cluster ticket file with the
             /opt/mapr/conf/maprserverticket file on the node.
             For example, to merge, run the following command:
 dest$ cat /tmp/sourceClusterTicketFile >> /opt/mapr/conf/maprserverticket
          b. Copy the /opt/mapr/conf/maprserverticket file to the CLDB
             nodes on the destination cluster.
-    4. Perform the steps to [2]verify configuration for mirroring.
+    4. Perform the steps to [4]verify configuration for mirroring.
 
    You can now create mirror volumes on the destination cluster and set up
    a schedule to pull data from the volumes on the source cluster.
    However, you cannot create volumes on the source cluster that pull data
-   from volumes in the destination cluster because the setup described
-   above is unidirectional. In order to configure the clusters for
-   bidirectional mirroring, repeat the steps above by switching the source
-   and destination clusters. For example, suppose there are two clusters,
-   clusterA and clusterB, and you performed the steps above for clusterA
-   as the source cluster and clusterB as the destination cluster. After
-   you complete the steps above, your destination cluster, clusterB can
-   pull data from volumes on clusterA. In order for clusterA to mirror
-   data on clusterB, perform the steps above with clusterB as the source
-   cluster and clusterA as the destination cluster.
+   from volumes in the destination cluster, because the setup described
+   above is unidirectional. To configure the clusters for bidirectional
+   mirroring, repeat the steps above, by switching the source and
+   destination clusters.
+
+   For example, suppose there are two clusters, clusterA and clusterB, and
+   you performed the steps above for clusterA as the source cluster and
+   clusterB as the destination cluster. After you complete the steps
+   above, your destination cluster, clusterB can pull data from volumes on
+   clusterA. For clusterA to mirror data on clusterB, perform the steps
+   above with clusterB as the source cluster and clusterA as the
+   destination cluster.
 
 Setting up Secure Clusters Manually for Cross-Cluster Replication
 
@@ -83,7 +89,7 @@ lusterticket -user destinationclusteruser
             For example:
 dest$ scp /tmp/crossclusterticket mapr@<source-ip>:/tmp/sourceClusterTicketFile
     3. Log in to the node in the source cluster where the cross-cluster
-       ticket was copied and perform the following steps:
+       ticket was copied, and perform the following steps:
          a. Merge the cross-cluster ticket file with the
             /opt/mapr/conf/maprserverticket file on the node.
             For example, to merge, run the following command:
@@ -91,50 +97,55 @@ cat /tmp/destinationClusterTicketFile >> /opt/mapr/conf/maprserverticket
          b. Copy the /opt/mapr/conf/maprserverticket file to all the nodes
             on the source cluster.
     4. Configure the Gateway for table and streams replication.
-       See [3]Configuring Gateways for Table and Stream Replication for
+       See [5]Configuring Gateways for Table and Stream Replication for
        more information.
-    5. Perform the steps to [4]verify configuration for replication.
+    5. Perform the steps to [6]verify configuration for replication.
 
    You can now set up volumes on the source cluster to push data to
    replicas on the destination cluster. However, you cannot create
    replicas on the source cluster that get data from volumes in the
    destination cluster because the setup described above is
-   unidirectional. In order to configure the clusters for bidirectional
+   unidirectional. To configure the clusters for bidirectional
    replication, repeat the steps above by switching the source and
-   destination clusters. For example, suppose there are two clusters,
-   clusterA and clusterB, and you performed the steps above for clusterA
-   as the source cluster and clusterB as the destination cluster. After
-   you complete the steps above, your source cluster, clusterA can push
-   data to replicas on clusterB. In order for clusterB to replicate data
-   on clusterA, perform the steps above with clusterB as the source
-   cluster and clusterA as the destination cluster.
+   destination clusters.
+
+   For example, suppose there are two clusters, clusterA and clusterB, and
+   you performed the steps above for clusterA as the source cluster and
+   clusterB as the destination cluster. After you complete the steps
+   above, your source cluster, clusterA can push data to replicas on
+   clusterB. For clusterB to replicate data on clusterA, perform the steps
+   above with clusterB as the source cluster, and clusterA as the
+   destination cluster.
 
 Verifying Cross-Cluster Configuration for Mirroring and Replication
 
    You can verify the cross-cluster configuration for:
     1. Mirroring by logging in to a node on the destination cluster as the
-       user for whom access was configured and creating a mirror volume on
-       the destination cluster for a volume on the source cluster.
-       You can create mirror volumes using [5]MCS and/or the [6]CLI.
+       user for whom access was configured, and creating a mirror volume
+       on the destination cluster for a volume on the source cluster.
+       You can create mirror volumes using [7]MCS and/or the [8]CLI.
     2. Replication by logging in to a node on the source cluster as the
        user for whom access was configured and creating a replica in the
        destination cluster for a volume, table, and stream on the source
        cluster.
        You can create replicas using MCS and the CLI. To set up
        replication on secure clusters for:
-          + Tables, refer to documentation for [7]MCS and/or the [8]CLI.
-          + Streams, refer to documentation for for [9]MCS and/or the
+          + Tables, refer to the documentation for [9]MCS and/or the
             [10]CLI.
+          + Streams, refer to the documentation for [11]MCS and/or the
+            [12]CLI.
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure-crosscluster.sh.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html#verify
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html#manual-mirroring
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html#manual-replication
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure-crosscluster.sh.html
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html#verify
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/SetUpReplication.html
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-add.html
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/streams/AddReplica.html
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_replica_add.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/Gateways/ConfiguringMapRGatewaysForTRAndI.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/AddingCross-ClusterTickets.html#verify
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/volumes/CreateVols.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/tables/SetUpReplication.html
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/table-replica-add.html
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ClusterAdministration/data/streams/AddReplica.html
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/stream_replica_add.html
