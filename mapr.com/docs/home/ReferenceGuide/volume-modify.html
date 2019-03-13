@@ -177,7 +177,7 @@ Parameters
 
    You cannot enable warm tiering if it was disabled, or disable warm
    tiering if it was enabled, when the volume was being created.
-   ecscheme The number of data chunks and the number of partify chunks
+   ecscheme The number of data chunks and the number of parity chunks
    separated by a plus (+) sign. The default scheme is 4+2. For
    information on the supported schemes, see [5]Erasure Coding Scheme for
    Data Protection and Recovery.
@@ -315,8 +315,10 @@ Parameters
    to give up on local containers, and take the appropriate recovery
    action of deleting the mapred volume and creating another one.
    schedule A schedule ID. If a schedule ID is provided, then the volume
-   will automatically create snapshots (normal volume) or sync with its
+   automatically creates snapshots (normal volume) or syncs with its
    source volume (mirror volume) on the specified schedule.
+
+   To disable the schedule, set this parameter to 0.
    source (Mirror volumes only) The source volume from which a mirror
    volume receives updates, specified in the format <volume>@<cluster>.
    tierencryption (For cold tier only) Specifies whether to enable (true)
@@ -515,6 +517,19 @@ dschedule=3&recallexpirytime=3' --user mapr:mapr
 {"timestamp":1526569653267,"timeofday":"2018-05-17 08:07:33.267 GMT-0700 AM","st
 atus":"OK","total":0,"data":[]}
 
+   Disable scheduled snapshot creation
+
+   To disable a schedule, set the schedule parameter to 0.
+
+   For example:
+     * [31]CLI
+
+# maprcli volume modify -name mapr.apps  -schedule 0
+# maprcli volume info -name mapr.apps  -json | grep schedule
+                        "scheduleid":"0",
+                        "schedulename":"",
+                        "mirrorscheduleid":"0"
+
 References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/audit-data.html
@@ -547,3 +562,4 @@ References
   28. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div7entry2
   29. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div8entry1
   30. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div8entry2
+  31. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div9entry1

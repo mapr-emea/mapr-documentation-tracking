@@ -4,19 +4,6 @@ gfsck
    MapR Support or Engineering, to perform consistency checks and
    appropriate repairs on a volume, or a volume snapshot.
 
-   You can use the gfsck (global file system check) command to perform a
-   consistency check and repair operation on a volume or volume snapshot,
-   including the following entities:
-     * All cross-container links (for example, from file to filelets, or
-       from table to tablets)
-     * The tabletmap key range
-     * The attributes of filelets (uid/gid/mode)
-
-   This command identifies the unreachable files, directories, and tables
-   in the volume, and moves them to /lost+found to be repaired. It also
-   identifies and fixes any unreachable DB inodes or dangling pointers to
-   lost inodes.
-
    You can use the gfsck command when the local fsck either repairs or
    loses some containers at the highest epoch.
 
@@ -24,19 +11,6 @@ Permissions Required
 
    Although you need to be the root user to run this command, checking
    tiering-enabled volumes requires you to be the mapr user.
-
-Process Flow to Use gfsck
-
-    1. Take the affected storage pools offline: [1]mrconfig sp offline
-    2. Execute the [2]fsck command on the storage pools or disks.
-    3. Bring the storage pools back online: [3]mrconfig sp online
-    4. Run the gfsck command on the affected volumes, or snapshots.
-       If there are alarms, such as DataUnavailableAlarm or
-       DataUnderReplicatedAlarm, do not run the gfsck command with the -r
-       (--repair) option. Running the gfsck command with the -r (--repair)
-       option, might result in data loss. If necessary, first run gfsck
-       without the -r (--repair) option, and attempt to repair only after
-       analyzing the command output.
 
 Syntax
 
@@ -290,9 +264,3 @@ Removing volume for_test5 from GWgfsckMode
   remove volume for_test5 from global-fsck mode (ret = 0) ...
 
 GlobalFsck completed successfully (37039 ms); Result: verify succeeded
-
-References
-
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mrconfig-sp-offline.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/fsck.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mrconfig-sp-online.html

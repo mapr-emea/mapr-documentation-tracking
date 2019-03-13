@@ -1,0 +1,37 @@
+Using Global File System Checking
+
+   You can use the [1]gfsck (global file system check) command to perform
+   a consistency check and repair operation on a volume or volume
+   snapshot, including the following entities:
+     * All cross-container links (for example, from file to filelets, or
+       from table to tablets)
+     * The tabletmap key range
+     * The attributes of filelets (uid/gid/mode)
+
+   This command identifies the unreachable files, directories, and tables
+   in the volume, and moves them to /lost+found to be repaired. It also
+   identifies and fixes any unreachable DB inodes or dangling pointers to
+   lost inodes.
+    1. Take the affected storage pools offline by running the [2]mrconfig
+       sp offline command.
+       For example:
+/opt/mapr/server/mrconfig sp offline /dev/sdc
+    2. Execute the [3]fsck command on the storage pools or disks.
+    3. Bring the storage pools back online by running the [4]mrconfig sp
+       online command.
+       For example:
+mrconfig sp online /dev/sdc
+    4. Run the gfsck command on the affected volumes, or snapshots.
+       If there are alarms, such as DataUnavailableAlarm or
+       DataUnderReplicatedAlarm, do not run the gfsck command with the -r
+       (--repair) option. Running the gfsck command with the -r (--repair)
+       option, might result in data loss. If necessary, first run gfsck
+       without the -r (--repair) option, and attempt to repair only after
+       analyzing the command output.
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/gfsck.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mrconfig-sp-offline.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/fsck.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/mrconfig-sp-online.html
