@@ -1,0 +1,29 @@
+Verifying SSL Security for HttpFS
+
+   You need to run curl commands to verify that HTTPS is enabled for
+   HttpFS.
+   Run one of the following curl commands to check that HTTPS is enabled.
+   These commands fetch the file some_file.txt from MapR file system under
+   /user/mapr and attempt to open it securely over HTTPS.
+     * To check if HTTPS is enabled, run the following command (which
+       differs for non-secure and secure clusters):
+          + For non-secure clusters:
+curl -k "https://localhost:14000/webhdfs/v1/user/mapr/some_file.txt?op=open&user
+.name=mapr"
+          + For secure clusters:
+curl -u <user_name> -k
+ "https://localhost:14000/webhdfs/v1/user/mapr/some_file.txt?op=open"
+     * If you configured Hue to use SSL encryption with certificate-based
+       authentication for communication with HttpFS, run the following
+       command (which differs for non-secure and secure clusters):
+          + For non-secure clusters:
+curl -k
+ --cert /opt/mapr/hue/hue-<version>/cert.pem
+ --key /opt/mapr/hue/hue-<version>/hue_private_keystore.pem
+ "https://localhost:14000/webhdfs/v1/user/mapr/some_file.txt?op=open&user.name=m
+apr"
+          + For secure clusters:
+curl -u <user_name> -k
+--cert /opt/mapr/hue/hue-<version>/cert.pem
+--key /opt/mapr/hue/hue-<version>/hue_private_keystore.pem
+"https://localhost:14000/webhdfs/v1/user/mapr/some_file.txt?op=open"

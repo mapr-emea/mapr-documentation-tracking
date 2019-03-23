@@ -1,0 +1,31 @@
+Preparing to Enable SSL Security for HttpFS
+
+   To enable SSL security for HttpFS, you need to use ssl_keystore and
+   ssl_truststore, which are generated automatically for a secure cluster
+   in /opt/mapr/conf/. When using SSL on non-secure clusters, you need to
+   manually generate keystore and truststore.
+    1. To preserve the original version, rename the existing server.xml
+       file
+       (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server
+       .xml) to server.xml.orig.
+sudo cp /opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server.xml
+/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server.xml.orig
+    2. Replace the contents of server.xml with the contents of
+       server.xml.https.
+sudo cp /opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server.xml.h
+ttps
+/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server.xml
+    3. To enable SSL without certificate-based authentication, set the
+       clientAuth attribute to "false" and set properties related to
+       keystore and truststore (on a secure cluster, the defaults are
+       already set properly) in server.xml
+       (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/server
+       .xml).
+       For example:
+<Connector port="${httpfs.http.port}" SSLEnabled="true"
+maxThreads="150" scheme="https" secure="true"
+clientAuth="false" sslProtocol="TLS"
+keystoreFile="/opt/mapr/conf/ssl_keystore"
+keystorePass="<ssl-keystore-password>"
+truststoreFile="/opt/mapr/conf/ssl_truststore"
+truststorePass="<ssl-keystore-password>"/>

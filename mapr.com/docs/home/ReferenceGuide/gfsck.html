@@ -7,6 +7,9 @@ gfsck
    You can use the gfsck command when the local fsck either repairs or
    loses some containers at the highest epoch.
 
+   For an overview of using the GFSCK command, see [1]Using Global File
+   System Checking.
+
 Permissions Required
 
    Although you need to be the root user to run this command, checking
@@ -28,7 +31,7 @@ Syntax
     [ -GdelLog|--delete-Gateway-Log ]
     [ cluster=<cluster name> ]
     [ rwvolume=<volume name> ]
-    [scanthreads=<inode scanner threads count> ]
+    [ scanthreads=<inode scanner threads count> ]
     [ snapshot=<snapshot name> ]
     [ snapshotid=<snapshot-id> ]
 
@@ -38,33 +41,40 @@ Parameters
 
    Description
    User who must use this option
-   -h|--help Prints usage text. root, as well as mapr
-   -c|--clear Clears previous warnings before performing the global
-   filesystem check. root
-   -d|--debug Provides information for debugging. root
+   -h|--help Prints usage text. N.A
+   -c|--clear Clears previous warnings before performing the global file
+   system check. N.A
+   -d|--debug Provides information for debugging. N.A
    -b|--dbcheck Checks that every key in a tablet is within that tablet's
    startKey and endKey range. As this option is I/O intensive, use this
    option only if you suspect database inconsistency. root
+   -r --repair Indicates and repairs the inconsistencies detected by
+   -GQuick, -GFull, and -DQuick. root
    -y --assume-yes If specified, assumes that containers without valid
-   copies (as reported by CLDB) will be deleted automatically. If not
+   copies (as reported by CLDB) are deleted automatically. If not
    specified, gfsck pauses for user input: yes to delete, no to exit
-   gfsck, or ctrl-C to quit. root
+   gfsck, or ctrl-C to quit. N.A
    -Gquick|--check-gateway-consistency-only Checks if the entries in the
-   metadata tables maintained internally for objects and tiers, are
-   consistent and reports an error if not. mapr
+   metadata tables maintained internally for objects and tiers (the
+   mapping between the Virtual Cluster Descriptor (VCD) map and object
+   map) , are consistent, and reports an error if not. mapr
    -Gfull|--check-gateway-vcd-consistency Checks if the entries in the
-   metadata tables maintained internally for objects and containers, are
-   consistent and reports an error if not. mapr
+   metadata tables maintained internally for objects and containers (the
+   mapping between the VCD map and object map, along with the mapping
+   between the VCD map and the MFS meta data), are consistent and reports
+   an error if not. mapr
    -Dquick|--check-object-presence Specified with either -Gquick or
    -Gfull, checks and reports if the object in the metadata tables exists
    in the tier or not. mapr
    -GdelLog|--delete-Gateway-Log Deletes the metalog created by MAST
    Gateway if it crashes. mapr
    cluster Specifies the name of the cluster (default: default cluster)
-   root
-   rwvolume Specifies the name of the volume (default: null) root
-   snapshot Specifies the name of the snapshot (default: null) root
-   snapshotid Specifies the snapshot ID (default: 0) root
+   N.A
+   rwvolume Specifies the name of the volume (default: null) N.A
+   scanthreads Specifies the number of threads for scanning inodes
+   (default:10, max:1000) N.A
+   snapshot Specifies the name of the snapshot (default: null) N.A
+   snapshotid Specifies the snapshot ID (default: 0) N.A
 
 Example (Debug mode)
 
@@ -264,3 +274,7 @@ Removing volume for_test5 from GWgfsckMode
   remove volume for_test5 from global-fsck mode (ret = 0) ...
 
 GlobalFsck completed successfully (37039 ms); Result: verify succeeded
+
+References
+
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/UsingGFSCK.html
