@@ -1,12 +1,9 @@
 hadoop mfs
 
-   The hadoop mfs command performs operations on files and directories in
-   the cluster.
-
-   The main purposes of hadoop mfs are to display directory information
-   and contents, to create symbolic links and hard links, to set, get, and
-   remove Access Control Expressions (ACE) on files and directories, and
-   to set compression and chunk size on a directory.
+   The hadoop mfs command displays directory information and contents,
+   creates symbolic links and hard links, sets, gets, and removes Access
+   Control Expressions (ACE) on files and directories, and sets
+   compression and chunk size on a directory.
 
 Syntax
 
@@ -51,9 +48,9 @@ ld:<ace>]"]
 Parameters
 
    The normal command syntax is to specify a single option from the
-   following table, along with its corresponding arguments. If compression
-   and chunk size are not set explicitly for a given directory, the values
-   are inherited from the parent directory.
+   following table, along with its corresponding arguments. If you do not
+   set compression and chunk size for a given directory, the values are
+   inherited from the parent directory.
 
    Parameter
 
@@ -66,33 +63,33 @@ Parameters
    the default value, which is the empty string. Here:
      * [-R] — Enables recursion allowing you to perform the operation in
        subdirectories as well.
-     * <path> — Specifies path to file or directory.
+     * <path> — Specifies the path to the file or directory.
 
-   Note: You cannot delete specific access types with this parameter.
-   Instead, if necessary, reset the value for the specific access type to
-   the empty string using -setace parameter. If the empty string is used
-   to deny a specific type of access, that type of access will be denied
-   to all users. To deny specific types of access to specific users only,
-   use the negation operator (!). The mode bits corresponding to the ACEs
-   being deleted will not change.
+   You cannot delete specific access types with this parameter. Instead,
+   if necessary, reset the value for the specific access type to an empty
+   string using the -setace parameter. If you use an empty string to deny
+   a specific type of access, then that type of access is denied to all
+   users. To deny specific types of access to specific users only, use the
+   negation operator (!). The mode bits corresponding to the ACEs being
+   deleted, do not change.
    -getace [-R] <path> Returns the permissions -- POSIX mode bits and
    [2]ACEs -- for the given file or (recursively) for the directory.
    Recursion is enabled only if -R is specified; if -R is not specified,
-   returns the permissions for the given directory only. Here:
+   this parameter returns the permissions only for the given directory.
+   Here:
      * [-R] — (Optional) Enables recursion allowing you to perform the
        operation in subdirectories as well.
-     * <path> — (Required) Specifies path to file or directory.
+     * <path> — (Required) Specifies the path to the file or directory.
 
-   Note: If one or more ACEs are available for the file or directory, a
-   plus sign (+), which indicates that both ACEs and POSIX mode bits are
-   set for the given file or directory, will also be returned. If the ACE
-   on the file or directory is an empty string, the plus sign will not be
-   returned.
+   If one or more ACEs are available for the file or directory, a plus
+   sign (+), which indicates that both ACEs and POSIX mode bits are set
+   for the given file or directory, is returned. If the ACE on the file or
+   directory is an empty string, the plus sign is not returned.
    -help <command> Displays help for the hadoop mfs command.
    -ln <target> <symlink> Creates a symbolic link <symlink> that points to
    the target path <target>, similar to the standard Linux ln -s command.
-   -lnh <target> <hardlink> Creates a hardlink that associates a new
-   name/file path with an existing file. You must specify the following:
+   -lnh <target> <hardlink> Creates a hardlink that associates a new name
+   or a file path with an existing file. You must specify the following:
 
    <target>
           File name, including the full path, of the file to link to.
@@ -121,15 +118,15 @@ Parameters
      * Whether encryption is enabled for each file
      * Whether audit is enabled (A) or disabled (U) for each file
 
-   This command is faster than hadoop fs -ls as it uses optimized printing
-   method to dump data on screen.
-   -lsor <path> Lists files in the directory specified by <path>
-   recursively. This command is the recursive variant of the hadoop mfs
-   -lso command.
-   -lsr <path> Lists files in the directory and subdirectories specified
-   by <path>, recursively, including dereferencing symbolic links. The
-   hadoop mfs -lsr command corresponds to the standard hadoop fs -lsr
-   command, but provides the following additional information:
+   This command is faster than hadoop fs -ls as it uses an optimized
+   printing method to dump data on screen.
+   -lsor <path> Recursively lists files in the directory specified by
+   <path>. This command is the recursive variant of the hadoop mfs -lso
+   command.
+   -lsr <path> Recursively lists files in the directory and subdirectories
+   specified by <path>. The hadoop mfs -lsr command corresponds to the
+   standard hadoop fs -lsr command, but provides the following additional
+   information:
      * Chunks used for each file
      * Server where each chunk resides
 
@@ -139,34 +136,34 @@ Parameters
    -lss <path> Lists files in the directory specified by <path>, with an
    additional column that displays the number of disk blocks per file.
    Disk blocks are 8192 bytes.
-   offload <file_path> [-v] The file to offload to the storage tier. This
+   -offload <file_path> [-v] The file to offload to the storage tier. This
    is a blocking operation; the control is not returned until the
    operation is complete and the file has been offloaded. Use -v (for
-   verbose) to view the status of the ongoing offload.
-   recall <file_path> [-v] The file to recall from the storage tier. This
+   verbose) to view the status of the ongoing offload operation.
+   -recall <file_path> [-v] The file to recall from the storage tier. This
    is a blocking operation; the control is not returned until the
    operation is complete and the file has been recalled. Use -v (for
-   verbose) to view the status of the ongoing recall.
-   -rmr <path> Deletes files and directories in the specified path
-   recursively. This is a highly optimized version of the normal generic
-   hadoop fs rmr command and is 10X faster for large directories. This
-   option is useful when one or more directories in the specified path
-   contains many (millions of) files.
+   verbose) to view the status of the ongoing recall operation.
+   -rmr <path> Recursively deletes files and directories in the specified
+   path. This is a highly optimized version of the normal generic hadoop
+   fs rmr command and is 10X faster for large directories. This option is
+   useful when one or more directories in the specified path contains many
+   (millions of) files.
    -setace [-R] [-readfile <ace>] [-writefile <ace>] [-executefile <ace>]
    [-addchild <ace>] [-deletechild <ace>] [-lookupdir <ace>] [-readdir
    <ace>] [-aces
    "[rf:<ace>],[wf:<ace>],[ef:<ace>],[ac:<ace>],[dc:<ace>],[rd:<ace>],[ld:
    <ace>]"] [-preservemodebits <true|false>] [-setinherit <true|false>]
-   <path> Sets or modifies the read, write, and/or execute [3]permissions
-   for files or directories. This argument will
+   <path> Sets or modifies the read, write, and execute [3]permissions for
+   files or directories. This argument will:
      * Overwrite existing values with new values, if specified, for access
        types that were previously set.
      * Set new values for access types that have not yet been set.
      * Not set or modify access types that were not passed in with the
-       command, whether they were previously set or are unset.
+       command, whether they were previously set or unset.
 
-   Note: ACEs must be specified immediately after the -setace parameter.
-   All other arguments, if specified, must be given after the ACEs.
+   Specify the ACEs immediately after the -setace parameter. Specify all
+   the other parameters, after the ACEs.
    Here:
 
    -R
@@ -176,22 +173,22 @@ Parameters
           permissions for the given directory only.
 
    <ace>
-          [4]Access Control Expressions defined using boolean expressions
-          and sub-expressions.
+          [4]ACE Syntax defined using boolean expressions and
+          sub-expressions.
 
    -readfile
    -writefile
    -executefile
           Specifies permissions (defined using ACE) for reading, writing,
-          and/or executing the file.
+          or executing the file.
 
    -readdir
    -lookupdir
           Specifies permissions (defined using ACE) for accessing the
-          directory. To read the files in the directory, the user must be
-          granted lookupdir access and to write to or execute files in the
-          directory, the user must be granted readdir and lookupdir access
-          types.
+          directory. To permit users to read files in the directory, grant
+          the lookupdir access permission. To permit users to write to or
+          execute files in the directory, grant the readdir and lookupdir
+          access permissions.
 
    -addchild
    -deletechild
@@ -200,25 +197,23 @@ Parameters
 
    -aces
           Specifies ACEs as a single string. Specify a comma-separated
-          list of ACEs within quotes. The following permissions can be
-          set.
+          list of ACEs within quotes, up to 60 KB in length. You can set
+          the following permissions.
 
    rf Refers to read file access.
    wf Refers to write file access
    ef Refers to execute file access
    rd Refers to read directory access.
 
-   Note: To write to or execute files in the directory, the user must be
-   granted both rd and ld permissions.
+   To write to or execute files in the directory, grant the user rd and ld
+   permissions.
    ld Refers to lookup directory access.
 
-   Note: To read the files in the directory, the user must be granted ld
-   access and to write to or execute files in the directory, the user must
-   be granted both rd and ld permissions.
+   To read the files in the directory, grant the user ld access. To write
+   to or execute files in the directory, grant the user both rd and ld
+   permissions.
    ac Refers to add child directory access.
    dc Refers to delete child directory access.
-
-          Note: ACEs can be up to 60KB in length.
 
    -preservemodebits
           Indicates whether to preserve or modify POSIX mode bits. Values
@@ -227,7 +222,7 @@ Parameters
           + true - preserve existing POSIX mode bits
           + false - change POSIX mode bits to match the given ACE setting
 
-          By default, this is set to false.
+          The default value is false.
 
    -setinherit
           Indicates whether or not to allow all files and subdirectories
@@ -237,20 +232,20 @@ Parameters
           + true - inherit ACE from parent
           + false - do not inherit ACE from parent
 
-          By default, this is set to true.
+          The default value is true.
 
-          If true, new files and directories under the parent will inherit
-          the ACEs and corresponding POSIX mode bits from the parent
-          directory.
+          If true, new files and directories under the parent
+          directory,inherit the ACEs and corresponding POSIX mode bits
+          from the parent directory.
 
-          If false, files and directories under the parent will not
-          inherit the ACE of the parent directory. Instead, by default,
-          the files and directories will get the default ACE, which is the
-          empty string for all access types; POSIX mode bits will be set
+          If false, files and directories under the parent directory do
+          not inherit the ACE of the parent directory. Instead, by
+          default, the files and directories get the default ACE, which is
+          the empty string for all access types; POSIX mode bits are set
           on the files and directories in the traditional way.
 
    <path>
-          Specifies path to file or directory.
+          Specifies the path to the file or directory.
 
    -setaudit on|off <dir|file|table> Enables auditing of the specified
    directory, file, or MapR Database table.
@@ -259,12 +254,11 @@ Parameters
    subdirectories that exist in the directory. You must enable auditing on
    those existing files and subdirectories. However, any new files and
    subdirectories that you create will automatically be enabled for
-   auditing. See [5]Checking Whether Auditing is Enabled for a Directory,
-   File, or MapR Database Table.
+   auditing. See [5]Checking whether Auditing is Enabled.
 
    For operations on the object to be logged, auditing also needs to be
    enabled on the cluster and the volume in which the object is located.
-   See [6]Enabling Auditing for details. If auditing is enabled for a
+   See [6]Managing Auditing for details. If auditing is enabled for a
    directory, new files and directories created within that directory are
    also enabled for auditing.
    -setchunksize <size> <dir> Sets the chunk size in bytes for the
@@ -280,7 +274,7 @@ Parameters
      * zlib — turns on compression and sets the algorithm to ZLIB
 
    -setnetworkencryption on|off <target> Sets network encryption on or off
-   for the filesystem object defined in <target>. The cluster encrypts
+   for the file system object defined in <target>. The cluster encrypts
    network target to or from a file, directory, stream, or MapR table with
    network security enabled.
    -stat <path> Displays the statistics for the given file. Only the root
@@ -288,8 +282,7 @@ Parameters
    have permissions to run this command.
 
    The path is required and specifies the path (to the file) on which to
-   run the command. The output fields for this command are described
-   [7]below.
+   run the command. The output fields for this command are [7]as follows.
    tierstatus <file_path> [-v] The status of the offload or recall of the
    given file. If -v (for verbose) is also specified, for the given file,
    the command specifies whether data is local or offloaded as the final
@@ -299,15 +292,15 @@ File has local data
      * Is completely offloaded, returns the following final output:
 File does not have local data
 
-   See [8]Output below for more information.
+   See [8]Output for more information.
 
 Output
 
-   When used with -ls, -lsd, -lso, -lsor, or -lsr, -lss, hadoop mfs
-   displays information about files and directories. For each file or
-   directory hadoop mfs displays a line of basic information followed by
-   lines listing the chunks that make up the file, in the following
-   format:
+   When used with the -ls, -lsd, -lso, -lsor, -lsr, or -lss options,
+   hadoop mfs displays information about files and directories. For each
+   file or directory hadoop mfs displays a line of basic information
+   followed by lines listing the chunks that make up the file, in the
+   following format:
 
    {mode} {compression} {encryption} {audit} {diskFlush} {replication}
    {owner} {group} {size} {date} {chunk size} {name} {chunk} {fid} {host}
@@ -378,14 +371,14 @@ Output
      * The inode of the file within the container
      * An internal version number
 
-   Note: For volume links, the first fid is the chunk that stores the
-   volume link itself; the fid after the arrow (->) is the first chunk in
-   the target volume.
+   For volume links, the first fid is the chunk that stores the volume
+   link itself; the fid after the arrow (->) is the first chunk in the
+   target volume.
 
    host
 
    The host on which the chunk resides. When several hosts are listed, the
-   first host is the first copy of the chunk and subsequent hosts are
+   first host is the first copy of the chunk, while subsequent hosts are
    replicas.
 
    target volume name
@@ -396,17 +389,17 @@ Output
 
    Displays whether the volume is writable.
 
-   When used with -lsf <path>, hadoop mfs displays only the file ID (fid)
-   and the filename of each file in the path.
+   When used with the -lsf <path>option, hadoop mfs displays only the file
+   ID (fid) and the file name of each file in the path.
 
-   When used with -stat <path>, hadoop mfs displays statistics for the
-   given file. For each file, it displays the following:
+   When used with the -stat <path>option, hadoop mfs displays statistics
+   for the given file. For each file, it displays the following:
    Output field Description
    uid The user ID of the owner.
    atime The last access time.
    mtime The last modified time.
    nlink The number of hard links.
-   type The type of the file. Value can be:
+   type The type of the file. Value can be one of:
      * regular
      * directory
      * symlink
@@ -414,11 +407,11 @@ Output
      * kvstore
      * device
 
-   size The size of the file/directory. Depending on the type of file, it
-   can be the actual size or the number of entries.
+   size The size of the file or directory. Depending on the type of file,
+   it can be the actual size or the number of entries.
    mode The UNIX style permission mode bits for the file/directory.
-   networkencryption The network encryption setting. If the network
-   encryption is enabled for this file or not.
+   networkencryption The network encryption setting. Determines whether
+   network encryption is enabled for this file.
    subtype The subtype for the specified type. The following subtypes are
    supported for some of the types:
 
@@ -446,7 +439,7 @@ Output
           + FSTDevBlock
           + FSTDevChar
 
-   Note: For all other types, subtypes are not valid.
+   For all other types, subtypes are not valid.
    gid The group ID.
    compression The compression setting.
    When used with [10]tierstatus, the output varies based on whether or
@@ -621,10 +614,10 @@ References
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ACEs.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ACEs.html
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/ACEs.html
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/CheckingWhetherAuditingisEnabled.html#CheckingWhetherAuditingisEnabledforaDirectoryFileorMapR-DBTable
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-Prerequisites.html#EnablingAuditing
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/CheckingWhetherAuditingisEnabled.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-Prerequisites.html
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs__stat-output-fields
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs__output
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_setting_user_permissions_overview.html#SettingUserPermissions-Se_26982517-d3e207
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/c_setting_user_permissions_overview.html
   10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/hadoop-mfs.html#hadoopmfs__tierstatus

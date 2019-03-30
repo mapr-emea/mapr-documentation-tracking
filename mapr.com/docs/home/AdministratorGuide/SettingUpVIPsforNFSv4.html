@@ -1,14 +1,13 @@
 Setting Up VIPs for NFSv4
 
-   You can set up VIPs using the MapR Control System or the CLI.
-   Note: The NFSv3 server (mapr-nfsserver) nodes cannot failover to NFSv4
-   server (mapr-nfs4server) nodes and vice versa. Ensure that different
-   set of VIPs are assigned for NFSv3 and NFSv4 server nodes. When running
-   the maprcli virtualip add command to set up VIPs, list the MACs of the
-   respective nodes so that the failover works properly (this is necessary
-   if both NFSv3 and NFSv4 are going to be set up on the same cluster).
-   The MACs should be mutually exclusive as both NFSv3 and NFSv4 servers
-   cannot run on the same node.
+   Describes how to setup Virtual IPs (VIPs) for high availability of
+   NFSv4 servers, using the MapR Control System or the CLI.
+
+   Virtual IP addresses (VIPs) allow you to achieve high availability with
+   failover when the NFS servers use them to connect the your cluster.
+   When configuring VIPs for NFSv4 servers, ensure that you select NFSv4
+   server nodes only. MapR does not support failing over between NFSv3 and
+   NFSv4 servers.
 
 Adding VIPs Using the MapR Control System
 
@@ -17,7 +16,7 @@ Adding VIPs Using the MapR Control System
    You can also restrict the assignment of virtual IP addresses to certain
    subnets.
 
-   Before following this procedure, make sure:
+   Before following this procedure, make sure that:
      * You have installed NFS on at least three nodes (recommended).
      * You have started the NFS gateway service on the servers to which
        you plan to assign VIPs.
@@ -35,8 +34,8 @@ Adding VIPs Using the MapR Control System
        interfaces. VIPs are automatically migrated between the network
        interfaces when failures occur.
     5. Enter the Netmask for the VIP range in the Netmask field.
-       For example: 255.255.255.0MapR assigns this netmask to the network
-       interfaces along with the VIPs.
+       For example: 255.255.255.0. MapR assigns this netmask to the
+       network interfaces along with the VIPs.
     6. Specify whether (Yes) or not (No) to assign a particular VIP
        address to a specific server or MAC address. If Yes, enter the MAC
        address for the network interface to be assigned to the listed VIP
@@ -47,16 +46,18 @@ Adding VIPs Using the MapR Control System
             NFS Gateway service to set up VIPs that use all network
             interfaces on all the nodes running the NFS Gateway service.
             If additional NFS Gateway services are started, the network
-            interfaces on their nodes will automatically become candidates
-            for the VIPs in this range.
+            interfaces on their nodes automatically become candidates for
+            the VIPs in this range.
           + Select network interfaces to restrict the assignment of
             virtual IP addresses to certain subnets:
-            A list of available and selected node names, physical IP
-            addresses, and MAC addresses displays. Select from the:
-               o Available list and click [rightArrow.png] to move
-                 selection to Selected VIPs.
-               o Selected list and click [leftArrow.png] to remove from
-                 selected list of VIPs.
+            The system displays a list of available and selected node
+            names, physical IP addresses, and MAC addresses. Do one of the
+            following:
+               o Select from the available list and click [rightArrow.png]
+                 to move the selection to Selected VIPs.
+               o Choose from the selected list and click [leftArrow.png]
+                 to remove the chosen entries from the selected list of
+                 VIPs.
             See [2]Designating NICs for MapR.
     8. Confirm the actual VIP assignment by clicking Save Changes.
        It might take up to 40 seconds to assign the VIPs. If necessary,
@@ -64,22 +65,24 @@ Adding VIPs Using the MapR Control System
 
 Setting up VIPs for NFSv4 Server from the Command-Line
 
-   Virtual IP addresses (VIPs) allow you to achieve HA with failover when
-   the NFS servers use them to connect the your cluster. When configuring
-   VIPs for NFSv4 servers, ensure that you select NFSv4 server nodes only.
-   MapR does not support failing over between v3 and v4 servers.
-
    To set up VIPs for NFSv4 server:
     1. Add VIPs to the NFS server nodes in the cluster by running the
        [3]virtualip add command.
-       For example:
-maprcli virtualip add -service nfs4 -netmask netmask> -virtualip <vip> -macs <ma
-c>
+maprcli virtualip add -virtualip <vip> -virtualipend <vipend> -service nfs4 -net
+mask <netmask> -macs <mac>
+       For example, for a range of virtual IPs use:
+maprcli virtualip add -virtualip 10.10.104.203 -virtualipend
+    10.10.104.206 -service nfs4 -netmask 255.255.255.0 -macs
+   "18:e7:28:2e:b0:80 18:e7:28:2e:2d:a0 18:e7:28:2e:2d:a8"
+       For a single virtual IP, do not include the -virtualipend
+       parameter. For example:
+maprcli virtualip add -virtualip 10.10.104.203 -service nfs4 -netmask 255.255.25
+5.0 -macs
+   "18:e7:28:2e:b0:80 18:e7:28:2e:2d:a0 18:e7:28:2e:2d:a8"
        For the complete list of required and optional parameters, see
        [4]virtualip add.
-    2. Add hostname for each VIP in the /etc/hosts file.
-       Note: Make the changes to the /etc/hosts file on all the nodes in
-       the cluster.
+    2. Add the hostname for each VIP in the /etc/hosts file on all the
+       nodes in the cluster.
     3. Add the principal for each VIP and generate the keytab file. That
        is, repeat this step in the following order for each VIP:
          a. Add the principals for the following:
@@ -87,7 +90,7 @@ c>
                o VIP hostname in the kerberos server.
          b. Generate the keytab file, which contains entries for all the
             NFS server and VIP hostname principals.
-    4. Restart rpc.gssd services on all the NFSv4 server nodes.
+    4. Restart the rpc.gssd service on all the NFSv4 server nodes.
        To restart, run the following command:
 service rpcgssd start
     5. Mount the cluster.

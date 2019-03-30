@@ -82,13 +82,14 @@ Parameters
      * 1=group
 
    allowgrant Specifies whether the volume as a parent grants permission
-   for a child volume to inherit its properties. True or false. Default:
-   false.
-   auditenabled Specifies whether to turn auditing on for the volume. If
-   auditing is also enabled at the cluster level with the [1]maprcli audit
-   data command, setting this value to true causes auditing to start for
-   any directories, files, tables, or streams that are already enabled for
-   auditing. If none are yet so enabled, enabling auditing on any of them
+   for a child volume to inherit its properties. True or false.
+
+   Default: false.
+   auditenabled Specifies whether to turn on auditing for the volume. If
+   you enable auditing at the cluster level with the [1]audit data
+   command, setting this value to true causes auditing to start for any
+   directories, files, tables, or streams that are already enabled for
+   auditing. If none are yet enabled, enabling auditing on any of them
    causes auditing of them to start.
 
    Set auditenabled to true to enable auditing on directories, files,
@@ -102,8 +103,8 @@ Parameters
    default value.
    cluster The cluster on which to run the command.
    coalesce The interval of time during which READ, WRITE, or GETATTR
-   operations on one file from one client IP address are logged only once,
-   if auditing is enabled.
+   operations on one file from one client IP address are logged, if
+   auditing is enabled.
 
    For example, suppose that a client application reads a single file
    three times in 6 minutes, so that there is one read at 0 minutes,
@@ -124,23 +125,24 @@ Parameters
    containerallocationfactor Specifies the number of containers to create
    when the first write from a remote client is sent to the volume. The
    pre-created containers are distributed equally across topologies,
-   servers, MapR Filesystem instances, SPs, and CLDB also takes into
+   servers, MapR Filesystem instances, and SPs. CLDB also takes into
    consideration the load (IO/Space) when selecting target SPs for
-   containers. Value must be a positive integer. The default value is 0.
-   Value can be up to twice the number of SPs in the volume’s topology.
+   containers. The value must be a positive integer. The default value is
+   0. The value can be up to twice the number of SPs in the volume’s
+   topology.
    criticalrereplicationtimeoutsec Timeout (in seconds) before
-   re-replicating critically under-replicated containers only. If both
-   rereplicationtimeoutsec and criticalrereplicationtimeoutsec are set and
-   if the value of:
+   re-replicating only the critically under-replicated containers . If you
+   set both rereplicationtimeoutsec and
+   criticalrereplicationtimeoutsec,and if the value of:
      * rereplicationtimeoutsec is less than
-       criticalrereplicationtimeoutsec, rereplicationtimeoutsec will
-       override criticalrereplicationtimeoutsec setting for both
+       criticalrereplicationtimeoutsec, rereplicationtimeoutsec overrides
+       the criticalrereplicationtimeoutsec setting for both
        under-replicated and critically under-replicated containers.
      * rereplicationtimeoutsec is greater than
        criticalrereplicationtimeoutsec, criticalrereplicationtimeoutsec
-       will override rereplicationtimeoutsec setting for critically
-       under-replicated containers only; rereplicationtimeoutsec setting
-       is still applicable for under-replicated containers.
+       overrides the rereplicationtimeoutsec setting only for critically
+       under-replicated containers; rereplicationtimeoutsec setting is
+       still applicable for under-replicated containers.
 
    Default value for this parameter is 0 (which indicates no timeout).
    Value can be 0, or >= 300 seconds and <= 3600 seconds.
@@ -148,11 +150,11 @@ Parameters
    include (specified with a preceding plus sign (+)) or exclude
    (specified with a preceding minus sign (-)) from auditing.
 
-   If the first operation in the list (of operations) is to be excluded
-   from auditing, it must be preceded by two minus (--) signs. Subsequent
-   operations to exclude must be preceded by only a single minus (-) sign,
-   whether or not the first operation was included (using a plus (+) sign)
-   or excluded (using two minus (--) signs). If neither sign is specified,
+   To exclude the first operation in the list (of operations) from
+   auditing, precede it by two minus (--) signs. To exclude subsequent
+   operations, precede them by only a single minus (-) sign, irrespective
+   of whether the first operation was included (using a plus (+) sign) or
+   excluded (using two minus (--) signs). If neither sign is specified,
    the given operation is included for auditing.
    The operations that can be included (+) or excluded (-) from auditing
    are listed [3]here. You can, alternatively, group all the operations
@@ -167,16 +169,20 @@ Parameters
    Tip: For more information, see [4]Selective Auditing of Filesystem and
    Table Operations.
    dbindexlagsecalarmthresh Specifies the threshold (in seconds) to raise
-   an alarm for index update lag. Default: 0
+   an alarm for index update lag.
+
+   Default: 0
    dbrepllagsecalarmthresh Specifies the threshold (in seconds) to raise
-   an alarm for DB replication lag. Default: 0
+   an alarm for DB replication lag.
+
+   Default: 0
    ecenable Enable (true) warm tiering for the volume only if it is
    already not enabled. If this is specified, you cannot specify tiername
    to use an existing warm-tier; when the command runs, a new tier is
    created for the volume.
 
    You cannot enable warm tiering if it was disabled, or disable warm
-   tiering if it was enabled, when the volume was being created.
+   tiering if it was enabled during volume creation.
    ecscheme The number of data chunks and the number of parity chunks
    separated by a plus (+) sign. The default scheme is 4+2. For
    information on the supported schemes, see [5]Erasure Coding Scheme for
@@ -188,31 +194,33 @@ Parameters
    enforceminreplicationforio Specifies whether (true) or not (false) to
    enforce minimum number of replicas for the (read-write) volume during
    IO. This flag ensures that further updates (writes) to volume are
-   successful only when the minimum number of copies of the container is
-   available. Setting this to true ensures that if writes succeed, then it
-   has been applied to at least the minimum number of copies and if writes
-   fail, it may have been applied to zero or more copies.
+   successful only when the minimum number of copies of the container are
+   available. Setting this parameter to true ensures that if writes
+   succeed, then it has been applied to at least the minimum number of
+   copies; if writes fail, it may have been applied to zero or more
+   copies.
 
    Enabling this parameter, may stall volume dump and volume snapshot
    create operations, if the minimum number of copies of the container are
    not available.
-   If this parameter was not set on a volume, or if this parameter is
-   modified from false to true, restart all the nodes where the containers
-   associated with the volume exist for the changes to take effect.
+   If you do not set this parameter on a volume, or if you modified this
+   parameter from false to true, then you need to restart all the nodes
+   where the containers associated with the volume exist, for the changes
+   to take effect.
 
    This flag, if set on Mirror Volumes, is ignored.
    forceauditenable Specifies whether (1) or not (0) to force audit of
    operations on all files, tables, and streams in the volume if auditing
-   is enabled at the cluster level and at the volume level, irrespective
-   of the audit setting on the individual directory, file, table, and
-   stream. Value can be:
+   is enabled at the cluster and volume levels, irrespective of the audit
+   setting on the individual directory, file, table, and stream. The value
+   can either be:
      * true — force audit of all content
      * false — do not force audit
 
-   By default, this is disabled (0). To force audit of all directories,
-   files, tables, and streams in the volume irrespective of the audit
-   setting on the directories, files, tables, and streams, the
-   auditenabled parameter value must also be set to true.
+   By default, this parameter is set to false. To force audit of all
+   directories, files, tables, and streams in the volume irrespective of
+   the audit setting on the directories, files, tables, and streams, set
+   the auditenabled parameter to true.
    group Space-separated list of group:permission pairs.
    maxinodesalarmthreshold The number of inodes, which when exceeded
    raises the [7]INODES_EXCEEDED alarm.
@@ -232,43 +240,47 @@ Parameters
    mirrorthrottle Specifies whether mirror throttling is enabled (true) or
    disabled (false). The default is true. Throttling is set on the source
    volume and applies to all its mirrors.
-   namecontainerdatathreshold (Available from v6.0.1) Limits the size of
-   the name container. Value must be in MB. If this is set and the name
-   container size limit:
+   namecontainerdatathreshold Limits the size of the name container. The
+   value must be in MB. If the name container size limit:
      * Has not yet been reached, the first 64 KB of data is stored in the
        name container until the limit is reached. Once the limit is
-       reached, only the metadata is stored in the name container and data
-       is stored in data containers.
+       reached, only the metadata is stored in the name container, while
+       data is stored in data containers.
      * Has already been reached, only metadata is stored in the name
        container and all new data is spread across data containers. For
-       example, if the current name container size is 200GB and the limit
-       is set to 100GB, all new data is stored in data containers.
-       If this parameter is set to 0, there is no limit on the size of
-       data stored in the name container.
+       example, if you set the current name container size to 200GB and
+       the limit to 100GB, then all new data is stored in data containers.
+       If you set this parameter to 0, there is no limit on the size of
+       data that is stored in the name container.
 
    nsminreplication The minimum replication level for the namespace
-   container. Default: 2 When the replication factor falls below this
-   minimum, re-replication occurs as aggressively as possible to restore
-   the replication level. If any containers in the CLDB volume fall below
-   the minimum replication factor, writes are disabled until aggressive
-   re-replication restores the minimum level of replication. When enabled,
-   the CLDB manages the namespace container replication separate from the
-   data container replication. This capability is used when you have low
-   volume replication but want to have higher namespace replication.
+   container. Default: 2
 
-   This parameter must be the same or larger than the equivalent data
-   replication parameter, minreplication.
+   When the replication factor falls below this value, re-replication
+   occurs as aggressively as possible to restore the replication level. If
+   any containers in the CLDB volume fall below the minimum replication
+   factor, writes are disabled until aggressive re-replication restores
+   the minimum level of replication. When enabled, the CLDB manages the
+   namespace container replication separate from the data container
+   replication. You use this capability when you have low volume
+   replication but want to have higher namespace replication.
+
+   Set the value to be the same or larger than the value of the equivalent
+   data replication parameter, minreplication.
    See also: [10]Understanding Replication.
    nsreplication The desired namespace container replication level.
-   Default: 3. When the number of copies falls below the desired
-   replication factor, but remains equal to or above the minimum
-   replication factor, re-replication occurs after the timeout specified
-   in the cldb.fs.mark.rereplicate.sec parameter. This timeout is the time
-   given for a down node to come back online. After this timeout period,
-   the CLDB takes action to restore the replication factor. When enabled,
-   the CLDB manages the namespace container replication separate from the
-   data container replication. This capability is used when you have low
-   volume replication but want to have higher namespace replication.
+   Default: 3.
+
+   When the number of copies falls below the desired replication factor,
+   but remains equal to or above the minimum replication factor,
+   re-replication occurs after the timeout specified in the
+   cldb.fs.mark.rereplicate.sec parameter. This timeout is the time given
+   for a node that is down to come back online. After this timeout period,
+   the CLDB takes the action required to restore the replication factor.
+   When enabled, the CLDB manages the namespace container replication
+   separate from the data container replication. Use this capability when
+   you have low volume replication but want to have higher namespace
+   replication.
 
    By default, the value of this parameter is the same or larger than the
    value of the equivalent data replication parameter, replication.
@@ -283,17 +295,16 @@ Parameters
    quota=500G; Units: B, K, M, G, T, P
 
    Note that quotas for source and mirror volumes must match.
-   readAce Specifies [12]Access Control Expressions (ACEs) that grant
+   readAce Specifies [12]Access Control Expressions(ACEs) that grant
    permissions at the volume level to read files and tables in the volume.
    The default value is p, which grants access to all users.
 
    An ACE (up to 2KB in length) is a combination of users, groups, and/or
    roles for whom access (to volume data) is defined using boolean
    expressions and sub expressions within single quotes. When you pass in
-   an access type that has already been set, the new value will replace
-   the existing value for that access type. There will be no change to
-   access types that are not passed in with the command, whether or not
-   they were set.
+   an access type that has already been set, the new value replaces the
+   existing value for that access type. There is no change to access types
+   that are not passed in with the command, whether or not they were set.
    readonly Specifies whether the volume is read-only.
      * 0 = read/write
      * 1 = read-only
@@ -306,50 +317,55 @@ Parameters
    rereplicationtimeoutsec Timeout (in seconds) before attempting
    re-replication of replica containers. This volume property defines the
    timeout period until CLDB starts re-replicating the containers on the
-   node of the volume when CLDB stops receiving a heartbeat from the node.
+   node of the volume after CLDB stops receiving a heartbeat from the
+   node.
 
    When a node is down, CLDB gives the node an hour to come back online
    before it takes any action for the containers on this node. This
    parameter can be set on volumes to reduce the default 1 hour to a
-   shorter time period. This option is provided mainly for local volumes,
-   repl=1 so that when an MapR Filesystem is down, CLDB can give up
+   shorter time period. This option is provided mainly for local
+   volumes,so that when an MapR Filesystem is down, CLDB can give up
    quickly and decide that the container has no master. This forces the TT
    to give up on local containers, and take the appropriate recovery
    action of deleting the mapred volume and creating another one.
-   schedule A schedule ID. If a schedule ID is provided, then the volume
+   schedule A schedule ID. If you provide a schedule ID, then the volume
    automatically creates snapshots (normal volume) or syncs with its
    source volume (mirror volume) on the specified schedule.
 
    To disable the schedule, set this parameter to 0.
-   source (Mirror volumes only) The source volume from which a mirror
-   volume receives updates, specified in the format <volume>@<cluster>.
-   tierencryption (For cold tier only) Specifies whether to enable (true)
-   or disable (false) encryption of data. If enabled, user data is
-   encrypted before written to the object and HTTPs protocol is used for
-   communication with the object store to ensure data is encrypted both on
-   the wire and on the tier.
+   source The source volume from which a mirror volume receives updates,
+   specified in the format <volume>@<cluster>.
+   tierencryption Specifies whether to enable (true) or disable (false)
+   encryption of data. This parameter is applicable only for cold-tier
+   volumes. If you enable this parameter, user data is encrypted before
+   being written to the object, and the HTTPS protocol is used for
+   communication with the object store to ensure that data is encrypted
+   both on the wire and on the tier.
 
-   This can be set only if a tier name is also specified and cannot be
-   modified once set.
+   You can set this parameter only if you specify a tier name (see the
+   tiername parameter) as well. You cannot modify this parameter after you
+   set it.
 
-   If true, you can also specify a custom key using the tierkey parameter.
-   If true, MAST Gateway uses HTTPS to upload data to the cold-tier. If
-   the cold tier does not support HTTPS, all tier related operations will
-   fail. If the cold tier does not support HTTPS, you must explicitly set
-   the value for this to false at the time of associating a tier with the
-   volume because the default value for this parameter is true.
+   If you set the value to true, you can also specify a custom key using
+   the tierkey parameter. Once set to true, the MAST Gateway uses HTTPS to
+   upload data to the cold-tier. If the cold tier does not support HTTPS,
+   all tier related operations fail. If the cold-tier does not support
+   HTTPS, you must explicitly set the value for this to false at the time
+   of associating a tier with the volume because the default value for
+   this parameter is true.
    Tip: For warm tier, use -dare option on the front-end volume to enable
    or disable encryption of data-at-rest.
    tieringrule The name of the rule to use for offloading data to the
    tier.
-   tierkey (For cold tier only) The 32 character HEX string to use for
-   encryption. If this is not specified, CLDB generates a 32 character HEX
-   string to use for encrypting the data to offload to the tier.
+   tierkey The 32 character HEX string to use for encryption only for cold
+   tier volumes. If you do not specify a string, CLDB generates a 32
+   character HEX string to use for encrypting the data to offload to the
+   tier.
 
    You cannot modify the tierkey that is already associated with the
    volume.
-   tiername The name of the tier to use for offloading data. This can be
-   set only once and after it is set, it cannot be modified.
+   tiername The name of the tier to use for offloading data. You can set
+   this name only once and cannot modify it.
    type If type = mirror, the volume is converted from a rw (read/write)
    volume to a mirror volume.
 
@@ -359,22 +375,23 @@ Parameters
    wiresecurityenabled Enables (true) or disables (false) on-wire
    encryption for all files, tables, and streams in the volume. If true,
    this setting overrides all file, table, and stream level encryption
-   settings (set using hadoop mfs command) and enables on-wire encryption
-   for all files, tables, and streams. If this is disabled (false) at the
-   volume level and is enabled at the file, table, and/or stream level,
-   the file, table, and/or stream level encryption setting overrides this
-   setting on those files, tables, and streams where it is enabled; for
-   all other files, tables, and streams where encryption is not enabled at
-   the file, table, and/or stream level, on-wire encryption is disabled.
+   settings (set using the hadoop mfs command) and enables on-wire
+   encryption for all files, tables, and streams. If you disable (false)
+   this parameter at the volume level, but enable it at the file, table,
+   or stream level, the file, table, or stream level encryption setting
+   overrides this setting on those files, tables, and streams where it is
+   enabled; for all other files, tables, and streams where encryption is
+   not enabled at the file, table, or stream level, the on-wire encryption
+   is disabled.
    writeAce Specifies [14]Access Control Expressions (ACEs) that grant
    permission at the volume level to write to files and tables in the
    volume. The default value is p, which grants access to all users.
 
-   An ACE (up to 2KB in length) is a combination of users, groups, and/or
+   An ACE (up to 2KB in length) is a combination of users, groups, and
    roles for whom access is defined using boolean expressions and sub
    expressions within single quotes. When you pass in an access type that
-   has already been set, the new value will replace the existing value for
-   that access type. There will be no change to access types that are not
+   has already been set, the new value replaces the existing value for
+   that access type. There is no change to access types that are not
    passed in with the command, whether or not they were set.
 
 Examples
@@ -412,11 +429,11 @@ atus":"OK","total":0,"data":[]}
 
    Sub-volumes (children) can inherit properties from their parent volume.
    The maprcli volume create and volume modify commands provide parameters
-   for setting the inheritance feature. In order for child volume to
-   inherit from a parent volume, the parent volume must grant permission
-   and the child volume must be created specifying the volume name of the
-   parent. In the following example, the parent volume, parentVol, grants
-   of inheritance to child volumes.
+   for setting the inheritance feature. For a child volume to inherit from
+   a parent volume, the parent volume must grant permission, and the child
+   volume must be created specifying the volume name of the parent. In the
+   following example, the parent volume, parentVol, grants inheritance to
+   child volumes.
      * [19]CLI
      * [20]REST
 
@@ -426,15 +443,14 @@ maprcli volume modify -name parentVol -allowgrant true
 wgrant=true' --user mapr:mapr
 
    Set and modify ACEs on a volume
-   In the following example, the command will set and modify access
-   (defined using ACEs) to the volume data. When the command runs, new
-   values will:
+   In the following example, the command sets and modifies access (defined
+   using ACEs) to the volume data. When the command runs, new values:
      * Overwrite existing values for access types that were previously
        set.
-     * Be set for access types that were not set.
+     * Are set for access types that were not set.
 
-   Note: There will be no change to the readAce access type, which is not
-   specified with the command, whether or not it was set before.
+   Note: There is no change to the readAce access type, which is not
+   specified with the command, irrespective of whether it is set or not.
      * [21]CLI
      * [22]REST
 
@@ -537,7 +553,7 @@ References
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/audit-data.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl.html
    3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html#AuditingofFilesystemOperationsandTableOperations
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SelectiveAuditingOfOperations.html#concept_nzd_j5g_h5
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SelectiveAuditingOfOperations.html
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SelectECScheme.html
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-move.html
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/VolumeAlarms.html
@@ -545,9 +561,9 @@ References
    9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
   10. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
   11. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
-  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html
   13. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html
   15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div1entry1
   16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div1entry2
   17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div2entry1

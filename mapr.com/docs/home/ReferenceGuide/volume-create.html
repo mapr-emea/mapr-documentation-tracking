@@ -120,8 +120,8 @@ Parameters
    threshold (of 1024 GB), set the value for this to 0.
    cluster The cluster on which to create the volume.
    coalesce The interval of time during which READ, WRITE, or GETATTR
-   operations on one file from one client IP address are logged only once,
-   if auditing is enabled.
+   operations on one file from one client IP address are logged, if
+   auditing is enabled.
 
    For example, assume that a client application reads a single file three
    times in 6 minutes, so that there is one read at 0 minutes, another at
@@ -160,12 +160,12 @@ Parameters
    rereplicationtimeoutsec and criticalrereplicationtimeoutsec are set and
    if the value of:
      * rereplicationtimeoutsec is less than
-       criticalrereplicationtimeoutsec, rereplicationtimeoutsec will
-       override criticalrereplicationtimeoutsec setting for both
-       under-replicated and critically under-replicated containers.
+       criticalrereplicationtimeoutsec, rereplicationtimeoutsec overrides
+       criticalrereplicationtimeoutsec setting for both under-replicated
+       and critically under-replicated containers.
      * rereplicationtimeoutsec is greater than
        criticalrereplicationtimeoutsec, criticalrereplicationtimeoutsec
-       will override rereplicationtimeoutsec setting for critically
+       overrides rereplicationtimeoutsec setting for critically
        under-replicated containers only; rereplicationtimeoutsec setting
        is still applicable for under-replicated containers.
 
@@ -224,9 +224,9 @@ Parameters
    enforceminreplicationforio Specifies whether (true) or not (false) to
    enforce minimum number of replicas for the (read-write) volume during
    IO. This parameter ensures that further updates (writes) to volume are
-   successful only when minimum number of copies of the container is
+   successful only when the minimum number of copies of the container are
    available. Setting this to true ensures that if writes succeed, then it
-   has been applied to at least the minimum number of copies and if writes
+   has been applied to at least the minimum number of copies; if writes
    fail, it may have been applied to zero or more copies.
 
    Enabling this parameter, may stall volume dump and volume snapshot
@@ -240,16 +240,16 @@ Parameters
    set to false, by default, on the tier volume.
    forceauditenable Specifies whether (1) or not (0) to force audit of
    operations on all files, tables, and streams in the volume, if auditing
-   is enabled at the cluster level and at the volume level, irrespective
-   of the audit setting on the individual directory, file, table, and
-   stream. Value can be:
+   is enabled at the cluster and volume levels, irrespective of the audit
+   setting on the individual directory, file, table, and stream. The value
+   can be either:
      * true — force audit of all content
      * false — do not force audit
 
    By default, this parameter is disabled (false). To force audit of all
    directories, files, tables, and streams in the volume irrespective of
    the audit setting on the individual directory, file, table, and stream,
-   set the auditenabled parameter to true.
+   you set the auditenabled parameter to true.
    group Space-separated list of group:permission pairs. Use comma to
    separate permissions. For example: group:permission,permission,...
    inherit Specifies the name of the volume from which the new volume will
@@ -271,28 +271,28 @@ Parameters
    factor, writes are disabled until aggressive re-replication restores
    the minimum level of replication.
    Tip: For more information, see [7]Understanding Replication.
-   mirrorschedule The ID of a mirror schedule. If a mirror schedule ID is
-   provided, then the mirror volume will automatically sync with its
-   source volume on the specified schedule.
+   mirrorschedule The ID of a mirror schedule. If you specify a mirror
+   schedule ID, then the mirror volume automatically syncs with its source
+   volume on the specified schedule.
    mirrorthrottle Specifies whether throttling should be enabled at create
    time.
    mount Specifies whether the volume is mounted at creation time.
    name The name for the volume. A volume name can contain alphanumeric
    characters and the following characters: . (dot), _ (underscore), and -
-   (dash). For tiering-enabled volumes, volume name cannot exceed
+   (dash). For tiering-enabled volumes, the volume name cannot exceed
    ninety-eight characters.
    namecontainerdatathreshold Limits the size of data stored in the name
    container. By default, name container contains the first 64KB of each
-   file and metadata (attributes, block information) about each file. The
-   name container can grow very large with many files. For example,
-   suppose there are 10 million files; 64KB of each file would result in a
-   name container of 640GB. If the name container size control feature is
-   enabled, by setting this property, the size of the name container is
-   reduced because once the name container reaches the specified size, the
-   first 64KB of each file is no longer placed in the name container;
-   instead, once the limit is reached, all data is placed in data
-   containers and only the metadata is stored in the name container. Value
-   must be in MB. The default name container threshold is 512GB.
+   file along with metadata (attributes, and block information) about each
+   file. The name container can grow very large with many files. For
+   example, suppose there are 10 million files; 64KB of each file would
+   result in a name container of 640GB. Enabling the name container size
+   control feature, reduces the size of the name container because once
+   the name container reaches the specified size, the first 64KB of each
+   file is no longer placed in the name container; instead, once the limit
+   is reached, all data is placed in data containers and only the metadata
+   is stored in the name container. Value must be in MB. The default name
+   container threshold is 512GB.
 
    If this parameter is set to 0, there is no limit on the size of data
    stored in the name container.
@@ -353,10 +353,10 @@ Parameters
    permissions at the volume level to read files and tables in the volume.
    The default value is p, which grants access to all users.
 
-   An ACE (up to 2KB in length) is a combination of users, groups, and/or
+   An ACE (up to 2KB in length) is a combination of users, groups, or
    roles for whom access (to volume data) is defined using boolean
-   expressions and subexpressions within single quotes. There will be no
-   change to access types that are not passed in with the command.
+   expressions and subexpressions within single quotes. There is no change
+   to access types that are not passed in with the command.
    readonly Specifies whether or not the volume is read-only:
      * 0 = Volume is read/write.
      * 1 = Volume is read-only.
@@ -384,13 +384,13 @@ Parameters
    before it takes any action for the containers on this node. This
    parameter can be set on volumes to reduce the default 1 hour to a
    shorter time period. This option is provided mainly for local volumes,
-   repl=1 so that when an MapR Filesystem is down, CLDB can give up
-   quickly and decide that the container has no master. This forces the TT
-   to give up on local containers and take appropriate recovery action of
+   so that when a MapR Filesystem is down, CLDB can give up quickly and
+   decide that the container has no master. This forces the TT to give up
+   on local containers and take the appropriate recovery action of
    deleting the mapred volume and creating another one.
-   rootdirgroup Owning group of the root directory.
+   rootdirgroup Group that owns the root directory.
    rootdirperms Permissions on the volume root directory.
-   rootdiruser Owner of the root directory.
+   rootdiruser User that owns the root directory.
    schedule The ID of a schedule. Use the [12]schedule list command to
    find the ID of the named schedule you want to apply to the volume.
 
@@ -423,29 +423,30 @@ Parameters
    <source volume>@<cluster> (Required when creating a mirror volume).
    tenantuser The username of the tenant for whom the volume is being
    created.
-   tierencryption (For cold tier only) Specifies whether (true) or not
-   (false) data on the object store should be encrypted. If true, user
-   data is encrypted before written to the object. This can be set only if
-   a tier name is also specified and cannot be modified once set.
+   tierencryption Specifies whether (true) or not (false) data on the
+   object store should be encrypted. If true, user data is encrypted
+   before being written to the object. This parameter is applicable only
+   for a cold tier, and can be set only if a tier name is also
+   specified.Once set, you cannot modify this parameter.
 
    If true, you can also specify a custom key using the tierkey parameter.
    The default value is false.
    Tip: For creating a warm-tier volume, use -dare option on the front-end
    volume to enable or disable encryption of data-at-rest.
    tieringenable Enable (true) or disable (false) tiering for the volume.
-   If this is specified, you must also specify the tiername. Either this
-   or ecenable is required for creating a volume enabled for warm-tier.
-   For creating a tiering-enabled mirror volume, this is required if the
-   source volume is enabled for cold-tier and either this or ecenable is
-   required if the source volume is enabled for warm-tier.
+   When you specify this paramter, you must also specify the tiername. For
+   creating a tiering-enabled mirror volume, specify this parameter if the
+   source volume is enabled for cold-tier; specify either this parameter
+   or ecenable, if the source volume is enabled for warm-tier.
    tieringrule The name of the rule (refered to as storage policy in MCS)
-   to use for offloading data to the tier. If rule is not specified, the
-   default rule, which is all files (p), is associated with the volume.
-   See [13]Creating a Rule Using the CLI and REST API for more
+   to use for offloading data to the tier. If you do not specify a rule,
+   the default rule, which is all files (p), is associated with the
+   volume. See Creating a Rule in [13]Creating a Storage Policy for more
    information.
-   tierkey (For cold tier only) The 32 character HEX string to use for
-   encryption. If this is not specified, CLDB generates a 32 character HEX
-   string to use for encrypting data to offload to the tier.
+   tierkey The 32 character HEX string to use for encryption, only for
+   cold-tier operations. If you do not specify this parameter, CLDB
+   generates a 32 character HEX string to use for encrypting data to
+   offload to the tier.
    tiername The name of the tier to use for offloading data. This can be
    set only once and after it is set, it cannot be modified. For warm
    tiering, you cannot specify this if ecenable is set to true.
@@ -1059,19 +1060,19 @@ References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SelectiveAuditingOfOperations.html#concept_nzd_j5g_h5
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SelectiveAuditingOfOperations.html
    4. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SelectECScheme.html
    5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/VolumeAlarms.html
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/VolumeAlarms.html
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
    9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html
   11. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
-  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/schedule-list.html#schedulelist
-  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/CreateStoragePolicy.html#cli-create
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/License-upgrade.html#license-upgrade
-  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html#SyntaxofAccessControlExpressions
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/schedule-list.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/CreateStoragePolicy.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/UpgradeGuide/License-upgrade.html
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html
   16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html#volumecreate__params
   17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html#div1entry1
   18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-create.html#div1entry2
