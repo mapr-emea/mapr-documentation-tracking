@@ -1,13 +1,13 @@
 Memory and Disk Space
 
-   This section outlines required and recommended memory, storage, and
-   disk capacities.
+   Outlines required and recommended memory, storage, and disk capacities
+   for each node.
 
 Minimum Memory
 
-   A minimum of 16 GB total memory is required on a node. MapR recommends
-   at least 16 GB for a production environment, and typical MapR
-   production nodes have 32 GB or more.
+   A minimum of 16 GB memory is required on each node. MapR recommends at
+   least 16 GB for a production environment, and typical MapR production
+   nodes have 32 GB or more.
 
    Run free -g to display total and available memory in gigabytes.
 $ free -g
@@ -16,27 +16,29 @@ Mem:              3           2           1           0            0           1
 -/+ buffers/cache:            0           2
 Swap:             2           0           2
 
-   If the free command is not found, there are many alternatives: grep
-   MemTotal: /proc/meminfo, vmstat -s -SM, top, or various GUI system
+   If the free command is not found, you can use other options such as
+   grep MemTotal: /proc/meminfo, vmstat -s -SM, top, or various GUI system
    information tools.
 
-   Using the numad service is not recommended, since it has not been
-   tested and validated with MapR software. Using numad can cause
-   artificial memory constraints to be set, which can lead to performance
-   degradation under load. To disable numad:
-    1. Stop the service by issuing the command service numad stop.
-    2. Set the numad service not to start on reboot: chkconfig numad off
+   MapR does not recommend using the numad service, since it has not been
+   tested and validated with MapR software. Using the numad service can
+   cause artificial memory constraints to be set, which can lead to
+   performance degradation under load. To stop and disable the numad
+   service:
+    1. Stop the service by issuing the command systemctl stop numad.
+    2. Set the numad service not to start on reboot: systemctl disable
+       numad
 
-   Using overcommit is not recommended because it can lead to the kernel
+   MapR does not recommend using overcommit as it can lead to the kernel
    memory manager stopping processes to free memory, resulting in stopped
    MapR processes and system instability. Set vm.overcommit_memory to 0:
     1. Edit the file /etc/sysctl.conf and add the following line:
        vm.overcommit_memory=0
     2. Save the file and run: sysctl -p
 
-   Note: You can try MapR on non-production equipment, but under the
-   demands of a production environment, memory needs to be balanced
-   against disks, network, and CPU.
+   You can try MapR on non-production equipment, but under the demands of
+   a production environment, memory needs to be balanced against disks,
+   network, and CPU.
 
 Storage
 
@@ -60,16 +62,16 @@ Storage
 
 Drive Configuration
 
-   Do not use RAID or Logical Volume Management with disks that will be
-   added to a MapR node. While MapR software supports these technologies,
-   using them incurs additional setup overhead and can affect your
-   cluster's performance. Due to the possible formatting requirements that
-   are associated with changes to the drive settings, configure the drive
+   Do not use RAID or Logical Volume Management with disks that are added
+   to a MapR node. While MapR software supports these technologies, using
+   them incurs additional setup overhead and can affect your cluster's
+   performance. Due to the possible formatting requirements that are
+   associated with changes to the drive settings, configure the drive
    settings prior to installing MapR.
 
-   If you have a RAID controller, configure it to run in HBA mode. For LSI
-   MegaRAID controllers that do not support HBA, configure the following
-   drive-group settings for optimal performance:
+   If you have a RAID controller, you configure it to run in HBA mode. For
+   LSI MegaRAID controllers that do not support HBA, configure the
+   following drive-group settings for optimal performance:
    Property (The actual name depends on the version) Recommended Setting
    RAID Level RAID0
    Stripe Size >=256K
@@ -77,7 +79,8 @@ Drive Configuration
    Read Policy Always Read Ahead or Read Ahead
    Write Policy Write-Through
    Disk Cache Policy or Drive Cache Disabled
-   Note: Enabling the Disk Cache policy can improve performance. However,
+
+   Enabling the Disk Cache policy can improve performance. However,
    enabling the Disk Cache policy is not recommended because it increases
    the risk of data loss if the node loses power before the disk cache is
    committed to disk.
@@ -101,8 +104,8 @@ Minimum Disk Space
    recommendation of your OS vendor. The amount of swap space that a
    production system needs can vary greatly depending on the application,
    workload, and amount of RAM in the system.  Note that the MapR
-   Installer generates a warning if your swap space is less than 10% of
-   main memory or less than 2 GB.
+   Installer generates a warning if your swap space is either less than
+   10% of main memory, or less than 2 GB.
 
    ZooKeeper. On ZooKeeper nodes, dedicate a partition, if practicable,
    for the /opt/mapr/zkdata directory to avoid other processes filling
@@ -122,12 +125,12 @@ Virtual Memory (swappiness)
    still allow for emergency swapping (instead of killing processes). For
    all Linux distributions, the MapR recommendation is to set
    vm.swappiness to 1.
-   To check the current value for vm.swappiness:
+   To check the current value for vm.swappiness run:
 cat /proc/sys/vm/swappiness
 
-   To change the value:
+   To change the value, run:
 sudo sysctl vm.swappiness=1
 
-   Note: The value of vm.swappiness can revert to a system default setting
-   if you reboot the node. After rebooting, you might need to check and
-   reset the value.
+   The value of vm.swappiness can revert to a system default setting if
+   you reboot the node. After rebooting, you might need to check and reset
+   the value.

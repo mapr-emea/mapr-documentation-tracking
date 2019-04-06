@@ -1,0 +1,66 @@
+Configuring Certificate-Based Authentication for HttpFS
+
+   To configure certificate-based authentication for HttpFS, you need to
+   make changes to the server.xml and web.xml file and restart the HttpFS
+   server. To use this method, each client requires a client certificate
+   issued by trusted CA.
+    1. To enable certificate-based authentication, perform the following
+       steps:
+         a. Verify that the clientAuth attribute is set to "true" and set
+            properties related to keystore and trustore in server.xml
+            (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/s
+            erver.xml).
+            For example:
+<Connector port="${httpfs.http.port}" SSLEnabled="true"
+maxThreads="150" scheme="https" secure="true" clientAuth="true" sslProtocol="TLS
+"
+keystoreFile="/opt/mapr/conf/ssl_keystore"
+keystorePass="<ssl-keystore-password>"
+truststoreFile="/opt/mapr/conf/ssl_truststore"
+truststorePass="<ssl-keystore-password>"/>
+         b. In web.xml
+            (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/webapp
+            s/webhdfs/WEB-INF/web.xml), un-comment the following section:
+<security-constraint>
+  <web-resource-collection>
+    <web-resource-name>Protected Context</web-resource-name>
+    <url-pattern>/*</url-pattern>
+  </web-resource-collection>
+  <auth-constraint>
+    <role-name>sample</role-name>
+  </auth-constraint>
+  <user-data-constraint>
+    <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+  </user-data-constraint>
+</security-constraint>
+
+<security-role>
+  <role-name>sample</role-name>
+</security-role>
+
+<login-config>
+  <auth-method>CLIENT-CERT</auth-method>
+</login-config>
+         c. Verify that tomcat-users.xml
+            (/opt/mapr/httpfs/httpfs-1.0/share/hadoop/httpfs/tomcat/conf/t
+            omcat-users.xml) contains the roles and users in the
+            certificates.
+<tomcat-users>
+  <role rolename="sample"/>
+  <user name="CN=<hostname>" password="null" roles="sample" />
+</tomcat-users>
+            Note: The name value should include information from your
+            certificate. For example, <tomcat-users> <role
+            rolename="sample"/> <user name="CN=www.mapr.com, OU=mapr,
+            O=mapr, L=San Jose, ST=San Jose, C=CA" password="null"
+            roles="sample" /> </tomcat-users> You can run the following
+            command to view the contents of the certificate file: openssl
+            x509 -text -in /opt/mapr/hue/hue-<version>/cert.pem
+<tomcat-users>
+  <role rolename="sample"/>
+  <user name="CN=www.mapr.com, OU=mapr, O=mapr, L=San Jose,
+       ST=San Jose, C=CA" password="null" roles="sample" />
+</tomcat-users>
+    2. Restart the HttpFS server.
+maprcli node services -name httpfs -action restart -nodes <space delimited list
+of nodes>

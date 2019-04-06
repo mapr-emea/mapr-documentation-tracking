@@ -2,7 +2,7 @@ Configure SSL Encryption for Spark on YARN
 
    Starting in MEP 6.0.0, you can remove spark.ssl.keyStorePassword,
    spark.ssl.trustStorePassword, and spark.ssl.keyPassword from the
-   spark-defaults.conf file for addittional security. These passwords are
+   spark-defaults.conf file for additional security. These passwords are
    stored in the /opt/mapr/conf/ssl-client.xml file and Spark can access
    passwords from this file itself.
    Note: If passwords are present in both /opt/mapr/conf/ssl-client.xml
@@ -10,8 +10,12 @@ Configure SSL Encryption for Spark on YARN
    the password from the spark-defaults.conf file is used.
    Complete the following step to manually configure encryption for the
    Spark HTTP file and broadcast servers:
-   In the spark-defaults.conf file on each spark node, configure the
-   following properties:
+   In the spark-defaults.conf file on each spark node, configure the below
+   properties. Starting in MEP 6.0.0, the configured algorithms mentioned
+   in the following code are no longer available for your web service to
+   pick up. You need to remove the spark.ssl.enabledAlgorithms
+   TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA line to let
+   parties negotiate the matching ciphers.
      * For Spark 2.0.1 and later:
 spark.ssl.fs.enabled true
 spark.ssl.keyPassword <ssl-keystore-password>
@@ -48,9 +52,10 @@ C_SHA
    spark-defaults.conf file is in the following location:
    /opt/mapr/spark/spark-<version>/conf/. Make sure SSL is enabled for the
    Spark history server.
-   Note: When you manually configure encryption for Spark, set the same
-   protocol and algorithms for each node. Otherwise, the connection
-   between those components might fail.
+
+   When you manually configure encryption for Spark, set the same protocol
+   and algorithms for each node. Otherwise, the connection between those
+   components might fail.
 
 References
 
