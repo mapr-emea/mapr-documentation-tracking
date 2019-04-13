@@ -31,7 +31,8 @@ Swap:             2           0           2
 
    MapR does not recommend using overcommit as it can lead to the kernel
    memory manager stopping processes to free memory, resulting in stopped
-   MapR processes and system instability. Set vm.overcommit_memory to 0:
+   MapR processes and system instability. Set vm.overcommit_memory to 0,
+   to let the kernel automatically manage memory:
     1. Edit the file /etc/sysctl.conf and add the following line:
        vm.overcommit_memory=0
     2. Save the file and run: sysctl -p
@@ -42,11 +43,12 @@ Swap:             2           0           2
 
 Storage
 
-   MapR software manages raw, unformatted devices directly to optimize
-   performance and offer high availability. For data nodes, allocate at
-   least 3 unmounted physical drives or partitions for MapR storage. MapR
-   software uses disk spindles in parallel for faster read/write bandwidth
-   and therefore groups disks into sets of three.
+   MapR software works with raw unformatted devices and partitions. For
+   optimized performance and high reliability, MapR recommends using raw
+   unformatted devices. For data nodes, allocate at least 3 unmounted
+   physical drives or partitions for MapR storage. MapR software uses disk
+   spindles in parallel for faster read/write bandwidth and therefore
+   groups disks into sets of three.
 
    Minimum Disk Allocation: MapR software requires a minimum of one disk
    or partition for MapR data. However, file contention for a shared disk
@@ -69,9 +71,10 @@ Drive Configuration
    associated with changes to the drive settings, configure the drive
    settings prior to installing MapR.
 
-   If you have a RAID controller, you configure it to run in HBA mode. For
-   LSI MegaRAID controllers that do not support HBA, configure the
-   following drive-group settings for optimal performance:
+   If you have a RAID controller, disable it, and let the system run in
+   Host Bus Adapter (HBA) mode. For systems that do not support HBA, and
+   have LSI MegaRAID controllers, configure the following drive-group
+   settings for optimal performance:
    Property (The actual name depends on the version) Recommended Setting
    RAID Level RAID0
    Stripe Size >=256K
@@ -132,5 +135,5 @@ cat /proc/sys/vm/swappiness
 sudo sysctl vm.swappiness=1
 
    The value of vm.swappiness can revert to a system default setting if
-   you reboot the node. After rebooting, you might need to check and reset
-   the value.
+   you reboot the node. To make this setting permanent, enter
+   vm.swappiness=1 in /etc/sysctl.conf and save it.

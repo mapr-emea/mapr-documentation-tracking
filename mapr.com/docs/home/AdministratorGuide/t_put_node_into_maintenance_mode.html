@@ -1,32 +1,34 @@
 Putting a Node into Maintenance Mode
 
-   Before putting a node into maintenance mode, make sure that:
-     * All copies of CLDB volume exists if the node is a CLDB node. You
+   Describes how to put a node into maintainance mode.
+   Before putting a node into maintenance mode, ensure that:
+     * All copies of the CLDB volume exist if the node is a CLDB node. You
        can shut down the CLDB service on a node only if the CLDB is a
        slave CLDB or if high availability for CLDB is enabled.
-       Note: A node that is running both the CLDB and MapR Filesystem
-       services cannot be put into maintenance mode. You can shut down the
+       You cannot put a node that is running both the CLDB and MapR
+       Filesystem services into maintenance mode. You can shut down the
        CLDB service on the node as long as it is a secondary CLDB node or
-       High Availability for CLDB is enabled.
-     * All running processing tasks (such as NodeManager, Spark, etc.)
-       that depend on MapR Filesystem have been stopped.
+       if you have enabled High Availability for CLDB.
+     * All running processing tasks (such as NodeManager, Spark, for
+       example) that depend on the MapR Filesystem have been stopped.
 
    Warning: Do not put a node under maintenance if there are any volume
    under-replicated alarms because doing so may make some data completely
    offline.
-   To put a node into maintenance mode, follow this process:
+   To put a node into maintenance mode, perform the following actions:
     1. From a terminal, issue the [1]node maintenance command:
 maprcli node maintenance -nodes <IP|hostname> -timeoutminutes <minutes>
-       When running this command, specify a timeout (in minutes) long
+       When you run this command, specify a timeout (in minutes) long
        enough for you to perform necessary maintenance on the node.
        Note: For the duration of the timeout, the cluster's CLDB does not
-       consider this node's data as lost and does not trigger a resync of
-       the data on this node. However, if a node is put under maintenance
-       for more than 5 minutes, MapR Filesystem will be shut down on that
-       node so that any client(s) accessing containers on this node will
-       get appropriate error and retry other container copies.
+       consider the data of this node as lost and does not trigger a
+       resync of the data on this node. However, if a node is put under
+       maintenance for more than 5 minutes, the MapR Filesystem is shut
+       down on that node so that clients who access containers on this
+       node receive the appropriate error and retry other container
+       copies. This value of 5 minutes is hardcoded and cannot be changed.
     2. Stop warden on the node.
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-maintenance.html#nodemaintenance
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-maintenance.html

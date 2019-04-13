@@ -1,16 +1,19 @@
 node maintenance
 
-   Places a node into a maintenance mode for a specified timeout duration.
+   Places a node into a maintenance mode for a specified duration.
+   Important: Stop CLDB if it is running on the node, before putting that
+   node in maintenance mode. Else, the maintenance mode operation is not
+   permitted.
 
-   For the duration of the timeout, the cluster's CLDB does not consider
-   this node's data as lost and does not trigger a resync of the data on
-   this node. See [1]Administering Nodes for more information.
+   For the duration of the maintenance mode, the cluster's CLDB does not
+   consider the data of this node as lost and does not trigger a resync of
+   the data on this node. See [1]Administering Nodes for more information.
 
 Syntax
 
    CLI
 
-maprcli node maintenance
+/opt/mapr/bin/maprcli node maintenance
     [ -cluster <cluster> ]
     [ -serverids <serverids> ]
     -nodes <node names>
@@ -42,17 +45,17 @@ Parameters
 
    timeoutminutes
 
-   Duration of timeout in minutes
+   Duration of the maintenance mode in minutes
 
 Examples
 
      * [2]CLI
      * [3]REST
 
-maprcli node maintenance -nodes centos22.lab -timeoutminutes 20
+/opt/mapr/bin/maprcli node maintenance -nodes centos22.lab -timeoutminutes 20
 
-https://abc.sj.us:8443/rest/node/maintenance?nodes=centos22.lab&timeoutminutes=2
-0
+curl -u mapr:mapr -X POST -k 'https://abc.sj.us:8443/rest/node/maintenance?nodes
+=centos22.lab&timeoutminutes=20'
 
 References
 

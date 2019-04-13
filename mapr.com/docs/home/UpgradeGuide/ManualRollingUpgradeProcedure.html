@@ -1,7 +1,7 @@
 Manual Rolling Upgrade Procedure
 
-   You must complete a series of upgrade steps for each node in each
-   upgrade group.
+   Describes how to manually upgrade each node to the latest version of
+   MapR packages.
 
    Complete the following upgrade steps for each node in each upgrade
    group.
@@ -16,6 +16,9 @@ Manual Rolling Upgrade Procedure
           + Ubuntu: dpkg -l | grep mapr-patch
     4. Get the default MapReduce mode for the cluster.
        maprcli cluster mapreduce get
+       Important: Stop CLDB if it is running on the node, before putting
+       that node in maintenance mode. Else, the maintenance mode operation
+       is not permitted.
     5. Set the node to maintenance mode.
        sudo maprcli node maintenance -nodes <hostname> -timeoutminutes 30
     6. Notify the CLDB that the node is going to be upgraded.
@@ -32,7 +35,7 @@ Manual Rolling Upgrade Procedure
           + RHEL/CentOS or SUSE: sudo rpm --quiet --force --nosignature -U
             </FullPathToPackage/PackageName.rpm>
           + Ubuntu: sudo dpkg --force-all -i
-            </FullPathToPackage/PackageName.rpm>
+            </FullPathToPackage/PackageName.deb>
    11. Configure the node.
        sudo /opt/mapr/server/configure.sh -R
    12. If ZooKeeper is installed on the node, start ZooKeeper.
@@ -54,7 +57,7 @@ sudo maprcli notifyupgrade finish –node <hostname>
 /opt/mapr/server/mrconfig info containers resync local
        No output signifies that the containers are synchronized.
 
-   See [3]Post-Upgrade Steps for MapR Core
+   See [3]Post-Upgrade Steps for MapR Core.
 
 References
 
