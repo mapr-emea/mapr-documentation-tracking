@@ -1,7 +1,7 @@
 Examples of Designing Secondary Indexes
 
    These examples illustrate the concepts behind designing your secondary
-   indexes. Although the examples focus on query patterns and does not
+   indexes. Although the examples focus on query patterns and do not
    account for sizing, storage, and updates, you should always weigh the
    benefits of indexes against these other requirements.
 
@@ -64,7 +64,7 @@ Examples of Designing Secondary Indexes
      * AccountBalance
 
    6
-   Find male customers with the last name starting with the letter "S".
+   Find male customers having a last name starting with the letter "S."
      * Gender
      * FullName.LastName
 
@@ -81,15 +81,15 @@ Examples of Designing Secondary Indexes
    Index Rationale
    Simple index on DateOfBirth
 
-   Optimizes the range condition on DateOfBirth in [1]query 1.
+   Optimizes the range condition on DateOfBirth in Query 1.
 
    You need not create a hashed index, because it is unlikely that the
    order of DateOfBirth correlates with the insert order of new data.
    Simple index on AccountBalance, specified as a descending key
-     * Optimizes the range condition on AccountBalance in [2]query 2
-     * Descending order of key meets the ordering criteria in [3]query 2
-     * Also optimizes the range condition on AccountBalance in [4]query 5
-       in combination with the index on Address.State
+     * Optimizes the range condition on AccountBalance in Query 2.
+     * Descending order of key meets the ordering criteria in Query 2.
+     * Also optimizes the range condition on AccountBalance in Query 5 in
+       combination with the index on Address.State.
 
    Composite index on:
      * Address.State
@@ -97,10 +97,10 @@ Examples of Designing Secondary Indexes
      * FullName.FirstName
 
      * Optimizes both the equality condition on Address.State and ordering
-       in [5]query 3
-     * Inclusion of the name fields in the index meets [6]query 3 ordering
-     * Also optimizes the IN condition in [7]query 5 when used in
-       combination with the index on AccountBalance
+       in Query 3.
+     * Inclusion of the name fields in the index meets Query 3 ordering.
+     * Also optimizes the IN condition in Query 5 when used in combination
+       with the index on AccountBalance.
 
    Simple index with:
      * Indexed field on Address.Zip
@@ -108,44 +108,44 @@ Examples of Designing Secondary Indexes
           + Id
           + Email
 
-     * Optimizes the equality condition on Address.Zip in [8]query 4
-     * Adding the included fields avoids reading the JSON table in
-       [9]query 4
+     * Optimizes the equality condition on Address.Zip in Query 4.
+     * Adding the included fields avoids reading the JSON table in Query
+       4.
 
    Composite index on:
      * Gender
      * FullName.LastName
 
      * Optimizes equality condition on Gender and pattern matching
-       condition on FullName.LastName for [10]query 6
+       condition on FullName.LastName for Query 6.
      * Specifying Gender as the leading key in combination with
-       FullName.LastName results in more selective index lookups for
-       [11]query 6
+       FullName.LastName results in more selective index lookups for Query
+       6.
 
    Simple index on Hobbies[] Optimizes the equality condition on array
-   elements of Hobbies in [12]query 7:
+   elements of Hobbies in Query 7:
 {"$eq":{"Hobbies[]":"Reading"}}
 
    Composite index on:
      * Phones[].Type
      * Phones[].Number
 
-   Optimizes the following two conditions in [13]query 8:
+   Optimizes the following two conditions in Query 8:
      * Equality condition on the Type subfield in nested documents in the
-       Phones array
+       Phones array.
      * Pattern matching condition on the Number subfield in nested
-       documents in the Phones array
+       documents in the Phones array.
 
 Example with Multiple Container Field Paths
 
    The following example references documents that store the high and low
    temperatures for each day in a week. They use an array to store the
-   data, where each element in the array corresponds to a day in the week.
-   For each day of the week, there is a two element array of nested
+   data, where each element in the array corresponds to a day of the week.
+   For each day of the week, there is a two-element array of nested
    documents. The nested documents indicate whether the temperature
    corresponds to the high or low for that day. Typically, the outermost
    array has seven elements, one for each day of the week. But in cases
-   where data is unavailable, the document has only the days available.
+   where data is unavailable, the document has only the available days.
 {
    "_id": "001",
    "temps": [{"hiLo": [{"type": "hi", "temp": 61}, {"type": "lo", "temp": 49}],
@@ -224,23 +224,10 @@ find /apps/hiLoTemps
    By adding weekOf as an included field, the index is a covering index
    for the first query. By adding temps[].hiLo, the index becomes a
    covering index for the second query as well. Note that you must add
-   this included field even though the subfields are also indexed fields.
-   This is due to how indexes with container field paths store data. See
-   [14]Covering Indexes and Container Field Paths for more details.
+   this included field even though the sub-fields are also indexed fields.
+   This is due to how indexes with container field paths store data. For
+   more details, see [1]Covering Indexes and Container Field Paths.
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query1
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query2
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query2
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query5
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query3
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query3
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query5
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query4
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query4
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query6
-  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query6
-  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query7
-  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/indexes-designing-example.html#concept_nty_5cj_t1b__Query8
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html#concept_qdg_p5j_t1b__section_hk4_rcw_jdb
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/MapR-DB/Indexes/index-types-covering.html#concept_qdg_p5j_t1b__section_hk4_rcw_jdb
