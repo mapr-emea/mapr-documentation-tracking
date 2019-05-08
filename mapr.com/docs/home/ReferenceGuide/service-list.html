@@ -21,6 +21,8 @@ http[s]://<host>:<port>/rest/service/list?<parameters>
 
 Parameters
 
+   CAPTION:
+
    Parameter
 
    Description
@@ -39,6 +41,8 @@ Parameters
 
 Output Fields
 
+   CAPTION:
+
       Field                          Description
    memallocated The amount of system memory allocated to the service.
    name         Service name.
@@ -49,9 +53,14 @@ Output Fields
 Service States
 
    The following table lists the service states with their descriptions:
+
+   CAPTION:
+
    State Description
    0 Not configured. The package for the service is not installed and/or
-   the service is not configured (configure.sh has not run).
+   the service is not configured (configure.sh has not run). This state is
+   also returned for all the services if you run the command without
+   specifying a node.
    1 Configured. The package for the service is installed and configured.
    2 Running. The service is installed, started by the warden, and is
    currently running.
@@ -66,32 +75,82 @@ Examples
    CLI Example
 
    The following output is an example of the service information returned
-   when you run the service list command:
-# maprcli service list
-logpath                                 displayname         name             sta
-te
-/opt/mapr/logs/mfs.log                  FileServer          fileserver       0
-
-/opt/mapr/hadoop/hadoop-2.7.0/logs      ResourceManager     resourcemanager  0
-
-/opt/mapr/logs/cldb.log                 CLDB                cldb             0
-
-/opt/mapr/logs/nfs4/nfs4server.log      NFS4 Gateway        nfs4             0
-
-/opt/mapr/logs/mastgateway.log          MASTGatewayService  mastgateway      0
-
-/opt/mapr/hadoop/hadoop-2.7.0/logs      NodeManager         nodemanager      0
-
-/opt/mapr/logs/gateway.log              GatewayService      gateway          0
-
-/opt/mapr/logs/hoststats.log            HostStats           hoststats        0
-
-/opt/mapr/apiserver/logs/apiserver.log  APIServer           apiserver        0
+   when you run the service list command without specifying the node:
+# maprcli service list -json
+{
+        "timestamp":1555048050131,
+        "timeofday":"2019-04-11 10:47:30.131 GMT-0700 PM",
+        "status":"OK",
+        "total":10,
+        "data":[
+                {
+                        "name":"fileserver",
+                        "state":0,
+                        "logpath":"/opt/mapr/logs/mfs.log",
+                        "displayname":"FileServer"
+                },
+                {
+                        "name":"resourcemanager",
+                        "state":0,
+                        "logpath":"/opt/mapr/hadoop/hadoop-2.7.4/logs",
+                        "displayname":"ResourceManager"
+                },
+                {
+                        "name":"filemigrate",
+                        "state":0,
+                        "logpath":"/opt/mapr/filemigrate/filemigrate-1.0.0/logs"
+,
+                        "displayname":"FileMigrate"
+                },
+                {
+                        "name":"cldb",
+                        "state":0,
+                        "logpath":"/opt/mapr/logs/cldb.log",
+                        "displayname":"CLDB"
+                },
+                {
+                        "name":"nfs4",
+                        "state":0,
+                        "logpath":"/opt/mapr/logs/nfs4/nfs4server.log",
+                        "displayname":"NFS4 Gateway"
+                },
+                {
+                        "name":"mastgateway",
+                        "state":0,
+                        "logpath":"/opt/mapr/logs/mastgateway.log",
+                        "displayname":"MASTGatewayService"
+                },
+                {
+                        "name":"nodemanager",
+                        "state":0,
+                        "logpath":"/opt/mapr/hadoop/hadoop-2.7.4/logs",
+                        "displayname":"NodeManager"
+                },
+                {
+                        "name":"gateway",
+                        "state":0,
+                        "logpath":"/opt/mapr/logs/gateway.log",
+                        "displayname":"GatewayService"
+                },
+                {
+                        "name":"hoststats",
+                        "state":0,
+                        "logpath":"/opt/mapr/logs/hoststats.log",
+                        "displayname":"HostStats"
+                },
+                {
+                        "name":"apiserver",
+                        "state":0,
+                        "logpath":"/opt/mapr/apiserver/logs/apiserver.log",
+                        "displayname":"APIServer"
+                }
+        ]
 
    REST Example
 
    The following output is an example of the service information returned
-   when you issue the service list REST API call:
+   when you issue the service list REST API call, without specifying a
+   node:
 # curl -k -X GET 'https://abc.sj.us:8443/rest/service/list' --user mapr:mapr
 {"timestamp":1529380971417,"timeofday":"2018-06-18 09:02:51.417 GMT-0700 PM","st
 atus":"OK","total":9,"data":[{"name":"fileserver","state":0,"logpath":"/opt/mapr
@@ -106,6 +165,108 @@ ate":0,"logpath":"/opt/mapr/hadoop/hadoop-2.7.0/logs","displayname":"NodeManager
 me":"GatewayService"},{"name":"hoststats","state":0,"logpath":"/opt/mapr/logs/ho
 ststats.log","displayname":"HostStats"},{"name":"apiserver","state":0,"logpath":
 "/opt/mapr/apiserver/logs/apiserver.log","displayname":"APIServer"}]}
+
+   The following output is an example of the service information returned
+   when you run the service list command after specifying a node:
+/opt/mapr/bin/maprcli service list -node 10.10.82.29 -json
+{
+        "timestamp":1555049507312,
+        "timeofday":"2019-04-11 11:11:47.312 GMT-0700 PM",
+        "status":"OK",
+        "total":10,
+        "data":[
+                {
+                        "name":"fileserver",
+                        "state":2,
+                        "memallocated":"8382.0",
+                        "logpath":"/opt/mapr/logs/mfs.log",
+                        "displayname":"FileServer"
+                },
+                {
+                        "name":"resourcemanager",
+                        "state":2,
+                        "memallocated":"2395.0",
+                        "logpath":"/opt/mapr/hadoop/hadoop-2.7.4/logs",
+                        "displayname":"ResourceManager"
+                },
+                {
+                        "name":"filemigrate",
+                        "state":4,
+                        "logpath":"/opt/mapr/filemigrate/filemigrate-1.0.0/logs"
+,
+                        "displayname":"FileMigrate"
+                },
+                {
+                        "name":"cldb",
+                        "state":2,
+                        "memallocated":"1916.0",
+                        "logpath":"/opt/mapr/logs/cldb.log",
+                        "displayname":"CLDB"
+                },
+                {
+                        "name":"nfs4",
+                        "state":2,
+                        "memallocated":"2048.0",
+                        "logpath":"/opt/mapr/logs/nfs4/nfs4server.log",
+                        "displayname":"NFS4 Gateway"
+                },
+                {
+                        "name":"mastgateway",
+                        "state":2,
+                        "memallocated":"2395.0",
+                        "logpath":"/opt/mapr/logs/mastgateway.log",
+                        "displayname":"MASTGatewayService"
+                },
+                {
+                        "name":"nodemanager",
+                        "state":2,
+                        "memallocated":"325.0",
+                        "logpath":"/opt/mapr/hadoop/hadoop-2.7.4/logs",
+                        "displayname":"NodeManager"
+                },
+                {
+                        "name":"gateway",
+                        "state":2,
+                        "memallocated":"239.0",
+                        "logpath":"/opt/mapr/logs/gateway.log",
+                        "displayname":"GatewayService"
+                },
+                {
+                        "name":"hoststats",
+                        "state":2,
+                        "memallocated":"Auto",
+                        "logpath":"/opt/mapr/logs/hoststats.log",
+                        "displayname":"HostStats"
+                },
+                {
+                        "name":"apiserver",
+                        "state":2,
+                        "memallocated":"1000.0",
+                        "logpath":"/opt/mapr/apiserver/logs/apiserver.log",
+                        "displayname":"APIServer"
+                }
+        ]
+}
+
+   REST Example
+
+   The following output is an example of the service information returned
+   when you issue the service list REST API call, after specifying a node:
+# curl -k -X GET 'https://abc.sj.us:8443/rest/service/list' --user mapr:mapr
+            {"timestamp":1529380971417,"timeofday":"2018-06-18 09:02:51.417 GMT-
+0700 PM","status":"OK","total":9,"data":[{"name":"fileserver","state":0,"logpath
+":"/opt/mapr/logs/mfs.log","displayname":"FileServer"},{"name":"resourcemanager"
+,"state":0,"logpath":"/opt/mapr/hadoop/hadoop-2.7.0/logs","displayname":"Resourc
+eManager"},{"name":"cldb","state":0,"logpath":"/opt/mapr/logs/cldb.log","display
+name":"CLDB"},{"name":"nfs4","state":0,"logpath":"/opt/mapr/logs/nfs4/nfs4server
+.log","displayname":"NFS4 Gateway"},{"name":"mastgateway","state":0,"logpath":"/
+opt/mapr/logs/mastgateway.log","displayname":"MASTGatewayService"},{"name":"node
+manager","state":0,"logpath":"/opt/mapr/hadoop/hadoop-2.7.0/logs","displayname":
+"NodeManager"},{"name":"gateway","state":0,"logpath":"/opt/mapr/logs/gateway.log
+","displayname":"GatewayService"},{"name":"hoststats","state":0,"logpath":"/opt/
+mapr/logs/hoststats.log","displayname":"HostStats"},{"name":"apiserver","state":
+0,"logpath":"/opt/mapr/apiserver/logs/apiserver.log","displayname":"APIServer"}]
+}
 
    Note: When you configure high availability for the ResourceManager, the
    status of standby ResourceManager service differs based on the selected

@@ -8,14 +8,15 @@ Syntax
 
    CLI
 
-maprcli acl show
-    [ -cluster <cluster> ]
-    [ -group <group> ]
-    [ -name <name> ]
-    [ -output long|short|terse ]
-    [ -perm ]
-    -type cluster|volume|
-    [ -user <user> ]
+/opt/mapr/bin/maprcli acl show
+     -type object type [cluster|volume|securitypolicy]
+        [ -name name ]
+        [ -cluster cluster name ]
+        [ -user userName whose ACL is queried ]
+        [ -group groupName whose ACL is queried ]
+        [ -output output format short|long|terse (default short). default: short
+ ]
+        [ -perm list of available permissions Parameter takes no value  ]
 
    REST
 
@@ -24,6 +25,8 @@ maprcli acl show
 http[s]://<host>:<port>/rest/acl/show?<parameters>
 
 Parameters
+
+   CAPTION:
 
    Parameter
 
@@ -52,7 +55,7 @@ Parameters
 
    perm
 
-   When this option is specified, acl show displays the permissions
+   When you specify this option, acl show displays the permissions
    available for the object type specified in the type parameter.
 
    type
@@ -82,25 +85,29 @@ Examples
 
 # /opt/mapr/bin/maprcli acl show -type cluster -json
 {
-        "timestamp":1525459529684,
-        "timeofday":"2018-05-04 11:45:29.684 GMT-0700 AM",
+        "timestamp":1555494572399,
+        "timeofday":"2019-04-17 02:49:32.399 GMT-0700 AM",
         "status":"OK",
-        "total":1,
+        "total":2,
         "data":[
                 {
+                        "Principal":"User mapr",
+                        "Allowed actions":"[login, ss, cv, a, fc, cp]"
+                },
+                {
                         "Principal":"User root",
-                        "Allowed actions":"[login, ss, cv, a, fc]"
+                        "Allowed actions":"[login, ss, cv, a, fc, cp]"
                 }
         ]
 }
 
    REST
 
-# curl -k -X GET 'https://abc.sj.us:8443/rest/acl/show?type=cluster' --user mapr
-:mapr
-{"timestamp":1525459587701,"timeofday":"2018-05-04 11:46:27.701 GMT-0700 AM","st
-atus":"OK","total":1,"data":[{"Principal":"User root","Allowed actions":"[login,
- ss, cv, a, fc]"}]}
+curl -u mapr:mapr -X GET -k "https://host:8443/rest/acl/show?type=cluster"
+{"timestamp":1555494852652,"timeofday":"2019-04-17 02:54:12.652 GMT-0700 AM","st
+atus":"OK","total":2,"data":[{"Principal":"User mapr","Allowed actions":"[login,
+ ss, cv, a, fc, cp]"},{"Principal":"User root","Allowed actions":"[login, ss, cv
+, a, fc, cp]"}]}
 
    Show the ACL for "test-volume":
 
@@ -115,8 +122,8 @@ Allowed actions               Principal
 
    REST
 
-# curl -k -X GET 'https://abc.sj.us:8443/rest/acl/show?type=volume&name=sampleVo
-l1' --user mapr:mapr
+# curl -u mapr:mapr -X GET -k "https://host:8443/rest/acl/show?type=volume&name=
+sampleVol1"
 {"timestamp":1525461068100,"timeofday":"2018-05-04 12:11:08.100 GMT-0700 PM","st
 atus":"OK","total":4,"data":[{"Principal":"User mapr","Allowed actions":"[dump,
 restore, m, a, d, fc]"},{"Principal":"User foo","Allowed actions":"[dump, restor
@@ -134,16 +141,18 @@ ss           Start/stop services in the cluster
 cv           Create volumes
 a            Administrator
 fc           Full control
+cp           Create security policies
 
    REST
 
-# curl -k -X GET 'https://abc.sj.us:8443/rest/acl/show?type=cluster&perm' --user
- mapr:mapr
-{"timestamp":1525459863777,"timeofday":"2018-05-04 11:51:03.777 GMT-0700 AM","st
-atus":"OK","total":5,"data":[{"Permissions":"login","Description":"Login access"
+# curl -u mapr:mapr -X GET -k "https://host:8443/rest/acl/show?type=cluster&perm
+"
+{"timestamp":1555497261931,"timeofday":"2019-04-17 03:34:21.931 GMT-0700 AM","st
+atus":"OK","total":6,"data":[{"Permissions":"login","Description":"Login access"
 },{"Permissions":"ss","Description":"Start/stop services in the cluster"},{"Perm
 issions":"cv","Description":"Create volumes"},{"Permissions":"a","Description":"
-Administrator"},{"Permissions":"fc","Description":"Full control"}]}
+Administrator"},{"Permissions":"fc","Description":"Full control"},{"Permissions"
+:"cp","Description":"Create security policies"}]}
 
 References
 

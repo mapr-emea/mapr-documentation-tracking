@@ -8,17 +8,27 @@ Starting the mapr-loopbacknfs Service to Access a Cluster
 
 Prerequisites for accessing a secure cluster:
 
-     * Enable security for the cluster. See [1]enabling and [2]disabling
-       wire-level security.
-     * Generate a user ticket. See [3]Generating a MapR User Ticket for
+     * The stock Linux NFS service must not be running. Linux NFS and MapR
+       NFS cannot run concurrently.
+     * The lock manager (nlockmgr) must be disabled.
+     * On Red Hat and CentOS v6.0 and higher, the rpcbind service must be
+       running. You can use the command ps ax | grep rpcbind to check.
+     * On Red Hat and CentOS v5.x and lower, and on Ubuntu and SUSE, the
+       portmapper service must be running. You can use the command ps ax |
+       grep portmap to check.
+     * Make sure you have applied a Community Edition (M3) license or an
+       Enterprise Edition (M5) license (paid or trial) to the cluster. See
+       [1]Adding a License Using the MapR Control System.
+     * Enable security for the cluster. See [2]Enabling Wire-level
+       Security and [3]Disabling Wire-level Security wire-level security.
+     * Generate a user ticket. See [4]Generating a MapR User Ticket for
        instructions. If you do not already have a MapR user ticket, with
        full control ACL authorization on the cluster, you will have to
        have a cluster administrator do this for you.
-          + Go to a server node in the MapR cluster to which you want to
-            connect.
-          + Be sure to run maprlogin password to log in first. The user
-            that logs in must be a privileged user, such as the mapr
-            superuser.
+          + In the MapR cluster, navigate to the server node to which you
+            want to connect.
+          + First, run maprlogin password to login. The user who logs in
+            must be a privileged user, such as the mapr superuser.
           + Then run maprlogin generateticket -type service -user <user>
             -duration 365:0:0 -out <file> to generate the user ticket. The
             <user> for whom the ticket is generated can be any user. If
@@ -68,6 +78,7 @@ localhost:/mapr /mapr hard,nolock
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html#enable-wire-level-security
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Disable-wire-level-security.html#Disable-wire-level-security
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingMapRUserTicket.html#TicketsandCertificates-Ge_26281159-d3e202
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/t_add_license_MCS.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Enable-wire-level-security.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Disable-wire-level-security.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/GeneratingMapRUserTicket.html

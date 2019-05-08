@@ -1,5 +1,7 @@
 Designating NICs for MapR
 
+   Explains how to assign IP address blocks for MapR.
+
    By default, MapR Filesystem instances and the CLDB nodes advertise all
    the available IP addresses and MapR automatically uses all available
    network interface cards (NICs) on each node for all communication. For
@@ -11,7 +13,7 @@ Designating NICs for MapR
 
    For example, if you use multiple NICs of mixed speeds (such as 1GbE and
    10GbE) on each node, you might want to separate them to two different
-   networks depending upon the ethernet card speeds. You can assign IP
+   networks depending on the Ethernet card speeds. You can assign IP
    addresses in the same network to the NICs of 1GbE and assign IP
    addresses in another network to the the NICs of 10GbE. That way, you
    can use the faster NICs for communication within the cluster or for
@@ -47,9 +49,10 @@ About MAPR_SUBNETS Environment Variable
      * CLDB nodes, CLDB advertises the IP address to clients on the
        cluster.
 
-   The MAPR_SUBNETS environment variable can be set on all the nodes. On
-   the cluster nodes, the value for this environment variable is a
-   comma-separated list of subnet masks. For example:
+   You can set the MAPR_SUBNETS environment variable in the
+   /opt/mapr/conf/env_override.sh file on all the nodes. On the cluster
+   nodes, the value for this environment variable is a comma-separated
+   list of subnet masks. For example:
 export MAPR_SUBNETS=10.10.15.0/24,10.10.16.0/24
 
    You can specify up to four NICs in the MAPR_SUBNETS environment
@@ -59,47 +62,52 @@ export MAPR_SUBNETS=10.10.15.0/24,10.10.16.0/24
    subnets specified therein.
 
    The MAPR_SUBNETS environment variable can be set on the client if there
-   is a NAT between the server and client. On the client host, the value
-   for this environment variable is any one IP address of the client. For
-   example:
+   is a NAT between the server and client. On the client, the value for
+   this environment variable is an IP address of the client. For example:
 export MAPR_SUBNETS=10.11.12.13/32
 
    When specifying the IP address in the MAPR_SUBNETS environment variable
-   on the client host, use /32 to specify a single IP address.
+   on the client, use /32 to specify a single IP address.
+
+   For more information on the MAPR_SUBNETS environment variable, see
+   [1]Environment Variables.
 
 About MAPR_EXTERNAL Environment Variable
 
    If all the IP addresses on the servers are public and can be accessed
-   from outside, the MAPR_EXTERNAL environment variable need not be set.
-   On the other hand, if your cluster nodes have private IP addresses, to
-   allow clients outside the cluster to reach the cluster nodes (such as
-   when MapR is installed on the cloud or Docker container), the public IP
-   addresses can be specified in the MAPR_EXTERNAL environment variable.
+   from an external system, the MAPR_EXTERNAL environment variable need
+   not be set. However, if your cluster nodes have private IP addresses,
+   to allow clients outside the cluster to reach the cluster nodes (such
+   as when MapR is installed on the cloud or Docker container), specify
+   the public IP addresses in the MAPR_EXTERNAL environment variable.
 
-   This variable can be set on the cluster nodes only. When MAPR_EXTERNAL
-   environment variable is set on:
+   On the cluster nodes, you can set this variable in the
+   /opt/mapr/conf/env_override.sh file. When MAPR_EXTERNAL is set on:
      * MapR Filesystem nodes, MapR Filesystem registers these IP addresses
        with CLDB as the IP addresses on which external clients can reach
        MapR Filesystem nodes. Communication between MapR Filesystem nodes
-       on the cluster still happen over the internal IP addresses.
+       on the cluster still occurs over the internal IP addresses.
      * CLDB nodes, CLDB advertises these IPs addresses to clients outside
        the cluster or data center.
      * MAST Gateway nodes, the gateway registers these IP addresses with
-       CLDB as the IP addresses on which external clients can reach MAST
-       Gateway.
+       CLDB as the IP addresses on which external clients can reach the
+       MAST Gateway.
 
-   Note: Do not set the MAPR_EXTERNAL environment variable on the client
-   host(s).
+   Note: Do not set the MAPR_EXTERNAL environment variable on the
+   client(s).
 
    The value for this environment variable is a comma-separated list of IP
    addresses; you cannot specify the hostname as value. For example:
 ip1,ip2,ip3;
 
-   For example, you can specify the IP addresses of the IGbE NICs (shown
-   in the illustration above) as the value for this environment variable
-   to allow external or low-performance clients to communicate with the
-   cluster nodes.
+   For example, you can specify the IP addresses of the 1GbE NICs (shown
+   in the previous illustration) as the value for this environment
+   variable, to allow external or low-performance clients to communicate
+   with the cluster nodes.
 export MAPR_EXTERNAL=10.11.0.0
+
+   For more information on the MAPR_EXTERNAL environment variable, see
+   [2]Environment Variables.
 
 About IP Addresses for ZooKeeper Nodes
 
@@ -112,13 +120,13 @@ About IP Addresses for ZooKeeper Nodes
    When you specify the IP addresses using the -Z and -EZ options, these
    IP addresses are registered with CLDB and included in the cldb.conf
    file. In the cldb.conf file, the internal IP addresses set using the -Z
-   option are the values for the cldb.zookeeper.servers parameter and the
+   option are the values for the cldb.zookeeper.servers parameter. The
    external IP addresses set using the -EZ option are the values for the
    cldb.external.zookeeper.servers parameter.
-   Note: The configure.sh command with the -EZ option need not be run
-   during client configuration.
+   Note: You do not need to run the configure.sh command with the -EZ
+   option during client configuration.
 
-   For more information, see [1]configure.sh.
+   For more information, see [3]configure.sh.
 
    If all the ZooKeepers have different IP addresses, port forwarding is
    not required and, optionally, you can specify the same port with all
@@ -126,7 +134,7 @@ About IP Addresses for ZooKeeper Nodes
    single external IP address being used by multiple ZooKeepers (as in a
    Docker container), you can specify ports for ZooKeepers when you run
    the configure.sh utility with the -Z and -EZ options. For more
-   information, see [2]Specifying Ports.
+   information, see [4]Specifying Ports.
 
 About Internal and External Clients
 
@@ -167,12 +175,13 @@ Limitations
        registers the IP addresses (in the MAPR_SUBNETS environment
        variable) with CLDB as internal IPs.
 
-   Note: Both the environment variables must be set to segregate internal
-   or high performance clients and external or low-performance clients.
+   Note: Set both the environment variables in the
+   /opt/mapr/conf/env_override.sh file to segregate internal or high
+   performance clients, and external or low-performance clients.
 
    You can specify up to 4 IP addresses in the MAPR_SUBNETS environment
-   variable 4 IP addresses in the MAPR_EXTERNAL environment variable.
-   Note: ZooKeeper must be configured with an IP address that is reachable
+   variable, and 4 IP addresses in the MAPR_EXTERNAL environment variable.
+   Note: You must configure ZooKeeper with an IP address that is reachable
    by both internal and external clients.
 
 Summary
@@ -181,6 +190,9 @@ Summary
    various services that use non-default ports and that support public IP
    address(es) for communication with external clients and remote
    clusters:
+
+   CAPTION:
+
    Service Environment variable to set...
    Public IP Address for External Clients/Remote Clusters Non-default Port
    CLDB MAPR_EXTERNAL CLDB_EXTERNAL_RPC_PORT
@@ -222,5 +234,7 @@ Summary
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpPorts.html
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/EnvironmentVariables.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/EnvironmentVariables.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/configure.sh.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/SettingUpPorts.html

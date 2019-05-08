@@ -9,24 +9,28 @@ node list
      * To window the list, use the start and limit options to select only
        a portion of the results.
      * To list nodes that match certain criteria, pass a filter to the
-       filter parameter. See the [1]Fields table on the [2]node page for
-       the fields available to filter by. See the [3]maprcli and REST API
-       Syntax page for information on filters.
+       filter parameter. See the [1]node table for the fields available to
+       filter by. See the [2]Filters page for information on filters.
+
+   Using the node list command without the -clientsonly true or the
+   -nfsnodes true option, does not list edge nodes. To include edge nodes,
+   use the -nfsnodes true or the -clientsonly true option.
 
 Syntax
 
    CLI
 
-maprcli node list
+/opt/mapr/bin/maprcli node list
     [ -alarmednodes 0|1 ]
     [ -cluster <cluster> ]
     [ -clientsonly true|false ]
-    [ -columns <columns>]
+    [ -columns <columns>|all]
     [ -filter <filter> ]
     [ -limit <limit> ]
     [ -nfsnodes 0|1 ]
     [ -output terse|verbose ]
     [ -sortby <attribute> ]
+    [ -sortorder asc|desc ]
     [ -start <offset> ]
     [ -zkconnect <ZooKeeper Connect String> ]
 
@@ -38,97 +42,105 @@ http[s]://<host>:<port>/rest/node/list[?<parameters>]
 
 Parameters
 
+   CAPTION:
+
    Parameter
 
    Description
-   alarmednodes If set to 1, displays only nodes with raised alarms.
-   Cannot be used if nfsnodes is set.
+   alarmednodes This parameter when set to 1, displays only nodes with
+   raised alarms. You cannot use this parameter if nfsnodes is set.
    cluster The cluster on which to run the command.
-   clientsonly A filter for retrieving the list of nodes running unique
-   platinum FUSE-based POSIX, NFSv3, NFSv4 and loopbacknfs POSIX clients
-   if value is set to true. The command returns the following fields:
-   clienttype, clienthealth, hostname, ip, lasthb, id. For more
-   information, see the [4]Fields table on the [5]node command page.
+   clientsonly Set this parameter to true to return the list of nodes
+   running unique platinum FUSE-based POSIX clients, and NFSv3, and NFSv4
+   services. The command returns the following fields: clienttype,
+   clienthealth, hostname, ip, lasthb, id. For more information, see this
+   [3]fields table.
 
-   If false, which is the default value, returns per node-level
-   information for all the services running on the node and other stats.
+   If you set this parameter to false, which is the default value, this
+   parameter returns per node-level information for all the services
+   running on the node.
    columns A comma-separated list of fields to return in the query,
    specified by the short names.
-   Note: When specifying this option, the ip and hostname columns are
-   always returned in the query.
+
+   When specifying this option, the ip and hostname columns are always
+   returned in the query.
    filter A filter specifying nodes on which to start or stop services.
-   See the Fields table on the [6]node page for the fields available to
-   filter. See the [7]maprcli and REST API Syntax page for information on
+   See the Fields table on the [4]node page for the fields available to
+   filter. See the [5]maprcli and REST API Syntax page for information on
    filters.
    limit The number of rows to return, beginning at start. Default: 0
-   nfsnodes If set to 1, displays only nodes running NFS. Cannot be used
-   if alarmednodes is set.
+   nfsnodes Set this to 1 to display only nodes running NFS. Cannot be
+   used if alarmednodes is set.
    output Specifies whether the output should be terse or verbose.
-   sortby Specifies one of the following attributes to sort the list of
-   nodes by: nodeid, nodeip, nodehostname, noderackpath, nodeswitchpath,
-   nodestatus, nodeservices, nodefshb, nodejthb, nodedisktotal,
-   nodediskused, nodediskavail, noderpc, noderpcin, noderpcout,
-   nodediskcount, nodediskreadops, nodediskreadkbytes, nodediskwriteops,
-   nodediskwritekbytes, nodecpucount, nodecpuutil, nodememtotal,
-   nodememused, nodefaileddisks, nodevirtualip, nodevirtualipend,
-   nodenetmaskvnodemacaddress, nodegateway, nodebytesreceived,
-   nodebytessent, nodecpuuptime, nodemaprdiskcount, nodestatusdesc,
-   nodeblockmovesout, nodeblockmovesinvnodemaxcontainersthreshold,
-   nodenuminstances, nodenumspsperinstance, nodenfsstate,
-   nodeisposixclient, nodeisloopbacknfs, nodeisloopbacknfsrunning
+   sortby Specifies one of the following attributes by which to sort the
+   list of nodes: nodeid, nodeip, nodehostname, noderackpath,
+   nodeswitchpath, nodestatus, nodeservices, nodefshb, nodejthb,
+   nodedisktotal, nodediskused, nodediskavail, noderpc, noderpcin,
+   noderpcout, nodediskcount, nodediskreadops, nodediskreadkbytes,
+   nodediskwriteops, nodediskwritekbytes, nodecpucount, nodecpuutil,
+   nodememtotal, nodememused, nodefaileddisks, nodevirtualip,
+   nodevirtualipend, nodenetmaskvnodemacaddress, nodegateway,
+   nodebytesreceived, nodebytessent, nodecpuuptime, nodemaprdiskcount,
+   nodestatusdesc, nodeblockmovesout,
+   nodeblockmovesinvnodemaxcontainersthreshold, nodenuminstances,
+   nodenumspsperinstance, nodenfsstate, nodeisposixclient,
+   nodeisloopbacknfs, nodeisloopbacknfsrunning
    start The offset from the starting row according to sort. Default: 0
-   zkconnect [8]ZooKeeper Connect String
+   zkconnect [6]ZooKeeper Connect String
 
 Output
 
-   Information about the nodes. See the [9]Fields table on the [10]node
-   command page.
+   Information about the nodes. See the [7]fields for more information.
 
    Sample Output
 # /opt/mapr/bin/maprcli node list -json
 {
-        "timestamp":1521121710003,
-        "timeofday":"2018-03-15 06:48:30.003 GMT-0700 AM",
+        "timestamp":1555342212112,
+        "timeofday":"2019-04-15 08:30:12.112 GMT-0700 AM",
         "status":"OK",
         "total":1,
         "data":[
                 {
-                        "id":"2420737303527197275",
-                        "ip":"10.20.30.40",
-                        "hostname":"sample.lab",
-                        "racktopo":"/data/default-rack/sample.lab",
+                        "id":"7146221175287263104",
+                        "ip":[
+                                "10.10.82.29",
+                                "172.17.0.1"
+                        ],
+                        "hostname":"doc29.lab",
+                        "racktopo":"/data/default-rack/doc29.lab",
                         "health":2,
-                        "healthDesc":"One or more alarms raised",
-                        "service":"resourcemanager,fileserver,cldb,nodemanager,g
-ateway,hoststats,apiserver",
-                        "configuredservice":"resourcemanager,fileserver,cldb,nod
-emanager,hoststats,apiserver",
+                        "healthDesc":"One or more services is down",
+                        "service":"resourcemanager,fileserver,cldb,nfs4,mastgate
+way,nodemanager,gateway,hoststats,apiserver,posixclientbasic",
+                        "configuredservice":"resourcemanager,filemigrate,fileser
+ver,cldb,nfs4,mastgateway,nodemanager,gateway,hoststats,apiserver,posixclientbas
+ic",
                         "fs-heartbeat":0,
                         "jt-heartbeat":2,
-                        "dtotal":273,
+                        "dtotal":272,
                         "dused":0,
                         "davail":272,
                         "rpcs":0,
-                        "rpcin":205,
-                        "rpcout":501,
+                        "rpcin":345,
+                        "rpcout":652,
                         "disks":5,
                         "MapRfs disks":3,
                         "faileddisks":0,
                         "dreads":0,
                         "dreadK":0,
-                        "dwrites":12,
-                        "dwriteK":128,
+                        "dwrites":1,
+                        "dwriteK":8,
                         "cpus":8,
-                        "utilization":23,
-                        "uptime":"Sat Feb 10 14:53:05 PST 2018",
-                        "mtotal":15886,
-                        "mused":10288,
+                        "utilization":25,
+                        "uptime":"Mon Nov 20 15:03:37 PST 2017",
+                        "mtotal":23949,
+                        "mused":11996,
                         "ttmapSlots":0,
                         "ttmapUsed":0,
                         "ttReduceSlots":0,
                         "ttReduceUsed":0,
-                        "bytesReceived":612,
-                        "bytesSent":368,
+                        "bytesReceived":168,
+                        "bytesSent":180,
                         "numResyncSlots":16,
                         "blockMovesOut":false,
                         "blockMovesIn":false,
@@ -147,7 +159,7 @@ emanager,hoststats,apiserver",
                         "numScansInLastMinute":0,
                         "numScansInLastFiveMinutes":0,
                         "numScansInLastFifteenMinutes":0,
-                        "LogLevelAlarm":1521059886739,
+                        "LogLevelAlarm":0,
                         "ServiceCLDBDownNotRunningAlarm":0,
                         "ServiceFileserverDownNotRunningAlarm":0,
                         "ServiceJTDownNotRunningAlarm":0,
@@ -155,6 +167,321 @@ emanager,hoststats,apiserver",
                         "ServiceHBMasterDownNotRunningAlarm":0,
                         "ServiceHBRegionDownNotRunningAlarm":0,
                         "ServiceNFSDownNotRunningAlarm":0,
+                        "ServiceNFS4DownNotRunningAlarm":0,
+                        "ServiceWebserverDownNotRunningAlarm":0,
+                        "ServiceHoststatsDownNotRunningAlarm":0,
+                        "DiskFailureAlarm":0,
+                        "VersionMismatchAlarm":0,
+                        "TimeSkewAlarm":0,
+                        "HbProcessingSlow":1554758472188,
+                        "RootPartitionFullAlarm":0,
+                        "HomeMapRFullAlarm":0,
+                        "CorePresentAlarm":0,
+                        "HighMfsMemoryAlarm":0,
+                        "PamMisconfiguredAlarm":0,
+                        "TTLocaldirFullAlarm":0,
+                        "NodeNoHeartbeatAlarm":0,
+                        "NodeMaprUserMismatchAlarm":0,
+                        "NodeDuplicateHostIdAlarm":0,
+                        "NodeMetricsWriteProblemAlarm":0,
+                        "NodeTooManyContainersAlarm":0,
+                        "IncorrectTopologyAlarm":0,
+                        "ServiceHueDownNotRunningAlarm":0,
+                        "ServiceHttpfsDownNotRunningAlarm":0,
+                        "ServiceBeeswaxDownNotRunningAlarm":0,
+                        "ServiceHiveDownNotRunningAlarm":0,
+                        "ServiceHs2DownNotRunningAlarm":0,
+                        "ServiceOozieDownNotRunningAlarm":0,
+                        "NodeManagerDown":0,
+                        "InstanceMismatch":0,
+                        "ResourceManagerDown":0,
+                        "Insufficient memory for buckets":0,
+                        "NoDiskAttached":0,
+                        "MemoryAllocationAlarm":0,
+                        "FileMigrateServerDown":1555340598576,
+                        "MemorySwapping":0,
+                        "ApiServerDown":0
+                }
+        ]
+}
+
+Fields
+
+   For definitions of the output fields, and short names for use with
+   filters, see the [8]fields table.
+
+Examples
+
+   List all nodes:
+
+   For neatly formatted results, use the -json option when listing all
+   nodes or a large subset of node information.
+     * [9]CLI
+     * [10]REST
+
+/opt/mapr/bin/maprcli node list -json
+{
+        "timestamp":1555342212112,
+        "timeofday":"2019-04-15 08:30:12.112 GMT-0700 AM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "id":"7146221175287263104",
+                        "ip":[
+                                "10.10.82.29",
+                                "172.17.0.1"
+                        ],
+                        "hostname":"doc29.lab",
+                        "racktopo":"/data/default-rack/doc29.lab",
+                        "health":2,
+                        "healthDesc":"One or more services is down",
+                        "service":"resourcemanager,fileserver,cldb,nfs4,mastgate
+way,nodemanager,gateway,hoststats,apiserver,posixclientbasic",
+                        "configuredservice":"resourcemanager,filemigrate,fileser
+ver,cldb,nfs4,mastgateway,nodemanager,gateway,hoststats,apiserver,posixclientbas
+ic",
+                        "fs-heartbeat":0,
+                        "jt-heartbeat":2,
+                        "dtotal":272,
+                        "dused":0,
+                        "davail":272,
+                        "rpcs":0,
+                        "rpcin":345,
+                        "rpcout":652,
+                        "disks":5,
+                        "MapRfs disks":3,
+                        "faileddisks":0,
+                        "dreads":0,
+                        "dreadK":0,
+                        "dwrites":1,
+                        "dwriteK":8,
+                        "cpus":8,
+                        "utilization":25,
+                        "uptime":"Mon Nov 20 15:03:37 PST 2017",
+                        "mtotal":23949,
+                        "mused":11996,
+                        "ttmapSlots":0,
+                        "ttmapUsed":0,
+                        "ttReduceSlots":0,
+                        "ttReduceUsed":0,
+                        "bytesReceived":168,
+                        "bytesSent":180,
+                        "numResyncSlots":16,
+                        "blockMovesOut":false,
+                        "blockMovesIn":false,
+                        "numInstances":"1",
+                        "numReportedInstances":"1",
+                        "spsPerInstance":"0",
+                        "numPutsInLastTenSeconds":0,
+                        "numPutsInLastMinute":0,
+                        "numPutsInLastFiveMinutes":0,
+                        "numPutsInLastFifteenMinutes":0,
+                        "numGetsInLastTenSeconds":0,
+                        "numGetsInLastMinute":0,
+                        "numGetsInLastFiveMinutes":0,
+                        "numGetsInLastFifteenMinutes":0,
+                        "numScansInLastTenSeconds":0,
+                        "numScansInLastMinute":0,
+                        "numScansInLastFiveMinutes":0,
+                        "numScansInLastFifteenMinutes":0,
+                        "LogLevelAlarm":0,
+                        "ServiceCLDBDownNotRunningAlarm":0,
+                        "ServiceFileserverDownNotRunningAlarm":0,
+                        "ServiceJTDownNotRunningAlarm":0,
+                        "ServiceTTDownNotRunningAlarm":0,
+                        "ServiceHBMasterDownNotRunningAlarm":0,
+                        "ServiceHBRegionDownNotRunningAlarm":0,
+                        "ServiceNFSDownNotRunningAlarm":0,
+                        "ServiceNFS4DownNotRunningAlarm":0,
+                        "ServiceWebserverDownNotRunningAlarm":0,
+                        "ServiceHoststatsDownNotRunningAlarm":0,
+                        "DiskFailureAlarm":0,
+                        "VersionMismatchAlarm":0,
+                        "TimeSkewAlarm":0,
+                        "HbProcessingSlow":1554758472188,
+                        "RootPartitionFullAlarm":0,
+                        "HomeMapRFullAlarm":0,
+                        "CorePresentAlarm":0,
+                        "HighMfsMemoryAlarm":0,
+                        "PamMisconfiguredAlarm":0,
+                        "TTLocaldirFullAlarm":0,
+                        "NodeNoHeartbeatAlarm":0,
+                        "NodeMaprUserMismatchAlarm":0,
+                        "NodeDuplicateHostIdAlarm":0,
+                        "NodeMetricsWriteProblemAlarm":0,
+                        "NodeTooManyContainersAlarm":0,
+                        "IncorrectTopologyAlarm":0,
+                        "ServiceHueDownNotRunningAlarm":0,
+                        "ServiceHttpfsDownNotRunningAlarm":0,
+                        "ServiceBeeswaxDownNotRunningAlarm":0,
+                        "ServiceHiveDownNotRunningAlarm":0,
+                        "ServiceHs2DownNotRunningAlarm":0,
+                        "ServiceOozieDownNotRunningAlarm":0,
+                        "NodeManagerDown":0,
+                        "InstanceMismatch":0,
+                        "ResourceManagerDown":0,
+                        "Insufficient memory for buckets":0,
+                        "NoDiskAttached":0,
+                        "MemoryAllocationAlarm":0,
+                        "FileMigrateServerDown":1555340598576,
+                        "MemorySwapping":0,
+                        "ApiServerDown":0
+                }
+        ]
+}
+
+curl -u mapr:mapr -X GET -k "https://host:8443/rest/node/list"
+
+   List the health and configuredservice of all nodes:
+
+   The following examples show the use of short forms for the column
+   parameter.
+     * [11]CLI
+     * [12]REST
+
+/opt/mapr/bin/maprcli node list -columns service,health,configuredservice -json
+/opt/mapr/bin/maprcli node list -columns svc,h,csvc -json
+{
+        "timestamp":1555343115082,
+        "timeofday":"2019-04-15 08:45:15.082 GMT-0700 AM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "ip":[
+                                "10.10.82.29",
+                                "172.17.0.1"
+                        ],
+                        "hostname":"doc29.lab",
+                        "health":2,
+                        "service":"resourcemanager,fileserver,cldb,nfs4,mastgate
+way,nodemanager,gateway,hoststats,apiserver,posixclientbasic",
+                        "configuredservice":"resourcemanager,filemigrate,fileser
+ver,cldb,nfs4,mastgateway,nodemanager,gateway,hoststats,apiserver,posixclientbas
+ic"
+                }
+        ]
+}
+
+curl -u mapr:mapr -X GET -k "https://host:8443/rest/node/list?columns=service%2C
+health%2Cconfiguredservice"
+curl -u mapr:mapr -X GET -k "https://host:8443/rest/node/list?columns=svc%2Ch%2C
+csvs"
+{"timestamp":1555482645387,"timeofday":"2019-04-16 11:30:45.387 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"ip":["10.10.82.29","172.17.0.1"],"hostname":"doc2
+9.lab","health":2,"service":"","configuredservice":""}]}
+
+   List the number of slots on all nodes:
+     * [13]CLI
+     * [14]REST
+
+/opt/mapr/bin/maprcli node list -columns ip,ttmapSlots,ttmapUsed,ttReduceSlots,t
+tReduceUsed -json
+{
+        "timestamp":1555483525095,
+        "timeofday":"2019-04-16 11:45:25.095 GMT-0700 PM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "ip":[
+                                "10.10.82.29",
+                                "172.17.0.1"
+                        ],
+                        "hostname":"doc29.lab",
+                        "ttmapSlots":0,
+                        "ttmapUsed":0,
+                        "ttReduceSlots":0,
+                        "ttReduceUsed":0
+                }
+        ]
+}
+
+curl -u mapr:mapr -X GET -k "https://host:8443/rest/node/list?columns=ip%2Cttmap
+Slots%2CttmapUsed%2CttReduceSlots%2CttReduceUsed"
+{"timestamp":1555483675606,"timeofday":"2019-04-16 11:47:55.606 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"ip":["10.10.82.29","172.17.0.1"],"hostname":"doc2
+9.lab","ttmapSlots":0,"ttmapUsed":0,"ttReduceSlots":0,"ttReduceUsed":0}]}
+
+   List nodes on a particular subnet:
+     * [15]CLI
+     * [16]REST
+
+/opt/mapr/bin/maprcli node list -filter '[ip==10.*]' -json
+{
+        "timestamp":1555483749837,
+        "timeofday":"2019-04-16 11:49:09.837 GMT-0700 PM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "id":"1470287842321938805",
+                        "ip":[
+                                "10.10.82.29",
+                                "172.17.0.1"
+                        ],
+                        "hostname":"doc29.lab",
+                        "racktopo":"/data/default-rack/doc29.lab",
+                        "health":2,
+                        "healthDesc":"One or more services is down",
+                        "service":"resourcemanager,fileserver,cldb,nfs4,mastgate
+way,nodemanager,hoststats,gateway,apiserver",
+                        "configuredservice":"resourcemanager,fileserver,cldb,nfs
+4,mastgateway,nodemanager,hoststats,gateway,apiserver",
+                        "fs-heartbeat":0,
+                        "jt-heartbeat":2,
+                        "dtotal":272,
+                        "dused":0,
+                        "davail":272,
+                        "rpcs":0,
+                        "rpcin":489,
+                        "rpcout":940,
+                        "disks":5,
+                        "MapRfs disks":3,
+                        "faileddisks":0,
+                        "dreads":0,
+                        "dreadK":0,
+                        "dwrites":0,
+                        "dwriteK":0,
+                        "cpus":8,
+                        "utilization":27,
+                        "uptime":"Tue Apr 16 04:00:39 PDT 2019",
+                        "mtotal":23947,
+                        "mused":10646,
+                        "ttmapSlots":0,
+                        "ttmapUsed":0,
+                        "ttReduceSlots":0,
+                        "ttReduceUsed":0,
+                        "bytesReceived":0,
+                        "bytesSent":0,
+                        "numResyncSlots":16,
+                        "blockMovesOut":false,
+                        "blockMovesIn":false,
+                        "numInstances":"1",
+                        "numReportedInstances":"1",
+                        "spsPerInstance":"0",
+                        "numPutsInLastTenSeconds":0,
+                        "numPutsInLastMinute":0,
+                        "numPutsInLastFiveMinutes":0,
+                        "numPutsInLastFifteenMinutes":0,
+                        "numGetsInLastTenSeconds":0,
+                        "numGetsInLastMinute":0,
+                        "numGetsInLastFiveMinutes":0,
+                        "numGetsInLastFifteenMinutes":0,
+                        "numScansInLastTenSeconds":0,
+                        "numScansInLastMinute":0,
+                        "numScansInLastFiveMinutes":0,
+                        "numScansInLastFifteenMinutes":0,
+                        "LogLevelAlarm":0,
+                        "ServiceCLDBDownNotRunningAlarm":0,
+                        "ServiceFileserverDownNotRunningAlarm":0,
+                        "ServiceJTDownNotRunningAlarm":0,
+                        "ServiceTTDownNotRunningAlarm":0,
+                        "ServiceHBMasterDownNotRunningAlarm":0,
+                        "ServiceHBRegionDownNotRunningAlarm":0,
+                        "ServiceNFSDownNotRunningAlarm":0,
+                        "ServiceNFS4DownNotRunningAlarm":0,
                         "ServiceWebserverDownNotRunningAlarm":0,
                         "ServiceHoststatsDownNotRunningAlarm":0,
                         "DiskFailureAlarm":0,
@@ -186,65 +513,52 @@ emanager,hoststats,apiserver",
                         "Insufficient memory for buckets":0,
                         "NoDiskAttached":0,
                         "MemoryAllocationAlarm":0,
+                        "FileMigrateServerDown":1555482296140,
                         "MemorySwapping":0,
                         "ApiServerDown":0
                 }
         ]
 }
 
-Fields
+curl -u mapr:mapr -X GET -k "https://host:8443/rest/node/list?filter=%5Bip%3D%3D
+10.*%5D"
+{"timestamp":1555483809698,"timeofday":"2019-04-16 11:50:09.698 GMT-0700 PM","st
+atus":"OK","total":1,"data":[{"id":"1470287842321938805","ip":["10.10.82.29","17
+2.17.0.1"],"hostname":"doc29.lab","racktopo":"/data/default-rack/doc29.lab","hea
+lth":2,"healthDesc":"One or more services is down","service":"","configuredservi
+ce":"","fs-heartbeat":0,"jt-heartbeat":2,"dtotal":272,"dused":0,"davail":272,"rp
+cs":0,"rpcin":489,"rpcout":942,"disks":5,"MapRfs disks":3,"faileddisks":0,"dread
+s":0,"dreadK":0,"dwrites":0,"dwriteK":0,"cpus":8,"utilization":1,"uptime":"Tue A
+pr 16 04:00:39 PDT 2019","mtotal":23947,"mused":10560,"ttmapSlots":0,"ttmapUsed"
+:0,"ttReduceSlots":0,"ttReduceUsed":0,"bytesReceived":672,"bytesSent":792,"numRe
+syncSlots":16,"blockMovesOut":false,"blockMovesIn":false,"numInstances":"1","num
+ReportedInstances":"1","spsPerInstance":"0","numPutsInLastTenSeconds":0,"numPuts
+InLastMinute":0,"numPutsInLastFiveMinutes":0,"numPutsInLastFifteenMinutes":0,"nu
+mGetsInLastTenSeconds":0,"numGetsInLastMinute":0,"numGetsInLastFiveMinutes":0,"n
+umGetsInLastFifteenMinutes":0,"numScansInLastTenSeconds":0,"numScansInLastMinute
+":0,"numScansInLastFiveMinutes":0,"numScansInLastFifteenMinutes":0,"LogLevelAlar
+m":0,"ServiceCLDBDownNotRunningAlarm":0,"ServiceFileserverDownNotRunningAlarm":0
+,"ServiceJTDownNotRunningAlarm":0,"ServiceTTDownNotRunningAlarm":0,"ServiceHBMas
+terDownNotRunningAlarm":0,"ServiceHBRegionDownNotRunningAlarm":0,"ServiceNFSDown
+NotRunningAlarm":0,"ServiceNFS4DownNotRunningAlarm":0,"ServiceWebserverDownNotRu
+nningAlarm":0,"ServiceHoststatsDownNotRunningAlarm":0,"DiskFailureAlarm":0,"Vers
+ionMismatchAlarm":0,"TimeSkewAlarm":0,"HbProcessingSlow":0,"RootPartitionFullAla
+rm":0,"HomeMapRFullAlarm":0,"CorePresentAlarm":0,"HighMfsMemoryAlarm":0,"PamMisc
+onfiguredAlarm":0,"TTLocaldirFullAlarm":0,"NodeNoHeartbeatAlarm":0,"NodeMaprUser
+MismatchAlarm":0,"NodeDuplicateHostIdAlarm":0,"NodeMetricsWriteProblemAlarm":0,"
+NodeTooManyContainersAlarm":0,"IncorrectTopologyAlarm":0,"ServiceHueDownNotRunni
+ngAlarm":0,"ServiceHttpfsDownNotRunningAlarm":0,"ServiceBeeswaxDownNotRunningAla
+rm":0,"ServiceHiveDownNotRunningAlarm":0,"ServiceHs2DownNotRunningAlarm":0,"Serv
+iceOozieDownNotRunningAlarm":0,"NodeManagerDown":0,"GatewayServiceDown":0,"Insta
+nceMismatch":0,"ResourceManagerDown":0,"Insufficient memory for buckets":0,"NoDi
+skAttached":0,"MemoryAllocationAlarm":0,"FileMigrateServerDown":1555482296140,"M
+emorySwapping":0,"ApiServerDown":0}]}
 
-   For definitions of the output fields, and short names for use with
-   filters, see the [11]Fields table on the [12]node command page.
-
-Examples
-
-   List all nodes:
-
-   For best results, use the -json option when listing all nodes or a
-   large subset of node information.
-     * [13]CLI
-     * [14]REST
-
-maprcli node list -json
-
-https://r1n1.sj.us:8443/rest/node/list
-
-   List the health and configuredservice of all nodes:
-
-   The following examples also show the use of short forms for the column
-   parameter.
-     * [15]CLI
-     * [16]REST
-
-maprcli node list -columns service,health,configuredservice
-maprcli node list -columns svc,h,csvc
-
-https://10.10.82.23:8443/rest/node/list?columns=service,health,configuredservice
-https://10.10.82.23:8443/rest/node/list?columns=svc,h,csvs
-
-   List the number of slots on all nodes:
+   List the nodes running the clients:
      * [17]CLI
      * [18]REST
 
-maprcli node list -columns ip,ttmapSlots,ttmapUsed,ttReduceSlots,ttReduceUsed
-
-https://abc.sj.us:8443/rest/node/list?columns=ip,ttmapSlots,ttmapUsed,ttReduceSl
-ots,ttReduceUsed
-
-   List nodes on a particular subnet:
-     * [19]CLI
-     * [20]REST
-
-maprcli node list -filter [ip==192.168.10.*]
-
-https://abc.sj.us:8443/rest/node/list?filter=%5Bip%3D%3D192.168.10.*%5D
-
-   List the nodes running the clients:
-     * [21]CLI
-     * [22]REST
-
-# maprcli node list -clientsonly true
+/opt/mapr/bin/maprcli node list -clientsonly true -json
 clienttype           clienthealth  hostname           ip                       l
 asthb  id
 posixclientgold      Active        atsqa4-119.qa.lab  10.10.88.119,172.17.0.1  2
@@ -270,8 +584,7 @@ NFS_V3               Active        qa108-189.qa.lab   10.10.108.189            1
 NFS_V4               Active        qa108-190.qa.lab   10.10.108.190            2
        1203052391917747224
 
-# curl -k -X POST 'https://abc.sj.us:8443/rest/node/list?clientsonly=true' --use
-r mapr:mapr
+curl -u mapr:mapr -X GET -k "https://host:8443/rest/node/list?clientsonly=true"
 {"timestamp":1531171868890,"timeofday":"2018-07-09 02:31:08.890 GMT-0700 PM","st
 atus":"OK","total":1,"data":[{"id":"5412384279424088014","hostname":"atsqa4-119.
 qa.lab","ip":"10.10.88.119,172.17.0.1","clienttype":"posixclientgold","clienthea
@@ -279,25 +592,21 @@ lth":"Active","lasthb":28}]}
 
 References
 
-   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
-   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html#concept_znz_qxz_5t
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html#concept_znz_qxz_5t
-   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-CommonParameters.html#concept_ymb_yxz_5t
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
-  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
-  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html#node__fields
-  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
-  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div1entry1
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div1entry2
-  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div2entry1
-  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div2entry2
-  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div3entry1
-  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div3entry2
-  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div4entry1
-  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div4entry2
-  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div5entry1
-  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div5entry2
+   1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+   2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-Filters.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/maprcli-REST-API-Syntax-CommonParameters.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+   8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div1entry1
+  10. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div1entry2
+  11. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div2entry1
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div2entry2
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div3entry1
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div3entry2
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div4entry1
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div4entry2
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div5entry1
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/node-list.html#div5entry2

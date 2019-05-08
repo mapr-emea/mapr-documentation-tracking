@@ -6,7 +6,7 @@ Syntax
 
    CLI
 
-maprcli dashboard info
+/opt/mapr/bin/maprcli dashboard info
     [ -cluster <cluster name> ]
     [ -multi_cluster_info true|false]
     [ -version true|false ]
@@ -23,6 +23,8 @@ http[s]://<host>:<port>/rest/dashboard/info[?<parameters>]
 
 Parameters
 
+   CAPTION:
+
    Parameter
 
    Description
@@ -33,7 +35,7 @@ Parameters
    Values: true or false. Default: false.
    version Specifies whether to display the version. Values: true or
    false. Default: false.
-   zkconnect [1]ZooKeeper Connect String
+   zkconnect [1]Common Parameters
    json Formats the output.
 
 Output
@@ -42,7 +44,9 @@ Output
    applications, health, and utilization of the cluster.
    Output Fields
 
-   Field
+   CAPTION:
+
+         Field
 
    Description
 
@@ -67,12 +71,13 @@ Output
 
    cluster
 
-   The following information about the cluster:
+   Determines the following information about the cluster:
      * name — the cluster name
      * secure — whether the cluster is secure or not. Value: true (if
        enabled) or false (if disabled)
      * dare — whether the cluster is enabled for data at rest encryption
        or not. Value: true (if enabled) or false (if disabled)
+     *
      * ip — the IP address of the active CLDB
      * id — the cluster ID
      * nodesUsed — number of nodes in the cluster
@@ -98,8 +103,8 @@ Output
             compression) for the tiered volumes in the cluster.
             This value does not include erasure-coded backend volumes and
             cache-volumes.
-          + replicatedLogicalUsed — The logical size, in gigabytes, of
-            disk used by the tiered volumes and all associated replicas.
+          + replicatedLogicalUsed — The logical size in gigabytes, of disk
+            used by the tiered volumes and all associated replicas.
             This value is calculated as follows: disk space (before
             compression) used by volume * number of replicas. This value
             does not include erasure-coded backend volumes and
@@ -162,14 +167,15 @@ Output
 
    The number of active, stopped, failed, and total installed services on
    the cluster, for example:
+     * API server
      * CLDB
      * Fileserver
+     * File Migrate
      * ResourceManager
      * NodeManager
      * NFSv4
      * hoststats
      * MAST Gateway
-     * API server
 
    yarn
 
@@ -185,145 +191,153 @@ Output
      * Used disks
 
    Sample Output
-# maprcli dashboard info -json
+# /opt/mapr/bin/maprcli dashboard info -json
 {
-    "timestamp":1440744545985,
-    "timeofday":"2015-08-27 11:49:05.985 GMT-0700",
-    "status":"OK",
-    "total":1,
-    "data":[
-        {
-            "version":"4.14.14.34092.GA",
-            "cluster":{
-                "name":"my.cluster.com",
-                "secure":true,
-                "dare":true,
-                "ip":"10.20.30.100",
-                "id":"8925630648055792748",
-                "nodesUsed":1,
-                "totalNodesAllowed":-1
-            },
-            "volumes":{
-                "mounted":{
-                    "total":11,
-                    "size":1650
-                },
-                "unmounted":{
-                    "total":1,
-                    "size":1
+        "timestamp":1555484566822,
+        "timeofday":"2019-04-17 12:02:46.822 GMT-0700 AM",
+        "status":"OK",
+        "total":1,
+        "data":[
+                {
+                        "version":"6.1.9.20190416114817.GA",
+                        "cluster":{
+                                "name":"myCluster",
+                                "secure":true,
+                                "dare":true,
+
+                                "ip":"10.10.82.29",
+                                "id":"677116233136630791",
+                                "nodesUsed":1,
+                                "totalNodesAllowed":-1
+                        },
+                        "volumes":{
+                                "mounted":{
+                                        "total":17,
+                                        "size":0
+                                },
+                                "unmounted":{
+                                        "total":1,
+                                        "size":1
+                                }
+                        },
+                        "utilization":{
+                                "cpu":{
+                                        "util":20,
+                                        "total":8,
+                                        "active":1
+                                },
+                                "memory":{
+                                        "total":23947,
+                                        "active":10587
+                                },
+                                "disk_space":{
+                                        "total":272,
+                                        "active":0
+                                },
+                                "compression":{
+                                        "compressed":0,
+                                        "uncompressed":0
+                                },
+                                "tiering":{
+                                        "logicalUsed":0,
+                                        "replicatedLogicalUsed":0,
+                                        "replicatedTotalUsed":0,
+                                        "metaDBUsedMB":0,
+                                        "replicatedMetaDBUsedMB":0,
+                                        "offloaded":0,
+                                        "recalled":0,
+                                        "cvTotalUsed":0,
+                                        "replicatedCvTotalUsed":0,
+                                        "ecOffloaded":0,
+                                        "ecRecalled":0,
+                                        "ecTotalUsed":0
+                                }
+                        },
+                        "clusterReplication":{
+                                "bytesReceived":0,
+                                "bytesSend":0
+                        },
+                        "streamThroughput":{
+                                "bytesProduced":0,
+                                "bytesConsumed":0
+                        },
+                        "services":{
+                                "fileserver":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                },
+                                "resourcemanager":{
+                                        "active":1,
+                                        "standby":0,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                },
+                                "filemigrate":{
+                                        "active":0,
+                                        "standby":0,
+                                        "stopped":0,
+                                        "failed":1,
+                                        "total":1
+                                },
+                                "cldb":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                },
+                                "nfs4":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                },
+                                "mastgateway":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                },
+                                "nodemanager":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                },
+                                "gateway":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                },
+                                "hoststats":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                },
+                                "apiserver":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                }
+                        },
+                        "yarn":{
+                                "running_applications":0,
+                                "queued_applications":0,
+                                "num_node_managers":1,
+                                "total_memory_mb":5120,
+                                "total_vcores":4,
+                                "total_disks":3,
+                                "used_memory_mb":0,
+                                "used_vcores":0,
+                                "used_disks":0
+                        }
                 }
-            },
-            "utilization":{
-                "cpu":{
-                    "util":5,
-                    "total":16,
-                    "active":0
-                },
-                "memory":{
-                    "total":24103,
-                    "active":19882
-                },
-                "disk_space":{
-                    "total":16086,
-                    "active":4
-                },
-                "compression":{
-                    "compressed":1,
-                    "uncompressed":11
-                },
-                  "tiering":{
-                        "logicalUsed":79,
-                        "replicatedLogicalUsed":239,
-                        "replicatedTotalUsed":149,
-                        "metaDBUsedMB":22,
-                        "replicatedMetaDBUsedMB":66,
-                        "offloaded":0,
-                        "recalled":0,
-                        "cvTotalUsed":0,
-                        "replicatedCvTotalUsed":0,
-                        "ecOffloaded":8,
-                        "ecRecalled":2,
-                        "ecTotalUsed":29
-                  }
-            },
-            "clusterReplication":{
-                "bytesReceived":0,
-                "bytesSend":0
-            },
-            "streamThroughput":{
-                "bytesProduced":12493091880,
-                "bytesConsumed":97564851840
-            },
-            "services":{
-                "fileserver":{
-                    "active":1,
-                    "stopped":0,
-                    "failed":0,
-                    "total":1
-                },
-                  "resourcemanager":{
-                        "active":1,
-                        "standby":0,
-                        "stopped":0,
-                        "failed":0,
-                        "total":1
-                  },
-                  "cldb":{
-                        "active":1,
-                        "stopped":0,
-                        "failed":0,
-                        "total":1
-                  },
-                  "nfs4":{
-                        "active":0,
-                        "stopped":0,
-                        "failed":0,
-                        "total":1
-                  },
-                  "mastgateway":{
-                        "active":1,
-                        "stopped":0,
-                        "failed":0,
-                        "total":1
-                  },
-                  "nodemanager":{
-                        "active":1,
-                        "stopped":0,
-                        "failed":0,
-                        "total":1
-                  },
-                "gateway":{
-                    "active":1,
-                    "stopped":0,
-                    "failed":0,
-                    "total":1
-                },
-                "hoststats":{
-                    "active":1,
-                    "stopped":0,
-                    "failed":0,
-                    "total":1
-                },
-                  "apiserver":{
-                        "active":1,
-                        "stopped":0,
-                        "failed":0,
-                        "total":1
-                  }
-            },
-             "yarn":{
-                        "running_applications":0,
-                        "queued_applications":0,
-                        "num_node_managers":1,
-                        "total_memory_mb":5120,
-                        "total_vcores":4,
-                        "total_disks":3,
-                        "used_memory_mb":0,
-                        "used_vcores":0,
-                        "used_disks":0
-             }
-        }
-    ]
+        ]
 }
 
 Examples
@@ -334,66 +348,67 @@ Examples
 
 # maprcli dashboard info -json
 {
-        "timestamp":1527008633066,
-        "timeofday":"2018-05-22 10:03:53.066 GMT-0700 AM",
+        "timestamp":1555484566822,
+        "timeofday":"2019-04-17 12:02:46.822 GMT-0700 AM",
         "status":"OK",
         "total":1,
         "data":[
                 {
-                        "version":"6.1.0.20180521161953.GA",
+                        "version":"6.1.9.20190416114817.GA",
                         "cluster":{
-                                "name":"Cloudpool19",
+                                "name":"myCluster",
                                 "secure":true,
                                 "dare":true,
-                                "ip":"10.10.25.19",
-                                "id":"5362989631404162594",
-                                "nodesUsed":4,
+
+                                "ip":"10.10.82.29",
+                                "id":"677116233136630791",
+                                "nodesUsed":1,
                                 "totalNodesAllowed":-1
                         },
                         "volumes":{
                                 "mounted":{
-                                        "total":105,
-                                        "size":21177
+                                        "total":17,
+                                        "size":0
                                 },
                                 "unmounted":{
-                                        "total":8,
-                                        "size":124
+                                        "total":1,
+                                        "size":1
                                 }
                         },
                         "utilization":{
                                 "cpu":{
-                                        "util":34,
-                                        "total":64,
-                                        "active":0
+                                        "util":20,
+                                        "total":8,
+                                        "active":1
                                 },
                                 "memory":{
-                                        "total":252985,
-                                        "active":99397
+                                        "total":23947,
+                                        "active":10587
                                 },
                                 "disk_space":{
-                                        "total":10353,
-                                        "active":33
+                                        "total":272,
+                                        "active":0
                                 },
                                 "compression":{
-                                        "compressed":20,
-                                        "uncompressed":41
+                                        "compressed":0,
+                                        "uncompressed":0
                                 },
                                 "tiering":{
-                                       "logicalUsed":79,
-                                        "replicatedLogicalUsed":239,
-                                        "replicatedTotalUsed":149,
-                                        "metaDBUsedMB":22,
-                                        "replicatedMetaDBUsedMB":66,
+                                        "logicalUsed":0,
+                                        "replicatedLogicalUsed":0,
+                                        "replicatedTotalUsed":0,
+                                        "metaDBUsedMB":0,
+                                        "replicatedMetaDBUsedMB":0,
                                         "offloaded":0,
                                         "recalled":0,
                                         "cvTotalUsed":0,
                                         "replicatedCvTotalUsed":0,
-                                        "ecOffloaded":8,
-                                        "ecRecalled":2,
-                                        "ecTotalUsed":29
+                                        "ecOffloaded":0,
+                                        "ecRecalled":0,
+                                        "ecTotalUsed":0
                                 }
                         },
-                     "clusterReplication":{
+                        "clusterReplication":{
                                 "bytesReceived":0,
                                 "bytesSend":0
                         },
@@ -403,68 +418,75 @@ Examples
                         },
                         "services":{
                                 "fileserver":{
-                                        "active":4,
+                                        "active":1,
                                         "stopped":0,
                                         "failed":0,
-                                        "total":4
+                                        "total":1
                                 },
                                 "resourcemanager":{
-                                        "active":2,
-                                        "stopped":0,
-                                        "failed":0,
-                                        "total":2
-                                },
-                                "historyserver":{
                                         "active":1,
                                         "standby":0,
                                         "stopped":0,
                                         "failed":0,
                                         "total":1
                                 },
+                                "filemigrate":{
+                                        "active":0,
+                                        "standby":0,
+                                        "stopped":0,
+                                        "failed":1,
+                                        "total":1
+                                },
                                 "cldb":{
-                                        "active":2,
+                                        "active":1,
                                         "stopped":0,
                                         "failed":0,
-                                        "total":2
+                                        "total":1
                                 },
-                                "nfs":{
-                                        "active":4,
+                                "nfs4":{
+                                        "active":1,
                                         "stopped":0,
                                         "failed":0,
-                                        "total":4
+                                        "total":1
                                 },
-                                  "mastgateway":{
-                                   "active":3,
-                                   "stopped":0,
-                                   "failed":0,
-                                   "total":3
-                                   },
-                     "nodemanager":{
-                                        "active":4,
+                                "mastgateway":{
+                                        "active":1,
                                         "stopped":0,
                                         "failed":0,
-                                        "total":4
+                                        "total":1
+                                },
+                                "nodemanager":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
+                                },
+                                "gateway":{
+                                        "active":1,
+                                        "stopped":0,
+                                        "failed":0,
+                                        "total":1
                                 },
                                 "hoststats":{
-                                        "active":4,
+                                        "active":1,
                                         "stopped":0,
                                         "failed":0,
-                                        "total":4
+                                        "total":1
                                 },
                                 "apiserver":{
-                                        "active":2,
+                                        "active":1,
                                         "stopped":0,
                                         "failed":0,
-                                        "total":2
+                                        "total":1
                                 }
                         },
                         "yarn":{
                                 "running_applications":0,
                                 "queued_applications":0,
-                                "num_node_managers":4,
-                                "total_memory_mb":134360,
-                                "total_vcores":48,
-                                "total_disks":12,
+                                "num_node_managers":1,
+                                "total_memory_mb":5120,
+                                "total_vcores":4,
+                                "total_disks":3,
                                 "used_memory_mb":0,
                                 "used_vcores":0,
                                 "used_disks":0
@@ -475,28 +497,19 @@ Examples
 
    REST
 
-# curl -k -X GET 'https://abc.sj.us:8443/rest/dashboard/info' --user mapr:mapr
-{"timestamp":1527008591378,"timeofday":"2018-05-22 10:03:11.378 GMT-0700 AM","st
-atus":"OK","total":1,"data":[{"version":"6.1.0.20180521161953.GA","cluster":{"na
-me":"Cloudpool19","secure":true,"dare":true,"ip":"10.10.25.19","id":"53629896314
-04162594","nodesUsed":4,"totalNodesAllowed":-1},"volumes":{"mounted":{"total":10
-5,"size":21177},"unmounted":{"total":8,"size":124}},"utilization":{"cpu":{"util"
-:34,"total":64,"active":0},"memory":{"total":252985,"active":99361},"disk_space"
-:{"total":10353,"active":33},"compression":{"compressed":20,"uncompressed":41},"
-tiering":{"logicalUsed":79,"replicatedLogicalUsed":239,"replicatedTotalUsed":149
-,"metaDBUsedMB":22,"replicatedMetaDBUsedMB":66,"offloaded":0,"recalled":0,"cvTot
-alUsed":0,"replicatedCvTotalUsed":0,"ecOffloaded":8,"ecRecalled":2,"ecTotalUsed"
-:29}},"clusterReplication":{"bytesReceived":0,"bytesSend":0},"streamThroughput":
-{"bytesProduced":0,"bytesConsumed":0},"services":{"fileserver":{"active":4,"stop
-ped":0,"failed":0,"total":4},"resourcemanager":{"active":2,"stopped":0,"failed":
-0,"total":2},"historyserver":{"active":1,"standby":0,"stopped":0,"failed":0,"tot
-al":1},"cldb":{"active":2,"stopped":0,"failed":0,"total":2},"nfs":{"active":4,"s
-topped":0,"failed":0,"total":4},"mastgateway":{"active":3,"stopped":0,"failed":0
-,"total":3},"nodemanager":{"active":4,"stopped":0,"failed":0,"total":4},"hoststa
-ts":{"active":4,"stopped":0,"failed":0,"total":4},"apiserver":{"active":2,"stopp
-ed":0,"failed":0,"total":2}},"yarn":{"running_applications":0,"queued_applicatio
-ns":0,"num_node_managers":4,"total_memory_mb":134360,"total_vcores":48,"total_di
-sks":12,"used_memory_mb":0,"used_vcores":0,"used_disks":0}}]}
+curl -u mapr:mapr -X GET  -k "https://host:8443/rest/dashboard/info"
+{"timestamp":1555491565658,"timeofday":"2019-04-17 01:59:25.658 GMT-0700 AM","st
+atus":"OK","total":1,"data":[{"version":"6.1.9.20190416114817.GA","cluster":{"na
+me":"myCluster","secure":true,"dare":true,"globalPolicyMaster":true,"ip":"10.10.
+82.29","id":"677116233136630791","nodesUsed":1,"totalNodesAllowed":-1},"volumes"
+:{"mounted":{"total":17,"size":1},"unmounted":{"total":1,"size":1}},"utilization
+":{"cpu":{"util":1,"total":8,"active":0},"memory":{"total":23947,"active":10582}
+,"disk_space":{"total":272,"active":0},"compression":{"compressed":0,"uncompress
+ed":0},"tiering":{"logicalUsed":0,"replicatedLogicalUsed":0,"replicatedTotalUsed
+":0,"metaDBUsedMB":0,"replicatedMetaDBUsedMB":0,"offloaded":0,"recalled":0,"cvTo
+talUsed":0,"replicatedCvTotalUsed":0,"ecOffloaded":0,"ecRecalled":0,"ecTotalUsed
+":0}},"clusterReplication":{"bytesReceived":0,"bytesSend":0},"streamThroughput":
+{"bytesProduced":0,"bytesConsumed":0},"services":{}}]}
 
 References
 

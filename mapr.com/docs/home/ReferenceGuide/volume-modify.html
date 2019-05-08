@@ -71,6 +71,8 @@ http[s]://<host>:<port>/rest/volume/modify?<parameters>
 
 Parameters
 
+   CAPTION:
+
    Parameter
 
    Description
@@ -102,9 +104,9 @@ Parameters
    threshold (of 1024 GB), set the value for this to 0, which is the
    default value.
    cluster The cluster on which to run the command.
-   coalesce The interval of time during which READ, WRITE, or GETATTR
-   operations on one file from one client IP address are logged, if
-   auditing is enabled.
+   [3]coalesce The interval of time during which READ, WRITE, or GETATTR
+   operations on one file from one IP address or UID are logged only once
+   for a particular operation, if auditing is enabled.
 
    For example, suppose that a client application reads a single file
    three times in 6 minutes, so that there is one read at 0 minutes,
@@ -113,6 +115,11 @@ Parameters
    logged. However, if the interval is between 4 minutes, then only the
    first and third read operations are logged. If the interval is 2
    minutes, all three read operations are logged.
+
+   Now however, if the client was also writing to the file, irrespective
+   of the coalesce interval for the read operation in the example stated
+   previously, the write operation is logged, as it is a different
+   operation from reading.
 
    The default value is 60 minutes. Setting this field to a larger number
    helps prevent audit logs from growing quickly.
@@ -157,7 +164,7 @@ Parameters
    excluded (using two minus (--) signs). If neither sign is specified,
    the given operation is included for auditing.
    The operations that can be included (+) or excluded (-) from auditing
-   are listed [3]here. You can, alternatively, group all the operations
+   are listed [4]here. You can, alternatively, group all the operations
    using the keyword all, which:
      * If included (+), cannot be specified with a list of other included
        operations.
@@ -166,7 +173,7 @@ Parameters
 
    You can specify a mixed list of included and excluded operations. There
    is no change to operations that are not specified with the command.
-   Tip: For more information, see [4]Selective Auditing of Filesystem and
+   Tip: For more information, see [5]Selective Auditing of Filesystem and
    Table Operations.
    dbindexlagsecalarmthresh Specifies the threshold (in seconds) to raise
    an alarm for index update lag.
@@ -185,12 +192,12 @@ Parameters
    tiering if it was enabled during volume creation.
    ecscheme The number of data chunks and the number of parity chunks
    separated by a plus (+) sign. The default scheme is 4+2. For
-   information on the supported schemes, see [5]Erasure Coding Scheme for
+   information on the supported schemes, see [6]Erasure Coding Scheme for
    Data Protection and Recovery.
    ectopology The topology of the erasure coded volume if it is already
    not set. You cannot change the topology of an erasure coded volume
    using this command. To change the topology of an erasure coded volume,
-   use [6]volume move.
+   use [7]volume move.
    enforceminreplicationforio Specifies whether (true) or not (false) to
    enforce minimum number of replicas for the (read-write) volume during
    IO. This flag ensures that further updates (writes) to volume are
@@ -223,13 +230,13 @@ Parameters
    the auditenabled parameter to true.
    group Space-separated list of group:permission pairs.
    maxinodesalarmthreshold The number of inodes, which when exceeded
-   raises the [7]INODES_EXCEEDED alarm.
+   raises the [8]INODES_EXCEEDED alarm.
    maxnssizembalarmthreshold The namespace container size, which when
-   exceeded raises the [8]INODES_EXCEEDED alarm.
+   exceeded raises the [9]INODES_EXCEEDED alarm.
    metricsenabled Specifies whether (true) or not (false) to enable
    metrics collection for a volume.
    minreplication The minimum replication level. Default: 0
-   Tip: For more information, see [9]Understanding Replication.
+   Tip: For more information, see [10]Understanding Replication.
    mirrorschedule The schedule ID corresponding to the schedule to be used
    for mirroring. Pre-assigned IDs include 1 for critical data, 2 for
    important data, and 3 for normal data. Custom schedules are assigned ID
@@ -267,7 +274,7 @@ Parameters
 
    Set the value to be the same or larger than the value of the equivalent
    data replication parameter, minreplication.
-   See also: [10]Understanding Replication.
+   See also: [11]Understanding Replication.
    nsreplication The desired namespace container replication level.
    Default: 3.
 
@@ -286,7 +293,7 @@ Parameters
    value of the equivalent data replication parameter, replication.
    However, to set the value of this parameter lower than the replication
    value, first set engg.manual.override to true in cldb.conf.
-   See also: [11]Understanding Replication.
+   See also: [12]Understanding Replication.
    name The name of the volume to modify.
    offloadschedule The ID of the schedule to associate with the volume for
    offloading volume data to the tier. To disable schedule-based offload,
@@ -295,7 +302,7 @@ Parameters
    quota=500G; Units: B, K, M, G, T, P
 
    Note that quotas for source and mirror volumes must match.
-   readAce Specifies [12]Access Control Expressions(ACEs) that grant
+   readAce Specifies [13]Access Control Expressions(ACEs) that grant
    permissions at the volume level to read files and tables in the volume.
    The default value is p, which grants access to all users.
 
@@ -313,7 +320,7 @@ Parameters
    purging or offloading it. Value must be greater than 1 and lesser than
    7500. The default value is 1 day.
    replication The desired replication level. Default: 0
-   Tip: For more information, see [13]Understanding Replication.
+   Tip: For more information, see [14]Understanding Replication.
    rereplicationtimeoutsec Timeout (in seconds) before attempting
    re-replication of replica containers. This volume property defines the
    timeout period until CLDB starts re-replicating the containers on the
@@ -383,7 +390,7 @@ Parameters
    enabled; for all other files, tables, and streams where encryption is
    not enabled at the file, table, or stream level, the on-wire encryption
    is disabled.
-   writeAce Specifies [14]Access Control Expressions (ACEs) that grant
+   writeAce Specifies [15]Access Control Expressions (ACEs) that grant
    permission at the volume level to write to files and tables in the
    volume. The default value is p, which grants access to all users.
 
@@ -397,19 +404,21 @@ Parameters
 Examples
 
    Change the source volume of the mirror "test-mirror":
-     * [15]CLI
-     * [16]REST
+     * [16]CLI
+     * [17]REST
 
-maprcli volume modify -name test-mirror -source volume-2@my-cluster
+/opt/mapr/bin/maprcli volume modify -name test-mirror -source volume-2@my-cluste
+r
 
 curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=test-mirror&sour
 ce=volume-2@my-cluster' --user mapr:mapr
 
    Create a volume with namespace container replicas
-     * [17]CLI
-     * [18]REST
+     * [18]CLI
+     * [19]REST
 
-# maprcli volume modify -name testVol -nsminreplication 2 -nsreplication 4 -json
+# /opt/mapr/bin/maprcli volume modify -name testVol -nsminreplication 2 -nsrepli
+cation 4 -json
 {
         "timestamp":1526528489360,
         "timeofday":"2018-05-16 08:41:29.360 GMT-0700 PM",
@@ -434,10 +443,10 @@ atus":"OK","total":0,"data":[]}
    volume must be created specifying the volume name of the parent. In the
    following example, the parent volume, parentVol, grants inheritance to
    child volumes.
-     * [19]CLI
-     * [20]REST
+     * [20]CLI
+     * [21]REST
 
-maprcli volume modify -name parentVol -allowgrant true
+/opt/mapr/bin/maprcli volume modify -name parentVol -allowgrant true
 
 # curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=parentVol?allo
 wgrant=true' --user mapr:mapr
@@ -451,10 +460,11 @@ wgrant=true' --user mapr:mapr
 
    Note: There is no change to the readAce access type, which is not
    specified with the command, irrespective of whether it is set or not.
-     * [21]CLI
-     * [22]REST
+     * [22]CLI
+     * [23]REST
 
-maprcli volume modify -name testVol -writeAce 'g:group1&(!u:user1|!r:role1)'
+/opt/mapr/bin/maprcli volume modify -name testVol -writeAce 'g:group1&(!u:user1|
+!r:role1)'
 
 curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=testVol&writeAce
 =g%3Agroup1%26%28%21u%3Auser1%7C%21r%3Arole1%29' --user mapr:mapr
@@ -464,19 +474,21 @@ curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=testVol&writeAce
    In the following example, the create operation is included for auditing
    and the lookup operation is excluded from auditing. There are no
    changes to operations that are not specified.
-     * [23]CLI
-     * [24]RETST
+     * [24]CLI
+     * [25]RETST
 
-maprcli volume modify -name parentVol -dataauditops +create,-lookup
+/opt/mapr/bin/maprcli volume modify -name parentVol -dataauditops +create,-looku
+p
 
 curl -k -X POST 'https://abc.sj.us:8443/rest/volume/modify?name=p1&dataauditops=
 %2Bcreate%2C-lookup' --user mapr:mapr
 
    Modify an existing volume to enable on-wire encryption:
-     * [25]CLI
-     * [26]REST
+     * [26]CLI
+     * [27]REST
 
-# maprcli volume modify -name local2 -wiresecurityenabled true -json
+# /opt/mapr/bin/maprcli volume modify -name local2 -wiresecurityenabled true -js
+on
 {
         "timestamp":1505205889697,
         "timeofday":"2017-09-12 01:44:49.697 GMT-0700",
@@ -493,8 +505,8 @@ yenabled=true' --user mapr:mapr
 atus":"OK","total":0,"data":[]}
 
    Associate an offload rule with a tiering-enabled volume:
-     * [27]CLI
-     * [28]REST
+     * [28]CLI
+     * [29]REST
 
 /opt/mapr/bin/maprcli volume modify -name sampleVol -tieringrule ksTestRule -jso
 n
@@ -515,8 +527,8 @@ atus":"OK","total":0,"data":[]}
 
    Modify a volume to set a schedule for data offload and set number of
    days to three days to keep recalled data:
-     * [29]CLI
-     * [30]REST
+     * [30]CLI
+     * [31]REST
 
 /opt/mapr/bin/maprcli volume modify -name sampleVol -offloadschedule 3 -recallex
 pirytime 3 -json
@@ -540,10 +552,10 @@ atus":"OK","total":0,"data":[]}
    To disable a schedule, set the schedule parameter to 0.
 
    For example:
-     * [31]CLI
+     * [32]CLI
 
-# maprcli volume modify -name mapr.apps  -schedule 0
-# maprcli volume info -name mapr.apps  -json | grep schedule
+# /opt/mapr/bin/maprcli volume modify -name mapr.apps  -schedule 0
+# /opt/mapr/bin/maprcli volume info -name mapr.apps  -json | grep schedule
                         "scheduleid":"0",
                         "schedulename":"",
                         "mirrorscheduleid":"0"
@@ -552,32 +564,33 @@ References
 
    1. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/audit-data.html
    2. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/acl.html
-   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html#AuditingofFilesystemOperationsandTableOperations
-   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SelectiveAuditingOfOperations.html
-   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SelectECScheme.html
-   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-move.html
-   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/VolumeAlarms.html
+   3. file://localhost/root/docsync/tmp/mapr.com/docs/home/glossary/gloss_coalesce.html
+   4. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/Auditing-FilesystemTableOperations.html#AuditingofFilesystemOperationsandTableOperations
+   5. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SelectiveAuditingOfOperations.html
+   6. file://localhost/root/docsync/tmp/mapr.com/docs/home/StorageTiers/SelectECScheme.html
+   7. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-move.html
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/VolumeAlarms.html
-   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/VolumeAlarms.html
   10. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
   11. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
-  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html
-  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
-  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html
-  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div1entry1
-  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div1entry2
-  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div2entry1
-  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div2entry2
-  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div3entry1
-  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div3entry2
-  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div4entry1
-  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div4entry2
-  23. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div5entry1
-  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div5entry2
-  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div6entry1
-  26. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div6entry2
-  27. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div7entry1
-  28. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div7entry2
-  29. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div8entry1
-  30. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div8entry2
-  31. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div9entry1
+  12. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
+  13. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html
+  14. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/DetermineVolReplicationFactor.html
+  15. file://localhost/root/docsync/tmp/mapr.com/docs/home/SecurityGuide/SyntaxOfACE.html
+  16. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div1entry1
+  17. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div1entry2
+  18. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div2entry1
+  19. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div2entry2
+  20. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div3entry1
+  21. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div3entry2
+  22. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div4entry1
+  23. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div4entry2
+  24. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div5entry1
+  25. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div5entry2
+  26. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div6entry1
+  27. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div6entry2
+  28. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div7entry1
+  29. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div7entry2
+  30. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div8entry1
+  31. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div8entry2
+  32. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/volume-modify.html#div9entry1

@@ -12,13 +12,13 @@ Managing Audit Logs for Filesystem and Table Operations
 
 Effects of the -maxSize parameter
 
-   When you enable auditing with the [1]maprcli audit data command, you
-   can use the -maxSize parameter to specify the size at which an alarm is
-   raised concerning the size of the audit volume. The alarm is displayed
-   on the dashboard in MCS and in the output of the [2]maprcli alarm list
-   command. This alarm simply means that the threshold size has been
-   reached. Audited operations are still logged to the audit volume in
-   question.
+   When you enable auditing with the [1]audit datamaprcli audit data
+   command, you can use the -maxSize parameter to specify the size at
+   which an alarm is raised concerning the size of the audit volume. The
+   alarm is displayed on the dashboard in MCS and in the output of the
+   [2]alarm listmaprcli alarm list command. This alarm simply means that
+   the threshold size has been reached. Audited operations are still
+   logged to the audit volume in question.
 
    There are three actions that you can take:
      * If you decide that you want to be notified when the audit volume
@@ -75,8 +75,10 @@ Effects of the -retention parameter
 
 Effects of the -coalesce parameter
 
-   This parameter sets an interval during which READ, WRITE, or GETATTR
-   operations on one file from one client IP address are logged only once.
+   The [9]coalesceparameter represents the interval of time during which
+   READ, WRITE, or GETATTR operations on one file from one client IP
+   address and UID/GID are logged only once for a particular operation, if
+   auditing is enabled.
 
    For example, suppose that a client application reads a single file
    three times in 6 minutes, so that there is one read at 0 minutes,
@@ -86,9 +88,13 @@ Effects of the -coalesce parameter
    first and third read operations are logged. If the interval is 2
    minutes, all three read operations are logged.
 
-   You can set this interval on individual volumes. The default value is
-   60 minutes. Setting this field to a larger number helps prevent audit
-   logs from growing quickly.
+   Now however, if the client was also writing to the file, irrespective
+   of the coalesce interval for the read operation in the example stated
+   previously, the write operation is logged, as it is a different
+   operation from reading.
+
+   The default value is 60 minutes. Setting this field to a larger number
+   helps prevent audit logs from growing quickly.
 
 References
 
@@ -100,3 +106,4 @@ References
    6. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/audit-data.html
    7. file://localhost/root/docsync/tmp/mapr.com/docs/home/AdministratorGuide/Alarms-Checking.html
    8. file://localhost/root/docsync/tmp/mapr.com/docs/home/ReferenceGuide/alarm-list.html
+   9. file://localhost/root/docsync/tmp/mapr.com/docs/home/glossary/gloss_coalesce.html
